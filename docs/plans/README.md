@@ -1,4 +1,4 @@
-# Implementation and Test Plans
+# Execution Plans
 
 This directory contains executable plans used to hand work to implementation, testing, research, documentation, and operations agents.
 
