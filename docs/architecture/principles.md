@@ -3,7 +3,7 @@
 - **Status:** Draft
 - **Last updated:** 2026-07-28
 
-These principles guide design and implementation decisions across KitchenPilot. When a decision conflicts with a principle, the trade-off must be explicit and documented in an Architecture Decision Record.
+These principles guide design and implementation decisions across KitchenFlow. When a decision conflicts with a principle, the trade-off must be explicit and documented in an Architecture Decision Record.
 
 ## 1. Product behavior before technology
 

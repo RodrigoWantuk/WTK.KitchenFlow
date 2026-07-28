@@ -5,9 +5,9 @@
 
 ## Purpose
 
-This document defines the initial architectural shape of KitchenPilot without selecting technologies prematurely. Technology choices must be recorded through Architecture Decision Records.
+This document defines the initial architectural shape of KitchenFlow without selecting technologies prematurely. Technology choices must be recorded through Architecture Decision Records.
 
-KitchenPilot is planned as a web-based, multilingual product with independently deployable frontend and backend applications. It must support deployment to managed cloud environments or a self-hosted VPS.
+KitchenFlow is planned as a web-based, multilingual product with independently deployable frontend and backend applications. It must support deployment to managed cloud environments or a self-hosted VPS.
 
 ## Architectural goals
 
@@ -163,7 +163,7 @@ A single VPS may host several components for smaller installations. Managed clou
 
 ## Scalability approach
 
-KitchenPilot should scale through measured evolution:
+KitchenFlow should scale through measured evolution:
 
 1. establish modular boundaries and observability;
 2. keep request handlers stateless where practical;

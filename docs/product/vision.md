@@ -2,13 +2,13 @@
 
 - **Status:** Draft
 - **Last updated:** 2026-07-28
-- **Product:** KitchenPilot
+- **Product:** KitchenFlow
 
 ## Vision
 
-KitchenPilot helps people make home cooking practical enough to fit real life.
+KitchenFlow helps people make home cooking practical enough to fit real life.
 
-Instead of acting as another recipe catalog, KitchenPilot coordinates the full household cooking system: understanding the people, tracking what is available, planning purchases and preparation, selecting suitable meals, guiding execution, and learning from outcomes.
+Instead of acting as another recipe catalog, KitchenFlow coordinates the full household cooking system: understanding the people, tracking what is available, planning purchases and preparation, selecting suitable meals, guiding execution, and learning from outcomes.
 
 ## Problem statement
 
@@ -39,7 +39,7 @@ Future discovery may identify additional segments. The architecture must not ass
 
 ## Value proposition
 
-KitchenPilot provides a personalized cooking companion that can answer:
+KitchenFlow provides a personalized cooking companion that can answer:
 
 - What should we buy?
 - What do we already have?
@@ -106,12 +106,12 @@ The intended product scope includes:
 A representative journey is:
 
 1. The user creates a household and completes guided onboarding.
-2. KitchenPilot records preferences, restrictions, skills, equipment, schedule, and goals.
+2. KitchenFlow records preferences, restrictions, skills, equipment, schedule, and goals.
 3. The user initializes or gradually builds pantry inventory.
-4. KitchenPilot proposes a shopping plan and a preparation plan.
+4. KitchenFlow proposes a shopping plan and a preparation plan.
 5. The household accepts, edits, or rejects suggestions.
 6. Ingredients and prepared components are reconciled after shopping and cooking.
-7. KitchenPilot recommends a suitable meal for the current context.
+7. KitchenFlow recommends a suitable meal for the current context.
 8. The user follows guided instructions and asks contextual questions when needed.
 9. The result, consumption, leftovers, waste, and feedback update future decisions.
 

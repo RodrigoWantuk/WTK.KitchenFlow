@@ -1,6 +1,6 @@
-# Contributing to KitchenPilot
+# Contributing to KitchenFlow
 
-KitchenPilot is currently an early-stage source-available project. Contributions must preserve product intent, architectural clarity, documentation quality, safety, privacy, localization readiness, and testability.
+KitchenFlow is currently an early-stage source-available project. Contributions must preserve product intent, architectural clarity, documentation quality, safety, privacy, localization readiness, and testability.
 
 ## Before starting
 
@@ -35,6 +35,8 @@ Add pantry quantity validation
 Document AI provider fallback policy
 Fix household authorization boundary
 ```
+
+Delete merged working branches after the merge unless an explicit operational reason requires them to remain.
 
 ## Pull requests
 

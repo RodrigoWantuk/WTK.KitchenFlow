@@ -5,7 +5,7 @@
 
 ## Purpose
 
-KitchenPilot requires a layered quality strategy covering deterministic software, contracts, integrations, user journeys, AI-assisted behavior, security, accessibility, localization, performance, and operations.
+KitchenFlow requires a layered quality strategy covering deterministic software, contracts, integrations, user journeys, AI-assisted behavior, security, accessibility, localization, performance, and operations.
 
 Testing is part of feature design. A requirement is incomplete until its verification approach is understood.
 

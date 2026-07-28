@@ -1,15 +1,15 @@
-# KitchenPilot
+# KitchenFlow
 
-KitchenPilot is an AI-assisted web application designed to help people cook more often at home and rely less on delivery services.
+KitchenFlow is an AI-assisted web application designed to help people cook more often at home and rely less on delivery services.
 
 The product aims to manage the full home-cooking journey: understanding the household, organizing pantry inventory, planning purchases, preparing reusable components, selecting meals, guiding cooking, and helping users recover when something goes wrong.
 
-> Repository name: `WTK.KitchenPilot`  
-> Product name: **KitchenPilot**
+> Repository name: `WTK.KitchenFlow`  
+> Product name: **KitchenFlow**
 
 ## Project status
 
-KitchenPilot is currently in its foundation and discovery phase. Product requirements, architectural decisions, technology choices, and delivery milestones will be documented before implementation is expanded.
+KitchenFlow is currently in its foundation and discovery phase. Product requirements, architectural decisions, technology choices, and delivery milestones will be documented before implementation is expanded.
 
 ## Product goals
 
@@ -53,6 +53,6 @@ All source code, technical documentation, commit messages, issue content, and pu
 
 ## License
 
-KitchenPilot is source-available under the **PolyForm Noncommercial License 1.0.0**. Noncommercial use is permitted under the license terms. Commercial use is not permitted without a separate written commercial license from the copyright holder.
+KitchenFlow is source-available under the **PolyForm Noncommercial License 1.0.0**. Noncommercial use is permitted under the license terms. Commercial use is not permitted without a separate written commercial license from the copyright holder.
 
 See [`LICENSE`](LICENSE) for the complete terms.

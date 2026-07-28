@@ -5,7 +5,7 @@
 
 ## Purpose
 
-AI is a core KitchenPilot capability, but not the owner of application state or business correctness. This document defines the initial rules for model-assisted workflows before providers and implementation technologies are selected.
+AI is a core KitchenFlow capability, but not the owner of application state or business correctness. This document defines the initial rules for model-assisted workflows before providers and implementation technologies are selected.
 
 ## Intended AI responsibilities
 

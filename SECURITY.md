@@ -1,6 +1,6 @@
 # Security Policy
 
-KitchenPilot is in an early foundation phase. Security, privacy, household isolation, food-safety behavior, and AI data handling are treated as product requirements from the beginning.
+KitchenFlow is in an early foundation phase. Security, privacy, household isolation, food-safety behavior, and AI data handling are treated as product requirements from the beginning.
 
 ## Reporting a vulnerability
 

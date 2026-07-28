@@ -1,6 +1,6 @@
 # Infrastructure
 
-This directory will contain versioned infrastructure and deployment assets for KitchenPilot.
+This directory will contain versioned infrastructure and deployment assets for KitchenFlow.
 
 ## Intended scope
 
