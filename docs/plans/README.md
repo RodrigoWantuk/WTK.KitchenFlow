@@ -52,6 +52,13 @@ Use one primary type:
 
 A plan may include multiple disciplines, but it must identify a primary type and responsible owner.
 
+## Templates
+
+- Use [`0000-plan-template.md`](0000-plan-template.md) for implementation, research, documentation, and operations work.
+- Use [`0000-test-plan-template.md`](0000-test-plan-template.md) when the primary responsibility is independent test design or execution.
+
+The test-plan template adds requirements traceability, risk-based priorities, system-under-test baselines, evidence tracking, defect classification, and a final quality assessment. Do not replace it with an implementation checklist for substantial testing work.
+
 ## Required plan content
 
 Every plan must define:
@@ -68,8 +75,6 @@ Every plan must define:
 - execution state, exact next action, and blockers;
 - append-only progress log;
 - completion and handoff checklist.
-
-Use [`0000-plan-template.md`](0000-plan-template.md) as the starting point.
 
 ## Mandatory lifecycle
 
@@ -138,15 +143,20 @@ Delivery state may remain `PR open` or `Awaiting owner merge` after execution be
 
 ## Implementation and testing separation
 
-For risk-sensitive or substantial features, the implementation plan should define expected verification, while a separate testing plan may independently verify the delivered behavior.
+For risk-sensitive or substantial features, the implementation plan should define expected verification, while a separate testing plan independently verifies the delivered behavior.
 
 A testing agent must not merely trust the implementation plan's completion claims. It must:
 
-- derive tests from requirements and acceptance criteria;
+- derive tests from product requirements and acceptance criteria;
+- identify the exact branch, pull request, commit, or release under test;
 - inspect changed behavior and contracts;
-- record evidence, failures, and coverage gaps;
-- distinguish product defects from test-environment limitations;
+- maintain a requirements-to-evidence traceability matrix;
+- record evidence, failures, defects, and coverage gaps;
+- distinguish product defects from test defects and environment limitations;
+- provide a final quality assessment and merge or release recommendation;
 - update its own plan and registry row before every commit.
+
+Completion of a test plan does not imply that the tested change passed. A completed test plan may have a final outcome of `Fail` or `Inconclusive` when execution and evidence are complete.
 
 ## Concurrency rules
 
