@@ -1,6 +1,6 @@
 # Plan Execution Registry
 
-This file is the canonical, repository-wide view of implementation, testing, research, documentation, and operational plans.
+This file is the canonical, repository-wide view of implementation, testing, research, documentation, and operations plans.
 
 Detailed plans live under [`docs/plans/`](plans/). This registry exists so that a new agent can understand current work, ownership, progress, blockers, and the exact continuation point without reconstructing state from chat history or branch diffs.
 
