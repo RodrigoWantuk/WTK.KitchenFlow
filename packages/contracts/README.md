@@ -1,6 +1,6 @@
 # Shared Contracts
 
-This directory will contain implementation-neutral contracts shared across KitchenPilot boundaries.
+This directory will contain implementation-neutral contracts shared across KitchenFlow boundaries.
 
 ## Intended contents
 
