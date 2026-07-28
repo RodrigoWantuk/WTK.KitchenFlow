@@ -36,7 +36,7 @@ Document AI provider fallback policy
 Fix household authorization boundary
 ```
 
-Delete merged working branches unless an explicit operational reason requires them to remain.
+Delete merged working branches after the merge unless an explicit operational reason requires them to remain.
 
 ## Pull requests
 
