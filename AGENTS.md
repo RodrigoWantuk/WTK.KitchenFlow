@@ -4,8 +4,8 @@ This file defines mandatory working rules for AI coding agents and human contrib
 
 ## 1. Project identity
 
-- Product name: **KitchenPilot**.
-- Repository and technical namespace: **WTK.KitchenPilot**.
+- Product name: **KitchenFlow**.
+- Repository and technical namespace: **WTK.KitchenFlow**.
 - Product purpose: help individuals and households cook more often at home by coordinating planning, pantry management, shopping, preparation, cooking guidance, and troubleshooting.
 - The project is a multilingual web product with independently deployable frontend and backend components.
 
@@ -77,7 +77,7 @@ AI is a core product capability, but it must not become an unbounded implementat
 
 ## 7. Safety and privacy
 
-KitchenPilot may process food preferences, allergies, household information, budgets, schedules, and behavioral history. Treat these as sensitive user data.
+KitchenFlow may process food preferences, allergies, household information, budgets, schedules, and behavioral history. Treat these as sensitive user data.
 
 - Collect only data needed for a documented product purpose.
 - Never commit credentials, API keys, production data, personal data, or private prompt transcripts.
@@ -116,6 +116,7 @@ Documentation is part of the deliverable, not a later cleanup task.
 
 - Use descriptive English branch names, preferably `agent/<scope>` for agent-created branches.
 - Use concise imperative English commit messages.
+- Delete merged working branches after the merge unless an explicit operational reason requires them to remain.
 - Do not commit generated artifacts, dependencies, secrets, local configuration, or build output.
 - A pull request must explain what changed, why it changed, user/developer impact, risks, and validation performed.
 - Do not merge failing checks.
