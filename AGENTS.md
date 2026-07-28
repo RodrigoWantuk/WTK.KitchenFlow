@@ -1,194 +1,175 @@
 # AGENTS.md
 
-This file defines mandatory working rules for AI coding agents and human contributors operating in this repository.
+This file defines mandatory working rules for AI coding, testing, documentation, research, security, and operations agents in this repository.
 
 ## 1. Project identity
 
-- Product name: **KitchenFlow**.
+- Product: **KitchenFlow**.
 - Repository and technical namespace: **WTK.KitchenFlow**.
-- Product purpose: help individuals and households cook more often at home by coordinating planning, pantry management, shopping, preparation, cooking guidance, and troubleshooting.
-- The project is a multilingual web product with independently deployable frontend and backend components.
+- Product purpose: help adults transform available, planned, or purchasable food into useful meals with less effort, waste, and delivery dependence.
+- Platform: responsive multilingual web application.
+- Frontend: React and TypeScript generated and evolved through Lovable.
+- Backend: .NET 10 / ASP.NET Core modular monolith with independently scalable workers.
 
 ## 2. Language policy
 
-All technical work must be written in English, including:
+All technical work is written in English, including code, identifiers, comments, logs, documentation, ADRs, plans, branches, commits, issues, pull requests, tests, and test data descriptions.
 
-- source code and identifiers;
-- comments and logs;
-- documentation and Architecture Decision Records;
-- commit messages;
-- branch names;
-- issues and pull requests;
-- test names and test data descriptions.
+User-facing content must be localization-ready. Do not hard-code interface copy in application logic or reusable components.
 
-User-facing content must be localization-ready. Do not hard-code interface copy inside application logic or reusable components. English may be used as the source locale, but the architecture must support additional languages.
+## 3. Mandatory reading
 
-## 3. Required reading before changes
+Before modifying the repository, read the complete required path in [`docs/README.md`](docs/README.md), including:
 
-Before modifying the repository, read:
+1. repository and agent rules;
+2. plan registry and active plan;
+3. accepted product vision;
+4. the 2026-07-28 stakeholder discovery record;
+5. architecture principles and applicable ADRs;
+6. every product, domain, AI, security, testing, or operations document relevant to the change.
 
-1. `README.md`;
-2. `docs/README.md`;
-3. `docs/plan-status.md`;
-4. `docs/plans/README.md`;
-5. `docs/product/vision.md`;
-6. `docs/architecture/overview.md`;
-7. `docs/architecture/principles.md`;
-8. every Architecture Decision Record and active plan relevant to the requested change.
+A future agent must be able to work from repository state without access to earlier conversations.
 
-Do not infer that an undocumented technology, pattern, requirement, or work status has already been approved.
+Do not infer that an undocumented requirement, technology, pattern, exception, or work status is approved.
 
-## 4. Working method
+## 4. Foundation behavior that must not be silently changed
 
-- Understand the user and product outcome before writing code.
-- Keep changes small, cohesive, reviewable, and reversible.
-- Do not silently broaden scope.
-- Do not replace explicit requirements with a smaller "MVP" interpretation unless the product documentation explicitly authorizes it.
-- Update documentation in the same change whenever behavior, architecture, contracts, configuration, or operational procedures change.
-- Record significant technical choices as Architecture Decision Records before or alongside implementation.
-- Prefer explicit contracts and deterministic behavior over implicit conventions.
-- Never claim a feature, test, migration, or deployment is complete unless it has been verified.
+- The central decision problem is how to transform available, usable food into useful meals under user intent and constraints.
+- KitchenFlow is not reduced to a recipe generator or recipe catalog.
+- Inventory uses products and lots with quantity, state, shelf-life evidence, source, confidence, and lifecycle history.
+- Shelf-life behavior is advisory and explainable; it does not arbitrarily force or block a user's choice.
+- Optional modules and context sources must degrade gracefully.
+- Menu planning is optional and flexible.
+- User decisions, accepted plans, permanent recipes, and authoritative inventory are not rewritten silently.
+- Recipe execution completion and inventory reconciliation are atomic or explicitly pending reconciliation.
+- Recipes are privately owned; cross-user sharing creates an independent copy from an immutable snapshot.
+- AI is untrusted and never directly mutates authoritative state.
+- Deterministic code owns authorization, arithmetic, transitions, validation, quotas, cost accounting, retention, and safety guardrails.
+- Frontend and backend remain independently buildable, testable, deployable, and observable.
+- The accepted first release is substantial. Do not substitute a smaller undocumented MVP.
+
+Changing one of these decisions requires an explicit stakeholder-approved product document or superseding ADR and a migration plan where implementation exists.
 
 ## 5. Plan-driven execution
 
-Every nontrivial agent change must be associated with a plan under `docs/plans/` and a matching entry in `docs/plan-status.md`.
+Every nontrivial agent change uses a plan under `docs/plans/` and a matching row in `docs/plan-status.md`.
 
-Before changing implementation, test, infrastructure, contract, or durable documentation files, an agent must:
+Before implementation, testing, infrastructure, contract, or durable documentation work:
 
-1. create or claim the relevant plan;
-2. confirm its scope, requirements, acceptance criteria, dependencies, and required validation;
-3. register or update the plan in `docs/plan-status.md`;
-4. identify the owner, branch, current checkpoint, and exact next action;
-5. use a branch name that includes the plan ID whenever practical, such as `agent/plan-0001-short-scope`.
+1. create or claim a plan;
+2. confirm scope, requirements, acceptance criteria, dependencies, and validation;
+3. register or update it in `docs/plan-status.md`;
+4. identify owner, branch, checkpoint, and exact next action;
+5. use a branch containing the plan ID when practical.
 
-### Mandatory pre-commit state update
+### Mandatory pre-commit update
 
-Before creating **every commit**, an agent must update both:
+Before every agent-created commit, update:
 
 - the active plan's `Execution state` and append-only `Progress log`;
-- the matching row in `docs/plan-status.md`.
+- the matching registry row.
 
-These updates must describe the repository state produced by the same commit, including:
+The same commit must record the checkpoint it produces, material changes, validation and result, failures or unverified behavior, blockers, and exact next action.
 
-- the checkpoint completed or partially completed;
-- material files or areas changed;
-- validation performed and its result;
-- known failures, limitations, or unverified behavior;
-- blockers;
-- the exact next action.
+A commit without synchronized plan state is noncompliant.
 
-The plan-state updates must be committed together with the work they describe. An agent-created commit without current plan and registry information is noncompliant.
+### Pause and handoff
 
-### Pause, block, and handoff
+Before stopping, leave the repository resumable without conversation history. Record status, last verified checkpoint, incomplete areas, commands and results, risks, exact next action, and uncommitted work. Update plan and registry in the pause or handoff commit.
 
-Before stopping work for any reason, the agent must leave the repository resumable without access to the previous conversation:
-
-- set the plan to `Paused` or `Blocked` when appropriate;
-- record the last verified checkpoint;
-- identify partially modified files or unfinished behavior;
-- record commands and validation already performed;
-- document unresolved decisions and risks;
-- state the exact next action;
-- identify uncommitted work, if any;
-- update the registry before committing the pause or handoff state.
-
-Do not mark a plan `Completed` until all acceptance criteria and required validation are resolved truthfully. Pull-request and merge state are tracked separately from execution completion.
-
-Follow [`docs/plans/README.md`](docs/plans/README.md) and use [`docs/plans/0000-plan-template.md`](docs/plans/0000-plan-template.md).
+Do not mark a plan completed until acceptance criteria and validation are truthful. Delivery and merge state are separate.
 
 ## 6. Architecture boundaries
 
-The initial repository is a technology-neutral monorepo. Preserve these conceptual boundaries:
+- `apps/frontend`: React/Lovable user experience and generated API consumption.
+- `apps/backend`: ASP.NET Core API, BFF, application modules, workers, persistence, authorization, AI gateway, and integrations.
+- `packages/contracts`: OpenAPI, events, AI schemas, identifiers, units, and compatibility fixtures.
+- `docs`: durable product and engineering truth.
+- `infrastructure`: container, environment, deployment, backup, and observability assets.
+- `scripts`: reproducible repository automation.
 
-- `apps/frontend`: user-facing web application;
-- `apps/backend`: APIs, application orchestration, authentication, persistence, and integration boundaries;
-- `packages/contracts`: versioned schemas and contracts shared across boundaries;
-- `docs`: durable product and engineering knowledge;
-- `infrastructure`: deployment and environment definitions;
-- `scripts`: repository automation.
+Frontend code does not directly access PostgreSQL, Keycloak administration, AI providers, authoritative quota, or domain state mutation.
 
-Frontend and backend must remain independently buildable, testable, deployable, and observable. Shared packages must not create hidden runtime coupling.
+Backend modules do not freely mutate another module's tables. Use explicit application contracts and transactions.
+
+Python may be introduced only as an isolated specialist service through an accepted plan and ADR; it does not own core authorization or the primary domain database.
 
 ## 7. AI engineering rules
 
-AI is a core product capability, but it must not become an unbounded implementation shortcut.
+- Route every model operation through the AI gateway.
+- Register operation, workflow version, request and response schema, context budget, model policy, timeout, fallback, quota, privacy, and evaluation.
+- Treat URLs, images, receipts, recipe text, and model output as hostile input.
+- Assemble minimal structured context in the backend; never give unrestricted data access.
+- Use explicit limits for strings, objects, collections, tokens or cost, concurrency, and retries.
+- Validate schema, domain, units, restrictions, safety, authorization, and current state.
+- Record provider, model, workflow, latency, usage, cost, validation, fallback, and failure where privacy permits.
+- Do not expose credentials, private prompts, personal data, hidden context, or internal model reasoning.
+- Ensure the defined non-AI degraded behavior remains functional.
 
-- Use AI where contextual reasoning or natural interaction creates product value.
-- Use deterministic code for validation, authorization, calculations, state transitions, inventory consistency, persistence rules, and other logic that must be repeatable.
-- Prefer structured model outputs validated against versioned schemas.
-- Treat every model response as untrusted external input.
-- Validate required fields, ranges, units, identifiers, locale, and safety constraints before accepting model output.
-- Design explicit timeout, retry, cancellation, fallback, and error-reporting behavior.
-- Keep prompts versioned and testable; do not scatter prompt strings throughout application code.
-- Do not expose provider credentials, private prompts, personal data, or internal reasoning to clients.
-- Track model provider, model identifier, prompt version, latency, token usage, estimated cost, validation result, and failure category where privacy rules permit.
-- Provider-specific implementations must remain behind application-owned interfaces.
+## 8. Security, privacy, and food safety
 
-## 8. Safety and privacy
-
-KitchenFlow may process food preferences, allergies, household information, budgets, schedules, and behavioral history. Treat these as sensitive user data.
-
-- Collect only data needed for a documented product purpose.
-- Never commit credentials, API keys, production data, personal data, or private prompt transcripts.
-- Apply least privilege and secure defaults.
-- Food allergy, cross-contamination, storage, doneness, and reheating guidance require explicit safety handling.
-- Generated cooking guidance must not present uncertain safety-critical claims as guaranteed facts.
-- Security and privacy failures must be visible, logged appropriately, and covered by incident procedures.
+- Apply least privilege and explicit resource authorization.
+- Treat allergies, health restrictions, household behavior, photos, and history as sensitive.
+- Collect and retain only for documented purposes.
+- Never commit secrets, production data, personal data, or private prompts.
+- Preserve access, correction, export, deletion, consent, and retention behavior.
+- Keep temporary import images transient and permanent photos explicit.
+- Apply current OAuth/OIDC, cookie, CSRF, upload, URL-fetching, abuse, and rate-limit controls.
+- Food safety requires curated rules, deterministic validation, AI evaluation, clear uncertainty, and incident handling.
+- Do not present uncertain safety estimates as guarantees.
 
 ## 9. Testing expectations
 
-Every meaningful change must include the appropriate level of automated verification.
+Every meaningful change includes risk-appropriate verification.
 
 Expected layers include:
 
-- unit tests for deterministic domain behavior;
-- contract tests for schemas and APIs;
-- integration tests for persistence and external boundaries;
+- unit tests for deterministic domain invariants;
+- contract tests for APIs, events, and AI schemas;
+- integration tests for PostgreSQL, Keycloak, RabbitMQ, object storage, and providers;
+- idempotency, concurrency, outbox, retry, and dead-letter tests;
 - end-to-end tests for critical user journeys;
-- prompt and model-behavior evaluations for AI-assisted features;
-- security, accessibility, localization, and performance checks where relevant.
+- AI evaluations for every model-assisted operation;
+- authorization and cross-user isolation tests;
+- privacy export and deletion tests;
+- food-safety and restriction tests;
+- accessibility, localization, performance, resilience, backup, and restore checks.
 
-Tests must be deterministic whenever possible. Model-dependent tests must use controlled fixtures, recorded responses, contract validation, or explicitly versioned evaluation datasets.
+Read [`docs/testing/product-foundation-gates.md`](docs/testing/product-foundation-gates.md). Testing agents use the same plan protocol and independently verify implementation claims.
 
-Testing agents must use the same plan and registry protocol as implementation agents. For substantial or risk-sensitive work, create an independent testing plan instead of relying only on implementation claims.
+## 10. Documentation and ADR expectations
 
-## 10. Documentation expectations
-
-Documentation is part of the deliverable, not a later cleanup task.
-
-- Use Markdown unless another format is justified.
-- Link related documents instead of duplicating rules.
-- Mark assumptions, open questions, risks, and decisions clearly.
-- Keep diagrams text-based or reproducible when practical.
-- Add an ADR for decisions that affect architecture, technology, data ownership, security, deployment, AI providers, or cross-component contracts.
-- Update status markers when a proposal becomes accepted, superseded, or rejected.
-- Keep active plans and `docs/plan-status.md` synchronized with the repository state.
+- Update documentation in the same change as behavior, contracts, architecture, configuration, deployment, or operations.
+- Add or supersede an ADR for durable technology, data, identity, AI, privacy, deployment, or contract choices.
+- Do not rewrite accepted historical rationale.
+- Link rather than create divergent copies.
+- Keep active plans and registry synchronized.
 
 ## 11. Git and pull requests
 
-- Use descriptive English branch names, preferably `agent/plan-<id>-<scope>` for agent-created branches.
+- Use descriptive English branches, preferably `agent/plan-<id>-<scope>`.
 - Use concise imperative English commit messages.
-- Update the active plan and `docs/plan-status.md` before every agent-created commit.
-- Delete merged working branches after the merge unless an explicit operational reason requires them to remain.
-- Do not commit generated artifacts, dependencies, secrets, local configuration, or build output.
-- A pull request must link its plan and explain what changed, why it changed, user/developer impact, risks, and validation performed.
+- Delete merged working branches unless an explicit operational reason is documented.
+- Do not commit generated dependencies, secrets, local configuration, or build output.
+- Pull requests link the plan and describe scope, rationale, impact, validation, risks, limitations, and handoff.
 - Do not merge failing checks.
-- Avoid mixing refactoring, formatting, dependency upgrades, and product behavior in one change unless they are inseparable.
+- Keep changes cohesive and reviewable.
 
 ## 12. Definition of done
 
 A change is complete only when:
 
 - acceptance criteria are satisfied;
-- architecture boundaries remain valid;
-- relevant tests pass;
-- error paths and observability are addressed;
-- documentation is current;
-- localization implications are handled;
-- security, privacy, food-safety, accessibility, and cost implications were considered;
-- no credentials or personal data were introduced;
-- the implementation does not claim unsupported behavior;
-- the plan execution state and `docs/plan-status.md` are current and truthful;
-- exact continuation instructions exist for any unfinished work.
+- accepted product and domain behavior is preserved;
+- architecture boundaries and ADRs are followed;
+- relevant tests and evaluations pass;
+- failure, recovery, idempotency, and observability are addressed;
+- documentation and generated contracts are current;
+- localization and accessibility are handled;
+- security, privacy, food safety, AI cost, and operation are considered;
+- no secrets or personal data were introduced;
+- plan and registry are truthful;
+- exact continuation exists for unfinished work;
+- unsupported behavior is not claimed.
 
-When any item cannot be completed, document the exact limitation and leave the repository in a truthful, resumable state.
+When an item cannot be completed, document the exact limitation and leave a truthful, resumable state.

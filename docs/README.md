@@ -1,73 +1,140 @@
 # KitchenFlow Documentation
 
-This directory is the durable source of truth for product, architecture, engineering, AI, quality, security, operations, and work-execution decisions.
+This directory is the durable source of truth for product, domain, architecture, engineering, AI, quality, security, operations, and work-execution decisions.
 
-Documentation must evolve with the implementation. A code change that modifies behavior, contracts, architecture, configuration, deployment, operational procedures, or plan execution state is incomplete until the related documentation is updated.
+Documentation is part of the product. Code, tests, contracts, plans, and operational behavior must remain consistent with the accepted documents.
 
 ## Documentation map
 
 ```text
-plan-status.md       Canonical registry of active, paused, blocked, and completed plans
-plans/               Executable implementation, testing, research, documentation, and operations plans
-product/             Product vision, users, problems, scope, and requirements
-architecture/        System architecture, principles, boundaries, and ADRs
-ai/                  AI capabilities, prompt lifecycle, providers, validation, and evaluation
-testing/             Quality strategy, test levels, and release gates
-security/            Security, privacy, threat modeling, and incident practices
-operations/          Deployment, observability, backups, and support procedures
+plan-status.md       Canonical registry of active and completed plans
+plans/               Implementation, testing, research, documentation, and operations plans
+discovery/           Structured stakeholder discovery and decision records
+product/             Vision, audience, profile, journeys, and release scope
+domain/              Inventory, planning, shopping, recipes, cooking, and invariants
+architecture/        System architecture, principles, and ADRs
+ai/                  AI workflows, context, providers, validation, quotas, and cost
+security/            Privacy, data protection, security, and abuse controls
+testing/             Quality strategy, domain gates, test levels, and release gates
+operations/          Deployment, scale, reliability, backup, and observability
 ```
 
-Some directories will be created when their first approved document is added. Empty placeholder directories are intentionally not tracked by Git.
+## Required reading for every agent
 
-## Start here
+Before modifying the repository:
 
-Every implementation or testing agent must begin with:
-
-1. [`plan-status.md`](plan-status.md)
-2. [`plans/README.md`](plans/README.md)
-3. the active plan assigned to the work
-4. [`product/vision.md`](product/vision.md)
-5. [`architecture/overview.md`](architecture/overview.md)
-6. [`architecture/principles.md`](architecture/principles.md)
-7. [`ai/overview.md`](ai/overview.md) when AI behavior is involved
-8. [`testing/strategy.md`](testing/strategy.md)
+1. [`../README.md`](../README.md)
+2. [`../AGENTS.md`](../AGENTS.md)
+3. [`plan-status.md`](plan-status.md)
+4. [`plans/README.md`](plans/README.md)
+5. the active plan assigned to the work
+6. [`product/vision.md`](product/vision.md)
+7. [`discovery/2026-07-28-stakeholder-discovery.md`](discovery/2026-07-28-stakeholder-discovery.md)
+8. [`architecture/principles.md`](architecture/principles.md)
 9. [`architecture/decisions/README.md`](architecture/decisions/README.md)
+10. every applicable accepted ADR
 
-Repository-wide mandatory rules remain defined in [`../AGENTS.md`](../AGENTS.md).
+This is the minimum. Work-specific reading follows.
 
-## Plan execution documents
+## Product and frontend work
 
-Detailed plans live under `docs/plans/`. The central status and handoff view lives in `docs/plan-status.md`.
+Read:
 
-Before every agent-created commit, the agent must update both the active plan and the central registry so they describe the state produced by that commit. This includes partial work, validation results, blockers, and the exact next action.
+- [`product/audience-and-profile.md`](product/audience-and-profile.md)
+- [`product/user-journeys.md`](product/user-journeys.md)
+- [`product/initial-release.md`](product/initial-release.md)
+- [`domain/README.md`](domain/README.md)
+- all domain documents touched by the workflow
+- [`security/privacy-and-data-protection.md`](security/privacy-and-data-protection.md)
+- [`testing/product-foundation-gates.md`](testing/product-foundation-gates.md)
 
-The plan system is intended to make work resumable from repository state alone and to support independent implementation and testing agents.
+## Backend, data, and integration work
+
+Read:
+
+- [`domain/inventory-lifecycle.md`](domain/inventory-lifecycle.md)
+- [`domain/planning-and-shopping.md`](domain/planning-and-shopping.md)
+- [`domain/recipes-and-cooking.md`](domain/recipes-and-cooking.md)
+- [`architecture/overview.md`](architecture/overview.md)
+- [`ai/overview.md`](ai/overview.md)
+- [`ai/usage-and-cost-governance.md`](ai/usage-and-cost-governance.md)
+- [`security/security-and-abuse.md`](security/security-and-abuse.md)
+- [`operations/platform-and-reliability.md`](operations/platform-and-reliability.md)
+- [`testing/strategy.md`](testing/strategy.md)
+- [`testing/product-foundation-gates.md`](testing/product-foundation-gates.md)
+
+## AI work
+
+Read every backend item plus:
+
+- the operation-specific prompt, schema, evaluation, privacy, quota, and fallback design;
+- ADR-0005 and any later provider or evaluation ADR;
+- applicable food-safety and restriction rules.
+
+No agent may add a direct provider call outside the application-owned AI gateway.
+
+## Security, privacy, and operations work
+
+Read:
+
+- [`security/privacy-and-data-protection.md`](security/privacy-and-data-protection.md)
+- [`security/security-and-abuse.md`](security/security-and-abuse.md)
+- [`operations/platform-and-reliability.md`](operations/platform-and-reliability.md)
+- identity, data, messaging, AI, and deployment ADRs;
+- the applicable domain documents because privacy and recovery workflows must preserve domain invariants.
+
+## Canonical decision hierarchy
+
+When documents appear to conflict, use this order and raise the conflict in the active plan:
+
+1. current explicit stakeholder decision recorded in an accepted document;
+2. accepted ADR for technical decisions;
+3. accepted product and domain documents;
+4. active plan for bounded execution detail;
+5. draft or proposed documents;
+6. local implementation comments.
+
+Do not silently resolve a conflict by choosing the easiest implementation.
+
+## Non-negotiable foundation summary
+
+- The core question is how to transform available, usable food into useful meals under user intent and constraints.
+- Inventory tracks real products and lots, not only aggregate ingredients.
+- Shelf-life guidance is sourced, confidence-aware, advisory, and actionable.
+- Quantity or an explicit availability state is required.
+- Planning, inventory, equipment, and history are optional context sources and degrade gracefully.
+- Menu plans are flexible intentions, not obligations.
+- Recommendations never silently rewrite accepted plans or authoritative inventory.
+- Execution completion and inventory reconciliation are atomic or explicitly pending.
+- Recipes are user-owned, revisioned, derivable, and shared by immutable snapshot and copy.
+- AI never mutates authoritative state directly.
+- React/Lovable frontend and .NET backend are independently deployable.
+- Privacy, food safety, accessibility, localization, cost, and operability are first-class behavior.
+
+## Plan execution
+
+Detailed plans live under `docs/plans/`; the central status view is `docs/plan-status.md`.
+
+Before every agent-created commit, the active plan and registry must describe the repository state produced by that same commit, including progress, validation, failures, blockers, and exact next action.
 
 ## Document lifecycle
 
-Documents should use one of these statuses when a status is relevant:
+- **Draft:** under development and not binding.
+- **Proposed:** ready for stakeholder review.
+- **Accepted:** approved and binding.
+- **Superseded:** replaced by another document.
+- **Rejected:** considered and intentionally not adopted.
+- **Deprecated:** retained for compatibility or history but not for new work.
 
-- **Draft**: under discussion and not yet binding.
-- **Proposed**: ready for review and decision.
-- **Accepted**: approved and binding.
-- **Superseded**: replaced by another document or decision.
-- **Rejected**: considered and intentionally not adopted.
-- **Deprecated**: still present for compatibility or history, but should not guide new work.
-
-Execution-plan statuses are defined separately in [`plan-status.md`](plan-status.md) and must not be replaced with document-lifecycle statuses.
+Execution-plan statuses are defined in [`plan-status.md`](plan-status.md).
 
 ## Writing standards
 
 - Write technical documentation in English.
-- Prefer direct, testable statements over aspirational language.
-- Separate facts, decisions, assumptions, risks, progress, and open questions.
-- Link to the canonical document instead of duplicating rules.
-- Use diagrams that can be reviewed and versioned as text when practical.
-- Include dates using ISO 8601 (`YYYY-MM-DD`).
-- Use UTC ISO 8601 timestamps when plan progress requires time precision.
-- Reference issues, plans, ADRs, and pull requests when a document is created or materially changed.
-- Do not rewrite plan progress history to hide failed approaches, interruptions, or handoffs.
-
-## Product documentation versus implementation documentation
-
-Product documents explain the user problem, expected outcomes, rules, and acceptance criteria. Architecture documents explain system boundaries and trade-offs. Plans explain how a bounded body of work will be delivered and verified. Implementation details belong near the relevant code when they are local and short-lived, but durable cross-cutting knowledge belongs here.
+- Use direct, testable statements.
+- Separate accepted decisions, assumptions, risks, progress, and open questions.
+- Link to canonical documents instead of copying divergent rules.
+- Use ISO 8601 dates and UTC timestamps when precision matters.
+- Keep diagrams text-based or reproducible when practical.
+- Reference plans, ADRs, issues, and pull requests.
+- Preserve historical plan and ADR rationale.

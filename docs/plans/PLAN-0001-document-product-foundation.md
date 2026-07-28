@@ -1,7 +1,7 @@
 # PLAN-0001 — Document the KitchenFlow Product Foundation
 
 - **Type:** Documentation
-- **Status:** In Progress
+- **Status:** Validating
 - **Owner:** AI documentation agent
 - **Branch:** `agent/plan-0001-document-product-foundation`
 - **Created:** 2026-07-28
@@ -9,73 +9,59 @@
 
 ## Objective
 
-Convert the complete 2026-07-28 stakeholder discovery into durable, structured, implementation-ready documentation. Future agents must work without the original conversation.
+Convert the complete 2026-07-28 stakeholder discovery into durable, structured, implementation-ready documentation so future agents can work without the original conversation.
 
 ## Included scope
 
-Product, domain, release, architecture, AI, security, privacy, operations, ADRs, and mandatory agent reading.
+Product, domain, first release, architecture, AI, security, privacy, operations, testing gates, ADRs, and mandatory agent reading.
 
 ## Excluded scope
 
 Executable code, migrations, API schemas, final vendors, pricing, ads, exact credits, and final legal wording.
 
-## Open questions preserved
+## Preserved open questions
 
-Cloud products, AI providers and models, commercial limits, shelf-life references, notification and billing providers, frontend libraries, retention periods, and country availability.
+Cloud products, AI providers and models, commercial limits, shelf-life references, notification and billing providers, frontend implementation libraries, retention periods, and country availability.
 
 ## Execution phases
 
-### Phase 1 — Register and inventory
-
-- [x] Register PLAN-0001.
-- [x] Review canonical documents.
-- [x] Identify required documents.
-
-### Phase 2 — Product and domain foundation
-
-- [x] Document discovery, product, profile, journeys, and release.
+- [x] Register and synchronize PLAN-0001.
+- [x] Document stakeholder discovery, product, profile, journeys, and release.
 - [x] Document inventory, planning, shopping, recipes, and cooking.
-
-### Phase 3 — Architecture and governance
-
-- [x] Update accepted architecture and principles.
-- [x] Document AI gateway, cost, quota, context, and resilience.
-- [x] Document privacy, security, age, rights, and file handling.
-- [x] Document scale, jobs, reliability, observability, and deployment.
+- [x] Document architecture, AI, privacy, security, scale, reliability, and operations.
 - [x] Add and index accepted ADRs.
-
-### Phase 4 — Agent onboarding and validation
-
-- [ ] Update indexes, root and application summaries, and mandatory reading.
-- [ ] Cross-check discovery coverage.
-- [ ] Validate links, terminology, statuses, and contradictions.
-- [ ] Mark completed and open the pull request.
+- [x] Reconcile root, agent, contributor, frontend, backend, contract, infrastructure, testing, and documentation indexes.
+- [ ] Validate complete branch diff, links, terminology, status, and discovery coverage.
+- [ ] Open pull request, update delivery state, and complete the plan.
 
 ## Validation strategy
 
-- Cross-check every discovery decision.
-- Separate first-release commitment from deferred work.
+- Cross-check every material discovery decision against canonical documents.
+- Separate accepted first-release behavior from deferred work.
+- Verify stale technology-neutral guidance is removed.
 - Verify AI never owns authoritative state.
-- Verify imported source images and URLs are not retained.
-- Verify frontend/Lovable, backend, security, privacy, and operational decisions are explicit.
-- Review links and the complete branch diff.
+- Verify temporary source images and URLs are not retained.
+- Verify role-specific mandatory reading and test gates.
+- Review changed files, links, statuses, and the complete diff.
 
 ## Acceptance criteria
 
 - [x] Complete discovery is durable without chat history.
+- [x] Central product question and waste-reduction core are explicit.
 - [x] Product and domain behavior are documented.
-- [x] Initial release and deferred work are separated.
+- [x] First release and deferred capabilities are separated.
 - [x] Architecture, AI, privacy, security, scale, and operations are documented.
-- [x] Accepted durable choices have ADRs.
-- [ ] Future agents have an explicit mandatory foundation reading path.
-- [ ] Existing summaries contain no contradictory technology-neutral guidance.
+- [x] Durable accepted choices have ADRs.
+- [x] Future agents have an explicit mandatory foundation reading path.
+- [x] Root and application summaries reflect accepted technology and behavior.
+- [x] Product foundation test gates exist.
 - [ ] Full branch validation is complete.
 - [ ] Pull request is open.
 
 ## Execution state
 
-- **Current checkpoint:** Product, domain, architecture, AI, security, privacy, operations, and six accepted ADRs are documented. Existing repository indexes, AGENTS rules, root README, and application README files still contain earlier foundation-phase or technology-neutral wording.
-- **Exact next action:** Reconcile all indexes and mandatory reading, update frontend/backend/root summaries, validate the complete diff and links, then mark PLAN-0001 completed and open the pull request.
+- **Current checkpoint:** All planned discovery, product, domain, architecture, AI, privacy, security, operations, ADR, testing-gate, and repository-onboarding documents are written and reconciled. The branch is ready for full diff and link validation.
+- **Exact next action:** Compare the branch to `main`, inspect all changed files and stale guidance, verify plan coverage, then open the pull request and record its delivery state.
 - **Blockers:** None.
 - **Uncommitted work:** None after this commit.
 
@@ -83,27 +69,32 @@ Cloud products, AI providers and models, commercial limits, shelf-life reference
 
 ### 2026-07-28 — Plan registered and synchronized
 
-- Registered PLAN-0001 and synchronized the central registry.
+Registered PLAN-0001 and corrected the connector's initial single-file commit through an immediate atomic plan-and-registry synchronization.
 
 ### 2026-07-28 — Product and domain foundation documented
 
-- Added discovery, product, release, journey, inventory, planning, shopping, recipe, and cooking documents.
+Added the complete discovery record, accepted product foundation, first release, primary journeys, and inventory, planning, shopping, recipe, and cooking domain documents.
 
 ### 2026-07-28 — Architecture and governance documented
 
-- Replaced the technology-neutral architecture summary with the accepted React/Lovable and .NET modular architecture.
-- Updated architecture principles and AI architecture.
-- Added AI usage and cost governance, privacy, security, and operational reliability requirements.
-- Added six accepted ADRs covering frontend, backend, data and messaging, identity, AI, and deployment.
-- Validation performed: checked current official .NET 10, ASP.NET Core OpenAPI, Keycloak OIDC, RabbitMQ reliability, PostgreSQL transaction, OAuth security, OpenTelemetry, LGPD rights, and international-transfer documentation.
-- Known limitation: repository indexes and application README files still require reconciliation.
-- Next action: complete repository-wide consistency and validation.
+Added accepted architecture, AI and cost governance, privacy, security, operations, and six ADRs.
+
+### 2026-07-28 — Repository foundation reconciled
+
+- Updated root, documentation, agent, and contribution entry points.
+- Updated frontend, backend, contract, and infrastructure ownership and technology guidance.
+- Added product-foundation test gates.
+- Removed earlier statements that no frontend, backend, contract, or deployment direction had been selected.
+- Validation performed: manual consistency review against the complete discovery and accepted ADRs.
+- Known limitation: complete branch-level diff and link validation remains.
+- Next action: validate and open the pull request.
 
 ## Completion and handoff checklist
 
-- [ ] All acceptance criteria resolved.
 - [x] ADRs added and linked.
-- [ ] Existing documents reconciled.
+- [x] Existing documents reconciled.
+- [x] Mandatory agent reading established.
+- [x] Product test gates documented.
 - [ ] Full branch diff reviewed.
 - [ ] Pull request opened.
 - [ ] Post-merge branch cleanup documented.

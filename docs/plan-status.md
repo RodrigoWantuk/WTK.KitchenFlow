@@ -8,7 +8,7 @@ Before every agent-created commit, update the active plan and this registry so b
 
 | Plan | Title | Type | Status | Delivery | Owner | Branch / PR | Current checkpoint | Exact next action | Blocker | Updated |
 |---|---|---|---|---|---|---|---|---|---|---|
-| [PLAN-0001](plans/PLAN-0001-document-product-foundation.md) | Document the KitchenFlow Product Foundation | Documentation | In Progress | Branch open | AI documentation agent | `agent/plan-0001-document-product-foundation` | Product, domain, architecture, AI, security, privacy, operations, and six ADRs documented | Reconcile indexes and application summaries, validate complete diff and links, then complete the plan and open a PR | None | 2026-07-28 |
+| [PLAN-0001](plans/PLAN-0001-document-product-foundation.md) | Document the KitchenFlow Product Foundation | Documentation | Validating | Branch open | AI documentation agent | `agent/plan-0001-document-product-foundation` | All foundation documents, ADRs, test gates, and repository entry points are written and reconciled | Compare against `main`, validate all changed files and links, then open the PR and complete the plan | None | 2026-07-28 |
 
 ## Completed plans
 
