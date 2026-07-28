@@ -9,7 +9,7 @@ Documentation is part of the product. Code, tests, contracts, plans, and operati
 ```text
 plan-status.md       Canonical registry of active and completed plans
 plans/               Implementation, testing, research, documentation, and operations plans
-discovery/           Structured stakeholder discovery and decision records
+discovery/           Structured stakeholder discovery and reference evidence
 product/             Vision, audience, profile, journeys, and release scope
 domain/              Inventory, planning, shopping, recipes, cooking, and invariants
 architecture/        System architecture, principles, and ADRs
@@ -30,9 +30,10 @@ Before modifying the repository:
 5. the active plan assigned to the work
 6. [`product/vision.md`](product/vision.md)
 7. [`discovery/2026-07-28-stakeholder-discovery.md`](discovery/2026-07-28-stakeholder-discovery.md)
-8. [`architecture/principles.md`](architecture/principles.md)
-9. [`architecture/decisions/README.md`](architecture/decisions/README.md)
-10. every applicable accepted ADR
+8. [`discovery/2026-07-28-reference-persona-evidence.md`](discovery/2026-07-28-reference-persona-evidence.md)
+9. [`architecture/principles.md`](architecture/principles.md)
+10. [`architecture/decisions/README.md`](architecture/decisions/README.md)
+11. every applicable accepted ADR
 
 This is the minimum. Work-specific reading follows.
 

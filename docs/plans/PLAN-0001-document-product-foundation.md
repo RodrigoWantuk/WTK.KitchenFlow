@@ -13,7 +13,7 @@ Convert the complete 2026-07-28 stakeholder discovery into durable, structured, 
 
 ## Included scope
 
-Product, domain, first release, architecture, AI, security, privacy, operations, testing gates, ADRs, and mandatory agent reading.
+Product, reference evidence, domain, first release, architecture, AI, security, privacy, operations, testing gates, ADRs, and mandatory agent reading.
 
 ## Excluded scope
 
@@ -26,27 +26,30 @@ Cloud products, AI providers and models, commercial limits, shelf-life reference
 ## Execution phases
 
 - [x] Register and synchronize PLAN-0001.
-- [x] Document stakeholder discovery, product, profile, journeys, and release.
+- [x] Document stakeholder discovery and concrete reference-persona evidence.
+- [x] Document product, profile, journeys, and release.
 - [x] Document inventory, planning, shopping, recipes, and cooking.
 - [x] Document architecture, AI, privacy, security, scale, reliability, and operations.
 - [x] Add and index accepted ADRs.
 - [x] Reconcile root, agent, contributor, frontend, backend, contract, infrastructure, testing, and documentation indexes.
-- [ ] Validate complete branch diff, links, terminology, status, and discovery coverage.
+- [ ] Complete final branch diff, link, terminology, and coverage validation.
 - [ ] Open pull request, update delivery state, and complete the plan.
 
 ## Validation strategy
 
-- Cross-check every material discovery decision against canonical documents.
+- Cross-check every material discovery decision and concrete reference observation.
 - Separate accepted first-release behavior from deferred work.
 - Verify stale technology-neutral guidance is removed.
 - Verify AI never owns authoritative state.
 - Verify temporary source images and URLs are not retained.
 - Verify role-specific mandatory reading and test gates.
-- Review changed files, links, statuses, and the complete diff.
+- Preserve full plan-registry governance while updating its active row.
+- Review changed files, links, statuses, and complete diff.
 
 ## Acceptance criteria
 
-- [x] Complete discovery is durable without chat history.
+- [x] Complete material discovery is durable without chat history.
+- [x] Concrete reference-persona frequencies, effort, priorities, leftovers, and success criteria are preserved.
 - [x] Central product question and waste-reduction core are explicit.
 - [x] Product and domain behavior are documented.
 - [x] First release and deferred capabilities are separated.
@@ -54,14 +57,14 @@ Cloud products, AI providers and models, commercial limits, shelf-life reference
 - [x] Durable accepted choices have ADRs.
 - [x] Future agents have an explicit mandatory foundation reading path.
 - [x] Root and application summaries reflect accepted technology and behavior.
-- [x] Product foundation test gates exist.
+- [x] Product-foundation test gates exist.
 - [ ] Full branch validation is complete.
 - [ ] Pull request is open.
 
 ## Execution state
 
-- **Current checkpoint:** All planned discovery, product, domain, architecture, AI, privacy, security, operations, ADR, testing-gate, and repository-onboarding documents are written and reconciled. The branch is ready for full diff and link validation.
-- **Exact next action:** Compare the branch to `main`, inspect all changed files and stale guidance, verify plan coverage, then open the pull request and record its delivery state.
+- **Current checkpoint:** Full diff validation identified and corrected two documentation-quality issues: concrete reference-persona evidence needed explicit preservation, and the central plan registry needed its complete governance text restored. All planned foundation content is now present.
+- **Exact next action:** Re-run the branch comparison, inspect changed-file scope and key canonical files, then open the pull request and record its delivery state.
 - **Blockers:** None.
 - **Uncommitted work:** None after this commit.
 
@@ -73,7 +76,7 @@ Registered PLAN-0001 and corrected the connector's initial single-file commit th
 
 ### 2026-07-28 — Product and domain foundation documented
 
-Added the complete discovery record, accepted product foundation, first release, primary journeys, and inventory, planning, shopping, recipe, and cooking domain documents.
+Added the comprehensive discovery record, accepted product foundation, first release, primary journeys, and core domain documents.
 
 ### 2026-07-28 — Architecture and governance documented
 
@@ -81,13 +84,16 @@ Added accepted architecture, AI and cost governance, privacy, security, operatio
 
 ### 2026-07-28 — Repository foundation reconciled
 
-- Updated root, documentation, agent, and contribution entry points.
-- Updated frontend, backend, contract, and infrastructure ownership and technology guidance.
-- Added product-foundation test gates.
-- Removed earlier statements that no frontend, backend, contract, or deployment direction had been selected.
-- Validation performed: manual consistency review against the complete discovery and accepted ADRs.
-- Known limitation: complete branch-level diff and link validation remains.
-- Next action: validate and open the pull request.
+Updated repository entry points, application ownership, contracts, infrastructure, and product test gates.
+
+### 2026-07-28 — Validation findings corrected
+
+- Added a dedicated reference-persona evidence record preserving exact conversational estimates, ordinary cooking time, personal priority order, leftover behavior, shopping tolerance, desired value moments, and planning generalization.
+- Added the evidence record to mandatory reading for every agent.
+- Restored the full central registry governance text instead of retaining the abbreviated reconciliation version.
+- Validation performed: compared 34 changed files against `main` and inspected the discovery coverage and plan framework.
+- Known limitation: final comparison after this correction and PR creation remain.
+- Next action: re-run final validation and open the PR.
 
 ## Completion and handoff checklist
 
@@ -95,6 +101,6 @@ Added accepted architecture, AI and cost governance, privacy, security, operatio
 - [x] Existing documents reconciled.
 - [x] Mandatory agent reading established.
 - [x] Product test gates documented.
-- [ ] Full branch diff reviewed.
+- [ ] Full branch diff reviewed after final correction.
 - [ ] Pull request opened.
 - [ ] Post-merge branch cleanup documented.
