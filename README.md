@@ -29,6 +29,7 @@ KitchenFlow is currently in its foundation and discovery phase. Product requirem
 - Security, privacy, food safety, accessibility, localization, and cost control are first-class concerns.
 - Every meaningful behavior must have an appropriate automated test strategy.
 - Significant technical decisions must be recorded as Architecture Decision Records.
+- Agent work must be plan-driven, resumable, and traceable from repository state.
 
 ## Repository structure
 
@@ -37,7 +38,9 @@ apps/                 Deployable applications
   backend/            Backend application
   frontend/           Web frontend
 packages/             Shared contracts and reusable packages
-docs/                 Product, architecture, AI, testing, and operational documentation
+docs/                 Product, architecture, plans, AI, testing, and operational documentation
+  plan-status.md      Canonical execution and handoff registry
+  plans/              Detailed implementation and test plans
 infrastructure/       Deployment and infrastructure assets
 scripts/              Repository automation and maintenance scripts
 .github/              GitHub workflows and contribution templates
@@ -45,9 +48,11 @@ scripts/              Repository automation and maintenance scripts
 
 The structure is intentionally technology-neutral until the relevant Architecture Decision Records are approved.
 
-## Documentation
+## Documentation and work execution
 
-Start with [`docs/README.md`](docs/README.md). Future contributors and coding agents must also read [`AGENTS.md`](AGENTS.md) before changing the repository.
+Start with [`docs/README.md`](docs/README.md). Future contributors and coding agents must also read [`AGENTS.md`](AGENTS.md), [`docs/plan-status.md`](docs/plan-status.md), and [`docs/plans/README.md`](docs/plans/README.md) before changing the repository.
+
+Implementation, testing, research, documentation, and operations agents use versioned plans under `docs/plans/`. Before every agent-created commit, the active plan and central registry must be updated to record progress, validation, blockers, and the exact next action.
 
 All source code, technical documentation, commit messages, issue content, and pull request content must be written in English. User-facing text must be localization-ready and must not be embedded directly in application logic.
 
