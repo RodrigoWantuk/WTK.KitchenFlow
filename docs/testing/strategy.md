@@ -20,6 +20,26 @@ Testing is part of feature design. A requirement is incomplete until its verific
 - Support safe deployment to cloud and VPS environments.
 - Keep failures diagnosable without exposing sensitive data.
 
+## Test execution governance
+
+Substantial or independent testing work must use a testing plan under `docs/plans/` and a matching entry in `docs/plan-status.md`.
+
+Use [`../plans/0000-test-plan-template.md`](../plans/0000-test-plan-template.md) to define:
+
+- the exact system-under-test branch, pull request, commit, release, and environment;
+- the authoritative test basis and acceptance criteria;
+- risk-based test priorities;
+- requirements-to-evidence traceability;
+- environments, synthetic data, fixtures, and provider simulations;
+- test cases, defects, evidence, coverage gaps, and residual risk;
+- entry and exit criteria;
+- the final quality outcome and merge or release recommendation;
+- current checkpoint, blockers, and exact next action.
+
+Before every testing-agent commit, the agent must update the test plan's execution state and progress log together with the matching row in `docs/plan-status.md`. The update must describe the test state produced by that commit, including evidence, defects, coverage gaps, blockers, and continuation instructions.
+
+A testing agent must verify behavior against product requirements, contracts, architecture, and acceptance criteria rather than trusting implementation claims. Completion of test execution is not equivalent to a passing result: a completed testing plan may conclude `Pass`, `Conditional Pass`, `Fail`, or `Inconclusive`.
+
 ## Test levels
 
 ### Unit tests
@@ -194,14 +214,19 @@ A defect report should include:
 
 Food-safety, allergy, data-isolation, credential, and destructive-data defects require explicit incident evaluation.
 
+Testing plans must distinguish product defects from test defects, environment failures, expected behavior requiring clarification, and accepted limitations.
+
 ## Definition of tested
 
 A change is considered tested only when:
 
 - the relevant risks are identified;
-- appropriate automated tests exist and pass;
+- appropriate automated tests exist and pass, or failures are documented;
 - required manual verification is recorded;
 - AI behavior is evaluated when affected;
 - failure and recovery paths are covered;
+- requirements have evidence or an explicit coverage gap;
+- defects and residual risks are recorded;
 - documentation and acceptance criteria match observed behavior;
+- the testing plan and `docs/plan-status.md` are current;
 - known gaps are documented truthfully.
