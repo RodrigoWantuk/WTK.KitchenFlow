@@ -33,8 +33,8 @@ Describe the last verified checkpoint, any incomplete work, and the exact next a
 - [ ] AI behavior, validation, and cost reviewed
 - [ ] Deployment and operational impact reviewed
 - [ ] Documentation updated
-- [ ] Active plan updated before the final commit
-- [ ] `docs/plan-status.md` updated before the final commit
+- [ ] Active plan was updated before every agent-created commit
+- [ ] `docs/plan-status.md` was updated before every agent-created commit
 
 Use `Not applicable` with a brief explanation when an item does not apply.
 
