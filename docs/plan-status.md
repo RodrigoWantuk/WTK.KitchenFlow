@@ -1,6 +1,6 @@
 # Plan Execution Registry
 
-This file is the canonical, repository-wide view of implementation, testing, research, documentation, and operations plans.
+This file is the canonical, repository-wide view of implementation, testing, research, documentation, and operational plans.
 
 Detailed plans live under [`docs/plans/`](plans/). This registry exists so that a new agent can understand current work, ownership, progress, blockers, and the exact continuation point without reconstructing state from chat history or branch diffs.
 
@@ -39,7 +39,7 @@ Plans with status `Draft`, `Ready`, `In Progress`, `Paused`, `Blocked`, or `Vali
 
 | Plan | Title | Type | Status | Delivery | Owner | Branch / PR | Current checkpoint | Exact next action | Blocker | Updated |
 |---|---|---|---|---|---|---|---|---|---|---|
-| _None_ |  |  |  |  |  |  |  |  |  |  |
+| [PLAN-0001](plans/PLAN-0001-document-product-foundation.md) | Document the KitchenFlow Product Foundation | Documentation | In Progress | Branch open | AI documentation agent | `agent/plan-0001-document-product-foundation` | Plan and registry synchronized; existing documentation and governance reviewed; canonical foundation documents not yet created | Create and cross-link the complete product, domain, architecture, AI, privacy, operations, and release documentation | None | 2026-07-28 |
 
 ## Completed plans
 

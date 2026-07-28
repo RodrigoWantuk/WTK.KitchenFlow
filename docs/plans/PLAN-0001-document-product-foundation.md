@@ -131,7 +131,7 @@ Relevant decisions must be represented as ADRs rather than being buried only in 
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0001 is registered. Existing repository governance and documentation structure were reviewed. No product-foundation documents have been changed yet.
+- **Current checkpoint:** PLAN-0001 and its central registry entry are synchronized. Existing repository governance and documentation structure were reviewed. No product-foundation documents have been changed yet.
 - **Exact next action:** Create the canonical product, domain, architecture, AI, privacy, operations, and release documents, then update existing indexes and agent reading rules in a single plan-compliant documentation commit.
 - **Blockers:** None.
 - **Uncommitted work:** None after this commit.
@@ -144,7 +144,8 @@ Relevant decisions must be represented as ADRs rather than being buried only in 
 - Registered the plan as `In Progress` on branch `agent/plan-0001-document-product-foundation`.
 - Reviewed the merged plan framework and current registry.
 - Validation performed: confirmed PR #4 is merged and plan-driven execution is mandatory.
-- Known limitations: detailed discovery documentation has not yet been written.
+- Known limitation: the connector's single-file contents operation created the initial plan commit before the registry could be included.
+- Corrective action: immediately synchronized the plan and registry through one atomic Git tree commit and will use atomic multi-file commits for the remainder of this plan.
 - Next action: produce and cross-link the canonical foundation documentation.
 
 ## Completion and handoff checklist
