@@ -1,78 +1,90 @@
 # Architecture Principles
 
-- **Status:** Draft
+- **Status:** Accepted
 - **Last updated:** 2026-07-28
 
-These principles guide design and implementation decisions across KitchenFlow. When a decision conflicts with a principle, the trade-off must be explicit and documented in an Architecture Decision Record.
+When a decision conflicts with a principle, the trade-off must be explicit in an ADR.
 
 ## 1. Product behavior before technology
 
-Architecture exists to support user outcomes. Technology choices must be justified by product requirements, operational constraints, maintainability, and measurable risks rather than familiarity or novelty alone.
+Technology exists to implement the accepted product and domain behavior. Do not reshape inventory, recipes, planning, privacy, or user control merely because a framework makes a smaller model easier.
 
-## 2. Modular first, distributed when justified
+## 2. Independent frontend and backend lifecycles
 
-Begin with clear modules and contracts inside a small number of deployable applications. Do not introduce separately deployed services unless scaling, isolation, ownership, compliance, or reliability requirements justify the operational cost.
+React frontend and .NET backend are independent artifacts with explicit API contracts, tests, deployment, and observability. Shared code must not create hidden runtime coupling.
 
-## 3. Independent frontend and backend lifecycles
+## 3. Modular first, distributed when measured
 
-Frontend and backend must be independently buildable, testable, versionable, deployable, and observable. Their relationship must be expressed through explicit contracts rather than shared implementation details.
+Begin with a modular monolith and separately scalable workers. Introduce a service only for a measured scaling, isolation, compliance, reliability, or ownership need.
 
-## 4. Deterministic core, AI-assisted edges
+## 4. PostgreSQL is authoritative
 
-Use deterministic code for rules that require repeatability, authorization, validation, calculations, state transitions, and data integrity. Use AI for contextual reasoning, language interaction, adaptation, and generation where probabilistic behavior adds product value.
+Authoritative product state lives in PostgreSQL. Cache, queue, search index, model context, and frontend state are replaceable projections or transport mechanisms.
 
-## 5. AI output is untrusted input
+## 5. Deterministic core, AI-assisted reasoning
 
-Every model response must pass schema validation, domain validation, authorization checks, safety checks, and observability controls before it affects user-visible state or authoritative data.
+Use deterministic code for authorization, quantities, conversions, reservations, state transitions, transactions, quotas, retention, and safety rules. Use AI for extraction, adaptation, explanation, contextual suggestion, and troubleshooting.
 
-## 6. Provider independence
+## 6. AI output is untrusted input
 
-Product workflows must depend on application-owned interfaces and contracts, not directly on a model vendor SDK. Provider-specific capabilities may be used, but their impact and fallback behavior must be documented.
+Every model result passes parsing, schema, domain, restriction, safety, authorization, consistency, and budget checks before presentation or state change.
 
-## 7. Contracts are versioned products
+## 7. Centralize AI access
 
-APIs, events, structured AI outputs, prompts, and stored data formats are contracts. They require ownership, compatibility rules, versioning, tests, and migration strategies.
+No frontend or domain module calls an AI provider directly. An application-owned gateway controls context, provider, model, prompts, quotas, fallback, telemetry, and privacy.
 
-## 8. Security and privacy by default
+## 8. Explicit optional context
 
-Use least privilege, explicit authorization, secure defaults, minimal data collection, controlled retention, encryption where appropriate, secret isolation, and auditable state changes. Sensitive household data must never be treated as ordinary telemetry.
+Inventory, plans, equipment, history, and manually entered products are optional context sources. The backend selects relevant context under a declared budget. It does not send all available user data by default.
 
-## 9. Safety is a system concern
+## 9. Advisory, explainable user control
 
-Food allergies, cross-contamination, storage, temperature, doneness, reheating, substitutions, and equipment hazards cannot be delegated to a single prompt. Safety requires product rules, structured data, validation, user communication, testing, and incident review.
+Shelf-life attention, recommendations, substitutions, and plan changes are proposals. Users can inspect source, confidence, consequences, edit, reject, postpone, or choose another action.
 
-## 10. Internationalization is architectural
+## 10. Transactional lifecycle integrity
 
-The product must support multiple languages, units, ingredient vocabularies, date and number formats, regional availability, and culinary conventions. User-facing strings must be externalized, and internal identifiers must remain locale-independent.
+A completed cooking execution cannot silently disagree with authoritative inventory. Completion and reconciliation are atomic, or the execution is explicitly pending reconciliation.
 
-## 11. Accessibility is part of correctness
+## 11. Retry safely
 
-Keyboard operation, screen-reader semantics, contrast, responsive behavior, readable instructions, clear error states, and alternatives to time-sensitive interactions must be considered from the first interface implementation.
+Network requests, jobs, and messages may repeat. State-changing operations and consumers are idempotent where duplication would cause harm. Exactly-once processing is not assumed.
 
-## 12. Observable and supportable behavior
+## 12. Contracts are versioned products
 
-Important workflows must expose structured logs, metrics, traces, correlation identifiers, failure categories, and user-safe diagnostic information. Observability must help answer what happened without exposing secrets or unnecessary personal data.
+REST APIs, events, AI schemas, prompts, units, identifiers, and stored formats have owners, compatibility rules, tests, and migrations.
 
-## 13. Explicit degraded operation
+## 13. Privacy and security by default
 
-The product must define what remains available when AI providers, networks, background workers, caches, or optional integrations are unavailable. Failure must not silently corrupt pantry, planning, or household state.
+Minimize data, isolate secrets, enforce least privilege, classify sensitive data, control retention, record consent and provenance, and audit privileged access. Observability must not become an ungoverned copy of user data.
 
-## 14. Portability through configuration
+## 14. Safety is multi-layered
 
-Cloud and VPS deployments must use the same application code. Environment-specific behavior belongs in configuration, infrastructure definitions, and adapters. Secrets must never be stored in source control.
+Allergy, cross-contamination, storage, temperature, doneness, reheating, and equipment risks require curated data, deterministic validation, AI evaluation, user communication, and incident handling.
 
-## 15. Measure before scaling
+## 15. Degraded operation is designed
 
-Performance work must be based on expected workloads, profiling, service-level objectives, and observed bottlenecks. Avoid premature distribution, caching, denormalization, and vendor-specific infrastructure.
+Saved data, deterministic operations, and active cooking remain useful when AI, cache, notifications, or a worker subsystem is unavailable. Failure does not corrupt state.
 
-## 16. Documentation is executable responsibility
+## 16. Internationalization is architectural
 
-Architecture documents, ADRs, contracts, tests, and operational procedures must agree with the implementation. Documentation drift is a defect.
+Language, region, timezone, currency, measurement system, product names, culinary terminology, and availability are separate concepts. Internal identifiers are locale-independent.
 
-## 17. Small, reviewable evolution
+## 17. Accessibility is correctness
 
-Prefer cohesive changes with clear acceptance criteria and validation. Large architectural rewrites require an explicit migration plan, compatibility strategy, rollback approach, and staged verification.
+Responsive cooking workflows, keyboard navigation, focus, screen-reader semantics, readable staged instructions, contrast, error recovery, and alternatives to time-sensitive interaction are required from the first UI.
 
-## 18. User control and explainability
+## 18. Observe cost and reliability from day one
 
-Users must be able to inspect, edit, reject, and correct important recommendations. The system should explain the relevant factors behind a plan without exposing private provider reasoning or presenting probabilistic output as certainty.
+Logs, metrics, traces, job state, queue delay, AI token usage, provider cost, validation, fallback, notification delivery, and privacy workflows must be measurable without exposing unnecessary personal data.
+
+## 19. Measure before caching or extraction
+
+Do not add Redis, denormalization, read replicas, services, or multi-region complexity without a workload and measurable target.
+
+## 20. Backward-compatible evolution
+
+Database and API changes support rolling deployment, low-usage release windows, rollback, feature flags, and safe disablement of integrations.
+
+## 21. Documentation is operational state
+
+Canonical docs, ADRs, plans, tests, and implementation must agree. Documentation drift is a defect.

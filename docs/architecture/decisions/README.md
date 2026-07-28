@@ -1,55 +1,44 @@
 # Architecture Decision Records
 
-Architecture Decision Records (ADRs) capture significant decisions, their context, considered alternatives, and consequences.
+Architecture Decision Records capture significant decisions, context, alternatives, and consequences.
 
-## When an ADR is required
+## Mandatory lifecycle
 
-Create an ADR for decisions that materially affect:
+- **Draft:** being written.
+- **Proposed:** ready for stakeholder decision.
+- **Accepted:** approved and binding.
+- **Rejected:** reviewed and not adopted.
+- **Superseded:** replaced by a later ADR.
+- **Deprecated:** retained for history but no longer recommended.
 
-- system boundaries or deployment topology;
-- languages, frameworks, databases, or major dependencies;
-- API, event, or schema conventions;
-- authentication, authorization, security, or privacy;
-- AI providers, prompts, evaluations, or model-routing strategy;
-- data ownership, retention, migrations, or compatibility;
-- localization, accessibility, observability, or release processes;
-- decisions that are expensive or risky to reverse.
+Do not rewrite accepted history. Add a note or superseding ADR.
 
-Routine implementation details do not require an ADR unless they establish a durable precedent.
+## Current ADRs
 
-## File naming
+| ADR | Decision | Status |
+|---|---|---|
+| [0001](0001-frontend-platform-and-boundary.md) | React/TypeScript frontend through Lovable with a strict backend boundary | Accepted |
+| [0002](0002-backend-platform-and-modular-monolith.md) | .NET 10 ASP.NET Core modular monolith and .NET workers | Accepted |
+| [0003](0003-primary-data-and-asynchronous-messaging.md) | PostgreSQL, transactional outbox, RabbitMQ, and optional Redis | Accepted |
+| [0004](0004-identity-and-browser-session.md) | Keycloak OIDC and backend-managed browser session | Accepted |
+| [0005](0005-ai-gateway-and-usage-governance.md) | Central AI gateway, structured context, model routing, and quota ledger | Accepted |
+| [0006](0006-deployment-and-observability.md) | Containers, Docker Compose test environment, Virginia production, and OpenTelemetry | Accepted |
 
-Use a four-digit sequence followed by a short kebab-case title:
+## Future decision backlog
 
-```text
-0001-backend-platform.md
-0002-frontend-platform.md
-0003-primary-database.md
-```
+ADRs or implementation designs are still required for:
 
-Use `0000-adr-template.md` as the starting point.
+- exact Lovable project runtime, state, component, localization, and test libraries;
+- detailed .NET solution and module enforcement;
+- migration tooling conventions and schema ownership;
+- exact RabbitMQ topology and scheduler implementation;
+- exact cloud and managed-service vendors;
+- AI providers, model catalog, prompt storage, evaluation tooling, and credit conversion;
+- notification providers;
+- object-storage provider and media pipeline;
+- billing and advertising;
+- secret management;
+- deployment pipeline and release gates;
+- retention schedule and legal launch-country matrix.
 
-## Status lifecycle
-
-- **Draft**: being written.
-- **Proposed**: ready for decision.
-- **Accepted**: approved and binding.
-- **Rejected**: reviewed and not adopted.
-- **Superseded**: replaced by a later ADR.
-- **Deprecated**: retained for history but no longer recommended.
-
-Do not rewrite the historical rationale of an accepted ADR to make a later outcome appear inevitable. Add notes or create a superseding ADR.
-
-## Decision process
-
-1. Define the problem and decision drivers.
-2. Identify realistic options, including retaining the current state.
-3. Compare options using the same criteria.
-4. Document security, privacy, cost, operability, portability, testing, and migration impact.
-5. Record the decision and its consequences.
-6. Link the implementing issues and pull requests.
-7. Review the result after implementation when the decision includes measurable expectations.
-
-## Current decision backlog
-
-The initial architecture overview identifies the first ADRs required before implementation choices become binding. See [`../overview.md`](../overview.md#decisions-still-required).
+Use [`0000-adr-template.md`](0000-adr-template.md) for future records.
