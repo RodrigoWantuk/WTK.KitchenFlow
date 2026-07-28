@@ -35,11 +35,11 @@ Pull-request and merge state are tracked separately in the `Delivery` column. Ex
 
 ## Active plans
 
-Plans with status `Ready`, `In Progress`, `Paused`, `Blocked`, or `Validating` belong here.
+Plans with status `Draft`, `Ready`, `In Progress`, `Paused`, `Blocked`, or `Validating` belong here.
 
-| Plan | Title | Type | Status | Owner | Branch / PR | Current checkpoint | Exact next action | Blocker | Updated |
-|---|---|---|---|---|---|---|---|---|---|
-| _None_ |  |  |  |  |  |  |  |  |  |
+| Plan | Title | Type | Status | Delivery | Owner | Branch / PR | Current checkpoint | Exact next action | Blocker | Updated |
+|---|---|---|---|---|---|---|---|---|---|---|
+| _None_ |  |  |  |  |  |  |  |  |  |  |
 
 ## Completed plans
 
@@ -62,6 +62,7 @@ Plans with status `Completed` belong here. Keep the most recent completed plans 
 - Use ISO 8601 dates and UTC timestamps when time precision matters.
 - `Current checkpoint` must state the last verified state, not an intention.
 - `Exact next action` must be concrete enough for a different agent to execute immediately.
+- `Delivery` must state the repository delivery state, such as `Not started`, `Branch open`, `PR open`, `Changes requested`, `Awaiting owner merge`, or `Merged`.
 - A blocked row must identify the blocking decision, dependency, issue, or external event.
 - When responsibility changes, update `Owner` and add a handoff entry to the plan progress log.
 - Move rows between sections instead of duplicating them.
