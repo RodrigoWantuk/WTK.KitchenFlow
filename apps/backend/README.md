@@ -1,6 +1,6 @@
-# KitchenPilot Backend
+# KitchenFlow Backend
 
-This directory will contain the independently deployable KitchenPilot backend application.
+This directory will contain the independently deployable KitchenFlow backend application.
 
 ## Intended responsibilities
 
