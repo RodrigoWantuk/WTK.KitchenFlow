@@ -1,156 +1,131 @@
 # Product Vision
 
-- **Status:** Draft
+- **Status:** Accepted
 - **Last updated:** 2026-07-28
 - **Product:** KitchenFlow
+- **Discovery source:** [`2026-07-28 stakeholder discovery`](../discovery/2026-07-28-stakeholder-discovery.md)
 
 ## Vision
 
-KitchenFlow helps people make home cooking practical enough to fit real life.
+KitchenFlow makes home cooking practical enough to fit real life.
 
-Instead of acting as another recipe catalog, KitchenFlow coordinates the full household cooking system: understanding the people, tracking what is available, planning purchases and preparation, selecting suitable meals, guiding execution, and learning from outcomes.
+It is not primarily a recipe catalog. It is a household food decision and execution system that connects what the user owns, what remains usable, what may be purchased, what the user is willing and able to do, and how those resources can become useful meals.
+
+## Central product question
+
+> Considering what food exists, how much exists, how long it remains usable, and what the user is willing to do, what is the best way to transform that food into useful meals?
+
+Every major module exists to provide context, execute an answer, or learn from the outcome.
 
 ## Problem statement
 
-People who live alone or share a household often rely on delivery because cooking requires several separate decisions and tasks:
+Home cooking frequently loses to delivery because it is a chain of separate burdens:
 
 - deciding what to eat;
-- remembering preferences and restrictions;
-- knowing what ingredients are available;
-- buying the right quantities;
-- planning around expiration and waste;
-- choosing a meal that fits the available time and energy;
-- understanding techniques and equipment;
-- recovering when a preparation does not go as expected.
+- knowing what food is actually available;
+- remembering opened packages, freezer contents, and shelf life;
+- buying quantities that fit real package sizes and household demand;
+- finding a useful destination for package remainders and leftovers;
+- fitting the meal to time, energy, skill, equipment, cleanup tolerance, and preference;
+- understanding unfamiliar techniques;
+- recovering when preparation diverges from the instructions;
+- reconciling what was consumed, stored, frozen, or discarded.
 
-The problem is not simply a lack of recipes. It is the accumulated planning, organization, confidence, and execution cost around everyday food.
+The absence of recipes is not the primary problem. The accumulated planning, memory, organization, confidence, execution, and cleanup cost is the problem.
 
-## Target users
+## Initial audience
 
-Initial target users include:
+KitchenFlow is initially optimized, in priority order, for:
 
-- individuals living alone;
-- couples and small households;
-- people with limited time or cooking confidence;
-- people who want to reduce delivery usage and food waste;
-- households that need practical coordination of preferences, schedules, ingredients, and equipment.
+1. people living alone;
+2. people with limited cooking experience;
+3. people who can cook but struggle to organize food, shopping, and meals;
+4. people who depend heavily on delivery;
+5. people who want to improve the quality or healthfulness of everyday eating.
 
-Future discovery may identify additional segments. The architecture must not assume that every household contains only one person or that every user has the same permissions.
+The architecture may support other household sizes, but the first experience must remain excellent for a single adult or small household with limited time.
 
 ## Value proposition
 
-KitchenFlow provides a personalized cooking companion that can answer:
+> KitchenFlow helps people with limited time or cooking experience plan, shop, and cook better at home, with less effort, waste, and dependence on delivery.
 
-- What should we buy?
-- What do we already have?
-- What should be prepared in advance?
-- What can we cook today with our available time and energy?
-- How should this meal be prepared with our equipment and skill level?
-- What should we do when the result differs from the instructions?
+It supports three compatible motivations:
+
+- improve everyday food quality;
+- spend and waste less;
+- learn techniques and make more interesting food achievable at home.
 
 ## Product capabilities
 
-The intended product scope includes:
+### Understand
 
-1. **Household and profile understanding**
-   - household members;
-   - food preferences and dislikes;
-   - allergies, intolerances, and restrictions;
-   - cooking skills and confidence;
-   - schedules, budget expectations, and meal habits.
+Maintain an editable profile of household context, cooking skill, equipment, restrictions, preferences, routines, goals, time, effort, cleanup tolerance, reheating, leftovers, and freezing preferences.
 
-2. **Kitchen and equipment awareness**
-   - appliances, cookware, utensils, storage, and kitchen constraints;
-   - techniques the household can currently perform;
-   - substitutions based on available equipment.
+### Supply
 
-3. **Pantry and inventory management**
-   - ingredients and prepared components;
-   - quantities, units, locations, expiration, and confidence in inventory accuracy;
-   - consumption, waste, corrections, and replenishment.
+Track real products as inventory lots, including quantity, source, package state, storage, preparation state, shelf-life evidence, uncertainty, reservations, and lifecycle transitions.
 
-4. **Shopping planning**
-   - monthly, weekly, and immediate shopping lists;
-   - consolidation across meals and household needs;
-   - quantity normalization and duplicate detection;
-   - prioritization based on inventory and planned meals.
+### Decide
 
-5. **Meal and preparation planning**
-   - daily suggestions and weekly plans;
-   - advance preparation, freezing, storage, and reuse;
-   - adaptation to time, effort, equipment, ingredients, and household preferences.
+Produce explainable meal and preservation suggestions from optional context. Prioritize useful consumption without forcing the user to follow a recommendation.
 
-6. **Cooking guidance**
-   - clear, staged instructions;
-   - timers, checkpoints, substitutions, and parallel tasks;
-   - explanations appropriate to the user's skill level;
-   - troubleshooting based on what the user observes during preparation.
+### Plan
 
-7. **Learning and adaptation**
-   - record what was cooked and consumed;
-   - capture ratings, adjustments, leftovers, failures, and preferences;
-   - improve future planning while preserving user control.
+Optionally organize recipes, portions, purchases, flexible reservations, preparation tasks, thawing, and missing-item alerts. Planning is an aid, not a contract.
+
+### Shop
+
+Generate shopping guidance that accounts for current lots, selected meals, package sizes, expected remainders, future uses, required and optional products, and the real purchase outcome.
+
+### Cook
+
+Provide mise en place, staged instructions, adjustable detail, timers and checkpoints when implemented, text troubleshooting, active-instruction adaptation, and explicit execution completion.
+
+### Reconcile and learn
+
+Atomically reconcile consumption, leftovers, freezing, waste, and reservations. Preserve ratings, notes, photos, changes, and user-confirmed learning for future decisions.
 
 ## Product principles
 
-- **Reduce decisions, not user agency.** Recommendations should be actionable while remaining explainable and editable.
-- **Fit the household, not an idealized lifestyle.** Plans must consider time, energy, budget, equipment, skill, and preferences.
-- **Prefer continuity over isolated answers.** Every interaction should improve the next planning and cooking decision.
-- **Use AI deliberately.** AI should provide contextual reasoning and conversation; deterministic systems should protect consistency, validation, state, and safety.
-- **Be honest about uncertainty.** Inventory confidence, model uncertainty, substitutions, and safety limitations must be visible.
-- **Design for international use.** Language, units, ingredient naming, regional availability, prices, and culinary conventions vary by locale.
-- **Treat food safety as a product requirement.** Allergens, storage, contamination, doneness, reheating, and unsafe substitutions require explicit safeguards.
+- **Reduce decisions without removing agency.** Recommend and explain; do not force.
+- **Waste avoidance is a decision factor, not a moral judgment.** Surface urgent food and useful actions without shaming the user.
+- **Optional context must degrade gracefully.** Complete inventory improves decisions, but manual or minimal context remains useful.
+- **Track real products and lots.** Do not erase storage, package, and shelf-life differences by reducing everything to a generic ingredient.
+- **Planning is flexible.** Plans create intentions, shortcuts, reservations, and preparation actions, not obligations.
+- **Inventory mutations are explicit.** Proposed consumption becomes authoritative only through confirmed policy or finalization.
+- **Uncertainty is visible.** Estimated shelf life, extracted data, and AI output identify source and confidence.
+- **AI assists; deterministic systems protect.** Models reason and generate. Application code owns state, arithmetic, authorization, quotas, validation, and safety boundaries.
+- **Continuity matters.** Shopping, cooking, storage, and history improve the next decision.
+- **Internationalization is foundational.** Language, region, measurement, currency, ingredient terminology, and culinary convention are separate concerns.
+- **Privacy and safety are product behavior.** They are not launch-time policy additions.
 
-## Initial end-to-end journey
+## Product boundaries
 
-A representative journey is:
+The initial product provides general cooking and nutrition information. It does not diagnose, prescribe clinical diets, replace a nutritionist, or guarantee that a food is safe based only on an estimate.
 
-1. The user creates a household and completes guided onboarding.
-2. KitchenFlow records preferences, restrictions, skills, equipment, schedule, and goals.
-3. The user initializes or gradually builds pantry inventory.
-4. KitchenFlow proposes a shopping plan and a preparation plan.
-5. The household accepts, edits, or rejects suggestions.
-6. Ingredients and prepared components are reconciled after shopping and cooking.
-7. KitchenFlow recommends a suitable meal for the current context.
-8. The user follows guided instructions and asks contextual questions when needed.
-9. The result, consumption, leftovers, waste, and feedback update future decisions.
+The product is for users aged 18 or older and requires an account.
 
 ## Success indicators
 
-Candidate product indicators include:
+Candidate indicators include:
 
-- reduction in delivery orders reported by active households;
-- percentage of planned meals actually prepared;
-- time from opening the application to selecting a meal;
-- shopping-list acceptance and edit rate;
-- pantry accuracy and correction frequency;
-- ingredient waste and expiration events;
-- cooking completion and abandonment rate;
-- repeat preparation of recommended meals;
-- user confidence improvement over time;
-- AI response validation, correction, and fallback rates;
-- retention without requiring excessive notifications or engagement mechanics.
+- reduced self-reported delivery reliance;
+- useful food maintained in inventory;
+- expired or discarded quantity and preventable-waste events;
+- time from intent to accepted meal;
+- shopping-plan acceptance and correction;
+- inventory reconciliation accuracy;
+- completed versus abandoned cooking executions;
+- repeated successful recipes and techniques;
+- user-confirmed improvement in confidence;
+- AI cost, latency, validation, correction, and fallback rates;
+- retention without excessive notification pressure.
 
-Targets will be defined after product discovery and instrumentation design.
+Exact targets require instrumentation and launch baselines.
 
-## Explicit non-goals for the foundation phase
+## Related documents
 
-The foundation phase does not yet commit to:
-
-- a specific frontend, backend, database, AI provider, or cloud vendor;
-- medical nutrition treatment or diagnosis;
-- guaranteed inventory accuracy without user or device confirmation;
-- fully autonomous purchasing;
-- replacing qualified food-safety or healthcare professionals;
-- a single-country ingredient, unit, retailer, or culinary model.
-
-## Open product questions
-
-- Which onboarding questions are essential before the first useful recommendation?
-- How should households balance shared and individual preferences?
-- How much pantry detail can be requested without creating excessive maintenance?
-- Which data can be inferred safely, and which data must always be confirmed?
-- How should the product distinguish preferences, allergies, intolerances, religious restrictions, and medical diets?
-- What planning horizon provides the greatest value: immediate, weekly, monthly, or a combination?
-- Which parts of the experience must remain useful when an AI provider is unavailable?
-- How should the product measure reduced delivery reliance without becoming intrusive?
+- [`Audience and profile`](audience-and-profile.md)
+- [`Primary user journeys`](user-journeys.md)
+- [`Initial release definition`](initial-release.md)
+- [`Domain documentation`](../domain/README.md)
