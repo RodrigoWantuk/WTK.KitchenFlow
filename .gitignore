@@ -1,0 +1,100 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.local
+*.secret
+*.secrets
+secrets/
+
+# Operating systems
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors and IDEs
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Logs and runtime files
+*.log
+logs/
+*.pid
+*.pid.lock
+
+# JavaScript / TypeScript
+node_modules/
+.pnpm-store/
+.yarn/
+.npm/
+coverage/
+.nyc_output/
+dist/
+build/
+.next/
+.nuxt/
+.svelte-kit/
+.vite/
+.turbo/
+*.tsbuildinfo
+
+# .NET
+[Bb]in/
+[Oo]bj/
+artifacts/
+TestResults/
+*.nupkg
+*.snupkg
+packages/
+!packages/contracts/
+!packages/contracts/**
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Databases and local storage
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+.local-data/
+data/local/
+
+# Containers and infrastructure
+*.tfstate
+*.tfstate.*
+.terraform/
+terraform.tfvars
+cdk.out/
+
+# Test and analysis output
+playwright-report/
+test-results/
+allure-results/
+reports/
+*.coverage
+*.coveragexml
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+.cache/
+tmp/
+temp/
