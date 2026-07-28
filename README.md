@@ -40,7 +40,7 @@ apps/                 Deployable applications
 packages/             Shared contracts and reusable packages
 docs/                 Product, architecture, plans, AI, testing, and operational documentation
   plan-status.md      Canonical execution and handoff registry
-  plans/              Detailed implementation and test plans
+  plans/              Detailed execution plans
 infrastructure/       Deployment and infrastructure assets
 scripts/              Repository automation and maintenance scripts
 .github/              GitHub workflows and contribution templates
