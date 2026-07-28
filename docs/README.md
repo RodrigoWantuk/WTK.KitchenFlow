@@ -1,4 +1,4 @@
-# KitchenPilot Documentation
+# KitchenFlow Documentation
 
 This directory is the durable source of truth for product, architecture, engineering, AI, quality, security, and operations decisions.
 
