@@ -1,6 +1,6 @@
-# KitchenPilot Frontend
+# KitchenFlow Frontend
 
-This directory will contain the independently deployable KitchenPilot web frontend.
+This directory will contain the independently deployable KitchenFlow web frontend.
 
 ## Intended responsibilities
 
