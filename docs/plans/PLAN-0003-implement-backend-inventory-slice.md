@@ -539,6 +539,15 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Next action:** Run containers/migration and implement OIDC, CSRF, endpoint, OpenAPI, and test behavior.
 - **Blockers or handoff notes:** The full PLAN-0003 acceptance suite is not yet implemented or executed.
 
+### 2026-07-28T00:45:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Corrected an accidental generated-artifact commit.
+- **Changes included in the commit:** Removed only `dotnet-ef` BuildHost artifacts created under literal backslash path names; source, migration, compose, and realm assets remain intact.
+- **Validation performed:** Enumerated every affected tracked path with `git ls-files` before removal.
+- **Result:** Generated dependencies are no longer tracked.
+- **Next action:** Continue from the initial migration with compose startup and authenticated API behavior.
+- **Blockers or handoff notes:** PLAN-0003 remains incomplete; no completion, PR, or validation claims are made.
+
 ### 2026-07-29T00:25:00Z — AI planning agent
 
 - **Checkpoint:** Implementation plan created.
