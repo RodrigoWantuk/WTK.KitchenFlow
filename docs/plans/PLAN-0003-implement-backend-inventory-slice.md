@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend implementation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T16:36:49Z
+- **Last updated:** 2026-07-29T16:41:26Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, open)
 - **Related implementation plan:** PLAN-0002
@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** The runtime and checked-in OpenAPI 3.1 contract now declare precise inventory enums, decimal quantities, security/header requirements, examples, and reproducible export/drift commands; application-service extraction is active.
-- **Last completed step:** Regenerated and drift-validated the OpenAPI snapshot from the local HTTPS API after adding enum and decimal schema constraints.
-- **Exact next action:** Extract create, read/list, metadata update, adjustment, and deletion use cases into the inventory module application layer, leaving endpoints as HTTP mapping only.
+- **Current checkpoint:** Inventory routes now map HTTP and CSRF only; a scoped application service owns the current inventory command/query orchestration and an architecture test prevents endpoints from accepting EF or domain objects directly.
+- **Last completed step:** Extracted create, list/read, update, adjustment, deletion, and history orchestration from endpoint handlers into the scoped inventory application service.
+- **Exact next action:** Move the application-service contract into `KitchenFlow.Modules.Inventory.Application` and provide an infrastructure persistence adapter, so the composition-root service becomes a thin adapter rather than the authoritative use-case implementation.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
-- **Validation performed:** Release build; targeted OpenAPI integration tests; full solution tests; formatting verification; Compose PostgreSQL migration check; live HTTPS OpenAPI export; `scripts/backend/export-openapi.sh`; `scripts/backend/check-openapi.sh`; diff whitespace verification.
-- **Known failures or limitations:** Endpoint orchestration still accesses EF directly; explicit application services/ports, remaining Problem Details completion, XML documentation/enforcement, expanded tests/CI, and runbook corrections remain unfinished. The snapshot is regenerated and drift-checked, but is not yet a stable PLAN-0004 milestone because the broader correction work remains open.
-- **Working tree state:** OpenAPI schema/snapshot checkpoint is ready to commit with synchronized plan and registry updates.
+- **Validation performed:** Release build; architecture tests; PostgreSQL/Testcontainers integration-test project; formatting verification; diff whitespace verification; the preceding OpenAPI export/drift checkpoint remains valid.
+- **Known failures or limitations:** The application service is still in the API composition root and directly uses persistence. The required module-owned application contracts/ports and infrastructure adapter, complete XML documentation enforcement, broadened tests/CI, and operational runbooks remain unfinished. The regenerated snapshot is not yet a stable PLAN-0004 milestone because the broader correction work remains open.
+- **Working tree state:** Endpoint/application-service separation checkpoint is ready to commit with synchronized plan and registry updates.
 
 ## Progress log
+
+### 2026-07-29T16:41:26Z — Codex backend implementation agent
+
+- **Checkpoint:** Extracted executable inventory orchestration from minimal API endpoints into a scoped application-service seam.
+- **Changes included in the commit:** Moved list, read, create, metadata correction, adjustment, deletion, history, idempotency, audit, domain reconstruction, cursor, and response orchestration into `InventoryApplicationService`; reduced `InventoryEndpoints` to route metadata, request binding, CSRF filtering, and service dispatch; registered the scoped service; added an architecture test that rejects endpoint parameters of `ApplicationDbContext`, `InventoryLot`, `Product`, or `InventoryTransaction`.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx --configuration Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.ArchitectureTests/KitchenFlow.ArchitectureTests.csproj --configuration Release --no-restore` (3 passed); `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj --configuration Release --no-restore` (exit code 0); `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; `git diff --check`.
+- **Result:** No inventory endpoint handler receives EF persistence or executable domain objects. Existing API behavior remains covered by the PostgreSQL-backed integration suite while commands and queries have one central implementation seam.
+- **Known failures or unverified behavior:** This is an intermediate architectural correction: the service currently remains in the API composition root and directly depends on `ApplicationDbContext`. Module-owned application contracts/ports and an infrastructure adapter are still required to meet the accepted modular-monolith boundary. XML documentation enforcement, expanded tests/CI, and runbooks also remain open.
+- **Blockers:** None.
+- **Next action:** Define module-owned inventory use-case contracts and a persistence port, then move the authoritative orchestration behind an infrastructure adapter and strengthen the architecture rule accordingly.
 
 ### 2026-07-29T16:36:49Z — Codex backend implementation agent
 

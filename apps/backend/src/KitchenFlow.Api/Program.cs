@@ -32,6 +32,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<CurrentUserService>();
+builder.Services.AddScoped<InventoryApplicationService>();
 builder.Services.AddAntiforgery(options => { options.HeaderName = "X-CSRF-TOKEN"; options.Cookie.Name = "__Host-kitchenflow-antiforgery"; options.Cookie.Path = "/"; options.Cookie.SecurePolicy = CookieSecurePolicy.Always; });
 var keyRingPath = Environment.GetEnvironmentVariable("KITCHENFLOW_SESSION_KEYRING_PATH");
 var dataProtection = builder.Services.AddDataProtection().SetApplicationName("KitchenFlow");
