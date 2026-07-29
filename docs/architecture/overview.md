@@ -1,207 +1,253 @@
 # Architecture Overview
 
-- **Status:** Draft
+- **Status:** Accepted
 - **Last updated:** 2026-07-28
+- **Discovery source:** [`2026-07-28 stakeholder discovery`](../discovery/2026-07-28-stakeholder-discovery.md)
 
 ## Purpose
 
-This document defines the initial architectural shape of KitchenFlow without selecting technologies prematurely. Technology choices must be recorded through Architecture Decision Records.
+This document defines the accepted initial architecture for KitchenFlow. Detailed technology choices are recorded in Architecture Decision Records under [`decisions/`](decisions/).
 
-KitchenFlow is planned as a web-based, multilingual product with independently deployable frontend and backend applications. It must support deployment to managed cloud environments or a self-hosted VPS.
+KitchenFlow is a responsive multilingual web product with independently buildable, testable, deployable, and observable frontend and backend applications.
 
 ## Architectural goals
 
-- Preserve clear product and domain boundaries.
-- Allow frontend, backend, workers, and integrations to evolve independently.
-- Keep deployment portable across supported environments.
-- Make AI behavior observable, testable, replaceable, and cost-controlled.
-- Protect household data, credentials, and safety-sensitive information.
-- Support horizontal scaling where workloads justify it.
-- Avoid distributed-system complexity until a measured requirement demands it.
-- Maintain a repository structure that gives human and AI contributors enough context to make consistent changes.
+- Protect transactional inventory and recipe-execution consistency.
+- Keep probabilistic AI outside authoritative state mutation.
+- Support low-cost launch infrastructure and measured horizontal growth.
+- Remain useful during AI, notification, cache, or worker degradation.
+- Preserve portability between a development VPS and managed cloud deployment.
+- Make cost, quota, latency, privacy, and failure behavior observable from the beginning.
+- Avoid premature microservices while maintaining extractable module boundaries.
 
-## Initial system context
+## Accepted technology direction
+
+| Area | Decision |
+|---|---|
+| Frontend | React and TypeScript generated and evolved through Lovable |
+| Backend | .NET 10 LTS with ASP.NET Core |
+| Application style | Modular monolith plus separately scalable worker processes |
+| API | REST with OpenAPI 3.1 and generated TypeScript client/contracts |
+| Primary database | PostgreSQL |
+| Data access | Entity Framework Core, with explicit SQL where measured requirements justify it |
+| Identity provider | Keycloak through standard OpenID Connect |
+| Browser session | Backend-managed secure session cookie; provider tokens are not exposed to frontend JavaScript |
+| Async messaging | RabbitMQ with transactional outbox and idempotent consumers |
+| Cache and distributed limits | Redis only when justified; never authoritative storage |
+| Files | S3-compatible object storage with separate temporary and permanent flows |
+| Observability | OpenTelemetry logs, metrics, and traces |
+| Packaging | Containers |
+| Development and VPS test | Docker Compose |
+| Production region | Initial cloud deployment in Virginia |
+| Specialized AI or image runtime | Optional isolated Python worker only when a concrete need justifies it |
+
+## System context
 
 ```text
-+-------------------+
-| Household members |
-+---------+---------+
+Users and browsers
+        |
+        | HTTPS
+        v
+CDN / WAF / reverse proxy / load balancer
+        |
+        +---------------------------+
+        |                           |
+        v                           v
+React frontend                 ASP.NET Core API / BFF
+Lovable-generated UI                |
+                                    +-------------------------------+
+                                    |                               |
+                                    v                               v
+                             Modular application                Keycloak
+                                    |
+          +-------------------------+-------------------------+
+          |             |             |          |            |
+          v             v             v          v            v
+     PostgreSQL     RabbitMQ      Object      Redis       AI providers
+       + outbox                    storage    optional
           |
           v
-+-------------------+       +----------------------+
-| Web frontend      |------>| Backend application  |
-| localized UI      |       | APIs and orchestration|
-+-------------------+       +----+-----------+-----+
-                                 |           |
-                                 v           v
-                         +-------------+  +----------------+
-                         | Data stores |  | AI gateway     |
-                         | and cache   |  | and workflows  |
-                         +-------------+  +-------+--------+
-                                                   |
-                                                   v
-                                          +----------------+
-                                          | AI providers   |
-                                          +----------------+
-
-Additional boundaries may include background workers, notification providers,
-object storage, identity providers, and observability systems.
+     .NET workers
+          |
+          +---- ingestion, AI jobs, notifications, privacy jobs,
+                alert calculation, export, deletion, and scheduling
 ```
 
-## Monorepo boundaries
+The reverse proxy should expose frontend and API under a controlled origin where practical. Frontend and backend remain separate artifacts even when one external origin routes both.
 
-### `apps/frontend`
+## Frontend boundary
 
-Responsibilities:
+The frontend owns:
 
-- localized web experience;
-- user interaction and accessibility;
-- client-side state appropriate to the selected framework;
-- presentation of plans, inventory, recipes, guidance, and troubleshooting;
-- secure communication with backend APIs.
+- responsive localized presentation;
+- accessible interaction and navigation;
+- temporary UI state;
+- upload initiation and progress;
+- presentation of uncertainty, provenance, validation, quota, and job state;
+- consumption of generated API clients.
 
-The frontend must not own authoritative household state, embed provider credentials, or execute safety-critical validation as its only enforcement layer.
+The frontend does not own:
 
-### `apps/backend`
+- authoritative inventory arithmetic or lifecycle transitions;
+- authorization decisions;
+- AI provider calls or credentials;
+- official quota balance;
+- shelf-life authority;
+- secret material;
+- direct database access.
 
-Responsibilities:
+The exact Lovable-generated runtime, router, build tool, component library, and state library are selected after inspecting the generated frontend. React and TypeScript are fixed; incidental tool choices are not assumed before the code exists.
 
-- authentication and authorization boundaries;
-- application use cases and workflow orchestration;
-- authoritative state changes;
-- persistence and integration coordination;
-- deterministic validation;
-- AI request orchestration and response validation;
-- observability, auditability, rate control, and cost controls.
+## Backend boundary
 
-The backend should begin as a modular application unless an accepted ADR establishes a need for separately deployed services.
+The backend owns:
 
-### `packages/contracts`
+- BFF and API endpoints;
+- application authentication integration and authorization;
+- domain commands, queries, validation, and transactions;
+- PostgreSQL persistence and migrations;
+- AI gateway and structured workflow orchestration;
+- quota, entitlement, usage, and cost accounting;
+- persistent job creation and state;
+- outbox event publication;
+- privacy and data-right workflows;
+- audit, observability, rate limits, and abuse controls.
 
-Responsibilities:
+## Modular monolith
 
-- API schemas;
-- event schemas;
-- structured AI input and output schemas;
-- shared identifiers, units, enums, and validation metadata where appropriate;
-- compatibility and versioning rules.
+The initial backend is one logical application with explicit modules and a small number of deployables:
 
-Contracts must remain implementation-neutral. Sharing contracts must not result in sharing business logic or persistence models across application boundaries.
+```text
+KitchenFlow.Api
+KitchenFlow.Worker
+KitchenFlow.Contracts
+KitchenFlow.SharedKernel
 
-### `infrastructure`
+Modules/
+  Accounts
+  Profiles
+  Inventory
+  Recipes
+  Cooking
+  Planning
+  Shopping
+  Notifications
+  Ai
+  UsageAndBilling
+  Privacy
+  AuditAndSupport
+```
 
-Responsibilities:
+Modules own their domain rules and persistence mappings. A module must not bypass another module's public application contract by freely editing its tables.
 
-- local development environment definitions;
-- deployment assets;
-- environment configuration templates;
-- migrations and operational automation when technology choices are accepted.
+The API and workers may scale independently while sharing the same codebase and database at first.
 
-Infrastructure must avoid embedding secrets or environment-specific credentials.
+## API and contracts
 
-## Logical domain areas
+- REST is the initial external API style.
+- OpenAPI 3.1 is generated from the backend build.
+- TypeScript clients and types are generated rather than copied manually.
+- APIs, events, AI schemas, units, enums, and identifiers are versioned contracts.
+- Breaking changes require compatibility and migration plans.
+- Idempotency keys are required for retryable state-changing operations where duplicate effects would be harmful.
 
-The following domain areas are candidates for modular boundaries:
+## Transactional consistency
 
-- identity and access;
-- households and members;
-- preferences, restrictions, and goals;
-- kitchens, equipment, and capabilities;
-- pantry and inventory;
-- ingredients, units, and normalization;
-- shopping and replenishment;
-- meal planning;
-- recipes and preparation plans;
-- guided cooking sessions;
-- feedback, history, and learning;
-- AI workflows, prompts, evaluations, and provider integration;
-- notifications and scheduling;
-- localization and regionalization;
-- subscriptions, entitlements, and billing if introduced later.
+PostgreSQL is the source of truth. Critical operations use one logical transaction.
 
-These are conceptual boundaries, not a commitment to separate processes or databases.
+Recipe completion includes, as applicable:
+
+```text
+complete execution
++ consume inventory lots
++ create leftover lots
++ register waste
++ release reservations
++ store execution result
++ write outbox events
+```
+
+The application uses optimistic concurrency by default and stronger locking or transaction isolation for specific invariants. Serialization failures are retried by re-executing the complete transaction with bounded policy.
+
+## Asynchronous work
+
+Long or externally dependent work is persistent and resumable:
+
+- AI recipe generation and broad planning;
+- receipt and recipe parsing;
+- notifications;
+- shelf-life alert calculation;
+- account export and deletion;
+- image processing;
+- reprocessing and maintenance.
+
+A web request creates durable job state and can return before completion. The user may close the page and later inspect progress and results.
+
+RabbitMQ provides at-least-once delivery. Consumers are idempotent. Failed messages use bounded retries and dead-letter handling. PostgreSQL transactional outbox prevents domain commits from being separated from event intent.
 
 ## AI boundary
 
-AI providers are external dependencies. All provider access must pass through an application-owned AI gateway or equivalent boundary.
+All model access passes through the backend AI gateway. The gateway owns operation catalog, provider routing, models, prompts, context, schemas, budgets, timeout, fallback, validation, telemetry, and usage settlement.
 
-The boundary must support:
+AI output is untrusted input and never writes authoritative state directly.
 
-- provider and model selection;
-- versioned prompt and workflow definitions;
-- structured request and response contracts;
-- deterministic validation and repair policies;
-- timeouts, cancellation, retries, fallbacks, and circuit breaking;
-- usage, latency, cost, validation, and failure telemetry;
-- redaction and privacy controls;
-- test doubles and recorded fixtures;
-- migration between providers without rewriting product workflows.
+See [`../ai/overview.md`](../ai/overview.md) and [`../ai/usage-and-cost-governance.md`](../ai/usage-and-cost-governance.md).
 
-AI must not directly mutate authoritative data. A validated application command must mediate every state change proposed by a model.
+## Data and file storage
 
-## Data ownership and consistency
+### PostgreSQL
 
-- The backend owns authoritative household and operational state.
-- Every state-changing request must be authenticated, authorized, validated, and auditable at an appropriate level.
-- Inventory is inherently uncertain; the model must represent confidence, correction, and reconciliation rather than pretending all quantities are exact.
-- Units and ingredient identities require normalized internal representation while preserving user-facing locale and wording.
-- Personal data and AI transcripts must have explicit retention, deletion, and export rules.
-- Analytics and evaluation data must be separated from operational data when their access or retention requirements differ.
+Stores authoritative operational data, usage ledger, job records, audit records, consent, privacy requests, and outbox records.
 
-## Deployment model
+### Redis
 
-The minimum deployment topology is expected to contain:
+May support cache, distributed rate limiting, short-lived deduplication, job progress acceleration, and brief coordination. It is optional at launch and never the sole store for inventory, recipes, quota balances, consent, billing, or durable jobs.
 
-- one frontend deployment;
-- one backend deployment;
-- one primary database;
-- optional cache and background worker components;
-- external AI providers;
-- centralized logs, metrics, and traces.
+### Object storage
 
-A single VPS may host several components for smaller installations. Managed cloud services may host the same logical components independently. Environment differences must be represented through configuration and deployment assets, not divergent application code.
+Temporary receipt and import images are isolated, parsed once, and deleted on success or reported failure. Permanent recipe or execution photos use a separate user-authorized storage lifecycle.
 
-## Scalability approach
+## Deployment
 
-KitchenFlow should scale through measured evolution:
+### Texas VPS environment
 
-1. establish modular boundaries and observability;
-2. keep request handlers stateless where practical;
-3. move long-running or asynchronous work to background processing;
-4. cache only when ownership and invalidation are defined;
-5. scale application instances horizontally when metrics justify it;
-6. separate services or data stores only when a documented bottleneck, security boundary, or ownership need exists.
+Docker Compose may run frontend, API, workers, PostgreSQL, RabbitMQ, Keycloak, object storage, optional Redis, and an OpenTelemetry Collector for development and testing.
 
-## Cross-cutting concerns
+### Virginia production environment
 
-Every implementation decision must consider:
+Production uses containerized stateless API and worker replicas behind managed edge and load-balancing infrastructure. PostgreSQL, RabbitMQ, Keycloak, object storage, and optional Redis may be managed or separately operated according to later vendor decisions.
 
-- security and privacy;
-- authentication and authorization;
-- food safety and allergy handling;
-- localization and regionalization;
-- accessibility;
-- observability and supportability;
-- resilience and degraded operation;
-- AI cost and provider availability;
-- data retention, export, and deletion;
-- testing and reproducibility;
-- deployment portability.
+Kubernetes is not required initially. Container and configuration discipline must keep future migration possible.
 
-## Decisions still required
+## Scale envelopes
 
-At minimum, ADRs are required for:
+| Scenario | Accounts | Daily active users | Approximate concurrency |
+|---|---:|---:|---:|
+| Launch | 5,000 | 500 | 50 |
+| Successful first year | 100,000 | 10,000 | 1,000 |
+| Unexpected success | 1,000,000 | 100,000 | 10,000 |
 
-- backend language and framework;
-- frontend framework and Lovable integration workflow;
-- API style and contract generation;
-- primary database and migration strategy;
-- authentication and household authorization model;
-- background processing and scheduling;
-- AI provider abstraction and supported providers;
-- prompt and evaluation storage;
-- localization framework and translation workflow;
-- observability stack;
-- deployment packaging and supported topologies;
-- secret management;
-- testing toolchain and release gates.
+These are architecture and test envelopes, not forecasts.
+
+## Extraction path
+
+Separately scalable or deployable boundaries may later include:
+
+- AI gateway and AI workers;
+- image and document ingestion;
+- notification delivery;
+- scheduling and background jobs;
+- public recipe sharing and community catalog;
+- search and recommendation read models;
+- analytics.
+
+Extraction requires measured load, security, compliance, reliability, or ownership justification and an accepted ADR.
+
+## Related decisions
+
+- [`0001 — Frontend platform and boundary`](decisions/0001-frontend-platform-and-boundary.md)
+- [`0002 — Backend platform and modular monolith`](decisions/0002-backend-platform-and-modular-monolith.md)
+- [`0003 — Primary data and asynchronous messaging`](decisions/0003-primary-data-and-asynchronous-messaging.md)
+- [`0004 — Identity and browser session`](decisions/0004-identity-and-browser-session.md)
+- [`0005 — AI gateway and usage governance`](decisions/0005-ai-gateway-and-usage-governance.md)
+- [`0006 — Deployment and observability`](decisions/0006-deployment-and-observability.md)

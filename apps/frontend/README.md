@@ -1,52 +1,61 @@
 # KitchenFlow Frontend
 
-This directory will contain the independently deployable KitchenFlow web frontend.
+This directory contains the independently deployable KitchenFlow responsive web frontend.
 
-## Intended responsibilities
+## Accepted platform
 
-- multilingual and accessible user experience;
-- household onboarding and profile management;
-- pantry, shopping, planning, preparation, and cooking workflows;
-- clear presentation of AI suggestions, uncertainty, validation errors, and recovery options;
-- secure communication with backend APIs;
-- responsive behavior across supported devices.
+- React;
+- TypeScript;
+- interface design and code generation through Lovable;
+- generated backend client and types from OpenAPI contracts.
+
+React and Lovable are fixed stakeholder decisions. The exact Lovable-generated runtime, router, build system, component library, state library, localization library, and test tools are selected after the actual generated project is inspected and require a plan or ADR where they establish durable precedent.
+
+See [`ADR-0001`](../../docs/architecture/decisions/0001-frontend-platform-and-boundary.md).
+
+## Responsibilities
+
+- responsive, multilingual, and accessible user experience;
+- account onboarding and progressive profile management;
+- inventory, attention, shopping, planning, recipe, cooking, history, notification, quota, and privacy workflows;
+- temporary UI state and optimistic presentation where safe;
+- upload initiation and job progress;
+- clear presentation of provenance, uncertainty, safety, quota, validation, and failure;
+- secure communication with backend/BFF endpoints.
+
+## Prohibited ownership
+
+The frontend does not:
+
+- access PostgreSQL directly;
+- call AI providers directly;
+- store provider credentials or long-lived access and refresh tokens;
+- calculate official quota or subscription entitlement;
+- own inventory arithmetic, shelf-life authority, authorization, privacy deletion, or food-safety enforcement;
+- bypass generated contracts with duplicated hand-maintained API models.
 
 ## Lovable workflow
 
-Lovable is expected to support interface design and initial frontend generation. Generated output is not exempt from project standards.
+Lovable output is reviewed as normal production code for:
 
-Before generated code is accepted, it must be reviewed for:
-
-- architecture and component boundaries;
+- component and feature boundaries;
 - accessibility and keyboard operation;
 - localization readiness;
 - responsive behavior;
-- security and privacy;
+- secure session and CSRF interaction;
+- privacy and sensitive-data exposure;
 - maintainability and testability;
-- contract compatibility;
-- unnecessary dependencies or duplicated logic.
+- generated contract compatibility;
+- unnecessary dependencies and duplicated backend logic.
 
-The repository remains the source of truth. Design-generation tools must not create a parallel undocumented architecture.
+The Git repository remains the source of truth. Lovable must not create a parallel backend or undocumented architecture.
 
-## Current status
+## Required reading
 
-No frontend framework or Lovable integration workflow has been selected. Do not introduce a framework, state-management library, design system, or localization library until the relevant Architecture Decision Records are accepted.
-
-## Required properties
-
-The frontend must be:
-
-- independently buildable, testable, and deployable;
-- localization-ready from the first user-facing implementation;
-- accessible by design rather than by later remediation;
-- unable to access AI or infrastructure credentials directly;
-- based on versioned backend contracts;
-- resilient to slow, unavailable, or invalid AI responses;
-- explicit when a recommendation is editable, uncertain, or safety-sensitive.
-
-See:
-
-- [`../../docs/product/vision.md`](../../docs/product/vision.md)
+- [`../../docs/README.md`](../../docs/README.md)
+- [`../../docs/product/user-journeys.md`](../../docs/product/user-journeys.md)
+- [`../../docs/product/initial-release.md`](../../docs/product/initial-release.md)
+- [`../../docs/domain/README.md`](../../docs/domain/README.md)
 - [`../../docs/architecture/overview.md`](../../docs/architecture/overview.md)
-- [`../../docs/architecture/principles.md`](../../docs/architecture/principles.md)
-- [`../../docs/testing/strategy.md`](../../docs/testing/strategy.md)
+- [`../../docs/security/privacy-and-data-protection.md`](../../docs/security/privacy-and-data-protection.md)
+- [`../../docs/testing/product-foundation-gates.md`](../../docs/testing/product-foundation-gates.md)

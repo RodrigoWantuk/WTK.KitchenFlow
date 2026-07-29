@@ -1,6 +1,6 @@
 # Plan Execution Registry
 
-This file is the canonical, repository-wide view of implementation, testing, research, documentation, and operations plans.
+This file is the canonical, repository-wide view of implementation, testing, research, documentation, and operational plans.
 
 Detailed plans live under [`docs/plans/`](plans/). This registry exists so that a new agent can understand current work, ownership, progress, blockers, and the exact continuation point without reconstructing state from chat history or branch diffs.
 
@@ -47,7 +47,7 @@ Plans with status `Completed` belong here. Keep the most recent completed plans 
 
 | Plan | Title | Type | Delivery | Result | Completed |
 |---|---|---|---|---|---|
-| _None_ |  |  |  |  |  |
+| [PLAN-0001](plans/PLAN-0001-document-product-foundation.md) | Document the KitchenFlow Product Foundation | Documentation | [PR #5 open](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/5) | Complete product, domain, release, architecture, AI, privacy, security, operations, ADR, agent-reading, and test-gate foundation | 2026-07-28 |
 
 ## Cancelled or superseded plans
 
