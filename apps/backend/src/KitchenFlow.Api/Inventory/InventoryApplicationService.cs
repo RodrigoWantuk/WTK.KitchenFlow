@@ -21,7 +21,8 @@ public sealed class InventoryApplicationService(
     ApplicationDbContext database,
     CurrentUserService currentUser,
     TimeProvider timeProvider,
-    IDataProtectionProvider dataProtection)
+    IDataProtectionProvider dataProtection,
+    InventoryLotLifecycleUseCase lifecycleUseCase)
 {
     /// <summary>Lists lots visible to the current KitchenFlow user.</summary>
     public Task<IResult> ListAsync(int? pageSize, string? status, string? storageLocation, string? search, string? cursor, CancellationToken cancellationToken) =>
@@ -262,14 +263,7 @@ public sealed class InventoryApplicationService(
         return await MutateAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken, (lot, _, now) =>
         {
             var domainLot = ToDomain(lot);
-            InventoryTransaction transaction = adjustment.Type switch
-            {
-                InventoryTransactionType.Consume => domainLot.AdjustMeasured(InventoryTransactionType.Consume, adjustment.Value!.Value, adjustment.ReasonCode, adjustment.Note, key, now),
-                InventoryTransactionType.Discard => domainLot.AdjustMeasured(InventoryTransactionType.Discard, adjustment.Value!.Value, adjustment.ReasonCode, adjustment.Note, key, now),
-                InventoryTransactionType.Correct => domainLot.AdjustMeasured(InventoryTransactionType.Correct, adjustment.Value!.Value, adjustment.ReasonCode, adjustment.Note, key, now),
-                InventoryTransactionType.AvailabilityChanged => domainLot.ChangeAvailability(adjustment.AvailabilityState!.Value, adjustment.ReasonCode, adjustment.Note, key, now),
-                _ => throw new InvalidOperationException("The adjustment is invalid for this lot.")
-            };
+            var transaction = lifecycleUseCase.ApplyAdjustment(domainLot, adjustment, key, now);
             CopyToRecord(domainLot, lot);
             return ToRecord(transaction);
         }, idempotencyKey: key, idempotencyScope: "inventory.lots.adjust", idempotencyHash: hash);
@@ -279,7 +273,7 @@ public sealed class InventoryApplicationService(
         await MutateAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken, (lot, _, now) =>
         {
             var domainLot = ToDomain(lot);
-            var transaction = domainLot.Delete(null, null, now);
+            var transaction = lifecycleUseCase.Delete(domainLot, now);
             CopyToRecord(domainLot, lot);
             return ToRecord(transaction);
         }, StatusCodes.Status204NoContent);

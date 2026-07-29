@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend implementation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T18:55:09Z
+- **Last updated:** 2026-07-29T19:00:35Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, open)
 - **Related implementation plan:** PLAN-0002
@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Inventory routes map HTTP and CSRF only; adjustment semantics are now owned by a typed module application command; versions remain protected opaque tokens and PostgreSQL constraints are verified directly.
-- **Last completed step:** Moved adjustment command normalization and field validation into `KitchenFlow.Modules.Inventory.Application.InventoryAdjustmentCommand`.
+- **Current checkpoint:** Inventory routes map HTTP and CSRF only; module-owned typed commands and lifecycle use cases now execute adjustment and deletion transitions; versions remain protected opaque tokens and PostgreSQL constraints are verified directly.
+- **Last completed step:** Moved adjustment and deletion transition selection from the API service into `InventoryLotLifecycleUseCase`.
 - **Exact next action:** Move the application-service contract into `KitchenFlow.Modules.Inventory.Application` and provide an infrastructure persistence adapter, so the composition-root service becomes a thin adapter rather than the authoritative use-case implementation.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
 - **Validation performed:** Release build; six unit tests; three focused PostgreSQL/Testcontainers adjustment integration tests; formatting verification; diff whitespace verification.
 - **Known failures or limitations:** The application service is still in the API composition root and directly uses persistence. The required module-owned application contracts/ports and infrastructure adapter, complete XML documentation enforcement, broadened tests/CI, and operational runbooks remain unfinished. The regenerated snapshot is not yet a stable PLAN-0004 milestone because the broader correction work remains open.
-- **Working tree state:** Module-owned adjustment-command checkpoint is ready to commit with synchronized plan and registry updates.
+- **Working tree state:** Module-owned lifecycle-use-case checkpoint is ready to commit with synchronized plan and registry updates.
 
 ## Progress log
+
+### 2026-07-29T19:00:35Z — Codex backend implementation agent
+
+- **Checkpoint:** Moved executable inventory lifecycle transition selection into the inventory module.
+- **Changes included in the commit:** Added `InventoryLotLifecycleUseCase` with typed adjustment and deletion transitions; registered it with dependency injection; replaced API-side adjustment switch and direct deletion invocation with module use-case calls.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx --configuration Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.UnitTests/KitchenFlow.UnitTests.csproj --configuration Release --no-build` (6 passed); focused adjustment integration tests (3 passed); `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; `git diff --check`.
+- **Result:** The API adapter no longer selects lifecycle transitions after HTTP adaptation. The inventory module owns the adjustment/deletion use-case boundary while persistence remains a subsequent extraction.
+- **Known failures or unverified behavior:** Create, metadata, query, history, authorization resolution, and persistence orchestration remain API-owned. The full module use-case contracts/ports and infrastructure adapter, XML documentation enforcement, expanded tests/CI, and runbooks remain open.
+- **Blockers:** None.
+- **Next action:** Define explicit module persistence ports and move create/read/update/history orchestration behind infrastructure adapters.
 
 ### 2026-07-29T18:55:09Z — Codex backend implementation agent
 
