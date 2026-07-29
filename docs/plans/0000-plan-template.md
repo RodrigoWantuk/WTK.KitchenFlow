@@ -35,6 +35,47 @@ Summarize the problem, relevant current behavior, authoritative requirements, an
 - Requirement or constraint.
 - Preserve all nonfunctional requirements relevant to this work.
 - Do not silently reduce scope to a smaller interpretation.
+- Do not expand scope merely to make a delivery appear large.
+
+## Substantial run delivery target
+
+State the largest coherent phase, vertical slice, decision-ready result, documentation package, or operational outcome the agent should complete in one execution run when no blocker exists.
+
+- **Target outcome:**
+- **Minimum acceptable evidence:** implementation, tests, documentation, contracts, migrations, validation, or other applicable evidence.
+- **Adjacent checkpoints to continue through when unblocked:**
+- **Valid early-stop conditions:** real external blocker, required decision, unsafe uncertainty, environment/tool failure, conflicting concurrent work, exhausted execution capacity, or required plan revision.
+
+Do not define delivery size by line count, file count, commit count, or elapsed time. A substantial run may use multiple cohesive commits.
+
+## Documentation deliverables
+
+Define every durable and code-level document required by this plan.
+
+### Durable documentation
+
+- Product/user behavior.
+- Domain invariants and lifecycle rules.
+- Architecture and ADRs.
+- APIs, events, schemas, prompts, and generated contracts.
+- Configuration, environment variables, defaults, and examples.
+- Migrations, compatibility, rollback, or forward-repair guidance.
+- Deployment, observability, alerts, runbooks, backup, restore, and support guidance.
+- Security, privacy, food safety, AI cost, localization, accessibility, performance, and resilience implications.
+- Test strategy, fixtures, evaluation data, commands, results, limitations, and handoff.
+
+Mark items not applicable only with justification.
+
+### Code-level documentation
+
+- XML documentation for new or materially changed project-owned public and protected .NET types and members.
+- XML documentation or equivalent durable explanation for non-obvious internal .NET contracts.
+- TSDoc/JSDoc for exported reusable TypeScript APIs whose contracts or side effects are not self-evident.
+- Inline comments for non-obvious rationale, invariants, hazards, security boundaries, concurrency, idempotency, protocols, compatibility, or unusual behavior.
+- Removal or correction of stale, misleading, redundant, false, or commented-out code.
+- Generated code documented at the source schema or generator boundary.
+
+List and justify any narrow documentation exception before implementation.
 
 ## Assumptions and open questions
 
@@ -62,6 +103,8 @@ State whether an ADR is required. Link the ADR when applicable.
 **Exit criteria**
 
 - Observable condition required before the phase is complete.
+- Applicable documentation and code-level documentation are current.
+- The phase represents a substantial coherent outcome or a valid blocker is documented.
 
 ### Phase 2: Name
 
@@ -70,6 +113,7 @@ State whether an ADR is required. Link the ADR when applicable.
 **Exit criteria**
 
 - Observable condition required before the phase is complete.
+- Applicable documentation and validation are complete.
 
 ## Testing and validation plan
 
@@ -84,6 +128,7 @@ Define the verification required for this plan, including relevant:
 - accessibility checks;
 - localization checks;
 - performance and resilience checks;
+- documentation and code-documentation review;
 - manual verification.
 
 ## Cross-cutting impact
@@ -117,18 +162,23 @@ Describe configuration, deployment, migrations, metrics, logs, traces, alerts, s
 ## Acceptance criteria
 
 - [ ] Criterion expressed as an observable, testable result.
-- [ ] Required documentation is current.
+- [ ] The substantial run delivery target was reached or a valid early-stop reason is documented.
+- [ ] Durable documentation is complete and current.
+- [ ] Code comments, XML documentation, and TSDoc/JSDoc are complete where applicable.
+- [ ] Required documentation enforcement is configured where the plan creates a new project foundation.
 - [ ] No unsupported completion claims remain.
 
 ## Execution state
 
 This section must be updated before every agent-created commit.
 
+- **Current run delivery target:**
 - **Current checkpoint:** No work started.
 - **Last completed step:** None.
 - **Exact next action:** Finalize and approve the plan.
 - **Blockers:** None.
 - **Partially modified areas:** None.
+- **Documentation delivered:** None.
 - **Validation performed:** None.
 - **Known failures or limitations:** None.
 - **Working tree state:** Clean | Uncommitted changes described below
@@ -139,8 +189,10 @@ Append one entry before every agent-created commit. Do not rewrite prior entries
 
 ### YYYY-MM-DDTHH:MM:SSZ — Agent or contributor
 
+- **Run delivery target:**
 - **Checkpoint:**
 - **Changes included in the commit:**
+- **Documentation and code-documentation delivered:**
 - **Validation performed:**
 - **Result:**
 - **Next action:**
@@ -149,8 +201,9 @@ Append one entry before every agent-created commit. Do not rewrite prior entries
 ## Completion and handoff checklist
 
 - [ ] All plan phases and acceptance criteria are resolved truthfully.
+- [ ] The run delivered a substantial coherent outcome or the valid early-stop reason is explicit.
 - [ ] Required tests and evaluations pass, or limitations are documented.
-- [ ] Documentation, contracts, and ADRs are current.
+- [ ] Durable documentation, contracts, comments, XML documentation, and TSDoc/JSDoc are current.
 - [ ] Security, privacy, safety, localization, accessibility, AI, and operational impacts were reviewed.
 - [ ] `docs/plan-status.md` matches this plan.
 - [ ] Pull request description links this plan and reports validation evidence.

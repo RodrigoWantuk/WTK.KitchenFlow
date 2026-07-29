@@ -60,7 +60,36 @@ Before implementation, testing, infrastructure, contract, or durable documentati
 2. confirm scope, requirements, acceptance criteria, dependencies, and validation;
 3. register or update it in `docs/plan-status.md`;
 4. identify owner, branch, checkpoint, and exact next action;
-5. use a branch containing the plan ID when practical.
+5. declare the substantial outcome targeted for the current execution run;
+6. use a branch containing the plan ID when practical.
+
+### Substantial delivery per execution run
+
+Each agent run must aim to deliver the largest coherent plan phase, vertical slice, or decision-ready outcome that can be safely implemented, documented, tested, and validated within the active plan.
+
+Unless a real blocker exists, do not stop after only:
+
+- reading or restating documentation;
+- creating a plan without beginning an already authorized execution phase;
+- scaffolding projects or folders;
+- adding one isolated DTO, entity, endpoint, component, migration, test placeholder, or configuration stub;
+- producing status-only or comment-only changes;
+- completing a narrow checkpoint when adjacent in-scope checkpoints can be safely finished and validated in the same run.
+
+A substantial run normally includes the applicable combination of implementation, tests, documentation, generated contracts, migrations, validation, and handoff evidence. Measure delivery size by coherent outcome and completed acceptance criteria, not line count, file count, commit count, or elapsed time.
+
+Large delivery does **not** authorize:
+
+- unplanned scope expansion;
+- unrelated changes bundled together;
+- giant unreviewable commits;
+- bypassing architecture, security, tests, or documentation;
+- concealing failures or unfinished behavior;
+- claiming completion because a large diff exists.
+
+Use multiple cohesive, reviewable commits inside one run when appropriate. Continue through adjacent plan checkpoints while dependencies are available and the repository remains safe and verifiable.
+
+An agent may stop before the intended run outcome only for a real external blocker, required stakeholder decision, unsafe uncertainty, environment or tool failure, conflicting concurrent work, exhausted execution capacity, or a necessary plan revision. Record the precise cause, completed work, validation, remaining work, and immediately executable next action.
 
 ### Mandatory pre-commit update
 
@@ -135,15 +164,52 @@ Expected layers include:
 - food-safety and restriction tests;
 - accessibility, localization, performance, resilience, backup, and restore checks.
 
-Read [`docs/testing/product-foundation-gates.md`](docs/testing/product-foundation-gates.md). Testing agents use the same plan protocol and independently verify implementation claims.
+Read [`docs/testing/product-foundation-gates.md`](docs/testing/product-foundation-gates.md). Testing agents use the same plan protocol, substantial-delivery mandate, and independent verification standard.
 
-## 10. Documentation and ADR expectations
+## 10. Complete documentation and code-documentation expectations
 
-- Update documentation in the same change as behavior, contracts, architecture, configuration, deployment, or operations.
-- Add or supersede an ADR for durable technology, data, identity, AI, privacy, deployment, or contract choices.
-- Do not rewrite accepted historical rationale.
-- Link rather than create divergent copies.
-- Keep active plans and registry synchronized.
+Documentation is part of the implementation, not deferred cleanup. Every delivery must update all affected durable documentation in the same pull request as the behavior or decision it describes.
+
+The required documentation package includes, where applicable:
+
+- product and user behavior;
+- domain invariants and lifecycle rules;
+- architecture, module boundaries, and ADRs;
+- API, event, schema, prompt, and generated-contract documentation;
+- configuration, environment variables, defaults, examples, and secrets handling;
+- database migrations, compatibility, rollback or forward-repair behavior;
+- deployment, operations, monitoring, alerts, runbooks, backup, restore, and support procedures;
+- security, privacy, food-safety, AI-cost, localization, accessibility, performance, and resilience implications;
+- test strategy, fixtures, evaluation datasets, validation commands, results, limitations, and handoff state.
+
+### .NET XML documentation
+
+For new or materially changed project-owned .NET code:
+
+- every public or protected type and member requires accurate XML documentation;
+- public APIs, domain types, application commands and queries, options, extension methods, middleware, integration adapters, exceptions, and reusable utilities require XML documentation;
+- internal types and members require XML documentation or equivalent durable explanation when they expose non-obvious domain, security, ownership, concurrency, lifecycle, idempotency, performance, or failure semantics;
+- use `<summary>`, `<param>`, `<typeparam>`, `<returns>`, `<exception>`, `<remarks>`, `<value>`, and `<inheritdoc/>` where they add truthful contract information;
+- document units, nullability, side effects, authorization assumptions, concurrency guarantees, retry behavior, exceptions, and ownership boundaries when relevant;
+- generated code is documented at its source schema or generator boundary and is not manually edited solely to add XML comments;
+- intentional exceptions must be narrow, justified in the active plan, and visible in review.
+
+New .NET project foundations must enable XML documentation output and add repository-scoped missing-documentation enforcement for project-owned public APIs. Do not suppress missing-documentation diagnostics globally merely to make a build pass.
+
+### TypeScript and frontend documentation
+
+For new or materially changed project-owned TypeScript code:
+
+- exported reusable components, hooks, functions, classes, types, adapters, and utilities require TSDoc/JSDoc when their contract is not completely self-evident;
+- document props, returns, side effects, accessibility behavior, security assumptions, cancellation, error states, caching, and ownership where relevant;
+- generated OpenAPI types and generated framework code are documented at their generator/schema boundary rather than edited manually;
+- Storybook or equivalent examples may supplement but do not replace contract documentation where a reusable API needs it.
+
+### Inline comments
+
+Use inline comments for non-obvious rationale, invariants, hazards, protocol requirements, security boundaries, concurrency, idempotency, parsing decisions, performance tradeoffs, compatibility constraints, and intentionally unusual behavior.
+
+Comments must explain **why**, constraints, or consequences. Do not narrate obvious syntax, duplicate well-named code, add filler comments, or preserve commented-out code. Correct or remove stale, misleading, redundant, or false comments in the same change.
 
 ## 11. Git and pull requests
 
@@ -151,9 +217,9 @@ Read [`docs/testing/product-foundation-gates.md`](docs/testing/product-foundatio
 - Use concise imperative English commit messages.
 - Delete merged working branches unless an explicit operational reason is documented.
 - Do not commit generated dependencies, secrets, local configuration, or build output.
-- Pull requests link the plan and describe scope, rationale, impact, validation, risks, limitations, and handoff.
+- Pull requests link the plan and describe scope, rationale, impact, validation, risks, limitations, documentation completeness, delivery depth, and handoff.
 - Do not merge failing checks.
-- Keep changes cohesive and reviewable.
+- Keep commits cohesive and reviewable even when the overall execution run is substantial.
 
 ## 12. Definition of done
 
@@ -164,10 +230,12 @@ A change is complete only when:
 - architecture boundaries and ADRs are followed;
 - relevant tests and evaluations pass;
 - failure, recovery, idempotency, and observability are addressed;
-- documentation and generated contracts are current;
+- durable documentation, code comments, XML documentation, TSDoc/JSDoc, and generated contracts are current where applicable;
+- configuration, migration, deployment, rollback, and operational guidance is current where applicable;
 - localization and accessibility are handled;
 - security, privacy, food safety, AI cost, and operation are considered;
 - no secrets or personal data were introduced;
+- the execution run delivered a substantial coherent outcome or truthfully documented a valid early-stop reason;
 - plan and registry are truthful;
 - exact continuation exists for unfinished work;
 - unsupported behavior is not claimed.

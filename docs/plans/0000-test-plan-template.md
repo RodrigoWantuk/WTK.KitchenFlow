@@ -20,7 +20,7 @@ Define the independent quality question this test plan must answer and the evide
 
 ## Test basis
 
-List the authoritative requirements, acceptance criteria, contracts, designs, ADRs, implementation plan, and known risks from which tests are derived.
+List the authoritative requirements, acceptance criteria, contracts, designs, ADRs, implementation plan, documentation claims, and known risks from which tests are derived.
 
 Do not rely only on implementation descriptions. Verify expected behavior against product and architecture requirements.
 
@@ -28,11 +28,23 @@ Do not rely only on implementation descriptions. Verify expected behavior agains
 
 ### Included
 
-- Behavior, component, workflow, platform, locale, role, or failure mode to test.
+- Behavior, component, workflow, platform, locale, role, failure mode, documentation claim, or operational behavior to test.
 
 ### Excluded
 
 - Explicitly excluded behavior and the reason.
+
+## Substantial test-run target
+
+State the largest coherent risk-based test campaign the agent should complete in one execution run when no blocker exists.
+
+- **Target outcome:**
+- **Priority areas completed in the run:**
+- **Evidence expected:** automated results, manual evidence, defects, traceability, documentation review, and final or interim assessment.
+- **Adjacent test areas to continue through when unblocked:**
+- **Valid early-stop conditions:** unstable baseline, blocking defect, environment/tool failure, required decision, unsafe uncertainty, conflicting concurrent work, exhausted execution capacity, or necessary plan revision.
+
+Do not stop after environment inspection, test scaffolding, one isolated test case, or partial evidence when the next risk-based group can be executed safely. A substantial test run may use multiple cohesive commits.
 
 ## System-under-test baseline
 
@@ -56,7 +68,7 @@ Do not start execution against an ambiguous or moving baseline without documenti
 
 | Requirement or acceptance criterion | Test case or evidence | Level | Status |
 |---|---|---|---|
-| Requirement link or identifier | Test identifier | Unit / Contract / Integration / E2E / Evaluation / Manual | Not Run |
+| Requirement link or identifier | Test identifier | Unit / Contract / Integration / E2E / Evaluation / Documentation / Manual | Not Run |
 
 Every applicable requirement must have evidence or a documented coverage gap.
 
@@ -76,6 +88,7 @@ Describe the strategy for relevant levels:
 - accessibility testing;
 - performance, load, and resilience testing;
 - migration, backup, recovery, and rollback testing;
+- durable documentation, code-comment, XML documentation, and TSDoc/JSDoc review;
 - exploratory and manual testing.
 
 ## Test environments and data
@@ -86,6 +99,27 @@ Describe required environments, services, accounts, roles, devices, browsers, lo
 - Identify privacy-sensitive fixtures.
 - Version AI evaluation datasets and recorded responses.
 - Document environment limitations that reduce confidence.
+
+## Documentation verification
+
+Verify the implementation delivery includes all applicable documentation:
+
+- product and user behavior;
+- domain invariants;
+- architecture and ADRs;
+- API, event, schema, prompt, and generated contracts;
+- configuration and environment guidance;
+- migrations, compatibility, rollback, and forward repair;
+- operations, observability, alerts, runbooks, backup, restore, and support;
+- security, privacy, food safety, AI cost, localization, accessibility, performance, and resilience;
+- test commands, evidence, limitations, and handoff;
+- accurate XML documentation for project-owned public/protected .NET APIs;
+- accurate documentation for non-obvious internal .NET contracts;
+- appropriate TSDoc/JSDoc for exported reusable TypeScript APIs;
+- rationale-focused inline comments without syntax narration;
+- no stale, misleading, redundant, false, or commented-out code.
+
+Generated code is reviewed at its source schema or generator boundary. Record documentation gaps as defects when they violate the implementation plan or repository rules.
 
 ## Test cases and execution checklist
 
@@ -111,6 +145,7 @@ Record defects in issues when they require implementation work. Keep a concise e
 Distinguish:
 
 - product defects;
+- documentation defects;
 - test defects;
 - environment failures;
 - expected behavior requiring clarification;
@@ -123,6 +158,7 @@ Distinguish:
 - [ ] Required environment and test data are available.
 - [ ] Blocking implementation defects are understood.
 - [ ] Safety-critical and authorization scenarios are prioritized.
+- [ ] Substantial run target is defined.
 
 ## Exit criteria
 
@@ -132,6 +168,8 @@ Distinguish:
 - [ ] Required regression testing is complete.
 - [ ] AI evaluation thresholds are satisfied when applicable.
 - [ ] Security, privacy, food-safety, localization, and accessibility evidence is recorded when applicable.
+- [ ] Documentation and code-documentation requirements have evidence or explicit defects.
+- [ ] The substantial run target was reached or a valid early-stop reason is documented.
 - [ ] Known limitations and residual risks are documented.
 - [ ] `docs/plan-status.md` matches the test plan state.
 
@@ -145,6 +183,7 @@ Link or summarize:
 - logs and correlation identifiers with sensitive data removed;
 - performance measurements;
 - accessibility evidence;
+- documentation review evidence;
 - manual test notes;
 - retest results.
 
@@ -152,11 +191,13 @@ Link or summarize:
 
 This section must be updated before every agent-created commit.
 
+- **Current run delivery target:**
 - **Current checkpoint:** Test execution not started.
 - **Last completed step:** None.
 - **Exact next action:** Finalize the test basis and entry criteria.
 - **Blockers:** None.
 - **Tests executed:** None.
+- **Documentation reviewed:** None.
 - **Defects found:** None.
 - **Evidence produced:** None.
 - **Known coverage gaps:** None.
@@ -168,8 +209,10 @@ Append one entry before every agent-created commit. Do not rewrite prior entries
 
 ### YYYY-MM-DDTHH:MM:SSZ — Agent or contributor
 
+- **Run delivery target:**
 - **Checkpoint:**
 - **Tests or changes included in the commit:**
+- **Documentation reviewed:**
 - **Evidence and validation:**
 - **Defects or coverage gaps:**
 - **Result:**
@@ -188,8 +231,10 @@ A test plan may be marked `Completed` with a failing outcome when execution is c
 ## Completion and handoff checklist
 
 - [ ] Test execution and evidence are complete or gaps are explicit.
+- [ ] The run completed a substantial coherent test campaign or the valid early-stop reason is explicit.
 - [ ] Defects are linked and classified.
 - [ ] Requirements traceability is current.
+- [ ] Durable documentation and code-documentation evidence is recorded.
 - [ ] Final quality assessment is supported by evidence.
 - [ ] Active plan and `docs/plan-status.md` match.
 - [ ] Exact next action is recorded for unresolved defects or retesting.
