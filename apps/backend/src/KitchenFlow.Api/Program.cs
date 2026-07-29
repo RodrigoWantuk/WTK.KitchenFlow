@@ -1,4 +1,5 @@
 using KitchenFlow.Api.Inventory;
+using KitchenFlow.Api.Observability;
 using KitchenFlow.Api.Services;
 using KitchenFlow.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication;
@@ -52,7 +53,7 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("mutation", context => RateLimitPartition.GetFixedWindowLimiter(context.User.FindFirst("sub")?.Value ?? context.User.Identity?.Name ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = 60, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 });
 builder.Services.AddOpenApi();
-builder.Services.AddOpenTelemetry().WithTracing(tracing => tracing.AddAspNetCoreInstrumentation().AddEntityFrameworkCoreInstrumentation()).WithMetrics(metrics => metrics.AddAspNetCoreInstrumentation());
+builder.Services.AddOpenTelemetry().WithTracing(tracing => tracing.AddAspNetCoreInstrumentation().AddEntityFrameworkCoreInstrumentation().AddProcessor(new SensitiveTelemetryRedactionProcessor())).WithMetrics(metrics => metrics.AddAspNetCoreInstrumentation());
 
 var app = builder.Build();
 if (!app.Environment.IsDevelopment())

@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Noninteractive final validation is complete; interactive graphical-browser validation is blocked by the execution environment.
-- **Last completed step:** Verified migration upgrade, compose readiness, health endpoints, OpenAPI drift, and attempted Chrome browser startup.
-- **Exact next action:** Run the documented interactive browser login/logout/create/list check on a supported workstation, then decide whether a telemetry-exporter test is required before PR.
+- **Current checkpoint:** Sensitive telemetry tags are removed before export and verified by an automated test; browser validation remains environment-limited.
+- **Last completed step:** Added an OpenTelemetry processor and captured-tag redaction test.
+- **Exact next action:** Run the documented interactive browser login/logout/create/list check on a supported workstation, then open the PR after recording that result.
 - **Blockers:** Interactive browser validation requires a supported workstation/browser session outside this container.
-- **Partially modified areas:** No implementation files; validation evidence and resumable handoff state only.
-- **Validation performed:** Locked restore; clean zero-warning release build; formatting; complete tests; migration update against compose PostgreSQL; compose health; API health endpoints; OpenAPI drift; attempted headless Chrome startup.
-- **Known failures or limitations:** Chrome browser services fail in this container due missing display/DBus/graphics authorization, so interactive validation cannot be claimed. No captured telemetry-exporter test is configured.
-- **Working tree state:** Plan and registry handoff state are ready to commit; working tree otherwise clean.
+- **Partially modified areas:** API OpenTelemetry redaction processor and integration test coverage.
+- **Validation performed:** `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`; formatting verification; attempted Chrome DevTools DOM navigation with headless GPU-disabled flags.
+- **Known failures or limitations:** Chrome can render a local HTTPS page but cannot complete the OIDC form-navigation flow in this headless container, so interactive validation cannot be claimed. The real Keycloak HTTPS form-post smoke remains passed.
+- **Working tree state:** Source, test, plan, and registry changes are ready to commit.
 
 ## Progress log
+
+### 2026-07-29T11:35:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Implemented and tested captured telemetry redaction.
+- **Changes included in the commit:** Added an OpenTelemetry activity processor that removes authorization, cookie, token, body, product, and note tags before export; added a test that supplies representative sensitive tags and asserts they are absent while a safe HTTP status tag remains.
+- **Validation performed:** `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; headless Chrome DevTools retry with GPU disabled.
+- **Result:** The telemetry test passes and extends the PostgreSQL integration project coverage. Chrome could render local HTTPS but could not complete trusted interactive OIDC form navigation in this container.
+- **Known failures or unverified behavior:** Interactive graphical-browser login/logout/create/list remains unverified only because of the host browser environment. The earlier real Keycloak form-post HTTPS smoke is still valid.
+- **Blockers:** Interactive browser validation requires a supported workstation/browser session outside this container.
+- **Next action:** Execute the documented graphical-browser check on a supported host, record it, then open the PLAN-0003 pull request.
 
 ### 2026-07-29T11:20:00Z — Codex backend implementation agent
 
