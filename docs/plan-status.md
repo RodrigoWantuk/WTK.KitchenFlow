@@ -39,7 +39,6 @@ Plans with status `Draft`, `Ready`, `In Progress`, `Paused`, `Blocked`, or `Vali
 
 | Plan | Title | Type | Status | Delivery | Owner | Branch / PR | Current checkpoint | Exact next action | Blocker | Updated |
 |---|---|---|---|---|---|---|---|---|---|---|
-| [PLAN-0002](plans/PLAN-0002-specify-authenticated-inventory-vertical-slice.md) | Specify the First Authenticated Inventory Vertical Slice | Documentation | In Progress | Branch open | AI planning agent | `agent/plan-0002-first-vertical-slice-plans` | Detailed implementation/test plans and Windows/Linux environment baseline are complete and indexed | Validate complete branch and open PR | None | 2026-07-29T00:40:00Z |
 | [PLAN-0003](plans/PLAN-0003-implement-backend-inventory-slice.md) | Implement Backend Foundation and Inventory Core | Implementation | Ready | Not started | Unassigned backend agent | `agent/plan-0003-backend-inventory-slice` | Exact backend structure, auth, persistence, API, contract, observability, phases, and tests are specified | Claim after PLAN-0002 merge and verify environment | PLAN-0002 merge | 2026-07-29T00:25:00Z |
 | [PLAN-0004](plans/PLAN-0004-implement-lovable-inventory-ux.md) | Implement Lovable Application Shell and Inventory UX | Implementation | Ready | Not started | Unassigned Lovable/frontend agent | `agent/plan-0004-lovable-inventory-ux` | Exact Lovable repository workflow, prompts, UI, API integration, localization, accessibility, phases, and tests are specified | Owner creates dedicated Lovable project/repository after PLAN-0002 merge | PLAN-0002 merge; owner Lovable setup; live API waits for PLAN-0003 contract | 2026-07-29T00:25:00Z |
 | [PLAN-0005](plans/PLAN-0005-test-authenticated-inventory-slice.md) | Independently Validate the Authenticated Inventory Slice | Testing | Ready | Not started | Unassigned independent test agent | `agent/plan-0005-test-inventory-slice` | P0/P1/P2 cases, evidence, traceability, entry/exit, and defect rules are specified | Pin stable PLAN-0003 and PLAN-0004 PR commits when available | Stable implementation baselines | 2026-07-29T00:25:00Z |
@@ -50,6 +49,7 @@ Plans with status `Completed` belong here. Keep the most recent completed plans 
 
 | Plan | Title | Type | Delivery | Result | Completed |
 |---|---|---|---|---|---|
+| [PLAN-0002](plans/PLAN-0002-specify-authenticated-inventory-vertical-slice.md) | Specify the First Authenticated Inventory Vertical Slice | Documentation | [PR #6 open](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/6) | Exact first-slice specification, detailed backend/Lovable/test plans, and canonical Windows/Linux development environment | 2026-07-29 |
 | [PLAN-0001](plans/PLAN-0001-document-product-foundation.md) | Document the KitchenFlow Product Foundation | Documentation | [Merged via PR #5](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/5) | Complete product, domain, release, architecture, AI, privacy, security, operations, ADR, agent-reading, and test-gate foundation | 2026-07-28 |
 
 ## Cancelled or superseded plans
