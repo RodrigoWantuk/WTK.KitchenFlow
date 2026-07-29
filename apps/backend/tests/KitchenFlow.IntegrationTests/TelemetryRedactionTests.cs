@@ -45,5 +45,14 @@ public sealed class TelemetryRedactionTests
         Assert.True(createResponses.TryGetProperty("422", out _));
         Assert.True(updateResponses.TryGetProperty("428", out _));
         Assert.True(updateResponses.TryGetProperty("412", out _));
+
+        var securityScheme = document.GetProperty("components").GetProperty("securitySchemes").GetProperty("kitchenflowSession");
+        var createParameters = document.GetProperty("paths").GetProperty("/api/v1/inventory/lots").GetProperty("post").GetProperty("parameters");
+        var sessionResponses = document.GetProperty("paths").GetProperty("/api/v1/session").GetProperty("get").GetProperty("responses");
+
+        Assert.Equal("cookie", securityScheme.GetProperty("in").GetString());
+        Assert.Contains(createParameters.EnumerateArray(), parameter => parameter.GetProperty("name").GetString() == "X-CSRF-TOKEN");
+        Assert.Contains(createParameters.EnumerateArray(), parameter => parameter.GetProperty("name").GetString() == "Idempotency-Key");
+        Assert.True(sessionResponses.GetProperty("200").GetProperty("content").GetProperty("application/json").TryGetProperty("schema", out _));
     }
 }

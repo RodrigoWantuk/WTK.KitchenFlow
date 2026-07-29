@@ -34,8 +34,10 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
 
         var response = await client.GetAsync("/api/v1/session");
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
 
         Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("authentication_required", problem.GetProperty("errorCode").GetString());
     }
 
     [Fact]

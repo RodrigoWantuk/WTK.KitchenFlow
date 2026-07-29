@@ -43,7 +43,7 @@ if (!string.IsNullOrWhiteSpace(keyRingPath))
 var oidcAuthority = Environment.GetEnvironmentVariable("KITCHENFLOW_OIDC_AUTHORITY") ?? builder.Configuration["Oidc:Authority"] ?? "http://127.0.0.1:8080/realms/kitchenflow";
 var oidcClientId = Environment.GetEnvironmentVariable("KITCHENFLOW_OIDC_CLIENT_ID") ?? builder.Configuration["Oidc:ClientId"] ?? "kitchenflow-backend";
 var oidcClientSecret = Environment.GetEnvironmentVariable("KITCHENFLOW_OIDC_CLIENT_SECRET") ?? builder.Configuration["Oidc:ClientSecret"] ?? "development-only-change-me";
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options => { options.Cookie.Name = "__Host-kitchenflow-session"; options.Cookie.Path = "/"; options.Cookie.SecurePolicy = CookieSecurePolicy.Always; options.Cookie.HttpOnly = true; options.Cookie.SameSite = SameSiteMode.Lax; options.Events.OnRedirectToLogin = context => { context.Response.StatusCode = StatusCodes.Status401Unauthorized; return Task.CompletedTask; }; }).AddOpenIdConnect("oidc", options => { options.Authority = oidcAuthority; options.ClientId = oidcClientId; options.ClientSecret = oidcClientSecret; options.ResponseType = "code"; options.UsePkce = true; options.SaveTokens = false; options.RequireHttpsMetadata = !builder.Environment.IsDevelopment(); });
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options => { options.Cookie.Name = "__Host-kitchenflow-session"; options.Cookie.Path = "/"; options.Cookie.SecurePolicy = CookieSecurePolicy.Always; options.Cookie.HttpOnly = true; options.Cookie.SameSite = SameSiteMode.Lax; options.Events.OnRedirectToLogin = context => Results.Problem(statusCode: StatusCodes.Status401Unauthorized, extensions: new Dictionary<string, object?> { ["errorCode"] = "authentication_required", ["traceId"] = context.HttpContext.TraceIdentifier }).ExecuteAsync(context.HttpContext); }).AddOpenIdConnect("oidc", options => { options.Authority = oidcAuthority; options.ClientId = oidcClientId; options.ClientSecret = oidcClientSecret; options.ResponseType = "code"; options.UsePkce = true; options.SaveTokens = false; options.RequireHttpsMetadata = !builder.Environment.IsDevelopment(); });
 builder.Services.AddAuthorization();
 builder.Services.AddRateLimiter(options =>
 {
@@ -68,19 +68,19 @@ app.MapOpenApi("/openapi/{documentName}.json").AllowAnonymous();
 app.MapGet("/health/live", () => Results.Ok()).AllowAnonymous();
 app.MapGet("/health/ready", async (ApplicationDbContext db, CancellationToken ct) => await db.Database.CanConnectAsync(ct) ? Results.Ok() : Results.StatusCode(503)).AllowAnonymous();
 var api = app.MapGroup("/api/v1");
-api.MapPost("/auth/login", (string? returnUrl) => Results.Challenge(new AuthenticationProperties { RedirectUri = returnUrl is not null && returnUrl.StartsWith('/') && !returnUrl.StartsWith("//", StringComparison.Ordinal) ? returnUrl : "/" }, ["oidc"])).AllowAnonymous().RequireRateLimiting("authentication");
+api.MapPost("/auth/login", (string? returnUrl) => Results.Challenge(new AuthenticationProperties { RedirectUri = returnUrl is not null && returnUrl.StartsWith('/') && !returnUrl.StartsWith("//", StringComparison.Ordinal) ? returnUrl : "/" }, ["oidc"])).AllowAnonymous().RequireRateLimiting("authentication").Produces(StatusCodes.Status302Found);
 api.MapPost("/auth/logout", async (HttpContext context, IAntiforgery antiforgery) =>
 {
     try { await antiforgery.ValidateRequestAsync(context); }
     catch (AntiforgeryValidationException) { return Results.Problem(statusCode: 400, extensions: new Dictionary<string, object?> { ["errorCode"] = "validation_failed" }); }
     return Results.SignOut(new AuthenticationProperties { RedirectUri = "/" }, [CookieAuthenticationDefaults.AuthenticationScheme, "oidc"]);
-}).RequireAuthorization();
+}).RequireAuthorization().Produces(StatusCodes.Status302Found).ProducesProblem(400).ProducesProblem(401);
 api.MapGet("/session", async (HttpContext context, IAntiforgery antiforgery, CurrentUserService currentUser, CancellationToken cancellationToken) =>
 {
     var user = await currentUser.GetOrCreateAsync(cancellationToken);
     var tokens = antiforgery.GetAndStoreTokens(context);
-    return Results.Ok(new { userId = user.Id, csrfToken = tokens.RequestToken, supportedLocales = new[] { "en", "pt-BR", "es" } });
-}).RequireAuthorization();
+    return Results.Ok(new SessionResponse(user.Id, tokens.RequestToken!, ["en", "pt-BR", "es"]));
+}).RequireAuthorization().Produces<SessionResponse>().ProducesProblem(401);
 api.MapGroup("/inventory").RequireAuthorization().MapInventoryEndpoints();
 app.Run();
 
