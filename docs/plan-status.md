@@ -39,7 +39,7 @@ Plans with status `Draft`, `Ready`, `In Progress`, `Paused`, `Blocked`, or `Vali
 
 | Plan | Title | Type | Status | Delivery | Owner | Branch / PR | Current checkpoint | Exact next action | Blocker | Updated |
 |---|---|---|---|---|---|---|---|---|---|---|
-| _None_ |  |  |  |  |  |  |  |  |  |  |
+| [PLAN-0002](plans/PLAN-0002-specify-authenticated-inventory-vertical-slice.md) | Specify the First Authenticated Inventory Vertical Slice | Documentation | In Progress | Branch open | AI planning agent | `agent/plan-0002-first-vertical-slice-plans` | Exact first-slice product, API, data, security, localization, and sequencing requirements are specified | Add detailed PLAN-0003, PLAN-0004, and PLAN-0005 | None | 2026-07-29T00:15:00Z |
 
 ## Completed plans
 
@@ -47,7 +47,7 @@ Plans with status `Completed` belong here. Keep the most recent completed plans 
 
 | Plan | Title | Type | Delivery | Result | Completed |
 |---|---|---|---|---|---|
-| [PLAN-0001](plans/PLAN-0001-document-product-foundation.md) | Document the KitchenFlow Product Foundation | Documentation | [PR #5 open](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/5) | Complete product, domain, release, architecture, AI, privacy, security, operations, ADR, agent-reading, and test-gate foundation | 2026-07-28 |
+| [PLAN-0001](plans/PLAN-0001-document-product-foundation.md) | Document the KitchenFlow Product Foundation | Documentation | [Merged via PR #5](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/5) | Complete product, domain, release, architecture, AI, privacy, security, operations, ADR, agent-reading, and test-gate foundation | 2026-07-28 |
 
 ## Cancelled or superseded plans
 
