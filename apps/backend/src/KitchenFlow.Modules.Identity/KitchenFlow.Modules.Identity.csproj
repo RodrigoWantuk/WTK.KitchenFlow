@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>KitchenFlow.Modules.Identity</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../KitchenFlow.SharedKernel/KitchenFlow.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>

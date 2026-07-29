@@ -1,0 +1,35 @@
+name: Backend
+
+on:
+  pull_request:
+    paths:
+      - 'apps/backend/**'
+      - 'packages/contracts/openapi/**'
+      - 'infrastructure/**'
+      - 'scripts/backend/**'
+      - '.github/workflows/backend.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/backend/**'
+      - 'packages/contracts/openapi/**'
+      - 'infrastructure/**'
+      - 'scripts/backend/**'
+      - '.github/workflows/backend.yml'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: apps/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.302
+      - run: dotnet restore KitchenFlow.slnx --locked-mode
+      - run: dotnet format KitchenFlow.slnx --verify-no-changes --no-restore
+      - run: dotnet build KitchenFlow.slnx -c Release --no-restore
+      - run: dotnet test KitchenFlow.slnx -c Release --no-build

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <AssemblyName>KitchenFlow.Api</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../KitchenFlow.Infrastructure/KitchenFlow.Infrastructure.csproj" />
+    <ProjectReference Include="../KitchenFlow.Modules.Identity/KitchenFlow.Modules.Identity.csproj" />
+    <ProjectReference Include="../KitchenFlow.Modules.Inventory/KitchenFlow.Modules.Inventory.csproj" />
+  </ItemGroup>
+
+</Project>
