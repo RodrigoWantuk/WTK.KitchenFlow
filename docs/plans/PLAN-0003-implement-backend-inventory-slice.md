@@ -638,3 +638,12 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Result:** Build passed with zero warnings/errors; three PostgreSQL integration tests pass.
 - **Next action:** Add mutation, cross-user isolation, ETag, idempotency, and CSRF behavior tests; then run real Keycloak browser/session smoke validation.
 - **Blockers or handoff notes:** API behavior test coverage is growing but still incomplete for PLAN-0003.
+
+### 2026-07-29T02:45:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Added and passed a cross-user inventory isolation API test.
+- **Changes included in the commit:** Added a seeded foreign-owner lot test that asserts a separate authenticated user receives `404`; replaced an EF Core-untranslatable tuple join projection with owner-scoped lot/product queries.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; PostgreSQL integration suite (4 passed).
+- **Result:** Cross-user lot enumeration by ID is denied without disclosing existence.
+- **Next action:** Add state-changing CSRF, ETag, idempotency, and adjustment behavior tests; complete Keycloak authentication smoke validation.
+- **Blockers or handoff notes:** Full two-user mutation/list/history matrix remains incomplete.

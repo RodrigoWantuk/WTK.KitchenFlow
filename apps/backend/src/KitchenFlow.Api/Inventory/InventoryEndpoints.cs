@@ -199,7 +199,17 @@ public static class InventoryEndpoints
         catch (InvalidOperationException exception) { return Problem(422, "domain_rule_violated", exception.Message); }
     }
 
-    private static async Task<(LotRecord Lot, ProductRecord Product)?> FindLotAsync(Guid id, Guid ownerId, ApplicationDbContext db, CancellationToken ct) => await (from lot in db.Lots where lot.Id == id && lot.OwnerUserId == ownerId join product in db.Products on lot.ProductId equals product.Id where product.OwnerUserId == ownerId select new ValueTuple<LotRecord, ProductRecord>(lot, product)).SingleOrDefaultAsync(ct);
+    private static async Task<(LotRecord Lot, ProductRecord Product)?> FindLotAsync(Guid id, Guid ownerId, ApplicationDbContext db, CancellationToken ct)
+    {
+        var lot = await db.Lots.SingleOrDefaultAsync(candidate => candidate.Id == id && candidate.OwnerUserId == ownerId, ct);
+        if (lot is null)
+        {
+            return null;
+        }
+
+        var product = await db.Products.SingleOrDefaultAsync(candidate => candidate.Id == lot.ProductId && candidate.OwnerUserId == ownerId, ct);
+        return product is null ? null : (lot, product);
+    }
     private static LotResponse ToResponse(LotRecord lot, string productName) => new(lot.Id, lot.ProductId, productName, ToQuantity(lot), lot.StorageLocation, lot.CustomLocation, lot.PackageState, lot.PrintedExpirationDate, lot.Notes, lot.Version, lot.CreatedAt, lot.UpdatedAt);
     private static QuantityResponse ToQuantity(LotRecord lot) => new(lot.MeasuredValue, lot.MeasuredUnit, lot.AvailabilityState);
     private static IResult WithEtag(LotResponse response, long version, int status = 200) => new EtagResult<LotResponse>(response, Etag(version), status);
