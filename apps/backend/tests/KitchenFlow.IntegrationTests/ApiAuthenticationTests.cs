@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Encodings.Web;
 using KitchenFlow.Api.Services;
 using KitchenFlow.Infrastructure.Persistence;
+using KitchenFlow.Modules.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -93,6 +94,22 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
 
         Assert.Equal(System.Net.HttpStatusCode.Created, first.StatusCode);
         Assert.Equal(System.Net.HttpStatusCode.Created, second.StatusCode);
+        Assert.Equal(1, list.GetProperty("items").GetArrayLength());
+    }
+
+    [Fact]
+    public async Task ConcurrentCreateWithSameIdempotencyKeyReplaysTheWinningResponse()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var key = Guid.NewGuid().ToString();
+
+        var responses = await Task.WhenAll(CreateAsync(client, csrf, key, "Concurrent tomato"), CreateAsync(client, csrf, key, "Concurrent tomato"));
+        var list = await client.GetFromJsonAsync<JsonElement>("/api/v1/inventory/lots?search=Concurrent%20tomato");
+
+        Assert.All(responses, response => Assert.Equal(System.Net.HttpStatusCode.Created, response.StatusCode));
         Assert.Equal(1, list.GetProperty("items").GetArrayLength());
     }
 
@@ -391,6 +408,7 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
             var productId = Guid.NewGuid();
             var lotId = Guid.NewGuid();
             var now = DateTimeOffset.UtcNow;
+            database.Users.Add(new InternalUser(ownerId, "https://integration.test", $"seeded-{ownerId:N}", now));
             database.Products.Add(new ProductRecord { Id = productId, OwnerUserId = ownerId, DisplayName = "Private tomato", NormalizedSearchName = "PRIVATE TOMATO", CreatedAt = now, UpdatedAt = now });
             database.Lots.Add(new LotRecord { Id = lotId, OwnerUserId = ownerId, ProductId = productId, MeasuredValue = 100m, MeasuredUnit = "Gram", StorageLocation = "Pantry", Version = 1, CreatedAt = now, UpdatedAt = now });
             await database.SaveChangesAsync();

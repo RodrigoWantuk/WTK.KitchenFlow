@@ -131,7 +131,16 @@ public static class InventoryEndpoints
         }
 
         var user = await currentUser.GetOrCreateAsync(cancellationToken);
-        var hash = Hash(request);
+        var hash = Hash(new
+        {
+            ProductName = productName,
+            Quantity = new { request.Quantity.MeasuredValue, request.Quantity.Unit, request.Quantity.AvailabilityState },
+            request.StorageLocation,
+            CustomLocation = request.CustomLocation?.Trim(),
+            request.PackageState,
+            request.PrintedExpirationDate,
+            Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim()
+        });
         var prior = await database.IdempotencyRecords.SingleOrDefaultAsync(record => record.OwnerUserId == user.Id && record.Scope == "inventory.lots.create" && record.Key == key, cancellationToken);
         if (prior is not null)
         {
@@ -154,7 +163,14 @@ public static class InventoryEndpoints
         var lot = new LotRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, ProductId = product.Id, MeasuredValue = request.Quantity.MeasuredValue, MeasuredUnit = request.Quantity.Unit, AvailabilityState = request.Quantity.AvailabilityState, StorageLocation = request.StorageLocation, CustomLocation = request.CustomLocation?.Trim(), PackageState = request.PackageState, PrintedExpirationDate = request.PrintedExpirationDate, ExpirationProvenance = request.PrintedExpirationDate is null ? null : "UserEntered", Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim(), Version = 1, CreatedAt = now, UpdatedAt = now };
         var response = ToResponse(lot, product.DisplayName);
         database.AddRange(product, lot, new TransactionRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, LotId = lot.Id, Type = "Initial", ResultingMeasuredValue = lot.MeasuredValue, ResultingMeasuredUnit = lot.MeasuredUnit, ResultingAvailabilityState = lot.AvailabilityState, OccurredAt = now }, new AuditEventRecord { Id = Guid.NewGuid(), ActorUserId = user.Id, EventName = "inventory.lot.created", TargetType = "inventory_lot", TargetId = lot.Id, CorrelationId = httpRequest.HttpContext.TraceIdentifier, MetadataJson = "{}", OccurredAt = now }, new IdempotencyRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, Scope = "inventory.lots.create", Key = key, RequestHash = hash, StatusCode = 201, ResponseBody = JsonSerializer.Serialize(response), ETag = Etag(lot.Version), CreatedAt = now, CompletedAt = now });
-        await database.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await database.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            return await ReplayAfterIdempotencyRaceAsync(database, user.Id, "inventory.lots.create", key, hash, StatusCodes.Status201Created, cancellationToken);
+        }
         return WithEtag(response, lot.Version, StatusCodes.Status201Created);
     }
 
@@ -194,7 +210,15 @@ public static class InventoryEndpoints
         }
 
         var user = await currentUser.GetOrCreateAsync(cancellationToken);
-        var hash = Hash(new { LotId = lotId, Request = request });
+        var hash = Hash(new
+        {
+            LotId = lotId,
+            request.Type,
+            request.Value,
+            request.AvailabilityState,
+            ReasonCode = string.IsNullOrWhiteSpace(request.ReasonCode) ? null : request.ReasonCode.Trim(),
+            Note = string.IsNullOrWhiteSpace(request.Note) ? null : request.Note.Trim()
+        });
         var prior = await database.IdempotencyRecords.SingleOrDefaultAsync(record => record.OwnerUserId == user.Id && record.Scope == "inventory.lots.adjust" && record.Key == key, cancellationToken);
         if (prior is not null)
         {
@@ -290,7 +314,15 @@ public static class InventoryEndpoints
             await database.SaveChangesAsync(cancellationToken);
             return successStatus == 204 ? Results.NoContent() : WithEtag(response, item.Value.Lot.Version);
         }
+        catch (DbUpdateConcurrencyException) when (idempotencyKey is not null)
+        {
+            return await ReplayAfterIdempotencyRaceAsync(database, user.Id, idempotencyScope!, idempotencyKey.Value, idempotencyHash!, successStatus, cancellationToken);
+        }
         catch (DbUpdateConcurrencyException) { return Problem(412, "precondition_failed", "The inventory lot was modified."); }
+        catch (DbUpdateException) when (idempotencyKey is not null)
+        {
+            return await ReplayAfterIdempotencyRaceAsync(database, user.Id, idempotencyScope!, idempotencyKey.Value, idempotencyHash!, successStatus, cancellationToken);
+        }
         catch (InvalidOperationException exception) { return Problem(422, "domain_rule_violated", exception.Message); }
     }
 
@@ -333,6 +365,28 @@ public static class InventoryEndpoints
         return error is null;
     }
     private static string Hash<T>(T value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value))));
+
+    private static async Task<IResult> ReplayAfterIdempotencyRaceAsync(ApplicationDbContext database, Guid ownerUserId, string scope, Guid key, string hash, int successStatus, CancellationToken cancellationToken)
+    {
+        // A unique PostgreSQL index elects one concurrent request as the owner. Clearing tracked
+        // failed inserts is essential before loading that owner's committed semantic response.
+        database.ChangeTracker.Clear();
+        var record = await database.IdempotencyRecords.SingleOrDefaultAsync(candidate => candidate.OwnerUserId == ownerUserId && candidate.Scope == scope && candidate.Key == key, cancellationToken);
+        if (record is null || record.CompletedAt is null)
+        {
+            return Problem(409, "idempotency_in_progress", "The request is still being processed.");
+        }
+
+        if (!string.Equals(record.RequestHash, hash, StringComparison.Ordinal))
+        {
+            return Problem(409, "idempotency_key_reused", "The Idempotency-Key was used for a different request.");
+        }
+
+        var response = JsonSerializer.Deserialize<LotResponse>(record.ResponseBody!);
+        return response is null
+            ? Problem(409, "idempotency_in_progress", "The request is still being processed.")
+            : WithEtag(response, response.Version, successStatus);
+    }
     private static string WriteCursor(CursorPosition position, IDataProtectionProvider provider) => provider.CreateProtector("KitchenFlow.Inventory.LotCursor.v1").Protect(JsonSerializer.Serialize(position));
     private static bool TryReadCursor(string cursor, IDataProtectionProvider provider, out CursorPosition? position)
     {

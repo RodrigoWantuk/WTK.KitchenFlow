@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend implementation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T13:00:00Z
+- **Last updated:** 2026-07-29T13:20:00Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, open)
 - **Related implementation plan:** PLAN-0002
@@ -483,16 +483,27 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Current `main`, immediate review defects, and PostgreSQL referential/domain integrity are corrected; the module application-service/domain refactor is the active substantial outcome.
-- **Last completed step:** Added the referential-integrity migration and database constraints that prevent orphaned, cross-owner, invalid-unit/state, negative-value, and invalid storage/provenance records.
-- **Exact next action:** Refactor inventory endpoint execution into module application services backed by authoritative domain behavior, then make idempotency concurrency-safe and expand migration-constraint tests.
+- **Current checkpoint:** Current `main`, immediate review defects, PostgreSQL referential integrity, and concurrent idempotency replay are corrected; the module application-service/domain refactor is the active substantial outcome.
+- **Last completed step:** Added PostgreSQL unique-race replay and canonical request hashing for create and adjustment commands, with simultaneous-create coverage.
+- **Exact next action:** Refactor inventory endpoint execution into module application services backed by authoritative domain behavior, then add direct migration-constraint coverage and complete Problem Details/OpenAPI contracts.
 - **Blockers:** None.
-- **Partially modified areas:** EF Core model, generated integrity migration/model snapshot, and active-plan state.
-- **Validation performed:** `dotnet tool run dotnet-ef migrations add EnforceInventoryReferentialIntegrity --project apps/backend/src/KitchenFlow.Infrastructure/KitchenFlow.Infrastructure.csproj --startup-project apps/backend/src/KitchenFlow.Api/KitchenFlow.Api.csproj --output-dir Persistence/Migrations`; `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`.
-- **Known failures or limitations:** The application/domain, idempotency-concurrency, OpenAPI/error-contract, XML documentation, expanded test/CI, and runbook corrections remain unfinished. The current snapshot is not a stable PLAN-0004 contract. EF tooling reports a non-failing local `10.0.3` tool versus `10.0.4` runtime advisory.
-- **Working tree state:** The referential-integrity migration checkpoint is ready to commit.
+- **Partially modified areas:** Inventory endpoint idempotency race handling, idempotency canonicalization, API integration fixtures, and active-plan state.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`.
+- **Known failures or limitations:** The application/domain, OpenAPI/error-contract, XML documentation, expanded test/CI, and runbook corrections remain unfinished. The current snapshot is not a stable PLAN-0004 contract. EF tooling reports a non-failing local `10.0.3` tool versus `10.0.4` runtime advisory.
+- **Working tree state:** The concurrent-idempotency checkpoint is ready to commit.
 
 ## Progress log
+
+### 2026-07-29T13:20:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Made PostgreSQL-backed create and adjustment idempotency resilient to concurrent duplicate requests.
+- **Changes included in the commit:** Canonicalized semantically normalized create/adjustment payloads before hashing; after a unique-key or optimistic-concurrency race, clears failed EF tracking and loads the winner's persisted response for semantic replay; added simultaneous create integration coverage; seeded an internal user in the cross-user fixture so it remains valid under the new foreign keys.
+- **Documentation and code documentation delivered:** Added an inline rationale explaining the transaction-race cleanup/replay boundary; synchronized plan and registry state.
+- **Validation performed:** Release build and PostgreSQL/Testcontainers integration test project.
+- **Result:** Two concurrent identical creates with the same `Idempotency-Key` receive `201` and produce exactly one lot; existing integration behavior continues to pass.
+- **Known failures or unverified behavior:** Simultaneous adjustment replay, module application services/domain execution, direct schema-constraint tests, Problem Details/OpenAPI, XML documentation, CI, and runbook work remain open.
+- **Blockers:** None.
+- **Next action:** Refactor executable inventory behavior into module application services that invoke the domain model, then add direct foreign-key and constraint rejection tests.
 
 ### 2026-07-29T13:00:00Z — Codex backend implementation agent
 
