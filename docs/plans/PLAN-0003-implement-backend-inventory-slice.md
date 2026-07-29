@@ -593,6 +593,15 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Next action:** Export and check in the OpenAPI snapshot, add drift verification, and add the missing tests.
 - **Blockers or handoff notes:** Runtime document endpoint exists but the contract milestone is not yet complete until export/drift validation is added.
 
+### 2026-07-28T01:30:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Created and validated the first OpenAPI contract snapshot.
+- **Changes included in the commit:** Registered OpenAPI generation services, generated `packages/contracts/openapi/kitchenflow-v1.json` from the live API, and added `scripts/backend/check-openapi.sh` for deterministic parse/drift verification.
+- **Validation performed:** Started the API with real PostgreSQL; fetched `/openapi/v1.json` (OpenAPI 3.1.1, nine paths); `jq empty packages/contracts/openapi/kitchenflow-v1.json`; `scripts/backend/check-openapi.sh`.
+- **Result:** The checked-in snapshot parses and matches the runtime contract.
+- **Next action:** Expand endpoint metadata/examples and add behavior/isolation tests before declaring the contract milestone complete for frontend integration.
+- **Blockers or handoff notes:** Snapshot currently reflects the implemented API foundation only; the remaining PLAN-0003 contract behavior must be completed before PLAN-0004 integration is unblocked.
+
 ### 2026-07-29T00:25:00Z — AI planning agent
 
 - **Checkpoint:** Implementation plan created.

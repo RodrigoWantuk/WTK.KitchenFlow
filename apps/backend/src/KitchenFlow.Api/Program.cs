@@ -27,6 +27,7 @@ builder.Services.AddScoped<CurrentUserService>();
 builder.Services.AddAntiforgery(options => { options.HeaderName = "X-CSRF-TOKEN"; options.Cookie.Name = "__Host-kitchenflow-antiforgery"; options.Cookie.SecurePolicy = CookieSecurePolicy.Always; });
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options => { options.Cookie.Name = "__Host-kitchenflow-session"; options.Cookie.SecurePolicy = CookieSecurePolicy.Always; options.Cookie.HttpOnly = true; options.Cookie.SameSite = SameSiteMode.Lax; options.Events.OnRedirectToLogin = context => { context.Response.StatusCode = StatusCodes.Status401Unauthorized; return Task.CompletedTask; }; }).AddOpenIdConnect("oidc", options => { options.Authority = builder.Configuration["Oidc:Authority"] ?? "http://127.0.0.1:8080/realms/kitchenflow"; options.ClientId = builder.Configuration["Oidc:ClientId"] ?? "kitchenflow-backend"; options.ClientSecret = builder.Configuration["Oidc:ClientSecret"] ?? "development-only-change-me"; options.ResponseType = "code"; options.UsePkce = true; options.SaveTokens = false; options.RequireHttpsMetadata = !builder.Environment.IsDevelopment(); });
 builder.Services.AddAuthorization();
+builder.Services.AddOpenApi();
 builder.Services.AddOpenTelemetry().WithTracing(tracing => tracing.AddAspNetCoreInstrumentation().AddEntityFrameworkCoreInstrumentation()).WithMetrics(metrics => metrics.AddAspNetCoreInstrumentation());
 
 var app = builder.Build();
