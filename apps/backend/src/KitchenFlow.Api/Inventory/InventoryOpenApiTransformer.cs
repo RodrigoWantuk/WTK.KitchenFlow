@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
@@ -70,6 +71,8 @@ internal static class InventoryOpenApiTransformer
                     operation.Parameters.Add(Header("Idempotency-Key", "Required UUID key for semantic create or adjustment replay."));
                 }
 
+                AddExamples(path, method, operation);
+
                 foreach (var response in (operation.Responses ?? []).Where(response => response.Key is "200" or "201"))
                 {
                     if (response.Value is OpenApiResponse typedResponse)
@@ -90,4 +93,36 @@ internal static class InventoryOpenApiTransformer
         Required = true,
         Description = description
     };
+
+    private static void AddExamples(string path, HttpMethod method, OpenApiOperation operation)
+    {
+        if (path.EndsWith("/lots", StringComparison.Ordinal) && method == HttpMethod.Post)
+        {
+            AddRequestExample(operation, "measuredLot", "A manually entered measured pantry lot.", """{"productName":"Red lentils","quantity":{"measuredValue":500,"unit":"Gram","availabilityState":null},"storageLocation":"Pantry","customLocation":null,"packageState":"Sealed","printedExpirationDate":"2026-12-31","notes":null}""");
+            AddProblemExample(operation, "422", "invalidQuantity", "A measured and availability quantity cannot be supplied together.", """{"status":422,"errorCode":"domain_rule_violated"}""");
+        }
+
+        if (path.EndsWith("/adjustments", StringComparison.Ordinal) && method == HttpMethod.Post)
+        {
+            AddRequestExample(operation, "consume", "Consumes a measured quantity from the current lot version.", """{"type":"Consume","value":125,"availabilityState":null,"reasonCode":"meal","note":null}""");
+            AddProblemExample(operation, "412", "staleEtag", "The supplied opaque ETag is no longer current.", """{"status":412,"errorCode":"precondition_failed"}""");
+            AddProblemExample(operation, "409", "reusedIdempotencyKey", "The key was used for a different semantic command.", """{"status":409,"errorCode":"idempotency_key_reused"}""");
+        }
+    }
+
+    private static void AddRequestExample(OpenApiOperation operation, string name, string summary, string value)
+    {
+        if (operation.RequestBody?.Content is { } content && content.TryGetValue("application/json", out var requestMediaType) && requestMediaType is OpenApiMediaType mediaType)
+        {
+            (mediaType.Examples ??= new Dictionary<string, IOpenApiExample>())[name] = new OpenApiExample { Summary = summary, Value = JsonNode.Parse(value) };
+        }
+    }
+
+    private static void AddProblemExample(OpenApiOperation operation, string statusCode, string name, string summary, string value)
+    {
+        if (operation.Responses is { } responses && responses.TryGetValue(statusCode, out var response) && response.Content is { } content && content.TryGetValue("application/problem+json", out var responseMediaType) && responseMediaType is OpenApiMediaType mediaType)
+        {
+            (mediaType.Examples ??= new Dictionary<string, IOpenApiExample>())[name] = new OpenApiExample { Summary = summary, Value = JsonNode.Parse(value) };
+        }
+    }
 }
