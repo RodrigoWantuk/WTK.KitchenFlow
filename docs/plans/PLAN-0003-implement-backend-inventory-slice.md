@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend implementation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T17:30:51Z
+- **Last updated:** 2026-07-29T18:55:09Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, open)
 - **Related implementation plan:** PLAN-0002
@@ -483,16 +483,27 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Inventory routes map HTTP and CSRF only; the application-service seam owns command/query orchestration; versions are protected opaque tokens; PostgreSQL constraints and field-level adjustment failures are directly verified.
-- **Last completed step:** Completed adjustment command validation for type, value, quantity mode, reason, and note, with deterministic field errors and nonempty trace IDs.
+- **Current checkpoint:** Inventory routes map HTTP and CSRF only; adjustment semantics are now owned by a typed module application command; versions remain protected opaque tokens and PostgreSQL constraints are verified directly.
+- **Last completed step:** Moved adjustment command normalization and field validation into `KitchenFlow.Modules.Inventory.Application.InventoryAdjustmentCommand`.
 - **Exact next action:** Move the application-service contract into `KitchenFlow.Modules.Inventory.Application` and provide an infrastructure persistence adapter, so the composition-root service becomes a thin adapter rather than the authoritative use-case implementation.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
-- **Validation performed:** Release build; targeted opaque-version, PostgreSQL-constraint, and adjustment-error integration tests; formatting verification; live HTTPS OpenAPI export; reproducible snapshot export and drift check; diff whitespace verification.
+- **Validation performed:** Release build; six unit tests; three focused PostgreSQL/Testcontainers adjustment integration tests; formatting verification; diff whitespace verification.
 - **Known failures or limitations:** The application service is still in the API composition root and directly uses persistence. The required module-owned application contracts/ports and infrastructure adapter, complete XML documentation enforcement, broadened tests/CI, and operational runbooks remain unfinished. The regenerated snapshot is not yet a stable PLAN-0004 milestone because the broader correction work remains open.
-- **Working tree state:** Adjustment-validation checkpoint is ready to commit with synchronized plan and registry updates.
+- **Working tree state:** Module-owned adjustment-command checkpoint is ready to commit with synchronized plan and registry updates.
 
 ## Progress log
+
+### 2026-07-29T18:55:09Z — Codex backend implementation agent
+
+- **Checkpoint:** Began module-owned executable application contracts by moving inventory adjustment normalization into the inventory module.
+- **Changes included in the commit:** Added `InventoryAdjustmentCommand` under `KitchenFlow.Modules.Inventory.Application`; it validates command type, quantity mode, decimal precision, qualitative state, immutable-history reason code, and private note while normalizing trim behavior. The API application service now consumes only this typed command for idempotency hashing and domain transitions, and the superseded duplicate API validator was removed.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx --configuration Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.UnitTests/KitchenFlow.UnitTests.csproj --configuration Release --no-build` (6 passed); focused adjustment integration tests (3 passed); `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; `git diff --check`.
+- **Result:** HTTP request strings no longer determine adjustment semantics after adapter mapping; the module exposes a normalized, type-safe command suitable for the upcoming persistence-port use case.
+- **Known failures or unverified behavior:** Create, metadata, query, deletion, history, and persistence orchestration remain API-owned. The full module use-case contract/port and infrastructure adapter, XML documentation enforcement, expanded tests/CI, and runbooks remain open.
+- **Blockers:** None.
+- **Next action:** Define the remaining module use-case contracts and an explicit inventory persistence port, then move the authoritative orchestration behind an infrastructure adapter.
+
 
 ### 2026-07-29T17:30:51Z — Codex backend implementation agent
 

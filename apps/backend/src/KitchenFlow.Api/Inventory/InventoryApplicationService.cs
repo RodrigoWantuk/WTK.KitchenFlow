@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using KitchenFlow.Api.Services;
 using KitchenFlow.Infrastructure.Persistence;
+using KitchenFlow.Modules.Inventory.Application;
 using KitchenFlow.Modules.Inventory.Domain;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.DataProtection;
@@ -225,20 +226,21 @@ public sealed class InventoryApplicationService(
             return Problem(400, "validation_failed", "A UUID Idempotency-Key header is required.", FieldErrors("Idempotency-Key", "A UUID Idempotency-Key header is required."));
         }
 
-        if (!ValidateAdjustment(request, out var adjustmentErrors))
+        if (!InventoryAdjustmentCommand.TryCreate(request.Type, request.Value, request.AvailabilityState, request.ReasonCode, request.Note, out var command, out var adjustmentErrors))
         {
             return Problem(422, "domain_rule_violated", adjustmentErrors.First().Value[0], adjustmentErrors);
         }
+        var adjustment = command!;
 
         var user = await currentUser.GetOrCreateAsync(cancellationToken);
         var hash = Hash(new
         {
             LotId = lotId,
-            request.Type,
-            request.Value,
-            request.AvailabilityState,
-            ReasonCode = string.IsNullOrWhiteSpace(request.ReasonCode) ? null : request.ReasonCode.Trim(),
-            Note = string.IsNullOrWhiteSpace(request.Note) ? null : request.Note.Trim()
+            adjustment.Type,
+            adjustment.Value,
+            adjustment.AvailabilityState,
+            adjustment.ReasonCode,
+            adjustment.Note
         });
         var prior = await database.IdempotencyRecords.SingleOrDefaultAsync(record => record.OwnerUserId == user.Id && record.Scope == "inventory.lots.adjust" && record.Key == key, cancellationToken);
         if (prior is not null)
@@ -260,12 +262,12 @@ public sealed class InventoryApplicationService(
         return await MutateAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken, (lot, _, now) =>
         {
             var domainLot = ToDomain(lot);
-            InventoryTransaction transaction = request.Type switch
+            InventoryTransaction transaction = adjustment.Type switch
             {
-                "Consume" => domainLot.AdjustMeasured(InventoryTransactionType.Consume, request.Value ?? throw new InvalidOperationException("A measured adjustment value is required."), request.ReasonCode?.Trim(), request.Note?.Trim(), key, now),
-                "Discard" => domainLot.AdjustMeasured(InventoryTransactionType.Discard, request.Value ?? throw new InvalidOperationException("A measured adjustment value is required."), request.ReasonCode?.Trim(), request.Note?.Trim(), key, now),
-                "Correct" => domainLot.AdjustMeasured(InventoryTransactionType.Correct, request.Value ?? throw new InvalidOperationException("A measured adjustment value is required."), request.ReasonCode?.Trim(), request.Note?.Trim(), key, now),
-                "AvailabilityChanged" when request.Value is null && request.AvailabilityState is not null && !string.IsNullOrWhiteSpace(request.ReasonCode) => domainLot.ChangeAvailability(Enum.Parse<AvailabilityState>(request.AvailabilityState), request.ReasonCode.Trim(), request.Note?.Trim(), key, now),
+                InventoryTransactionType.Consume => domainLot.AdjustMeasured(InventoryTransactionType.Consume, adjustment.Value!.Value, adjustment.ReasonCode, adjustment.Note, key, now),
+                InventoryTransactionType.Discard => domainLot.AdjustMeasured(InventoryTransactionType.Discard, adjustment.Value!.Value, adjustment.ReasonCode, adjustment.Note, key, now),
+                InventoryTransactionType.Correct => domainLot.AdjustMeasured(InventoryTransactionType.Correct, adjustment.Value!.Value, adjustment.ReasonCode, adjustment.Note, key, now),
+                InventoryTransactionType.AvailabilityChanged => domainLot.ChangeAvailability(adjustment.AvailabilityState!.Value, adjustment.ReasonCode, adjustment.Note, key, now),
                 _ => throw new InvalidOperationException("The adjustment is invalid for this lot.")
             };
             CopyToRecord(domainLot, lot);
@@ -468,56 +470,6 @@ public sealed class InventoryApplicationService(
         var available = quantity?.MeasuredValue is null && quantity?.Unit is null && quantity?.AvailabilityState is "Available" or "Low" or "Unavailable";
         error = measured || available ? null : "Quantity must be either a positive canonical measured value with a maximum of three decimal places or an availability state.";
         return error is null;
-    }
-    private static bool ValidateAdjustment(AdjustmentRequest request, out IReadOnlyDictionary<string, string[]> errors)
-    {
-        var validationErrors = new Dictionary<string, string[]>(StringComparer.Ordinal);
-        var measuredCommand = request.Type is "Consume" or "Discard" or "Correct";
-        var availabilityCommand = request.Type == "AvailabilityChanged";
-        if (!measuredCommand && !availabilityCommand)
-        {
-            validationErrors["type"] = ["type must be Consume, Discard, Correct, or AvailabilityChanged."];
-        }
-
-        if (string.IsNullOrWhiteSpace(request.ReasonCode) || request.ReasonCode.Trim().Length > 100)
-        {
-            validationErrors["reasonCode"] = ["reasonCode is required and must be at most 100 characters."];
-        }
-
-        if (request.Note is not null && request.Note.Trim().Length > 1000)
-        {
-            validationErrors["note"] = ["note must be at most 1000 characters."];
-        }
-
-        if (measuredCommand)
-        {
-            var hasValidValue = request.Value is { } value && decimal.Round(value, 3) == value && (request.Type == "Correct" ? value >= 0m : value > 0m);
-            if (!hasValidValue)
-            {
-                validationErrors["value"] = [request.Type == "Correct" ? "value must be a nonnegative decimal with at most three decimal places." : "value must be a positive decimal with at most three decimal places."];
-            }
-
-            if (request.AvailabilityState is not null)
-            {
-                validationErrors["availabilityState"] = ["availabilityState is only valid for AvailabilityChanged."];
-            }
-        }
-
-        if (availabilityCommand)
-        {
-            if (request.Value is not null)
-            {
-                validationErrors["value"] = ["value must be omitted for AvailabilityChanged."];
-            }
-
-            if (request.AvailabilityState is not ("Available" or "Low" or "Unavailable"))
-            {
-                validationErrors["availabilityState"] = ["availabilityState must be Available, Low, or Unavailable."];
-            }
-        }
-
-        errors = validationErrors;
-        return validationErrors.Count == 0;
     }
     private static string Hash<T>(T value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value))));
 
