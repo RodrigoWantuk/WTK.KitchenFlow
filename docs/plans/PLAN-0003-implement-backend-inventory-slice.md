@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Inventory orchestration resolves identity through the module-owned `ICurrentUserAccessor` contract rather than an API concrete type; persistence-port extraction remains next.
-- **Last completed step:** Introduced the inward-facing current-user application contract and wired the API identity resolver as its adapter.
+- **Current checkpoint:** The generated OpenAPI snapshot includes the current documented contract; CI drift from XML-derived schema descriptions is corrected locally.
+- **Last completed step:** Reproduced the current GitHub Actions OpenAPI drift and regenerated the checked-in snapshot from the Release API against Compose PostgreSQL.
 - **Exact next action:** Move the application-service contract into `KitchenFlow.Modules.Inventory.Application` and provide an infrastructure persistence adapter, so the composition-root service becomes a thin adapter rather than the authoritative use-case implementation.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
 - **Validation performed:** GitHub Actions runs `30484702156` and `30485251129` (the latter failed during fresh PostgreSQL 18 Compose startup before its gates); focused migration constraints and idempotency canonicalization tests; Release solution build; formatting verification; migration downgrade and upgrade against fresh Compose PostgreSQL; PostgreSQL and Keycloak readiness/discovery.
 - **Known failures or limitations:** The application service is still in the API composition root and directly uses persistence. Module persistence ports/adapters, automated real-Keycloak login/two-user smoke, operational runbooks, and a successful rerun of the expanded GitHub Actions workflow remain unfinished.
-- **Working tree state:** Module-owned current-user accessor checkpoint is ready to commit with synchronized plan and registry updates.
+- **Working tree state:** Regenerated OpenAPI contract snapshot is ready to commit with synchronized plan and registry updates.
 
 ## Progress log
+
+### 2026-07-29T20:25:26Z — Codex backend implementation agent
+
+- **Checkpoint:** Reconciled the checked-in OpenAPI 3.1 snapshot with the documented Release API.
+- **Changes included in the commit:** Regenerated `packages/contracts/openapi/kitchenflow-v1.json` after XML documentation enforcement added schema descriptions to the generated document.
+- **Validation performed:** Inspected failed GitHub Actions run `30486106912`; Release solution build (zero warnings/errors); started the Release API on `http://127.0.0.1:7080` with Compose PostgreSQL; `/health/ready` (200); `KITCHENFLOW_OPENAPI_URL=http://127.0.0.1:7080/openapi/v1.json bash scripts/backend/export-openapi.sh`; matching `check-openapi.sh`; `git diff --check`.
+- **Result:** The locally generated snapshot now includes the same XML-derived schema descriptions that caused CI drift, so the next CI run can validate the full current contract.
+- **Known failures or unverified behavior:** This snapshot has not yet passed GitHub Actions. The application service still directly uses EF persistence; module persistence ports/adapters, automated real-Keycloak login/two-user smoke, and operational runbooks remain open.
+- **Blockers:** None.
+- **Next action:** Commit and push the regenerated snapshot, inspect the replacement GitHub Actions run, then complete the remaining application/persistence boundary work or document any external validation gap truthfully.
 
 ### 2026-07-29T19:49:10Z — Codex backend implementation agent
 

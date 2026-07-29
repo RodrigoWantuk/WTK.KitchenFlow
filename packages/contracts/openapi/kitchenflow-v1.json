@@ -2,6 +2,7 @@
   "components": {
     "schemas": {
       "AdjustmentRequest": {
+        "description": "Records an explicit immutable inventory adjustment.",
         "properties": {
           "availabilityState": {
             "type": [
@@ -46,6 +47,7 @@
         "type": "object"
       },
       "CreateLotRequest": {
+        "description": "Creates one manually entered, user-owned inventory lot.",
         "properties": {
           "customLocation": {
             "type": [
@@ -102,6 +104,7 @@
         "type": "object"
       },
       "ListLotsResponse": {
+        "description": "Returns a cursor-paginated owner-scoped inventory list.",
         "properties": {
           "items": {
             "items": {
@@ -123,6 +126,7 @@
         "type": "object"
       },
       "LotHistoryResponse": {
+        "description": "Returns an immutable lifecycle transaction and its optional quantity snapshots.",
         "properties": {
           "occurredAt": {
             "format": "date-time",
@@ -173,6 +177,7 @@
         "type": "object"
       },
       "LotResponse": {
+        "description": "Returns the current representation of an inventory lot.",
         "properties": {
           "createdAt": {
             "format": "date-time",
@@ -298,6 +303,7 @@
         "type": "object"
       },
       "QuantityRequest": {
+        "description": "Represents exactly one inventory quantity mode supplied by an API client.",
         "properties": {
           "availabilityState": {
             "enum": [
@@ -329,6 +335,7 @@
         "type": "object"
       },
       "QuantityResponse": {
+        "description": "Returns a measured or qualitative quantity without mixing the two modes.",
         "properties": {
           "availabilityState": {
             "enum": [
@@ -360,6 +367,7 @@
         "type": "object"
       },
       "SessionResponse": {
+        "description": "Returns the KitchenFlow internal user identifier and request-specific CSRF token for a backend-managed browser session.\nOIDC access and refresh tokens are intentionally never present in this response.",
         "properties": {
           "csrfToken": {
             "type": "string"
@@ -383,6 +391,7 @@
         "type": "object"
       },
       "UpdateLotRequest": {
+        "description": "Corrects mutable lot metadata without accepting any authoritative owner identifier.",
         "properties": {
           "customLocation": {
             "type": [
