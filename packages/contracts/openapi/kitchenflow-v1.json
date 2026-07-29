@@ -1209,7 +1209,8 @@
   },
   "servers": [
     {
-      "url": "https://127.0.0.1:7443/"
+      "description": "KitchenFlow local HTTPS development endpoint.",
+      "url": "https://localhost:7443/"
     }
   ],
   "tags": [

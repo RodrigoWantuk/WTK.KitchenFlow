@@ -9,6 +9,9 @@ internal static class InventoryOpenApiTransformer
 {
     internal static Task ApplyAsync(OpenApiDocument document, OpenApiDocumentTransformerContext _, CancellationToken __)
     {
+        // The emitted contract must not drift merely because CI uses an HTTP loopback listener
+        // while local cookie development uses HTTPS. Consumers configure their actual base URL.
+        document.Servers = [new OpenApiServer { Url = "https://localhost:7443/", Description = "KitchenFlow local HTTPS development endpoint." }];
         var components = document.Components ??= new OpenApiComponents();
         (components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>())["kitchenflowSession"] = new OpenApiSecurityScheme
         {

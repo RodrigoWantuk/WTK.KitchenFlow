@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend implementation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T19:27:24Z
+- **Last updated:** 2026-07-29T19:29:44Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, open)
 - **Related implementation plan:** PLAN-0002
@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Inventory routes map HTTP and CSRF only; SharedKernel, Inventory, and Identity enforce XML documentation; CI defines infrastructure, migration, and contract gates.
-- **Last completed step:** Added XML documentation and CS1591 enforcement to Identity's internal OIDC identity mapping.
+- **Current checkpoint:** Inventory routes map HTTP and CSRF only; SharedKernel, Inventory, and Identity enforce XML documentation; CI infrastructure, migration, and contract gates have a deterministic OpenAPI server declaration.
+- **Last completed step:** Fixed environment-dependent OpenAPI `servers` drift exposed by the local CI-path validation.
 - **Exact next action:** Move the application-service contract into `KitchenFlow.Modules.Inventory.Application` and provide an infrastructure persistence adapter, so the composition-root service becomes a thin adapter rather than the authoritative use-case implementation.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
-- **Validation performed:** Identity XML documentation enforcement build; Release build; formatting verification; diff whitespace verification.
-- **Known failures or limitations:** The application service is still in the API composition root and directly uses persistence. Infrastructure XML enforcement has 71 documented missing members, primarily EF persistence records; API XML enforcement, module ports/adapters, automated real-Keycloak login/two-user smoke, and operational runbooks remain unfinished. GitHub Actions has not run this new workflow revision yet, and Ruby YAML parsing was unavailable locally.
-- **Working tree state:** Identity XML-documentation enforcement checkpoint is ready to commit with synchronized plan and registry updates.
+- **Validation performed:** Compose startup/readiness; migration downgrade/upgrade; API health; OpenAPI export/drift through HTTP CI listener; targeted contract tests; Release build; formatting verification.
+- **Known failures or limitations:** The application service is still in the API composition root and directly uses persistence. Infrastructure XML enforcement has 71 documented missing members, primarily EF persistence records; API XML enforcement, module ports/adapters, automated real-Keycloak login/two-user smoke, and operational runbooks remain unfinished. GitHub Actions has not run this new workflow revision yet.
+- **Working tree state:** Deterministic OpenAPI server/drift checkpoint is ready to commit with synchronized plan and registry updates.
 
 ## Progress log
+
+### 2026-07-29T19:29:44Z — Codex backend implementation agent
+
+- **Checkpoint:** Corrected OpenAPI drift between the CI HTTP listener and local HTTPS development listener.
+- **Changes included in the commit:** Declared a stable local HTTPS `servers` entry in the OpenAPI document transformer rather than emitting the runtime listener URL; regenerated the checked-in OpenAPI snapshot.
+- **Validation performed:** Started Compose PostgreSQL/Keycloak; applied the initial migration then upgraded to the latest migration; started the Release API on `http://127.0.0.1:7080`; checked `/health/ready` and Keycloak discovery; `KITCHENFLOW_OPENAPI_URL=http://127.0.0.1:7080/openapi/v1.json bash scripts/backend/export-openapi.sh`; matching drift check; targeted `TelemetryRedactionTests` (2 passed); Release build; `git diff --check`.
+- **Result:** The same OpenAPI snapshot now matches both the HTTP listener used in CI and the HTTPS local development metadata, removing a reproducible CI drift failure.
+- **Known failures or unverified behavior:** GitHub Actions has not executed this revision yet. Infrastructure/API XML enforcement, module persistence ports/adapters, real-Keycloak automated smoke, and runbooks remain open.
+- **Blockers:** None.
+- **Next action:** Inspect the GitHub Actions run for this SHA, then document Infrastructure persistence records and continue persistence-port extraction.
 
 ### 2026-07-29T19:27:24Z — Codex backend implementation agent
 
