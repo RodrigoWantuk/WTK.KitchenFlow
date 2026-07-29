@@ -4,6 +4,7 @@ using System.Text.Json;
 using KitchenFlow.Api.Services;
 using KitchenFlow.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,11 +40,27 @@ public static class InventoryEndpoints
         return group;
     }
 
-    private static async Task<IResult> ListAsync(int? pageSize, string? status, CurrentUserService currentUser, ApplicationDbContext database, CancellationToken cancellationToken)
+    private static async Task<IResult> ListAsync(int? pageSize, string? status, string? storageLocation, string? search, string? cursor, CurrentUserService currentUser, ApplicationDbContext database, IDataProtectionProvider dataProtection, CancellationToken cancellationToken)
     {
         if (pageSize is < 1 or > 100)
         {
             return Problem(400, "validation_failed", "pageSize must be between 1 and 100.");
+        }
+
+        if (status is not null && status is not ("active" or "depleted" or "deleted"))
+        {
+            return Problem(400, "validation_failed", "status must be active, depleted, or deleted.");
+        }
+
+        if (storageLocation is not null && storageLocation is not ("Pantry" or "Refrigerator" or "Freezer" or "Other"))
+        {
+            return Problem(400, "validation_failed", "storageLocation is invalid.");
+        }
+
+        CursorPosition? position = null;
+        if (!string.IsNullOrWhiteSpace(cursor) && !TryReadCursor(cursor, dataProtection, out position))
+        {
+            return Problem(400, "invalid_cursor", "The cursor is invalid.");
         }
 
         var user = await currentUser.GetOrCreateAsync(cancellationToken);
@@ -53,16 +70,40 @@ public static class InventoryEndpoints
             "deleted" => lots.Where(lot => lot.DeletedAt != null),
             "depleted" => lots.Where(lot => lot.DeletedAt == null && ((lot.MeasuredValue != null && lot.MeasuredValue == 0m) || lot.AvailabilityState == "Unavailable")),
             null or "active" => lots.Where(lot => lot.DeletedAt == null && ((lot.MeasuredValue != null && lot.MeasuredValue > 0m) || (lot.MeasuredValue == null && lot.AvailabilityState != "Unavailable"))),
-            _ => throw new ArgumentException("Invalid status.")
+            _ => lots
         };
 
-        var records = await (from lot in lots
-                             join product in database.Products on lot.ProductId equals product.Id
-                             orderby lot.UpdatedAt descending, lot.Id descending
-                             select new { Lot = lot, Product = product })
-            .Take(pageSize ?? 25)
+        if (storageLocation is not null)
+        {
+            lots = lots.Where(lot => lot.StorageLocation == storageLocation);
+        }
+
+        var records = from lot in lots
+                      join product in database.Products on lot.ProductId equals product.Id
+                      where product.OwnerUserId == user.Id
+                      select new { Lot = lot, Product = product };
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var normalized = search.Trim().ToUpperInvariant();
+            records = records.Where(item => item.Product.NormalizedSearchName.Contains(normalized));
+        }
+
+        if (position is not null)
+        {
+            records = records.Where(item => item.Lot.UpdatedAt < position.UpdatedAt || (item.Lot.UpdatedAt == position.UpdatedAt && item.Lot.Id.CompareTo(position.LotId) < 0));
+        }
+
+        var limit = pageSize ?? 25;
+        var page = await records
+            .OrderByDescending(item => item.Lot.UpdatedAt).ThenByDescending(item => item.Lot.Id)
+            .Take(limit + 1)
             .ToListAsync(cancellationToken);
-        return Results.Ok(new ListLotsResponse(records.Select(item => ToResponse(item.Lot, item.Product.DisplayName)).ToList(), null));
+        var hasMore = page.Count > limit;
+        var items = page.Take(limit).ToList();
+        var nextCursor = hasMore
+            ? WriteCursor(new CursorPosition(items[^1].Lot.UpdatedAt, items[^1].Lot.Id), dataProtection)
+            : null;
+        return Results.Ok(new ListLotsResponse(items.Select(item => ToResponse(item.Lot, item.Product.DisplayName)).ToList(), nextCursor));
     }
 
     private static async Task<IResult> GetAsync(Guid lotId, CurrentUserService currentUser, ApplicationDbContext database, CancellationToken cancellationToken)
@@ -242,10 +283,26 @@ public static class InventoryEndpoints
     private static string Etag(long version) => $"\"{version}\"";
     private static bool TryVersion(HttpRequest request, out long version) => long.TryParse(request.Headers.IfMatch.ToString().Trim('"'), out version);
     private static bool TryIdempotencyKey(HttpRequest request, out Guid key) => Guid.TryParse(request.Headers["Idempotency-Key"], out key);
-    private static bool ValidateStorage(string location, string? custom) => !string.IsNullOrWhiteSpace(location) && (location == "Custom" ? !string.IsNullOrWhiteSpace(custom) && custom.Length <= 80 : string.IsNullOrWhiteSpace(custom));
+    private static bool ValidateStorage(string location, string? custom) => location is "Pantry" or "Refrigerator" or "Freezer" && string.IsNullOrWhiteSpace(custom) || location == "Other" && !string.IsNullOrWhiteSpace(custom) && custom.Trim().Length <= 80;
     private static bool ValidateQuantity(QuantityRequest quantity, out string? error) { var measured = quantity.MeasuredValue is > 0m && quantity.Unit is not null && quantity.AvailabilityState is null; var available = quantity.MeasuredValue is null && quantity.Unit is null && quantity.AvailabilityState is "Available" or "Low" or "Unavailable"; error = measured || available ? null : "Quantity must be either a positive measured value with a canonical unit or an availability state."; return error is null; }
     private static string Hash<T>(T value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value))));
+    private static string WriteCursor(CursorPosition position, IDataProtectionProvider provider) => provider.CreateProtector("KitchenFlow.Inventory.LotCursor.v1").Protect(JsonSerializer.Serialize(position));
+    private static bool TryReadCursor(string cursor, IDataProtectionProvider provider, out CursorPosition? position)
+    {
+        try
+        {
+            position = JsonSerializer.Deserialize<CursorPosition>(provider.CreateProtector("KitchenFlow.Inventory.LotCursor.v1").Unprotect(cursor));
+            return position is not null;
+        }
+        catch (Exception exception) when (exception is CryptographicException or JsonException or FormatException)
+        {
+            position = null;
+            return false;
+        }
+    }
     private static IResult Problem(int status, string code, string detail) => Results.Problem(detail: detail, statusCode: status, extensions: new Dictionary<string, object?> { ["errorCode"] = code });
+
+    private sealed record CursorPosition(DateTimeOffset UpdatedAt, Guid LotId);
 
     private sealed class EtagResult<T>(T body, string etag, int statusCode) : IResult
     {

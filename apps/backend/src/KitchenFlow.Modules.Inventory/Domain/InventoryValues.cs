@@ -20,7 +20,7 @@ public enum StorageLocation
     Refrigerator,
     Freezer,
     Counter,
-    Custom
+    Other
 }
 
 public enum PackageState
@@ -110,13 +110,13 @@ public sealed record LotStorage
     public static bool TryCreate(StorageLocation location, string? customLocation, out LotStorage? storage)
     {
         var trimmed = customLocation?.Trim();
-        if (location == StorageLocation.Custom && string.IsNullOrWhiteSpace(trimmed))
+        if (location == StorageLocation.Other && string.IsNullOrWhiteSpace(trimmed))
         {
             storage = null;
             return false;
         }
 
-        if (location != StorageLocation.Custom && !string.IsNullOrWhiteSpace(trimmed))
+        if (location != StorageLocation.Other && !string.IsNullOrWhiteSpace(trimmed))
         {
             storage = null;
             return false;

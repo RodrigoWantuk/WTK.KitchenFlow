@@ -171,7 +171,32 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         Assert.Equal(2, history.GetArrayLength());
     }
 
-    private static object CreateLot() => new { productName = "Test tomato", quantity = new { measuredValue = 100m, unit = "Gram", availabilityState = (string?)null }, storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null };
+    [Fact]
+    public async Task ListUsesTamperEvidentCursorAndPreservesFilters()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var search = $"cursor-probe-{Guid.NewGuid():N}";
+
+        await CreateAsync(client, csrf, Guid.NewGuid().ToString(), $"{search}-one");
+        await CreateAsync(client, csrf, Guid.NewGuid().ToString(), $"{search}-two");
+        var first = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots?pageSize=1&storageLocation=Pantry&search={search}");
+        var cursor = first.GetProperty("nextCursor").GetString();
+        var second = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots?pageSize=1&storageLocation=Pantry&search={search}&cursor={Uri.EscapeDataString(cursor!)}");
+        var tampered = await client.GetAsync($"/api/v1/inventory/lots?cursor={Uri.EscapeDataString(cursor!)}x");
+        var problem = await tampered.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.NotNull(cursor);
+        Assert.Equal(1, first.GetProperty("items").GetArrayLength());
+        Assert.Equal(1, second.GetProperty("items").GetArrayLength());
+        Assert.NotEqual(first.GetProperty("items")[0].GetProperty("lotId").GetGuid(), second.GetProperty("items")[0].GetProperty("lotId").GetGuid());
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, tampered.StatusCode);
+        Assert.Equal("invalid_cursor", problem.GetProperty("errorCode").GetString());
+    }
+
+    private static object CreateLot(string productName = "Test tomato") => new { productName, quantity = new { measuredValue = 100m, unit = "Gram", availabilityState = (string?)null }, storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null };
 
     private static async Task<string> GetCsrfAsync(HttpClient client)
     {
@@ -179,9 +204,9 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         return session.GetProperty("csrfToken").GetString()!;
     }
 
-    private static async Task<HttpResponseMessage> CreateAsync(HttpClient client, string csrf, string key)
+    private static async Task<HttpResponseMessage> CreateAsync(HttpClient client, string csrf, string key, string productName = "Test tomato")
     {
-        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/inventory/lots") { Content = JsonContent.Create(CreateLot()) };
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/inventory/lots") { Content = JsonContent.Create(CreateLot(productName)) };
         request.Headers.Add("Idempotency-Key", key);
         request.Headers.Add("X-CSRF-TOKEN", csrf);
         return await client.SendAsync(request);

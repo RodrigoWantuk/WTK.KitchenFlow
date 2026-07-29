@@ -1,48 +1,181 @@
 {
-  "openapi": "3.1.1",
+  "components": {
+    "schemas": {
+      "AdjustmentRequest": {
+        "properties": {
+          "availabilityState": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reasonCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "type": {
+            "type": "string"
+          },
+          "value": {
+            "format": "double",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "value",
+          "availabilityState",
+          "reasonCode",
+          "note"
+        ],
+        "type": "object"
+      },
+      "CreateLotRequest": {
+        "properties": {
+          "customLocation": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "packageState": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "printedExpirationDate": {
+            "format": "date",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "productName": {
+            "type": "string"
+          },
+          "quantity": {
+            "$ref": "#/components/schemas/QuantityRequest"
+          },
+          "storageLocation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "productName",
+          "quantity",
+          "storageLocation",
+          "customLocation",
+          "packageState",
+          "printedExpirationDate",
+          "notes"
+        ],
+        "type": "object"
+      },
+      "QuantityRequest": {
+        "properties": {
+          "availabilityState": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "measuredValue": {
+            "format": "double",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ]
+          },
+          "unit": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "measuredValue",
+          "unit",
+          "availabilityState"
+        ],
+        "type": "object"
+      },
+      "UpdateLotRequest": {
+        "properties": {
+          "customLocation": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "packageState": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "printedExpirationDate": {
+            "format": "date",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "storageLocation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "storageLocation",
+          "customLocation",
+          "packageState",
+          "printedExpirationDate",
+          "notes"
+        ],
+        "type": "object"
+      }
+    }
+  },
   "info": {
     "title": "KitchenFlow.Api | v1",
     "version": "1.0.0"
   },
-  "servers": [
-    {
-      "url": "http://127.0.0.1:7080/"
-    }
-  ],
+  "openapi": "3.1.1",
   "paths": {
-    "/health/live": {
-      "get": {
-        "tags": [
-          "KitchenFlow.Api"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/health/ready": {
-      "get": {
-        "tags": [
-          "KitchenFlow.Api"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/v1/auth/login": {
       "post": {
-        "tags": [
-          "KitchenFlow.Api"
-        ],
         "parameters": [
           {
-            "name": "returnUrl",
             "in": "query",
+            "name": "returnUrl",
             "schema": {
               "type": "string"
             }
@@ -52,54 +185,63 @@
           "200": {
             "description": "OK"
           }
-        }
+        },
+        "tags": [
+          "KitchenFlow.Api"
+        ]
       }
     },
     "/api/v1/auth/logout": {
       "post": {
-        "tags": [
-          "KitchenFlow.Api"
-        ],
         "responses": {
           "200": {
             "description": "OK"
           }
-        }
-      }
-    },
-    "/api/v1/session": {
-      "get": {
+        },
         "tags": [
           "KitchenFlow.Api"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
+        ]
       }
     },
     "/api/v1/inventory/lots": {
       "get": {
-        "tags": [
-          "InventoryEndpoints"
-        ],
         "parameters": [
           {
-            "name": "pageSize",
             "in": "query",
+            "name": "pageSize",
             "schema": {
+              "format": "int32",
               "pattern": "^-?(?:0|[1-9]\\d*)$",
               "type": [
                 "integer",
                 "string"
-              ],
-              "format": "int32"
+              ]
             }
           },
           {
-            "name": "status",
             "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "storageLocation",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
             "schema": {
               "type": "string"
             }
@@ -109,12 +251,12 @@
           "200": {
             "description": "OK"
           }
-        }
-      },
-      "post": {
+        },
         "tags": [
           "InventoryEndpoints"
-        ],
+        ]
+      },
+      "post": {
         "requestBody": {
           "content": {
             "application/json": {
@@ -129,22 +271,22 @@
           "200": {
             "description": "OK"
           }
-        }
+        },
+        "tags": [
+          "InventoryEndpoints"
+        ]
       }
     },
     "/api/v1/inventory/lots/{lotId}": {
-      "get": {
-        "tags": [
-          "InventoryEndpoints"
-        ],
+      "delete": {
         "parameters": [
           {
-            "name": "lotId",
             "in": "path",
+            "name": "lotId",
             "required": true,
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "type": "string"
             }
           }
         ],
@@ -152,20 +294,41 @@
           "200": {
             "description": "OK"
           }
-        }
-      },
-      "patch": {
+        },
         "tags": [
           "InventoryEndpoints"
-        ],
+        ]
+      },
+      "get": {
         "parameters": [
           {
-            "name": "lotId",
             "in": "path",
+            "name": "lotId",
             "required": true,
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "InventoryEndpoints"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lotId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
             }
           }
         ],
@@ -183,43 +346,22 @@
           "200": {
             "description": "OK"
           }
-        }
-      },
-      "delete": {
+        },
         "tags": [
           "InventoryEndpoints"
-        ],
-        "parameters": [
-          {
-            "name": "lotId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
+        ]
       }
     },
     "/api/v1/inventory/lots/{lotId}/adjustments": {
       "post": {
-        "tags": [
-          "InventoryEndpoints"
-        ],
         "parameters": [
           {
-            "name": "lotId",
             "in": "path",
+            "name": "lotId",
             "required": true,
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "type": "string"
             }
           }
         ],
@@ -237,22 +379,22 @@
           "200": {
             "description": "OK"
           }
-        }
+        },
+        "tags": [
+          "InventoryEndpoints"
+        ]
       }
     },
     "/api/v1/inventory/lots/{lotId}/history": {
       "get": {
-        "tags": [
-          "InventoryEndpoints"
-        ],
         "parameters": [
           {
-            "name": "lotId",
             "in": "path",
+            "name": "lotId",
             "required": true,
             "schema": {
-              "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "type": "string"
             }
           }
         ],
@@ -260,175 +402,54 @@
           "200": {
             "description": "OK"
           }
-        }
+        },
+        "tags": [
+          "InventoryEndpoints"
+        ]
+      }
+    },
+    "/api/v1/session": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "KitchenFlow.Api"
+        ]
+      }
+    },
+    "/health/live": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "KitchenFlow.Api"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "KitchenFlow.Api"
+        ]
       }
     }
   },
-  "components": {
-    "schemas": {
-      "AdjustmentRequest": {
-        "required": [
-          "type",
-          "value",
-          "availabilityState",
-          "reasonCode",
-          "note"
-        ],
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string"
-          },
-          "value": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
-            "type": [
-              "null",
-              "number",
-              "string"
-            ],
-            "format": "double"
-          },
-          "availabilityState": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "reasonCode": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "note": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
-      "CreateLotRequest": {
-        "required": [
-          "productName",
-          "quantity",
-          "storageLocation",
-          "customLocation",
-          "packageState",
-          "printedExpirationDate",
-          "notes"
-        ],
-        "type": "object",
-        "properties": {
-          "productName": {
-            "type": "string"
-          },
-          "quantity": {
-            "$ref": "#/components/schemas/QuantityRequest"
-          },
-          "storageLocation": {
-            "type": "string"
-          },
-          "customLocation": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "packageState": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "printedExpirationDate": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date"
-          },
-          "notes": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
-      "QuantityRequest": {
-        "required": [
-          "measuredValue",
-          "unit",
-          "availabilityState"
-        ],
-        "type": "object",
-        "properties": {
-          "measuredValue": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
-            "type": [
-              "null",
-              "number",
-              "string"
-            ],
-            "format": "double"
-          },
-          "unit": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "availabilityState": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
-      "UpdateLotRequest": {
-        "required": [
-          "storageLocation",
-          "customLocation",
-          "packageState",
-          "printedExpirationDate",
-          "notes"
-        ],
-        "type": "object",
-        "properties": {
-          "storageLocation": {
-            "type": "string"
-          },
-          "customLocation": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "packageState": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "printedExpirationDate": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date"
-          },
-          "notes": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      }
+  "servers": [
+    {
+      "url": "http://127.0.0.1:7080/"
     }
-  },
+  ],
   "tags": [
     {
       "name": "KitchenFlow.Api"

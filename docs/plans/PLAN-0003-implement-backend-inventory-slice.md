@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Soft deletion now hides a lot from detail reads while retaining immutable owner-scoped history.
-- **Last completed step:** Added and passed the soft-delete API integration test against PostgreSQL.
-- **Exact next action:** Implement and test cursor-based lot pagination and list filters, then run real Keycloak authentication smoke validation.
+- **Current checkpoint:** Protected cursor pagination, storage/search filters, and the refreshed generated OpenAPI snapshot are verified.
+- **Last completed step:** Added and passed PostgreSQL API coverage for page continuation and cursor tampering.
+- **Exact next action:** Add remaining validation/error and two-user mutation coverage, then run the real Keycloak authentication smoke validation.
 - **Blockers:** None.
-- **Partially modified areas:** Inventory detail endpoint and PostgreSQL API integration tests.
-- **Validation performed:** `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj --no-restore` completed successfully after rebuilding the test project; the suite includes the deletion/history assertion.
-- **Known failures or limitations:** Cursor pagination, list filters, broader two-user mutation coverage, and real Keycloak login/logout smoke validation remain unfinished. The initial domain remains bounded to PLAN-0003 manual-lot operations.
-- **Working tree state:** Source and test changes are ready to commit with this synchronized plan state.
+- **Partially modified areas:** API query contract, cursor protection, inventory storage enum, PostgreSQL API tests, unit tests, and OpenAPI snapshot.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; `scripts/backend/check-openapi.sh`. All completed successfully; the integration suite has eleven tests.
+- **Known failures or limitations:** Broader two-user mutation coverage, validation/problem-details coverage, rate-limit and telemetry-redaction checks, and real Keycloak login/logout smoke validation remain unfinished. The initial domain remains bounded to PLAN-0003 manual-lot operations.
+- **Working tree state:** Source, contract, and test changes are ready to commit with this synchronized plan state.
 
 ## Progress log
+
+### 2026-07-29T04:25:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Implemented list filtering and protected cursor pagination.
+- **Changes included in the commit:** Added `storageLocation`, `search`, and `cursor` list parameters; owner-scoped deterministic continuation using a Data Protection protected cursor; `400 invalid_cursor` mapping; corrected the storage enum/value from the non-contract `Custom` to accepted `Other`; added PostgreSQL cursor/tampering coverage; regenerated the OpenAPI 3.1 snapshot.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; fetched the live development API OpenAPI document; `scripts/backend/check-openapi.sh`.
+- **Result:** Build and formatting completed with zero warnings/errors; eleven PostgreSQL API tests pass; the checked-in OpenAPI snapshot matches the live API and includes all five list query parameters.
+- **Known failures or unverified behavior:** Broader mutation isolation, remaining validation/problem-details behavior, rate limiting, telemetry redaction, and real Keycloak login/logout remain unverified.
+- **Blockers:** None.
+- **Next action:** Add the remaining API validation and two-user mutation tests, then execute the real Keycloak authentication smoke path.
 
 ### 2026-07-29T04:05:00Z — Codex backend implementation agent
 

@@ -14,11 +14,11 @@ public sealed class InventoryDomainTests
     }
 
     [Fact]
-    public void CustomStorageRequiresCustomLocation()
+    public void OtherStorageRequiresCustomLocation()
     {
-        Assert.False(LotStorage.TryCreate(StorageLocation.Custom, null, out _));
+        Assert.False(LotStorage.TryCreate(StorageLocation.Other, null, out _));
         Assert.False(LotStorage.TryCreate(StorageLocation.Pantry, "Shelf", out _));
-        Assert.True(LotStorage.TryCreate(StorageLocation.Custom, "Top shelf", out var storage));
+        Assert.True(LotStorage.TryCreate(StorageLocation.Other, "Top shelf", out var storage));
         Assert.Equal("Top shelf", storage!.CustomLocation);
     }
 
