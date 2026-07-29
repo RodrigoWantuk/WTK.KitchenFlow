@@ -483,16 +483,27 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Default OIDC and EF diagnostic paths are explicitly configured to avoid private-content logging.
-- **Last completed step:** Added PII suppression and restrictive logging filters; completed clean release-build validation.
-- **Exact next action:** Perform interactive browser validation and final migration/contract verification; add a dedicated telemetry exporter/redaction assertion if a test exporter is introduced.
-- **Blockers:** None.
-- **Partially modified areas:** API logging and identity-model diagnostics configuration.
-- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; inspected default ASP.NET Core/OpenTelemetry behavior (no request-body/header capture is configured). The final clean build completed with zero warnings/errors after removing two exact untracked malformed build-artifact directories.
-- **Known failures or limitations:** No test exporter is configured, so telemetry redaction is enforced by configuration and default instrumentation behavior rather than a captured-span assertion. Interactive graphical-browser validation and final end-to-end migration/contract verification remain unfinished.
-- **Working tree state:** API configuration changes are ready to commit with this synchronized plan state.
+- **Current checkpoint:** Noninteractive final validation is complete; interactive graphical-browser validation is blocked by the execution environment.
+- **Last completed step:** Verified migration upgrade, compose readiness, health endpoints, OpenAPI drift, and attempted Chrome browser startup.
+- **Exact next action:** Run the documented interactive browser login/logout/create/list check on a supported workstation, then decide whether a telemetry-exporter test is required before PR.
+- **Blockers:** Interactive browser validation requires a supported workstation/browser session outside this container.
+- **Partially modified areas:** No implementation files; validation evidence and resumable handoff state only.
+- **Validation performed:** Locked restore; clean zero-warning release build; formatting; complete tests; migration update against compose PostgreSQL; compose health; API health endpoints; OpenAPI drift; attempted headless Chrome startup.
+- **Known failures or limitations:** Chrome browser services fail in this container due missing display/DBus/graphics authorization, so interactive validation cannot be claimed. No captured telemetry-exporter test is configured.
+- **Working tree state:** Plan and registry handoff state are ready to commit; working tree otherwise clean.
 
 ## Progress log
+
+### 2026-07-29T11:20:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Completed all available noninteractive final validation and documented the browser-environment limitation.
+- **Changes included in the commit:** Recorded final validation evidence and exact continuation only; no implementation behavior changed.
+- **Validation performed:** Locked restore; clean zero-warning release build; formatting; complete tests (2 architecture, 5 unit, 17 PostgreSQL integration); migration update against compose PostgreSQL; compose service health; API live/ready health endpoints; OpenAPI drift script; attempted local headless Chrome startup.
+- **Result:** All noninteractive backend validation completed successfully. Chrome could start DevTools but graphical/browser services failed due missing display/DBus/graphics authorization in this execution environment.
+- **Known failures or unverified behavior:** Interactive graphical-browser login/logout/create/list is not performed. A captured telemetry-exporter redaction assertion is not present.
+- **Blockers:** Interactive browser validation requires a supported workstation/browser session outside this container.
+- **Next action:** Execute the documented interactive browser check on a supported host, record its result, then open the PLAN-0003 pull request if remaining validation is accepted.
+
 
 ### 2026-07-29T11:05:00Z — Codex backend implementation agent
 
@@ -501,7 +512,7 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Validation performed:** Release build and formatting verification. An initial build emitted a transient copy warning caused by two identified untracked malformed Windows-style build-artifact directories; removed only those generated directories and reran the build cleanly.
 - **Result:** Final release build passed with zero warnings/errors. Default API diagnostics no longer emit EF command text/parameters at information level, and identity-model PII output is disabled.
 - **Known failures or unverified behavior:** A captured telemetry exporter test is not yet present. Interactive graphical-browser validation and final migration/OpenAPI end-to-end verification remain unfinished.
-- **Blockers:** None.
+- **Blockers:** Interactive browser validation requires a supported workstation/browser session outside this container.
 - **Next action:** Commit the logging safeguard, then execute final browser, migration, compose, and OpenAPI evidence collection.
 
 ### 2026-07-29T10:45:00Z — Codex backend implementation agent
@@ -511,7 +522,7 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Validation performed:** `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`.
 - **Result:** Seventeen PostgreSQL API tests pass. Correct and availability transitions return the resulting lot representation and append the expected immutable history entries.
 - **Known failures or unverified behavior:** Telemetry/redaction checks, interactive graphical-browser validation, and final migration/contract verification remain unfinished.
-- **Blockers:** None.
+- **Blockers:** Interactive browser validation requires a supported workstation/browser session outside this container.
 - **Next action:** Add observability/redaction verification and execute final browser, migration, and contract validation.
 
 ### 2026-07-29T10:30:00Z — Codex backend implementation agent
@@ -521,7 +532,7 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Validation performed:** `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`.
 - **Result:** Fifteen PostgreSQL API tests pass. The rejected adjustment returns `422 domain_rule_violated` and leaves the initial transaction as the sole history entry.
 - **Known failures or unverified behavior:** Availability/correction adjustment edge cases, telemetry/redaction checks, interactive graphical-browser validation, and final migration/contract verification remain unfinished.
-- **Blockers:** None.
+- **Blockers:** Interactive browser validation requires a supported workstation/browser session outside this container.
 - **Next action:** Add availability/correction edge cases and observability checks before final validation.
 
 ### 2026-07-29T10:20:00Z — Codex backend implementation agent
@@ -531,7 +542,7 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Validation performed:** `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`.
 - **Result:** The integration test project completed successfully with fourteen tests. Owner scope applies before ETag/mutation behavior for the foreign user.
 - **Known failures or unverified behavior:** Adjustment edge cases, telemetry/redaction checks, interactive graphical-browser validation, and final migration/contract verification remain unfinished.
-- **Blockers:** None.
+- **Blockers:** Interactive browser validation requires a supported workstation/browser session outside this container.
 - **Next action:** Add adjustment and privacy-observability coverage, then perform final browser, migration, and contract validation.
 
 ### 2026-07-29T10:05:00Z — Codex backend implementation agent
@@ -541,7 +552,7 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Validation performed:** Release build; full test solution (2 architecture, 5 unit, 13 PostgreSQL integration tests); formatting verification; live OpenAPI export and drift verification; compose PostgreSQL/Keycloak readiness; live HTTPS OIDC challenge, Keycloak login, form-post callback, and `/api/v1/session` validation.
 - **Result:** All automated tests passed. The real-provider smoke returned a backend session with an internal user UUID and CSRF token and confirmed that no access or refresh token is exposed in the session response.
 - **Known failures or unverified behavior:** The real-provider path was driven by a noninteractive HTTPS client, so interactive graphical-browser login/logout remains unverified. Broader two-user mutation coverage, adjustment edge cases, rate limiting, and telemetry-redaction checks remain unfinished.
-- **Blockers:** None.
+- **Blockers:** Interactive browser validation requires a supported workstation/browser session outside this container.
 - **Next action:** Add remaining authorization/reliability tests and telemetry/rate-limit behavior, then perform interactive browser validation before completion.
 
 ### 2026-07-29T04:45:00Z — Codex backend implementation agent
@@ -551,7 +562,7 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`; live OpenAPI export; `scripts/backend/check-openapi.sh`.
 - **Result:** Build completed with zero warnings/errors; thirteen PostgreSQL API tests pass; the contract matches the live API. No migration is required because only application-level accepted enum values changed.
 - **Known failures or unverified behavior:** Broader two-user mutation coverage, further adjustment edge cases, rate limiting, telemetry redaction, and real Keycloak login/logout remain unverified.
-- **Blockers:** None.
+- **Blockers:** Interactive browser validation requires a supported workstation/browser session outside this container.
 - **Next action:** Add remaining two-user mutation and adjustment edge-case tests, then execute the real Keycloak authentication smoke path.
 
 ### 2026-07-29T04:25:00Z — Codex backend implementation agent
@@ -561,7 +572,7 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; fetched the live development API OpenAPI document; `scripts/backend/check-openapi.sh`.
 - **Result:** Build and formatting completed with zero warnings/errors; eleven PostgreSQL API tests pass; the checked-in OpenAPI snapshot matches the live API and includes all five list query parameters.
 - **Known failures or unverified behavior:** Broader mutation isolation, remaining validation/problem-details behavior, rate limiting, telemetry redaction, and real Keycloak login/logout remain unverified.
-- **Blockers:** None.
+- **Blockers:** Interactive browser validation requires a supported workstation/browser session outside this container.
 - **Next action:** Add the remaining API validation and two-user mutation tests, then execute the real Keycloak authentication smoke path.
 
 ### 2026-07-29T04:05:00Z — Codex backend implementation agent
@@ -571,7 +582,7 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Validation performed:** `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj --no-restore`.
 - **Result:** The integration test project completed successfully after the correction; deletion returns `204`, the deleted detail returns `404`, and the owner history contains the initial and `Deleted` transactions.
 - **Known failures or unverified behavior:** Cursor pagination, list filters, full mutation isolation matrix, and real Keycloak browser login/logout are not yet verified.
-- **Blockers:** None.
+- **Blockers:** Interactive browser validation requires a supported workstation/browser session outside this container.
 - **Next action:** Implement and test cursor-based lot pagination and list filters, then validate the real Keycloak authentication flow.
 
 ### 2026-07-28T00:00:00Z — Codex backend implementation agent
