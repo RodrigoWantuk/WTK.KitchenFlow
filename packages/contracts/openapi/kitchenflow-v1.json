@@ -225,12 +225,7 @@
             "type": "string"
           },
           "version": {
-            "format": "int64",
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ]
+            "type": "string"
           }
         },
         "required": [
@@ -607,7 +602,7 @@
           }
         ],
         "tags": [
-          "InventoryEndpoints"
+          "KitchenFlow.Api"
         ]
       },
       "post": {
@@ -715,7 +710,7 @@
           }
         ],
         "tags": [
-          "InventoryEndpoints"
+          "KitchenFlow.Api"
         ]
       }
     },
@@ -785,7 +780,7 @@
           }
         ],
         "tags": [
-          "InventoryEndpoints"
+          "KitchenFlow.Api"
         ]
       },
       "get": {
@@ -833,7 +828,7 @@
           }
         ],
         "tags": [
-          "InventoryEndpoints"
+          "KitchenFlow.Api"
         ]
       },
       "patch": {
@@ -933,7 +928,7 @@
           }
         ],
         "tags": [
-          "InventoryEndpoints"
+          "KitchenFlow.Api"
         ]
       }
     },
@@ -1091,7 +1086,7 @@
           }
         ],
         "tags": [
-          "InventoryEndpoints"
+          "KitchenFlow.Api"
         ]
       }
     },
@@ -1144,7 +1139,7 @@
           }
         ],
         "tags": [
-          "InventoryEndpoints"
+          "KitchenFlow.Api"
         ]
       }
     },
@@ -1220,9 +1215,6 @@
   "tags": [
     {
       "name": "KitchenFlow.Api"
-    },
-    {
-      "name": "InventoryEndpoints"
     }
   ]
 }

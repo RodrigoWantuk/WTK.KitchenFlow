@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend implementation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T16:41:26Z
+- **Last updated:** 2026-07-29T16:45:15Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, open)
 - **Related implementation plan:** PLAN-0002
@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Inventory routes now map HTTP and CSRF only; a scoped application service owns the current inventory command/query orchestration and an architecture test prevents endpoints from accepting EF or domain objects directly.
-- **Last completed step:** Extracted create, list/read, update, adjustment, deletion, and history orchestration from endpoint handlers into the scoped inventory application service.
+- **Current checkpoint:** Inventory routes map HTTP and CSRF only; the application-service seam owns command/query orchestration; client-visible lot versions are protected opaque tokens and `ETag`/`If-Match` use the same representation.
+- **Last completed step:** Replaced the leaked numeric response version with a protected version token and regenerated the OpenAPI snapshot.
 - **Exact next action:** Move the application-service contract into `KitchenFlow.Modules.Inventory.Application` and provide an infrastructure persistence adapter, so the composition-root service becomes a thin adapter rather than the authoritative use-case implementation.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
-- **Validation performed:** Release build; architecture tests; PostgreSQL/Testcontainers integration-test project; formatting verification; diff whitespace verification; the preceding OpenAPI export/drift checkpoint remains valid.
+- **Validation performed:** Release build; targeted opaque-version PostgreSQL/Testcontainers integration test; formatting verification; live HTTPS OpenAPI export; reproducible snapshot export and drift check; diff whitespace verification.
 - **Known failures or limitations:** The application service is still in the API composition root and directly uses persistence. The required module-owned application contracts/ports and infrastructure adapter, complete XML documentation enforcement, broadened tests/CI, and operational runbooks remain unfinished. The regenerated snapshot is not yet a stable PLAN-0004 milestone because the broader correction work remains open.
-- **Working tree state:** Endpoint/application-service separation checkpoint is ready to commit with synchronized plan and registry updates.
+- **Working tree state:** Opaque-version contract checkpoint is ready to commit with synchronized plan and registry updates.
 
 ## Progress log
+
+### 2026-07-29T16:45:15Z — Codex backend implementation agent
+
+- **Checkpoint:** Made the client-visible inventory concurrency version opaque.
+- **Changes included in the commit:** Replaced the numeric `LotResponse.version` with a Data Protection protected token derived from the internal version; made emitted `ETag` values quote that exact token; made `If-Match` unprotect and validate it before comparing the internal version; retained the numeric version only in the domain and persistence model; added an integration test asserting the response token is nonnumeric and exactly matches `ETag`; regenerated the OpenAPI 3.1 snapshot.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx --configuration Release --no-restore`; targeted `LotRepresentationUsesAnOpaqueVersionToken` PostgreSQL/Testcontainers integration test (1 passed); `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; live `curl --insecure https://127.0.0.1:7443/openapi/v1.json`; `bash scripts/backend/export-openapi.sh`; `bash scripts/backend/check-openapi.sh`; `git diff --check`.
+- **Result:** Clients cannot infer the persistence counter from a lot representation. A response version, its `ETag`, and the next `If-Match` value are one stable opaque concurrency token within the protected-session deployment boundary.
+- **Known failures or unverified behavior:** The service boundary is still API-owned and directly persistence-coupled. Module application contracts/ports and an infrastructure adapter, XML documentation enforcement, broadened tests/CI, and operational runbooks remain open. The snapshot is current but not yet a stable PLAN-0004 milestone.
+- **Blockers:** None.
+- **Next action:** Define module-owned inventory use-case contracts and a persistence port, then move authoritative orchestration behind an infrastructure adapter.
 
 ### 2026-07-29T16:41:26Z — Codex backend implementation agent
 

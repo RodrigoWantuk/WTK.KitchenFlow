@@ -100,6 +100,23 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task LotRepresentationUsesAnOpaqueVersionTokenThatMatchesItsEtag()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+
+        var created = await CreateAsync(client, csrf, Guid.NewGuid().ToString());
+        var body = await created.Content.ReadFromJsonAsync<JsonElement>();
+        var version = body.GetProperty("version").GetString();
+
+        Assert.Equal(System.Net.HttpStatusCode.Created, created.StatusCode);
+        Assert.False(long.TryParse(version, out _));
+        Assert.Equal($"\"{version}\"", created.Headers.ETag!.Tag);
+    }
+
+    [Fact]
     public async Task ConcurrentCreateWithSameIdempotencyKeyReplaysTheWinningResponse()
     {
         await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);

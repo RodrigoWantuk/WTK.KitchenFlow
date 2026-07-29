@@ -50,7 +50,7 @@ public sealed class InventoryApplicationService(
     public Task<IResult> HistoryAsync(Guid lotId, CancellationToken cancellationToken) =>
         HistoryCoreAsync(lotId, currentUser, database, cancellationToken);
 
-    private static async Task<IResult> ListCoreAsync(int? pageSize, string? status, string? storageLocation, string? search, string? cursor, CurrentUserService currentUser, ApplicationDbContext database, IDataProtectionProvider dataProtection, CancellationToken cancellationToken)
+    private async Task<IResult> ListCoreAsync(int? pageSize, string? status, string? storageLocation, string? search, string? cursor, CurrentUserService currentUser, ApplicationDbContext database, IDataProtectionProvider dataProtection, CancellationToken cancellationToken)
     {
         if (pageSize is < 1 or > 100)
         {
@@ -116,16 +116,16 @@ public sealed class InventoryApplicationService(
         return Results.Ok(new ListLotsResponse(items.Select(item => ToResponse(item.Lot, item.Product.DisplayName)).ToList(), nextCursor));
     }
 
-    private static async Task<IResult> GetCoreAsync(Guid lotId, CurrentUserService currentUser, ApplicationDbContext database, CancellationToken cancellationToken)
+    private async Task<IResult> GetCoreAsync(Guid lotId, CurrentUserService currentUser, ApplicationDbContext database, CancellationToken cancellationToken)
     {
         var user = await currentUser.GetOrCreateAsync(cancellationToken);
         var record = await FindLotAsync(lotId, user.Id, database, cancellationToken);
         return record is null || record.Value.Lot.DeletedAt is not null
             ? Problem(404, "resource_not_found", "The inventory lot was not found.")
-            : WithEtag(ToResponse(record.Value.Lot, record.Value.Product.DisplayName), record.Value.Lot.Version);
+            : WithEtag(ToResponse(record.Value.Lot, record.Value.Product.DisplayName));
     }
 
-    private static async Task<IResult> CreateCoreAsync(CreateLotRequest request, HttpRequest httpRequest, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
+    private async Task<IResult> CreateCoreAsync(CreateLotRequest request, HttpRequest httpRequest, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
     {
         if (!TryIdempotencyKey(httpRequest, out var key))
         {
@@ -169,7 +169,7 @@ public sealed class InventoryApplicationService(
             }
 
             var replay = JsonSerializer.Deserialize<LotResponse>(prior.ResponseBody!)!;
-            return WithEtag(replay, replay.Version, StatusCodes.Status201Created);
+            return WithEtag(replay, StatusCodes.Status201Created);
         }
 
         var now = timeProvider.GetUtcNow();
@@ -179,7 +179,7 @@ public sealed class InventoryApplicationService(
         var product = new ProductRecord { Id = domainProduct.Id, OwnerUserId = domainProduct.OwnerUserId, DisplayName = domainProduct.DisplayName, NormalizedSearchName = domainProduct.NormalizedSearchName, CreatedAt = domainProduct.CreatedAt, UpdatedAt = domainProduct.UpdatedAt };
         var lot = ToRecord(domainLot);
         var response = ToResponse(lot, product.DisplayName);
-        database.AddRange(product, lot, new TransactionRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, LotId = lot.Id, Type = "Initial", ResultingMeasuredValue = lot.MeasuredValue, ResultingMeasuredUnit = lot.MeasuredUnit, ResultingAvailabilityState = lot.AvailabilityState, OccurredAt = now }, new AuditEventRecord { Id = Guid.NewGuid(), ActorUserId = user.Id, EventName = "inventory.lot.created", TargetType = "inventory_lot", TargetId = lot.Id, CorrelationId = httpRequest.HttpContext.TraceIdentifier, MetadataJson = "{}", OccurredAt = now }, new IdempotencyRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, Scope = "inventory.lots.create", Key = key, RequestHash = hash, StatusCode = 201, ResponseBody = JsonSerializer.Serialize(response), ETag = Etag(lot.Version), CreatedAt = now, CompletedAt = now });
+        database.AddRange(product, lot, new TransactionRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, LotId = lot.Id, Type = "Initial", ResultingMeasuredValue = lot.MeasuredValue, ResultingMeasuredUnit = lot.MeasuredUnit, ResultingAvailabilityState = lot.AvailabilityState, OccurredAt = now }, new AuditEventRecord { Id = Guid.NewGuid(), ActorUserId = user.Id, EventName = "inventory.lot.created", TargetType = "inventory_lot", TargetId = lot.Id, CorrelationId = httpRequest.HttpContext.TraceIdentifier, MetadataJson = "{}", OccurredAt = now }, new IdempotencyRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, Scope = "inventory.lots.create", Key = key, RequestHash = hash, StatusCode = 201, ResponseBody = JsonSerializer.Serialize(response), ETag = ToEtag(response.Version), CreatedAt = now, CompletedAt = now });
         try
         {
             await database.SaveChangesAsync(cancellationToken);
@@ -188,10 +188,10 @@ public sealed class InventoryApplicationService(
         {
             return await ReplayAfterIdempotencyRaceAsync(database, user.Id, "inventory.lots.create", key, hash, StatusCodes.Status201Created, cancellationToken);
         }
-        return WithEtag(response, lot.Version, StatusCodes.Status201Created);
+        return WithEtag(response, StatusCodes.Status201Created);
     }
 
-    private static async Task<IResult> UpdateCoreAsync(Guid lotId, UpdateLotRequest request, HttpRequest requestContext, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
+    private async Task<IResult> UpdateCoreAsync(Guid lotId, UpdateLotRequest request, HttpRequest requestContext, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
     {
         var validMetadata = ValidateMetadata(request.StorageLocation, request.CustomLocation, request.PackageState, request.Notes, out var metadataError);
         var validProductName = request.ProductName is null || ValidateProductName(request.ProductName, out _, out _);
@@ -218,7 +218,7 @@ public sealed class InventoryApplicationService(
         });
     }
 
-    private static async Task<IResult> AdjustCoreAsync(Guid lotId, AdjustmentRequest request, HttpRequest requestContext, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
+    private async Task<IResult> AdjustCoreAsync(Guid lotId, AdjustmentRequest request, HttpRequest requestContext, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
     {
         if (!TryIdempotencyKey(requestContext, out var key))
         {
@@ -249,7 +249,7 @@ public sealed class InventoryApplicationService(
             }
 
             var replay = JsonSerializer.Deserialize<LotResponse>(prior.ResponseBody!)!;
-            return WithEtag(replay, replay.Version);
+            return WithEtag(replay);
         }
 
         return await MutateAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken, (lot, _, now) =>
@@ -268,7 +268,7 @@ public sealed class InventoryApplicationService(
         }, idempotencyKey: key, idempotencyScope: "inventory.lots.adjust", idempotencyHash: hash);
     }
 
-    private static async Task<IResult> DeleteCoreAsync(Guid lotId, HttpRequest requestContext, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken) =>
+    private async Task<IResult> DeleteCoreAsync(Guid lotId, HttpRequest requestContext, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken) =>
         await MutateAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken, (lot, _, now) =>
         {
             var domainLot = ToDomain(lot);
@@ -277,7 +277,7 @@ public sealed class InventoryApplicationService(
             return ToRecord(transaction);
         }, StatusCodes.Status204NoContent);
 
-    private static async Task<IResult> HistoryCoreAsync(Guid lotId, CurrentUserService currentUser, ApplicationDbContext database, CancellationToken cancellationToken)
+    private async Task<IResult> HistoryCoreAsync(Guid lotId, CurrentUserService currentUser, ApplicationDbContext database, CancellationToken cancellationToken)
     {
         var user = await currentUser.GetOrCreateAsync(cancellationToken);
         if (await FindLotAsync(lotId, user.Id, database, cancellationToken) is null)
@@ -289,7 +289,7 @@ public sealed class InventoryApplicationService(
         return Results.Ok(transactions.Select(item => new LotHistoryResponse(item.Id, item.Type, ToQuantity(item.PreviousMeasuredValue, item.PreviousMeasuredUnit, item.PreviousAvailabilityState), ToQuantity(item.ResultingMeasuredValue, item.ResultingMeasuredUnit, item.ResultingAvailabilityState), item.ReasonCode, item.OccurredAt)));
     }
 
-    private static async Task<IResult> MutateAsync(Guid lotId, HttpRequest request, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider clock, CancellationToken cancellationToken, Func<LotRecord, ProductRecord, DateTimeOffset, TransactionRecord?> operation, int successStatus = StatusCodes.Status200OK, Guid? idempotencyKey = null, string? idempotencyScope = null, string? idempotencyHash = null)
+    private async Task<IResult> MutateAsync(Guid lotId, HttpRequest request, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider clock, CancellationToken cancellationToken, Func<LotRecord, ProductRecord, DateTimeOffset, TransactionRecord?> operation, int successStatus = StatusCodes.Status200OK, Guid? idempotencyKey = null, string? idempotencyScope = null, string? idempotencyHash = null)
     {
         if (!TryVersion(request, out var version))
         {
@@ -321,10 +321,10 @@ public sealed class InventoryApplicationService(
             var response = ToResponse(item.Value.Lot, item.Value.Product.DisplayName);
             if (idempotencyKey is not null)
             {
-                database.IdempotencyRecords.Add(new IdempotencyRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, Scope = idempotencyScope!, Key = idempotencyKey.Value, RequestHash = idempotencyHash!, StatusCode = StatusCodes.Status200OK, ResponseBody = JsonSerializer.Serialize(response), ETag = Etag(item.Value.Lot.Version), CreatedAt = now, CompletedAt = now });
+                database.IdempotencyRecords.Add(new IdempotencyRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, Scope = idempotencyScope!, Key = idempotencyKey.Value, RequestHash = idempotencyHash!, StatusCode = StatusCodes.Status200OK, ResponseBody = JsonSerializer.Serialize(response), ETag = ToEtag(response.Version), CreatedAt = now, CompletedAt = now });
             }
             await database.SaveChangesAsync(cancellationToken);
-            return successStatus == 204 ? Results.NoContent() : WithEtag(response, item.Value.Lot.Version);
+            return successStatus == 204 ? Results.NoContent() : WithEtag(response);
         }
         catch (DbUpdateConcurrencyException) when (idempotencyKey is not null)
         {
@@ -424,12 +424,24 @@ public sealed class InventoryApplicationService(
         return privateNotes;
     }
 
-    private static LotResponse ToResponse(LotRecord lot, string productName) => new(lot.Id, lot.ProductId, productName, ToQuantity(lot), lot.StorageLocation, lot.CustomLocation, lot.PackageState, lot.PrintedExpirationDate, lot.Notes, lot.Version, lot.CreatedAt, lot.UpdatedAt);
+    private LotResponse ToResponse(LotRecord lot, string productName) => new(lot.Id, lot.ProductId, productName, ToQuantity(lot), lot.StorageLocation, lot.CustomLocation, lot.PackageState, lot.PrintedExpirationDate, lot.Notes, CreateVersionToken(lot.Version), lot.CreatedAt, lot.UpdatedAt);
     private static QuantityResponse ToQuantity(LotRecord lot) => new(lot.MeasuredValue, lot.MeasuredUnit, lot.AvailabilityState);
     private static QuantityResponse? ToQuantity(decimal? measuredValue, string? unit, string? availabilityState) => measuredValue is null && unit is null && availabilityState is null ? null : new QuantityResponse(measuredValue, unit, availabilityState);
-    private static IResult WithEtag(LotResponse response, long version, int status = 200) => new EtagResult<LotResponse>(response, Etag(version), status);
-    private static string Etag(long version) => $"\"{version}\"";
-    private static bool TryVersion(HttpRequest request, out long version) => long.TryParse(request.Headers.IfMatch.ToString().Trim('"'), out version);
+    private static IResult WithEtag(LotResponse response, int status = 200) => new EtagResult<LotResponse>(response, ToEtag(response.Version), status);
+    private static string ToEtag(string version) => $"\"{version}\"";
+    private string CreateVersionToken(long version) => dataProtection.CreateProtector("KitchenFlow.Inventory.LotVersion.v1").Protect(version.ToString(System.Globalization.CultureInfo.InvariantCulture));
+    private bool TryVersion(HttpRequest request, out long version)
+    {
+        version = 0;
+        try
+        {
+            return long.TryParse(dataProtection.CreateProtector("KitchenFlow.Inventory.LotVersion.v1").Unprotect(request.Headers.IfMatch.ToString().Trim('"')), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out version);
+        }
+        catch (CryptographicException)
+        {
+            return false;
+        }
+    }
     private static bool TryIdempotencyKey(HttpRequest request, out Guid key) => Guid.TryParse(request.Headers["Idempotency-Key"], out key);
     private static bool ValidateProductName(string? value, out string? productName, out string? normalizedProductName)
     {
@@ -454,7 +466,7 @@ public sealed class InventoryApplicationService(
     }
     private static string Hash<T>(T value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value))));
 
-    private static async Task<IResult> ReplayAfterIdempotencyRaceAsync(ApplicationDbContext database, Guid ownerUserId, string scope, Guid key, string hash, int successStatus, CancellationToken cancellationToken)
+    private async Task<IResult> ReplayAfterIdempotencyRaceAsync(ApplicationDbContext database, Guid ownerUserId, string scope, Guid key, string hash, int successStatus, CancellationToken cancellationToken)
     {
         // A unique PostgreSQL index elects one concurrent request as the owner. Clearing tracked
         // failed inserts is essential before loading that owner's committed semantic response.
@@ -473,7 +485,7 @@ public sealed class InventoryApplicationService(
         var response = JsonSerializer.Deserialize<LotResponse>(record.ResponseBody!);
         return response is null
             ? Problem(409, "idempotency_in_progress", "The request is still being processed.")
-            : WithEtag(response, response.Version, successStatus);
+            : WithEtag(response, successStatus);
     }
     private static string WriteCursor(CursorPosition position, IDataProtectionProvider provider) => provider.CreateProtector("KitchenFlow.Inventory.LotCursor.v1").Protect(JsonSerializer.Serialize(position));
     private static bool TryReadCursor(string cursor, IDataProtectionProvider provider, out CursorPosition? position)

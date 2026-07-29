@@ -13,7 +13,7 @@ public sealed record UpdateLotRequest(string? ProductName, string StorageLocatio
 public sealed record AdjustmentRequest(string Type, decimal? Value, string? AvailabilityState, string? ReasonCode, string? Note);
 
 /// <summary>Returns the current representation of an inventory lot.</summary>
-public sealed record LotResponse(Guid LotId, Guid ProductId, string ProductName, QuantityResponse Quantity, string StorageLocation, string? CustomLocation, string? PackageState, DateOnly? PrintedExpirationDate, string? Notes, long Version, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt);
+public sealed record LotResponse(Guid LotId, Guid ProductId, string ProductName, QuantityResponse Quantity, string StorageLocation, string? CustomLocation, string? PackageState, DateOnly? PrintedExpirationDate, string? Notes, string Version, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt);
 
 /// <summary>Returns a measured or qualitative quantity without mixing the two modes.</summary>
 public sealed record QuantityResponse(decimal? MeasuredValue, string? Unit, string? AvailabilityState);
