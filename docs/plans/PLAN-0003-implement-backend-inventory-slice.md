@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Protected cursor pagination, storage/search filters, and the refreshed generated OpenAPI snapshot are verified.
-- **Last completed step:** Added and passed PostgreSQL API coverage for page continuation and cursor tampering.
-- **Exact next action:** Add remaining validation/error and two-user mutation coverage, then run the real Keycloak authentication smoke validation.
+- **Current checkpoint:** Strict manual-lot validation and metadata correction, including product-name correction, are verified against PostgreSQL.
+- **Last completed step:** Added noncanonical-quantity rejection and metadata correction API coverage and refreshed OpenAPI.
+- **Exact next action:** Add remaining two-user mutation and adjustment edge-case coverage, then run the real Keycloak authentication smoke validation.
 - **Blockers:** None.
-- **Partially modified areas:** API query contract, cursor protection, inventory storage enum, PostgreSQL API tests, unit tests, and OpenAPI snapshot.
-- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; `scripts/backend/check-openapi.sh`. All completed successfully; the integration suite has eleven tests.
-- **Known failures or limitations:** Broader two-user mutation coverage, validation/problem-details coverage, rate-limit and telemetry-redaction checks, and real Keycloak login/logout smoke validation remain unfinished. The initial domain remains bounded to PLAN-0003 manual-lot operations.
+- **Partially modified areas:** Inventory contracts, API validation/mutation handling, inventory domain enum values, PostgreSQL API tests, and OpenAPI snapshot.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`; fetched the live API OpenAPI document; `scripts/backend/check-openapi.sh`. All completed successfully; the integration suite has thirteen tests.
+- **Known failures or limitations:** Broader two-user mutation coverage, additional adjustment edge cases, rate-limit and telemetry-redaction checks, and real Keycloak login/logout smoke validation remain unfinished. The initial domain remains bounded to PLAN-0003 manual-lot operations.
 - **Working tree state:** Source, contract, and test changes are ready to commit with this synchronized plan state.
 
 ## Progress log
+
+### 2026-07-29T04:45:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Hardened accepted inventory values and metadata correction behavior.
+- **Changes included in the commit:** Enforced canonical measured units and three-decimal precision, accepted storage values, `Unknown` package state, private-note trimming/limits, product-name validation/correction, and stricter measured/availability adjustment transitions; removed non-contract storage values from the domain enum; regenerated OpenAPI.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`; live OpenAPI export; `scripts/backend/check-openapi.sh`.
+- **Result:** Build completed with zero warnings/errors; thirteen PostgreSQL API tests pass; the contract matches the live API. No migration is required because only application-level accepted enum values changed.
+- **Known failures or unverified behavior:** Broader two-user mutation coverage, further adjustment edge cases, rate limiting, telemetry redaction, and real Keycloak login/logout remain unverified.
+- **Blockers:** None.
+- **Next action:** Add remaining two-user mutation and adjustment edge-case tests, then execute the real Keycloak authentication smoke path.
 
 ### 2026-07-29T04:25:00Z — Codex backend implementation agent
 

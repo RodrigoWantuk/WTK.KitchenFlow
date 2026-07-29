@@ -122,9 +122,12 @@ public static class InventoryEndpoints
             return Problem(400, "validation_failed", "A UUID Idempotency-Key header is required.");
         }
 
-        if (!ValidateQuantity(request.Quantity, out var quantityError) || !ValidateStorage(request.StorageLocation, request.CustomLocation))
+        var validProductName = ValidateProductName(request.ProductName, out var productName, out var normalizedProductName);
+        var validQuantity = ValidateQuantity(request.Quantity, out var quantityError);
+        var validMetadata = ValidateMetadata(request.StorageLocation, request.CustomLocation, request.PackageState, request.Notes, out var metadataError);
+        if (!validProductName || !validQuantity || !validMetadata)
         {
-            return Problem(422, "domain_rule_violated", quantityError ?? "Invalid storage location.");
+            return Problem(422, "domain_rule_violated", quantityError ?? metadataError ?? "The product name is invalid.");
         }
 
         var user = await currentUser.GetOrCreateAsync(cancellationToken);
@@ -147,16 +150,41 @@ public static class InventoryEndpoints
         }
 
         var now = timeProvider.GetUtcNow();
-        var product = new ProductRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, DisplayName = request.ProductName.Trim(), NormalizedSearchName = request.ProductName.Trim().ToUpperInvariant(), CreatedAt = now, UpdatedAt = now };
-        var lot = new LotRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, ProductId = product.Id, MeasuredValue = request.Quantity.MeasuredValue, MeasuredUnit = request.Quantity.Unit, AvailabilityState = request.Quantity.AvailabilityState, StorageLocation = request.StorageLocation, CustomLocation = request.CustomLocation, PackageState = request.PackageState, PrintedExpirationDate = request.PrintedExpirationDate, ExpirationProvenance = request.PrintedExpirationDate is null ? null : "UserEntered", Notes = request.Notes, Version = 1, CreatedAt = now, UpdatedAt = now };
+        var product = new ProductRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, DisplayName = productName!, NormalizedSearchName = normalizedProductName!, CreatedAt = now, UpdatedAt = now };
+        var lot = new LotRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, ProductId = product.Id, MeasuredValue = request.Quantity.MeasuredValue, MeasuredUnit = request.Quantity.Unit, AvailabilityState = request.Quantity.AvailabilityState, StorageLocation = request.StorageLocation, CustomLocation = request.CustomLocation?.Trim(), PackageState = request.PackageState, PrintedExpirationDate = request.PrintedExpirationDate, ExpirationProvenance = request.PrintedExpirationDate is null ? null : "UserEntered", Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim(), Version = 1, CreatedAt = now, UpdatedAt = now };
         var response = ToResponse(lot, product.DisplayName);
         database.AddRange(product, lot, new TransactionRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, LotId = lot.Id, Type = "Initial", ResultingMeasuredValue = lot.MeasuredValue, ResultingMeasuredUnit = lot.MeasuredUnit, ResultingAvailabilityState = lot.AvailabilityState, OccurredAt = now }, new AuditEventRecord { Id = Guid.NewGuid(), ActorUserId = user.Id, EventName = "inventory.lot.created", TargetType = "inventory_lot", TargetId = lot.Id, CorrelationId = httpRequest.HttpContext.TraceIdentifier, MetadataJson = "{}", OccurredAt = now }, new IdempotencyRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, Scope = "inventory.lots.create", Key = key, RequestHash = hash, StatusCode = 201, ResponseBody = JsonSerializer.Serialize(response), ETag = Etag(lot.Version), CreatedAt = now, CompletedAt = now });
         await database.SaveChangesAsync(cancellationToken);
         return WithEtag(response, lot.Version, StatusCodes.Status201Created);
     }
 
-    private static async Task<IResult> UpdateAsync(Guid lotId, UpdateLotRequest request, HttpRequest requestContext, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken) =>
-        await MutateAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken, (lot, _) => { lot.StorageLocation = request.StorageLocation; lot.CustomLocation = request.CustomLocation; lot.PackageState = request.PackageState; lot.PrintedExpirationDate = request.PrintedExpirationDate; lot.ExpirationProvenance = request.PrintedExpirationDate is null ? null : "UserEntered"; lot.Notes = request.Notes; return null; });
+    private static async Task<IResult> UpdateAsync(Guid lotId, UpdateLotRequest request, HttpRequest requestContext, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
+    {
+        var validMetadata = ValidateMetadata(request.StorageLocation, request.CustomLocation, request.PackageState, request.Notes, out var metadataError);
+        var validProductName = request.ProductName is null || ValidateProductName(request.ProductName, out _, out _);
+        if (!validMetadata || !validProductName)
+        {
+            return Problem(422, "domain_rule_violated", metadataError ?? "The product name is invalid.");
+        }
+
+        return await MutateAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken, (lot, product, now) =>
+        {
+            lot.StorageLocation = request.StorageLocation;
+            lot.CustomLocation = request.CustomLocation?.Trim();
+            lot.PackageState = request.PackageState;
+            lot.PrintedExpirationDate = request.PrintedExpirationDate;
+            lot.ExpirationProvenance = request.PrintedExpirationDate is null ? null : "UserEntered";
+            lot.Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim();
+            if (request.ProductName is not null)
+            {
+                ValidateProductName(request.ProductName, out var productName, out var normalizedProductName);
+                product.DisplayName = productName!;
+                product.NormalizedSearchName = normalizedProductName!;
+                product.UpdatedAt = now;
+            }
+            return null;
+        });
+    }
 
     private static async Task<IResult> AdjustAsync(Guid lotId, AdjustmentRequest request, HttpRequest requestContext, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
     {
@@ -184,18 +212,18 @@ public static class InventoryEndpoints
             return WithEtag(replay, replay.Version);
         }
 
-        return await MutateAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken, (lot, now) =>
+        return await MutateAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken, (lot, _, now) =>
         {
             var previous = ToQuantity(lot);
-            if (request.Type is "Consume" or "Discard" && lot.MeasuredValue is { } current && request.Value is { } delta && delta > 0m && delta <= current)
+            if (request.Type is "Consume" or "Discard" && lot.MeasuredValue is { } current && request.Value is { } delta && decimal.Round(delta, 3) == delta && delta > 0m && delta <= current && request.AvailabilityState is null)
             {
                 lot.MeasuredValue = current - delta;
             }
-            else if (request.Type == "Correct" && request.Value is >= 0m)
+            else if (request.Type == "Correct" && lot.MeasuredValue is not null && request.Value is { } corrected && decimal.Round(corrected, 3) == corrected && corrected >= 0m && request.AvailabilityState is null)
             {
-                lot.MeasuredValue = request.Value;
+                lot.MeasuredValue = corrected;
             }
-            else if (request.Type == "AvailabilityChanged" && lot.MeasuredValue is null && request.AvailabilityState is not null)
+            else if (request.Type == "AvailabilityChanged" && lot.MeasuredValue is null && request.Value is null && request.AvailabilityState is "Available" or "Low" or "Unavailable" && !string.IsNullOrWhiteSpace(request.ReasonCode) && request.ReasonCode.Trim().Length <= 100)
             {
                 lot.AvailabilityState = request.AvailabilityState;
             }
@@ -209,7 +237,7 @@ public static class InventoryEndpoints
     }
 
     private static async Task<IResult> DeleteAsync(Guid lotId, HttpRequest requestContext, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken) =>
-        await MutateAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken, (lot, now) => { lot.DeletedAt = now; return new TransactionRecord { Id = Guid.NewGuid(), OwnerUserId = lot.OwnerUserId, LotId = lot.Id, Type = "Deleted", OccurredAt = now }; }, StatusCodes.Status204NoContent);
+        await MutateAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken, (lot, _, now) => { lot.DeletedAt = now; return new TransactionRecord { Id = Guid.NewGuid(), OwnerUserId = lot.OwnerUserId, LotId = lot.Id, Type = "Deleted", OccurredAt = now }; }, StatusCodes.Status204NoContent);
 
     private static async Task<IResult> HistoryAsync(Guid lotId, CurrentUserService currentUser, ApplicationDbContext database, CancellationToken cancellationToken)
     {
@@ -223,7 +251,7 @@ public static class InventoryEndpoints
         return Results.Ok(history);
     }
 
-    private static async Task<IResult> MutateAsync(Guid lotId, HttpRequest request, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider clock, CancellationToken cancellationToken, Func<LotRecord, DateTimeOffset, TransactionRecord?> operation, int successStatus = StatusCodes.Status200OK, Guid? idempotencyKey = null, string? idempotencyScope = null, string? idempotencyHash = null)
+    private static async Task<IResult> MutateAsync(Guid lotId, HttpRequest request, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider clock, CancellationToken cancellationToken, Func<LotRecord, ProductRecord, DateTimeOffset, TransactionRecord?> operation, int successStatus = StatusCodes.Status200OK, Guid? idempotencyKey = null, string? idempotencyScope = null, string? idempotencyHash = null)
     {
         if (!TryVersion(request, out var version))
         {
@@ -245,7 +273,7 @@ public static class InventoryEndpoints
         try
         {
             var now = clock.GetUtcNow();
-            var transaction = operation(item.Value.Lot, now);
+            var transaction = operation(item.Value.Lot, item.Value.Product, now);
             item.Value.Lot.Version++;
             item.Value.Lot.UpdatedAt = now;
             if (transaction is not null)
@@ -283,8 +311,27 @@ public static class InventoryEndpoints
     private static string Etag(long version) => $"\"{version}\"";
     private static bool TryVersion(HttpRequest request, out long version) => long.TryParse(request.Headers.IfMatch.ToString().Trim('"'), out version);
     private static bool TryIdempotencyKey(HttpRequest request, out Guid key) => Guid.TryParse(request.Headers["Idempotency-Key"], out key);
-    private static bool ValidateStorage(string location, string? custom) => location is "Pantry" or "Refrigerator" or "Freezer" && string.IsNullOrWhiteSpace(custom) || location == "Other" && !string.IsNullOrWhiteSpace(custom) && custom.Trim().Length <= 80;
-    private static bool ValidateQuantity(QuantityRequest quantity, out string? error) { var measured = quantity.MeasuredValue is > 0m && quantity.Unit is not null && quantity.AvailabilityState is null; var available = quantity.MeasuredValue is null && quantity.Unit is null && quantity.AvailabilityState is "Available" or "Low" or "Unavailable"; error = measured || available ? null : "Quantity must be either a positive measured value with a canonical unit or an availability state."; return error is null; }
+    private static bool ValidateProductName(string? value, out string? productName, out string? normalizedProductName)
+    {
+        productName = value?.Trim();
+        normalizedProductName = productName?.ToUpperInvariant();
+        return !string.IsNullOrWhiteSpace(productName) && productName.Length <= 160;
+    }
+    private static bool ValidateMetadata(string? location, string? custom, string? packageState, string? notes, out string? error)
+    {
+        var validStorage = location is "Pantry" or "Refrigerator" or "Freezer" && string.IsNullOrWhiteSpace(custom) || location == "Other" && !string.IsNullOrWhiteSpace(custom) && custom.Trim().Length <= 80;
+        var validPackage = packageState is null or "Sealed" or "Opened" or "Unknown";
+        var validNotes = notes is null || notes.Trim().Length <= 1000;
+        error = !validStorage ? "The storage location is invalid." : !validPackage ? "The package state is invalid." : !validNotes ? "Notes must be at most 1000 characters." : null;
+        return error is null;
+    }
+    private static bool ValidateQuantity(QuantityRequest? quantity, out string? error)
+    {
+        var measured = quantity?.MeasuredValue is > 0m and { } value && decimal.Round(value, 3) == value && quantity.Unit is "Gram" or "Milliliter" or "Unit" && quantity.AvailabilityState is null;
+        var available = quantity?.MeasuredValue is null && quantity?.Unit is null && quantity?.AvailabilityState is "Available" or "Low" or "Unavailable";
+        error = measured || available ? null : "Quantity must be either a positive canonical measured value with a maximum of three decimal places or an availability state.";
+        return error is null;
+    }
     private static string Hash<T>(T value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value))));
     private static string WriteCursor(CursorPosition position, IDataProtectionProvider provider) => provider.CreateProtector("KitchenFlow.Inventory.LotCursor.v1").Protect(JsonSerializer.Serialize(position));
     private static bool TryReadCursor(string cursor, IDataProtectionProvider provider, out CursorPosition? position)

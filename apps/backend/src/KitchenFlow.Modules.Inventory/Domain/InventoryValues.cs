@@ -19,14 +19,14 @@ public enum StorageLocation
     Pantry,
     Refrigerator,
     Freezer,
-    Counter,
     Other
 }
 
 public enum PackageState
 {
     Sealed,
-    Opened
+    Opened,
+    Unknown
 }
 
 public enum ExpirationProvenance

@@ -196,6 +196,47 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         Assert.Equal("invalid_cursor", problem.GetProperty("errorCode").GetString());
     }
 
+    [Fact]
+    public async Task CreateRejectsNoncanonicalMeasuredQuantity()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/inventory/lots") { Content = JsonContent.Create(new { productName = "Invalid unit", quantity = new { measuredValue = 1.2345m, unit = "Pound", availabilityState = (string?)null }, storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null }) };
+        request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString());
+        request.Headers.Add("X-CSRF-TOKEN", csrf);
+
+        var response = await client.SendAsync(request);
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal((System.Net.HttpStatusCode)422, response.StatusCode);
+        Assert.Equal("domain_rule_violated", problem.GetProperty("errorCode").GetString());
+    }
+
+    [Fact]
+    public async Task UpdateCanCorrectProductDisplayName()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var created = await CreateAsync(client, csrf, Guid.NewGuid().ToString());
+        var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+        using var request = new HttpRequestMessage(HttpMethod.Patch, $"/api/v1/inventory/lots/{lotId}") { Content = JsonContent.Create(new { productName = "Corrected tomato", storageLocation = "Other", customLocation = "Cellar shelf", packageState = "Unknown", printedExpirationDate = (DateOnly?)null, notes = " trimmed note " }) };
+        request.Headers.Add("X-CSRF-TOKEN", csrf);
+        request.Headers.TryAddWithoutValidation("If-Match", created.Headers.ETag!.Tag);
+
+        var updated = await client.SendAsync(request);
+        var body = await updated.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, updated.StatusCode);
+        Assert.Equal("Corrected tomato", body.GetProperty("productName").GetString());
+        Assert.Equal("Other", body.GetProperty("storageLocation").GetString());
+        Assert.Equal("Cellar shelf", body.GetProperty("customLocation").GetString());
+        Assert.Equal("trimmed note", body.GetProperty("notes").GetString());
+    }
+
     private static object CreateLot(string productName = "Test tomato") => new { productName, quantity = new { measuredValue = 100m, unit = "Gram", availabilityState = (string?)null }, storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null };
 
     private static async Task<string> GetCsrfAsync(HttpClient client)

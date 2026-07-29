@@ -149,11 +149,18 @@
               "string"
             ]
           },
+          "productName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "storageLocation": {
             "type": "string"
           }
         },
         "required": [
+          "productName",
           "storageLocation",
           "customLocation",
           "packageState",
