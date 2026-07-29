@@ -584,6 +584,15 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Next action:** Add contract, behavior, and isolation tests, then validate real Keycloak login.
 - **Blockers or handoff notes:** The API process is a local validation process only; it is not a deployment or completed smoke test.
 
+### 2026-07-28T01:20:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Enabled the runtime OpenAPI document endpoint.
+- **Changes included in the commit:** Added the versioned runtime OpenAPI route at `/openapi/v1.json`.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/KitchenFlow.slnx -c Release --no-build`.
+- **Result:** Build passed with zero warnings/errors and five unit tests passed; architecture and integration projects still contain no test cases.
+- **Next action:** Export and check in the OpenAPI snapshot, add drift verification, and add the missing tests.
+- **Blockers or handoff notes:** Runtime document endpoint exists but the contract milestone is not yet complete until export/drift validation is added.
+
 ### 2026-07-29T00:25:00Z — AI planning agent
 
 - **Checkpoint:** Implementation plan created.
