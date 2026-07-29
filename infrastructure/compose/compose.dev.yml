@@ -8,7 +8,9 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
-      - kitchenflow-postgres:/var/lib/postgresql/data
+      # PostgreSQL 18 images store clusters beneath a major-version directory. Mounting the
+      # parent keeps a fresh named volume compatible with the image's startup contract.
+      - kitchenflow-postgres:/var/lib/postgresql
       - ../keycloak/init-keycloak-db.sql:/docker-entrypoint-initdb.d/init-keycloak-db.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]

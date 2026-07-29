@@ -42,7 +42,11 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
         modelBuilder.Entity<ProductRecord>(entity =>
         {
-            entity.ToTable("products", "inventory");
+            entity.ToTable("products", "inventory", table =>
+            {
+                table.HasCheckConstraint("ck_products_display_name", "length(btrim(\"DisplayName\")) > 0");
+                table.HasCheckConstraint("ck_products_normalized_search_name", "length(btrim(\"NormalizedSearchName\")) > 0");
+            });
             entity.HasKey(x => x.Id);
             entity.HasAlternateKey(x => new { x.Id, x.OwnerUserId });
             entity.Property(x => x.DisplayName).HasMaxLength(160).IsRequired();
@@ -81,7 +85,13 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
         modelBuilder.Entity<TransactionRecord>(entity =>
         {
-            entity.ToTable("transactions", "inventory");
+            entity.ToTable("transactions", "inventory", table =>
+            {
+                table.HasCheckConstraint("ck_transactions_type", "\"Type\" IN ('Initial', 'Consume', 'Discard', 'Correct', 'AvailabilityChanged', 'Deleted')");
+                table.HasCheckConstraint("ck_transactions_previous_quantity", "(\"PreviousMeasuredValue\" IS NULL AND \"PreviousMeasuredUnit\" IS NULL AND \"PreviousAvailabilityState\" IS NULL) OR (\"PreviousMeasuredValue\" IS NOT NULL AND \"PreviousMeasuredValue\" >= 0 AND \"PreviousMeasuredUnit\" IN ('Gram', 'Milliliter', 'Unit') AND \"PreviousAvailabilityState\" IS NULL) OR (\"PreviousMeasuredValue\" IS NULL AND \"PreviousMeasuredUnit\" IS NULL AND \"PreviousAvailabilityState\" IN ('Available', 'Low', 'Unavailable'))");
+                table.HasCheckConstraint("ck_transactions_resulting_quantity", "(\"ResultingMeasuredValue\" IS NOT NULL AND \"ResultingMeasuredValue\" >= 0 AND \"ResultingMeasuredUnit\" IN ('Gram', 'Milliliter', 'Unit') AND \"ResultingAvailabilityState\" IS NULL) OR (\"ResultingMeasuredValue\" IS NULL AND \"ResultingMeasuredUnit\" IS NULL AND \"ResultingAvailabilityState\" IN ('Available', 'Low', 'Unavailable'))");
+                table.HasCheckConstraint("ck_transactions_reason_code", "\"ReasonCode\" IS NULL OR length(btrim(\"ReasonCode\")) > 0");
+            });
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Type).HasMaxLength(30).IsRequired();
             entity.Property(x => x.PreviousMeasuredValue).HasColumnType("numeric(18,3)");
@@ -106,7 +116,11 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
         modelBuilder.Entity<IdempotencyRecord>(entity =>
         {
-            entity.ToTable("idempotency_records", "platform");
+            entity.ToTable("idempotency_records", "platform", table =>
+            {
+                table.HasCheckConstraint("ck_idempotency_status_code", "\"StatusCode\" BETWEEN 200 AND 299");
+                table.HasCheckConstraint("ck_idempotency_completion", "(\"CompletedAt\" IS NULL AND \"ResponseBody\" IS NULL AND \"ETag\" IS NULL) OR (\"CompletedAt\" IS NOT NULL AND \"ResponseBody\" IS NOT NULL)");
+            });
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Scope).HasMaxLength(100).IsRequired();
             entity.Property(x => x.RequestHash).HasMaxLength(128).IsRequired();

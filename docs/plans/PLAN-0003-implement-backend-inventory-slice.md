@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** SharedKernel, Inventory, Identity, Infrastructure, and API enforce XML documentation; invalid opaque `If-Match` values correctly fail as stale preconditions; the first CI execution exposed and locally verified that contract defect.
-- **Last completed step:** Reproduced the GitHub Actions failure, corrected invalid opaque version-token classification, and completed API/Infrastructure XML documentation enforcement.
+- **Current checkpoint:** PostgreSQL transaction/idempotency integrity constraints are migrated and integration-tested; the local Compose topology starts PostgreSQL 18 and Keycloak correctly from an empty volume.
+- **Last completed step:** Reproduced the second GitHub Actions failure, corrected the PostgreSQL 18 volume mount, and added history/idempotency persistence constraints with a migration.
 - **Exact next action:** Move the application-service contract into `KitchenFlow.Modules.Inventory.Application` and provide an infrastructure persistence adapter, so the composition-root service becomes a thin adapter rather than the authoritative use-case implementation.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
-- **Validation performed:** GitHub Actions run `30484702156` (failed only on the stale-version assertion before this fix); focused PostgreSQL integration test; complete Release test suite; Release solution build; formatting verification; diff check.
+- **Validation performed:** GitHub Actions runs `30484702156` and `30485251129` (the latter failed during fresh PostgreSQL 18 Compose startup before its gates); focused migration constraints test; Release solution build; formatting verification; migration downgrade and upgrade against fresh Compose PostgreSQL; PostgreSQL and Keycloak readiness/discovery.
 - **Known failures or limitations:** The application service is still in the API composition root and directly uses persistence. Module persistence ports/adapters, automated real-Keycloak login/two-user smoke, operational runbooks, and a successful rerun of the expanded GitHub Actions workflow remain unfinished.
-- **Working tree state:** Opaque precondition classification and API/Infrastructure documentation-enforcement checkpoint is ready to commit with synchronized plan and registry updates.
+- **Working tree state:** PostgreSQL 18 Compose compatibility and inventory history-integrity migration checkpoint is ready to commit with synchronized plan and registry updates.
 
 ## Progress log
+
+### 2026-07-29T19:45:33Z — Codex backend implementation agent
+
+- **Checkpoint:** Corrected fresh-runner PostgreSQL 18 Compose startup and enforced immutable-history/idempotency persistence invariants.
+- **Changes included in the commit:** Mounted the PostgreSQL 18 named volume at `/var/lib/postgresql`, as required by the official image's major-version data layout; added a named migration with controlled transaction types, valid prior/resulting quantity snapshots, nonblank reason codes, nonblank product names, idempotency completion-shape, and successful-status constraints; expanded PostgreSQL integration coverage to prove invalid transaction types and incomplete completed idempotency records are rejected.
+- **Validation performed:** Inspected GitHub Actions run `30485251129`, which failed before tests because a fresh `postgres:18.4` container rejected the obsolete `/var/lib/postgresql/data` volume mount; `docker compose -f infrastructure/compose/compose.dev.yml down -v --remove-orphans`; fresh `docker compose -f infrastructure/compose/compose.dev.yml up -d postgres keycloak` (both services healthy); Keycloak discovery endpoint (200); `dotnet ef database update` to an empty Compose database; focused `PostgreSqlMigrationTests` (2 passed); Release solution build (zero warnings/errors); formatting verification; `dotnet ef database update 20260729013459_InitialInventorySlice` followed by latest migration update; `git diff --check`.
+- **Result:** Fresh local Compose startup now matches the PostgreSQL 18 image contract, and PostgreSQL—not only application code—rejects invalid immutable history and malformed idempotency completion records.
+- **Known failures or unverified behavior:** The fixed Compose/migration checkpoint has not yet run in GitHub Actions. The full integration host was launched after the change but its runner detached from the terminal before reporting a final aggregate summary; focused migration verification passed. Module persistence ports/adapters, automated real-Keycloak login/two-user smoke, and operational runbooks remain open.
+- **Blockers:** None.
+- **Next action:** Commit and push the Compose/migration correction, inspect the replacement GitHub Actions workflow, then extract the inventory persistence port and module-owned application service.
 
 ### 2026-07-29T19:37:08Z — Codex backend implementation agent
 
