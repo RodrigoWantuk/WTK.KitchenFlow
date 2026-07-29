@@ -629,3 +629,12 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Result:** Domain boundaries and empty-database migration are now automatically verified.
 - **Next action:** Add API isolation/security tests and run real Keycloak authentication smoke validation.
 - **Blockers or handoff notes:** The endpoint/security test matrix remains incomplete.
+
+### 2026-07-29T02:30:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Added real-PostgreSQL API authentication/session integration tests.
+- **Changes included in the commit:** Added test-host authentication, Testcontainers-backed API database setup, unauthenticated 401 assertion, and authenticated internal-user/CSRF session assertion.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-build`.
+- **Result:** Build passed with zero warnings/errors; three PostgreSQL integration tests pass.
+- **Next action:** Add mutation, cross-user isolation, ETag, idempotency, and CSRF behavior tests; then run real Keycloak browser/session smoke validation.
+- **Blockers or handoff notes:** API behavior test coverage is growing but still incomplete for PLAN-0003.
