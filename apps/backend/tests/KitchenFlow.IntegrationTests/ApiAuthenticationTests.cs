@@ -257,6 +257,23 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         Assert.Equal(System.Net.HttpStatusCode.NotFound, delete.StatusCode);
     }
 
+    [Fact]
+    public async Task ConsumeCannotReduceMeasuredLotBelowZero()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var created = await CreateAsync(client, csrf, Guid.NewGuid().ToString());
+        var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+
+        var rejected = await AdjustAsync(client, csrf, lotId, created.Headers.ETag!.Tag, Guid.NewGuid().ToString(), 101m);
+        var history = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots/{lotId}/history");
+
+        Assert.Equal((System.Net.HttpStatusCode)422, rejected.StatusCode);
+        Assert.Equal(1, history.GetArrayLength());
+    }
+
     private static object CreateLot(string productName = "Test tomato") => new { productName, quantity = new { measuredValue = 100m, unit = "Gram", availabilityState = (string?)null }, storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null };
 
     private static async Task<string> GetCsrfAsync(HttpClient client)
