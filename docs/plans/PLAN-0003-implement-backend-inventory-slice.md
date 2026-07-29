@@ -7,7 +7,7 @@
 - **Created:** 2026-07-29
 - **Last updated:** 2026-07-29T12:10:00Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
-- **Pull request:** Pending creation
+- **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, open)
 - **Related implementation plan:** PLAN-0002
 - **Related issues:** None
 - **Related ADRs:** ADR-0002, ADR-0003, ADR-0004, ADR-0006
@@ -484,15 +484,25 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 ## Execution state
 
 - **Current checkpoint:** All PLAN-0003 implementation and non-graphical validation is complete; the owner expressly approved the sole remaining graphical-browser gate.
-- **Last completed step:** Recorded the stable contract handoff and owner approval, then set the implementation plan to completed pending PR creation.
-- **Exact next action:** Push this branch, open the PLAN-0003 draft PR, then record its number and URL in this plan and the registry.
+- **Last completed step:** Opened draft PR #9 and recorded its delivery state, validation record, and post-merge branch-cleanup responsibility.
+- **Exact next action:** Request review; PLAN-0004 consumes the stable OpenAPI contract and PLAN-0005 independently validates the PR baseline. The repository maintainer deletes this branch after merge.
 - **Blockers:** None.
 - **Partially modified areas:** Plan and registry completion state; PLAN-0004 contract handoff only.
 - **Validation performed:** Locked restore; zero-warning Release build; formatting; full automated suite (2 architecture, 5 unit, 18 PostgreSQL integration tests); migration update; compose readiness; OpenAPI export/drift; real Keycloak HTTPS Authorization Code + PKCE session smoke; two-user isolation smoke; telemetry-redaction coverage.
 - **Known failures or limitations:** An interactive graphical-browser login/logout/create/list walkthrough could not be executed in this headless container. The owner expressly approved treating that graphical-only validation as done; no automated backend check is failing.
-- **Working tree state:** Completion, registry, and handoff changes are ready to commit.
+- **Working tree state:** PR delivery metadata is ready to commit.
 
 ## Progress log
+
+### 2026-07-29T12:15:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Opened draft PR [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) for the completed PLAN-0003 implementation.
+- **Changes included in the commit:** Recorded the PR URL and delivery state; assigned post-merge deletion of `agent/plan-0003-backend-inventory-slice` to the repository maintainer.
+- **Validation performed:** Confirmed a clean completion commit (`0016e1c`), pushed the branch to `origin`, and created the English draft PR against `main` with implementation, contract, migration, security, validation, risk, and PLAN-0004/PLAN-0005 handoff details.
+- **Result:** PLAN-0003 is completed and delivered as an open draft PR. No merge or self-approval was performed.
+- **Known failures or unverified behavior:** The owner-approved graphical-only browser exception remains documented in the PR; no automated check is failing.
+- **Blockers:** None.
+- **Next action:** Independent reviewers validate PR #9; PLAN-0004 may consume `packages/contracts/openapi/kitchenflow-v1.json`, and PLAN-0005 independently tests the stable PR baseline.
 
 ### 2026-07-29T12:10:00Z — Codex backend implementation agent
 
@@ -749,9 +759,9 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - [ ] Documentation and ADRs remain current.
 - [ ] PLAN-0004 contract handoff is recorded.
 - [ ] `docs/plan-status.md` matches this plan.
-- [ ] PR reports all validation and limitations.
+- [x] PR reports all validation and limitations.
 - [ ] No hidden partial work remains.
-- [ ] Branch cleanup responsibility is recorded.
+- [x] Branch cleanup responsibility is recorded.
 ### 2026-07-29T02:10:00Z — Codex backend implementation agent
 
 - **Checkpoint:** Added executable architecture and real-PostgreSQL migration tests.
