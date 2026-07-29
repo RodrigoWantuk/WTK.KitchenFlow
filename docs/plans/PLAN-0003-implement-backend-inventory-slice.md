@@ -483,13 +483,13 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** The dependency-free inventory domain foundation is complete and unit-tested.
-- **Last completed step:** Added typed product, quantity, storage, private-note, expiration, lot, and immutable transaction domain behavior.
-- **Exact next action:** Add EF Core/Npgsql persistence, user identity persistence, migrations, and compose-backed PostgreSQL/Keycloak infrastructure.
+- **Current checkpoint:** EF Core/Npgsql persistence foundation and internal identity table mapping are buildable.
+- **Last completed step:** Added explicit schema/table mappings for internal users, products, lots, transactions, audit events, and idempotency records.
+- **Exact next action:** Create migrations and local PostgreSQL/Keycloak compose assets, then connect authenticated API use cases to the persistence model.
 - **Blockers:** None.
 - **Partially modified areas:** None.
-- **Validation performed:** Baseline verification plus `dotnet restore apps/backend/KitchenFlow.slnx --force-evaluate`; `dotnet restore apps/backend/KitchenFlow.slnx --locked-mode`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; and `dotnet test apps/backend/KitchenFlow.slnx -c Release --no-build`. Restore, formatting, and build passed with zero warnings/errors; the baseline unit test passed. The still-empty integration and architecture test assemblies report no discovered tests.
-- **Known failures or limitations:** Persistence, authentication, API behavior, migrations, OpenAPI, compose services, and their tests do not exist yet; those belong to later phases. The initial domain is deliberately bounded to the PLAN-0003 manual lot operations and does not implement broader lifecycle transitions or derived lots.
+- **Validation performed:** Previous foundation validation plus `dotnet restore apps/backend/KitchenFlow.slnx --force-evaluate` and `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`. Restore and build passed with zero warnings/errors after compatible dependency pins were selected.
+- **Known failures or limitations:** Migrations, authentication, API behavior, OpenAPI export, compose services, and integration tests do not exist yet. The initial domain is deliberately bounded to the PLAN-0003 manual lot operations and does not implement broader lifecycle transitions or derived lots.
 - **Working tree state:** Build outputs are ignored; tracked solution foundation is ready for validation.
 
 ## Progress log
@@ -520,6 +520,15 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Result:** Formatting and build pass with zero warnings/errors; five unit tests pass.
 - **Next action:** Persist the domain through EF Core/Npgsql and establish local service infrastructure.
 - **Blockers or handoff notes:** The first test assertion incorrectly treated consuming all remaining quantity as invalid; it was corrected to test only a negative-result adjustment, matching the accepted nonnegative rule.
+
+### 2026-07-28T00:30:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Added the EF Core/Npgsql persistence foundation.
+- **Changes included in the commit:** Added pinned EF Core, Npgsql, OIDC, OpenAPI, OpenTelemetry, integration-test, and architecture-test dependencies; internal-user identity model; and explicit PostgreSQL schema mappings for all PLAN-0003 persistence tables and constraints.
+- **Validation performed:** `dotnet restore apps/backend/KitchenFlow.slnx --force-evaluate`; `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`.
+- **Result:** Restore and Release build passed with zero warnings/errors. Initial dependency pins exposed vulnerable/incompatible OpenAPI and telemetry transitive versions; pins were upgraded to Microsoft.OpenApi 2.11.0, OpenTelemetry 1.17.0, EF Core/Npgsql 10.0.3, resolving the build and advisory failures.
+- **Next action:** Add migrations and compose services before API use cases.
+- **Blockers or handoff notes:** No migration has been generated yet; the application does not run persistence automatically on startup.
 
 ### 2026-07-29T00:25:00Z — AI planning agent
 
