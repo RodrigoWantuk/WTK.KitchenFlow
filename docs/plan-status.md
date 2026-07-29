@@ -39,7 +39,7 @@ Plans with status `Draft`, `Ready`, `In Progress`, `Paused`, `Blocked`, or `Vali
 
 | Plan | Title | Type | Status | Delivery | Owner | Branch / PR | Current checkpoint | Exact next action | Blocker | Updated |
 |---|---|---|---|---|---|---|---|---|---|---|
-| [PLAN-0001](plans/PLAN-0001-document-product-foundation.md) | Document the KitchenFlow Product Foundation | Documentation | Validating | Branch open | AI documentation agent | `agent/plan-0001-document-product-foundation` | Reference-persona evidence and complete registry governance restored after full-diff findings; all foundation content is present | Re-run final branch comparison, inspect key files and links, then open the PR and complete the plan | None | 2026-07-28 |
+| _None_ |  |  |  |  |  |  |  |  |  |  |
 
 ## Completed plans
 
@@ -47,7 +47,7 @@ Plans with status `Completed` belong here. Keep the most recent completed plans 
 
 | Plan | Title | Type | Delivery | Result | Completed |
 |---|---|---|---|---|---|
-| _None_ |  |  |  |  |  |
+| [PLAN-0001](plans/PLAN-0001-document-product-foundation.md) | Document the KitchenFlow Product Foundation | Documentation | [PR #5 open](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/5) | Complete product, domain, release, architecture, AI, privacy, security, operations, ADR, agent-reading, and test-gate foundation | 2026-07-28 |
 
 ## Cancelled or superseded plans
 
