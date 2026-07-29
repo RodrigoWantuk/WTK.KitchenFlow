@@ -96,6 +96,24 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         Assert.Equal(1, list.GetProperty("items").GetArrayLength());
     }
 
+    [Fact]
+    public async Task UpdateRequiresCurrentEtagAndRejectsStaleVersion()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var created = await CreateAsync(client, csrf, Guid.NewGuid().ToString());
+        var createdLot = await created.Content.ReadFromJsonAsync<JsonElement>();
+        var lotId = createdLot.GetProperty("lotId").GetGuid();
+
+        var missing = await UpdateAsync(client, csrf, lotId, null);
+        var stale = await UpdateAsync(client, csrf, lotId, "\"0\"");
+
+        Assert.Equal((System.Net.HttpStatusCode)428, missing.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.PreconditionFailed, stale.StatusCode);
+    }
+
     private static object CreateLot() => new { productName = "Test tomato", quantity = new { measuredValue = 100m, unit = "Gram", availabilityState = (string?)null }, storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null };
 
     private static async Task<string> GetCsrfAsync(HttpClient client)
@@ -109,6 +127,18 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/inventory/lots") { Content = JsonContent.Create(CreateLot()) };
         request.Headers.Add("Idempotency-Key", key);
         request.Headers.Add("X-CSRF-TOKEN", csrf);
+        return await client.SendAsync(request);
+    }
+
+    private static async Task<HttpResponseMessage> UpdateAsync(HttpClient client, string csrf, Guid lotId, string? etag)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Patch, $"/api/v1/inventory/lots/{lotId}") { Content = JsonContent.Create(new { storageLocation = "Refrigerator", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null }) };
+        request.Headers.Add("X-CSRF-TOKEN", csrf);
+        if (etag is not null)
+        {
+            request.Headers.TryAddWithoutValidation("If-Match", etag);
+        }
+
         return await client.SendAsync(request);
     }
 

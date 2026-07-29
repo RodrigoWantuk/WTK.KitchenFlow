@@ -656,3 +656,12 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Result:** Cookie-authenticated inventory mutations require CSRF; same-key identical create commands return `201` without a duplicate lot.
 - **Next action:** Test different-payload idempotency conflict, ETag preconditions, adjustments/history, and real Keycloak login/logout.
 - **Blockers or handoff notes:** Adjustment idempotency replay and broader mutation isolation coverage remain incomplete.
+
+### 2026-07-29T03:30:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Added passing ETag precondition integration tests.
+- **Changes included in the commit:** Added missing-`If-Match` and stale-ETag update tests using a real created lot.
+- **Validation performed:** Release build and PostgreSQL API integration suite (7 passed).
+- **Result:** Update mutations return `428 precondition_required` without a version and `412 precondition_failed` for stale state.
+- **Next action:** Complete adjustment idempotency/history tests, expand two-user mutation isolation, and validate real Keycloak login/logout.
+- **Blockers or handoff notes:** Complete adjustment replay and query pagination behavior are still unfinished.
