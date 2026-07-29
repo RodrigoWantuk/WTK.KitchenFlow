@@ -40,6 +40,20 @@ public sealed class InventoryDomainTests
     }
 
     [Fact]
+    public void CorrectionCanSetMeasuredQuantityToZeroWithoutChangingItsUnit()
+    {
+        var now = new DateTimeOffset(2026, 7, 28, 0, 0, 0, TimeSpan.Zero);
+        Assert.True(LotQuantity.TryCreateMeasured(100m, CanonicalUnit.Gram, out var quantity));
+        Assert.True(LotStorage.TryCreate(StorageLocation.Pantry, null, out var storage));
+        var lot = InventoryLot.Create(Guid.NewGuid(), Guid.NewGuid(), quantity!, storage!, null, null, null, now);
+
+        var transaction = lot.AdjustMeasured(InventoryTransactionType.Correct, 0m, "counted", null, Guid.NewGuid(), now.AddMinutes(1));
+
+        Assert.Equal(0m, Assert.IsType<LotQuantity.Measured>(transaction.ResultingQuantity).Value);
+        Assert.Equal(CanonicalUnit.Gram, Assert.IsType<LotQuantity.Measured>(transaction.ResultingQuantity).Unit);
+    }
+
+    [Fact]
     public void AvailabilityLotsCannotReceiveMeasuredAdjustments()
     {
         var now = new DateTimeOffset(2026, 7, 28, 0, 0, 0, TimeSpan.Zero);

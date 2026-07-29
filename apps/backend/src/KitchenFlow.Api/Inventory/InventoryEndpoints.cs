@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using KitchenFlow.Api.Services;
 using KitchenFlow.Infrastructure.Persistence;
+using KitchenFlow.Modules.Inventory.Domain;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -159,8 +160,11 @@ public static class InventoryEndpoints
         }
 
         var now = timeProvider.GetUtcNow();
-        var product = new ProductRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, DisplayName = productName!, NormalizedSearchName = normalizedProductName!, CreatedAt = now, UpdatedAt = now };
-        var lot = new LotRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, ProductId = product.Id, MeasuredValue = request.Quantity.MeasuredValue, MeasuredUnit = request.Quantity.Unit, AvailabilityState = request.Quantity.AvailabilityState, StorageLocation = request.StorageLocation, CustomLocation = request.CustomLocation?.Trim(), PackageState = request.PackageState, PrintedExpirationDate = request.PrintedExpirationDate, ExpirationProvenance = request.PrintedExpirationDate is null ? null : "UserEntered", Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim(), Version = 1, CreatedAt = now, UpdatedAt = now };
+        ProductName.TryCreate(productName, out var domainProductName);
+        var domainProduct = Product.Create(user.Id, domainProductName!, now);
+        var domainLot = CreateDomainLot(user.Id, domainProduct.Id, request, now);
+        var product = new ProductRecord { Id = domainProduct.Id, OwnerUserId = domainProduct.OwnerUserId, DisplayName = domainProduct.DisplayName, NormalizedSearchName = domainProduct.NormalizedSearchName, CreatedAt = domainProduct.CreatedAt, UpdatedAt = domainProduct.UpdatedAt };
+        var lot = ToRecord(domainLot);
         var response = ToResponse(lot, product.DisplayName);
         database.AddRange(product, lot, new TransactionRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, LotId = lot.Id, Type = "Initial", ResultingMeasuredValue = lot.MeasuredValue, ResultingMeasuredUnit = lot.MeasuredUnit, ResultingAvailabilityState = lot.AvailabilityState, OccurredAt = now }, new AuditEventRecord { Id = Guid.NewGuid(), ActorUserId = user.Id, EventName = "inventory.lot.created", TargetType = "inventory_lot", TargetId = lot.Id, CorrelationId = httpRequest.HttpContext.TraceIdentifier, MetadataJson = "{}", OccurredAt = now }, new IdempotencyRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, Scope = "inventory.lots.create", Key = key, RequestHash = hash, StatusCode = 201, ResponseBody = JsonSerializer.Serialize(response), ETag = Etag(lot.Version), CreatedAt = now, CompletedAt = now });
         try
@@ -185,18 +189,17 @@ public static class InventoryEndpoints
 
         return await MutateAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken, (lot, product, now) =>
         {
-            lot.StorageLocation = request.StorageLocation;
-            lot.CustomLocation = request.CustomLocation?.Trim();
-            lot.PackageState = request.PackageState;
-            lot.PrintedExpirationDate = request.PrintedExpirationDate;
-            lot.ExpirationProvenance = request.PrintedExpirationDate is null ? null : "UserEntered";
-            lot.Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim();
+            var domainLot = ToDomain(lot);
+            domainLot.UpdateMetadata(ToStorage(request.StorageLocation, request.CustomLocation), ToPackageState(request.PackageState), ToExpiration(request.PrintedExpirationDate), ToNotes(request.Notes), now);
+            CopyToRecord(domainLot, lot);
             if (request.ProductName is not null)
             {
-                ValidateProductName(request.ProductName, out var productName, out var normalizedProductName);
-                product.DisplayName = productName!;
-                product.NormalizedSearchName = normalizedProductName!;
-                product.UpdatedAt = now;
+                ProductName.TryCreate(request.ProductName, out var domainProductName);
+                var domainProduct = Product.Restore(product.Id, product.OwnerUserId, domainProductName!, product.CreatedAt, product.UpdatedAt, product.IsDeleted);
+                domainProduct.Rename(domainProductName!, now);
+                product.DisplayName = domainProduct.DisplayName;
+                product.NormalizedSearchName = domainProduct.NormalizedSearchName;
+                product.UpdatedAt = domainProduct.UpdatedAt;
             }
             return null;
         });
@@ -238,30 +241,28 @@ public static class InventoryEndpoints
 
         return await MutateAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken, (lot, _, now) =>
         {
-            var previous = ToQuantity(lot);
-            if (request.Type is "Consume" or "Discard" && lot.MeasuredValue is { } current && request.Value is { } delta && decimal.Round(delta, 3) == delta && delta > 0m && delta <= current && request.AvailabilityState is null)
+            var domainLot = ToDomain(lot);
+            InventoryTransaction transaction = request.Type switch
             {
-                lot.MeasuredValue = current - delta;
-            }
-            else if (request.Type == "Correct" && lot.MeasuredValue is not null && request.Value is { } corrected && decimal.Round(corrected, 3) == corrected && corrected >= 0m && request.AvailabilityState is null)
-            {
-                lot.MeasuredValue = corrected;
-            }
-            else if (request.Type == "AvailabilityChanged" && lot.MeasuredValue is null && request.Value is null && request.AvailabilityState is "Available" or "Low" or "Unavailable" && !string.IsNullOrWhiteSpace(request.ReasonCode) && request.ReasonCode.Trim().Length <= 100)
-            {
-                lot.AvailabilityState = request.AvailabilityState;
-            }
-            else
-            {
-                throw new InvalidOperationException("The adjustment is invalid for this lot.");
-            }
-
-            return new TransactionRecord { Id = Guid.NewGuid(), OwnerUserId = lot.OwnerUserId, LotId = lot.Id, Type = request.Type, PreviousMeasuredValue = previous.MeasuredValue, PreviousMeasuredUnit = previous.Unit, PreviousAvailabilityState = previous.AvailabilityState, ResultingMeasuredValue = lot.MeasuredValue, ResultingMeasuredUnit = lot.MeasuredUnit, ResultingAvailabilityState = lot.AvailabilityState, ReasonCode = request.ReasonCode, Note = request.Note, IdempotencyKey = key, OccurredAt = now };
+                "Consume" => domainLot.AdjustMeasured(InventoryTransactionType.Consume, request.Value ?? throw new InvalidOperationException("A measured adjustment value is required."), request.ReasonCode?.Trim(), request.Note?.Trim(), key, now),
+                "Discard" => domainLot.AdjustMeasured(InventoryTransactionType.Discard, request.Value ?? throw new InvalidOperationException("A measured adjustment value is required."), request.ReasonCode?.Trim(), request.Note?.Trim(), key, now),
+                "Correct" => domainLot.AdjustMeasured(InventoryTransactionType.Correct, request.Value ?? throw new InvalidOperationException("A measured adjustment value is required."), request.ReasonCode?.Trim(), request.Note?.Trim(), key, now),
+                "AvailabilityChanged" when request.Value is null && request.AvailabilityState is not null && !string.IsNullOrWhiteSpace(request.ReasonCode) => domainLot.ChangeAvailability(Enum.Parse<AvailabilityState>(request.AvailabilityState), request.ReasonCode.Trim(), request.Note?.Trim(), key, now),
+                _ => throw new InvalidOperationException("The adjustment is invalid for this lot.")
+            };
+            CopyToRecord(domainLot, lot);
+            return ToRecord(transaction);
         }, idempotencyKey: key, idempotencyScope: "inventory.lots.adjust", idempotencyHash: hash);
     }
 
     private static async Task<IResult> DeleteAsync(Guid lotId, HttpRequest requestContext, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken) =>
-        await MutateAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken, (lot, _, now) => { lot.DeletedAt = now; return new TransactionRecord { Id = Guid.NewGuid(), OwnerUserId = lot.OwnerUserId, LotId = lot.Id, Type = "Deleted", OccurredAt = now }; }, StatusCodes.Status204NoContent);
+        await MutateAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken, (lot, _, now) =>
+        {
+            var domainLot = ToDomain(lot);
+            var transaction = domainLot.Delete(null, null, now);
+            CopyToRecord(domainLot, lot);
+            return ToRecord(transaction);
+        }, StatusCodes.Status204NoContent);
 
     private static async Task<IResult> HistoryAsync(Guid lotId, CurrentUserService currentUser, ApplicationDbContext database, CancellationToken cancellationToken)
     {
@@ -271,8 +272,8 @@ public static class InventoryEndpoints
             return Problem(404, "resource_not_found", "The inventory lot was not found.");
         }
 
-        var history = await database.Transactions.Where(item => item.OwnerUserId == user.Id && item.LotId == lotId).OrderByDescending(item => item.OccurredAt).Select(item => new LotHistoryResponse(item.Id, item.Type, new QuantityResponse(item.PreviousMeasuredValue, item.PreviousMeasuredUnit, item.PreviousAvailabilityState), new QuantityResponse(item.ResultingMeasuredValue, item.ResultingMeasuredUnit, item.ResultingAvailabilityState), item.ReasonCode, item.OccurredAt)).ToListAsync(cancellationToken);
-        return Results.Ok(history);
+        var transactions = await database.Transactions.Where(item => item.OwnerUserId == user.Id && item.LotId == lotId).OrderByDescending(item => item.OccurredAt).ToListAsync(cancellationToken);
+        return Results.Ok(transactions.Select(item => new LotHistoryResponse(item.Id, item.Type, ToQuantity(item.PreviousMeasuredValue, item.PreviousMeasuredUnit, item.PreviousAvailabilityState), ToQuantity(item.ResultingMeasuredValue, item.ResultingMeasuredUnit, item.ResultingAvailabilityState), item.ReasonCode, item.OccurredAt)));
     }
 
     private static async Task<IResult> MutateAsync(Guid lotId, HttpRequest request, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider clock, CancellationToken cancellationToken, Func<LotRecord, ProductRecord, DateTimeOffset, TransactionRecord?> operation, int successStatus = StatusCodes.Status200OK, Guid? idempotencyKey = null, string? idempotencyScope = null, string? idempotencyHash = null)
@@ -298,8 +299,6 @@ public static class InventoryEndpoints
         {
             var now = clock.GetUtcNow();
             var transaction = operation(item.Value.Lot, item.Value.Product, now);
-            item.Value.Lot.Version++;
-            item.Value.Lot.UpdatedAt = now;
             if (transaction is not null)
             {
                 database.Transactions.Add(transaction);
@@ -337,8 +336,84 @@ public static class InventoryEndpoints
         var product = await db.Products.SingleOrDefaultAsync(candidate => candidate.Id == lot.ProductId && candidate.OwnerUserId == ownerId, ct);
         return product is null ? null : (lot, product);
     }
+
+    private static InventoryLot CreateDomainLot(Guid ownerUserId, Guid productId, CreateLotRequest request, DateTimeOffset now)
+    {
+        var quantity = request.Quantity.MeasuredValue is { } measured
+            ? new LotQuantity.Measured(measured, Enum.Parse<CanonicalUnit>(request.Quantity.Unit!))
+            : LotQuantity.FromAvailability(Enum.Parse<AvailabilityState>(request.Quantity.AvailabilityState!));
+        return InventoryLot.Create(ownerUserId, productId, quantity, ToStorage(request.StorageLocation, request.CustomLocation), ToPackageState(request.PackageState), ToExpiration(request.PrintedExpirationDate), ToNotes(request.Notes), now);
+    }
+
+    private static InventoryLot ToDomain(LotRecord lot)
+    {
+        var quantity = lot.MeasuredValue is { } measured
+            ? new LotQuantity.Measured(measured, Enum.Parse<CanonicalUnit>(lot.MeasuredUnit!))
+            : LotQuantity.FromAvailability(Enum.Parse<AvailabilityState>(lot.AvailabilityState!));
+        return InventoryLot.Restore(lot.Id, lot.OwnerUserId, lot.ProductId, quantity, ToStorage(lot.StorageLocation, lot.CustomLocation), ToPackageState(lot.PackageState), ToExpiration(lot.PrintedExpirationDate), ToNotes(lot.Notes), lot.Version, lot.CreatedAt, lot.UpdatedAt, lot.DeletedAt);
+    }
+
+    private static LotRecord ToRecord(InventoryLot lot)
+    {
+        var record = new LotRecord { Id = lot.Id, OwnerUserId = lot.OwnerUserId, ProductId = lot.ProductId, StorageLocation = lot.Storage.Location.ToString() };
+        CopyToRecord(lot, record);
+        return record;
+    }
+
+    private static void CopyToRecord(InventoryLot source, LotRecord target)
+    {
+        target.MeasuredValue = source.Quantity is LotQuantity.Measured measured ? measured.Value : null;
+        target.MeasuredUnit = source.Quantity is LotQuantity.Measured unit ? unit.Unit.ToString() : null;
+        target.AvailabilityState = source.Quantity is LotQuantity.Availability availability ? availability.State.ToString() : null;
+        target.StorageLocation = source.Storage.Location.ToString();
+        target.CustomLocation = source.Storage.CustomLocation;
+        target.PackageState = source.PackageState?.ToString();
+        target.PrintedExpirationDate = source.PrintedExpiration?.Date;
+        target.ExpirationProvenance = source.PrintedExpiration?.Provenance.ToString();
+        target.Notes = source.Notes?.Value;
+        target.Version = source.Version;
+        target.CreatedAt = source.CreatedAt;
+        target.UpdatedAt = source.UpdatedAt;
+        target.DeletedAt = source.DeletedAt;
+    }
+
+    private static TransactionRecord ToRecord(InventoryTransaction transaction) => new()
+    {
+        Id = transaction.Id,
+        OwnerUserId = transaction.OwnerUserId,
+        LotId = transaction.LotId,
+        Type = transaction.Type.ToString(),
+        PreviousMeasuredValue = transaction.PreviousQuantity is LotQuantity.Measured previous ? previous.Value : null,
+        PreviousMeasuredUnit = transaction.PreviousQuantity is LotQuantity.Measured previousUnit ? previousUnit.Unit.ToString() : null,
+        PreviousAvailabilityState = transaction.PreviousQuantity is LotQuantity.Availability previousAvailability ? previousAvailability.State.ToString() : null,
+        ResultingMeasuredValue = transaction.ResultingQuantity is LotQuantity.Measured result ? result.Value : null,
+        ResultingMeasuredUnit = transaction.ResultingQuantity is LotQuantity.Measured resultUnit ? resultUnit.Unit.ToString() : null,
+        ResultingAvailabilityState = transaction.ResultingQuantity is LotQuantity.Availability resultAvailability ? resultAvailability.State.ToString() : null,
+        ReasonCode = transaction.ReasonCode,
+        Note = transaction.Note,
+        IdempotencyKey = transaction.IdempotencyKey,
+        OccurredAt = transaction.OccurredAt
+    };
+
+    private static LotStorage ToStorage(string location, string? customLocation)
+    {
+        LotStorage.TryCreate(Enum.Parse<StorageLocation>(location), customLocation, out var storage);
+        return storage!;
+    }
+
+    private static PackageState? ToPackageState(string? packageState) => packageState is null ? null : Enum.Parse<PackageState>(packageState);
+
+    private static PrintedExpiration? ToExpiration(DateOnly? expiration) => expiration is null ? null : new PrintedExpiration(expiration.Value, ExpirationProvenance.UserEntered);
+
+    private static PrivateNotes? ToNotes(string? notes)
+    {
+        PrivateNotes.TryCreate(notes, out var privateNotes);
+        return privateNotes;
+    }
+
     private static LotResponse ToResponse(LotRecord lot, string productName) => new(lot.Id, lot.ProductId, productName, ToQuantity(lot), lot.StorageLocation, lot.CustomLocation, lot.PackageState, lot.PrintedExpirationDate, lot.Notes, lot.Version, lot.CreatedAt, lot.UpdatedAt);
     private static QuantityResponse ToQuantity(LotRecord lot) => new(lot.MeasuredValue, lot.MeasuredUnit, lot.AvailabilityState);
+    private static QuantityResponse? ToQuantity(decimal? measuredValue, string? unit, string? availabilityState) => measuredValue is null && unit is null && availabilityState is null ? null : new QuantityResponse(measuredValue, unit, availabilityState);
     private static IResult WithEtag(LotResponse response, long version, int status = 200) => new EtagResult<LotResponse>(response, Etag(version), status);
     private static string Etag(long version) => $"\"{version}\"";
     private static bool TryVersion(HttpRequest request, out long version) => long.TryParse(request.Headers.IfMatch.ToString().Trim('"'), out version);

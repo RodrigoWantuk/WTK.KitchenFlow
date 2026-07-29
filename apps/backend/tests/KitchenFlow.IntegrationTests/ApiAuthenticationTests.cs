@@ -186,6 +186,8 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         Assert.Equal(System.Net.HttpStatusCode.NoContent, deleted.StatusCode);
         Assert.Equal(System.Net.HttpStatusCode.NotFound, get.StatusCode);
         Assert.Equal(2, history.GetArrayLength());
+        Assert.Equal(100m, history[0].GetProperty("previousQuantity").GetProperty("measuredValue").GetDecimal());
+        Assert.Equal(100m, history[0].GetProperty("resultingQuantity").GetProperty("measuredValue").GetDecimal());
     }
 
     [Fact]

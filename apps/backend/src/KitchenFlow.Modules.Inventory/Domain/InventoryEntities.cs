@@ -28,6 +28,21 @@ public sealed class Product
 
     public static Product Create(Guid ownerUserId, ProductName name, DateTimeOffset now) =>
         new(Guid.NewGuid(), ownerUserId, name, now);
+
+    /// <summary>Restores a product loaded by an infrastructure adapter without exposing persistence types to the domain.</summary>
+    public static Product Restore(Guid id, Guid ownerUserId, ProductName name, DateTimeOffset createdAt, DateTimeOffset updatedAt, bool isDeleted)
+    {
+        var product = new Product(id, ownerUserId, name, createdAt) { UpdatedAt = updatedAt, IsDeleted = isDeleted };
+        return product;
+    }
+
+    /// <summary>Corrects the user-owned display name while retaining its normalized search representation.</summary>
+    public void Rename(ProductName name, DateTimeOffset now)
+    {
+        DisplayName = name.Value;
+        NormalizedSearchName = name.NormalizedSearchValue;
+        UpdatedAt = now;
+    }
 }
 
 public sealed class InventoryLot
@@ -93,6 +108,30 @@ public sealed class InventoryLot
         DateTimeOffset now) =>
         new(Guid.NewGuid(), ownerUserId, productId, quantity, storage, packageState, printedExpiration, notes, now);
 
+    /// <summary>Restores a lot for an application command while preserving its concurrency and deletion state.</summary>
+    public static InventoryLot Restore(
+        Guid id,
+        Guid ownerUserId,
+        Guid productId,
+        LotQuantity quantity,
+        LotStorage storage,
+        PackageState? packageState,
+        PrintedExpiration? printedExpiration,
+        PrivateNotes? notes,
+        long version,
+        DateTimeOffset createdAt,
+        DateTimeOffset updatedAt,
+        DateTimeOffset? deletedAt)
+    {
+        var lot = new InventoryLot(id, ownerUserId, productId, quantity, storage, packageState, printedExpiration, notes, createdAt)
+        {
+            Version = version,
+            UpdatedAt = updatedAt,
+            DeletedAt = deletedAt
+        };
+        return lot;
+    }
+
     public void UpdateMetadata(
         LotStorage storage,
         PackageState? packageState,
@@ -122,9 +161,9 @@ public sealed class InventoryLot
             throw new InvalidOperationException("Measured adjustments require a measured quantity.");
         }
 
-        if (value <= 0m || decimal.Round(value, 3) != value)
+        if ((type is InventoryTransactionType.Consume or InventoryTransactionType.Discard && value <= 0m) || (type == InventoryTransactionType.Correct && value < 0m) || decimal.Round(value, 3) != value)
         {
-            throw new InvalidOperationException("Adjustment value must be a positive value with at most three decimal places.");
+            throw new InvalidOperationException("Adjustment value must be nonnegative for corrections and positive for consumption or discard, with at most three decimal places.");
         }
 
         var result = type switch

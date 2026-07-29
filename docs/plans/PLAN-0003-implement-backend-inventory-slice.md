@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend implementation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T13:20:00Z
+- **Last updated:** 2026-07-29T13:45:00Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, open)
 - **Related implementation plan:** PLAN-0002
@@ -483,16 +483,27 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Current `main`, immediate review defects, PostgreSQL referential integrity, and concurrent idempotency replay are corrected; the module application-service/domain refactor is the active substantial outcome.
-- **Last completed step:** Added PostgreSQL unique-race replay and canonical request hashing for create and adjustment commands, with simultaneous-create coverage.
-- **Exact next action:** Refactor inventory endpoint execution into module application services backed by authoritative domain behavior, then add direct migration-constraint coverage and complete Problem Details/OpenAPI contracts.
+- **Current checkpoint:** Current `main`, immediate review defects, PostgreSQL integrity, concurrent idempotency replay, and domain-owned mutation state transitions are corrected; explicit application-service extraction is the active substantial outcome.
+- **Last completed step:** Routed the executable create, metadata-update, adjustment, and deletion transitions through restored domain entities and immutable domain transactions.
+- **Exact next action:** Extract endpoint orchestration into inventory module application services/ports, then add direct migration-constraint coverage and complete Problem Details/OpenAPI contracts.
 - **Blockers:** None.
-- **Partially modified areas:** Inventory endpoint idempotency race handling, idempotency canonicalization, API integration fixtures, and active-plan state.
-- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`.
-- **Known failures or limitations:** The application/domain, OpenAPI/error-contract, XML documentation, expanded test/CI, and runbook corrections remain unfinished. The current snapshot is not a stable PLAN-0004 contract. EF tooling reports a non-failing local `10.0.3` tool versus `10.0.4` runtime advisory.
-- **Working tree state:** The concurrent-idempotency checkpoint is ready to commit.
+- **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
+- **Validation performed:** `dotnet test apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`.
+- **Known failures or limitations:** Endpoint orchestration still accesses EF directly; explicit application services/ports, complete Problem Details/OpenAPI, XML documentation/enforcement, expanded test/CI, and runbook corrections remain unfinished. The current snapshot is not a stable PLAN-0004 contract.
+- **Working tree state:** The domain-execution checkpoint is ready to commit.
 
 ## Progress log
+
+### 2026-07-29T13:45:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Made the inventory domain authoritative for executable lot mutations.
+- **Changes included in the commit:** Added safe domain restoration/mapping; create now builds domain product/lot entities; metadata update uses domain metadata behavior; consume, discard, correction, availability change, and delete use domain transaction methods; domain transaction snapshots are persisted; correction to zero is accepted; history emits null only for genuinely absent snapshots.
+- **Documentation and code documentation delivered:** Added XML documentation to new domain restoration/name-correction APIs and an inline idempotency-race rationale retained from the prior checkpoint; synchronized plan and registry state.
+- **Validation performed:** Full backend solution test command and format verification.
+- **Result:** Six domain unit tests and the architecture suite pass; the PostgreSQL integration suite exits successfully after exercising the domain-backed mutation paths.
+- **Known failures or unverified behavior:** API endpoints still directly orchestrate EF and must be reduced to HTTP mapping over module application services. Complete Problem Details/OpenAPI, XML documentation/enforcement, expanded test/CI, and runbook work remain open.
+- **Blockers:** None.
+- **Next action:** Introduce inventory application-service commands/ports and move endpoint persistence/orchestration into the module/infrastructure boundary.
 
 ### 2026-07-29T13:20:00Z — Codex backend implementation agent
 
