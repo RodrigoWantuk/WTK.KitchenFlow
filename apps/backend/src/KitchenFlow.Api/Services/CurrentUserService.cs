@@ -9,13 +9,13 @@ namespace KitchenFlow.Api.Services;
 /// Resolves an authenticated OIDC issuer and subject into the KitchenFlow-owned internal user
 /// mapping. Client payloads never choose this identity.
 /// </summary>
-public sealed class CurrentUserService(ApplicationDbContext database, TimeProvider timeProvider, IHttpContextAccessor httpContextAccessor)
+public sealed class CurrentUserService(ApplicationDbContext database, TimeProvider timeProvider, IHttpContextAccessor httpContextAccessor) : ICurrentUserAccessor
 {
     /// <summary>Gets the current user's internal identity, creating its issuer-subject mapping atomically when needed.</summary>
     /// <param name="cancellationToken">Token that cancels the database operation.</param>
     /// <returns>The internal identity authorized for the current request.</returns>
     /// <exception cref="UnauthorizedAccessException">Thrown when the authenticated principal lacks a stable issuer or subject.</exception>
-    public async Task<InternalUser> GetOrCreateAsync(CancellationToken cancellationToken)
+    public async Task<InternalUser> GetCurrentAsync(CancellationToken cancellationToken)
     {
         var principal = httpContextAccessor.HttpContext?.User ?? new ClaimsPrincipal();
         var subjectClaim = principal.FindFirst("sub") ?? principal.FindFirst(ClaimTypes.NameIdentifier);
@@ -48,4 +48,10 @@ public sealed class CurrentUserService(ApplicationDbContext database, TimeProvid
                 cancellationToken);
         }
     }
+
+    /// <summary>Gets the current user through the legacy API-facing method while module callers use <see cref="GetCurrentAsync"/>.</summary>
+    /// <param name="cancellationToken">Token that cancels identity resolution.</param>
+    /// <returns>The internal identity derived from the current authenticated principal.</returns>
+    [Obsolete("Use ICurrentUserAccessor.GetCurrentAsync from application use cases.")]
+    public Task<InternalUser> GetOrCreateAsync(CancellationToken cancellationToken) => GetCurrentAsync(cancellationToken);
 }

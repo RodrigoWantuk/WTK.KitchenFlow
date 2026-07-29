@@ -6,6 +6,7 @@ using KitchenFlow.Api.Services;
 using KitchenFlow.Infrastructure.Persistence;
 using KitchenFlow.Modules.Inventory.Application;
 using KitchenFlow.Modules.Inventory.Domain;
+using KitchenFlow.Modules.Identity;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -19,7 +20,7 @@ namespace KitchenFlow.Api.Inventory;
 /// </summary>
 public sealed class InventoryApplicationService(
     ApplicationDbContext database,
-    CurrentUserService currentUser,
+    ICurrentUserAccessor currentUser,
     TimeProvider timeProvider,
     IDataProtectionProvider dataProtection,
     InventoryLotLifecycleUseCase lifecycleUseCase)
@@ -52,7 +53,7 @@ public sealed class InventoryApplicationService(
     public Task<IResult> HistoryAsync(Guid lotId, CancellationToken cancellationToken) =>
         HistoryCoreAsync(lotId, currentUser, database, cancellationToken);
 
-    private async Task<IResult> ListCoreAsync(int? pageSize, string? status, string? storageLocation, string? search, string? cursor, CurrentUserService currentUser, ApplicationDbContext database, IDataProtectionProvider dataProtection, CancellationToken cancellationToken)
+    private async Task<IResult> ListCoreAsync(int? pageSize, string? status, string? storageLocation, string? search, string? cursor, ICurrentUserAccessor currentUser, ApplicationDbContext database, IDataProtectionProvider dataProtection, CancellationToken cancellationToken)
     {
         if (pageSize is < 1 or > 100)
         {
@@ -75,7 +76,7 @@ public sealed class InventoryApplicationService(
             return Problem(400, "invalid_cursor", "The cursor is invalid.");
         }
 
-        var user = await currentUser.GetOrCreateAsync(cancellationToken);
+        var user = await currentUser.GetCurrentAsync(cancellationToken);
         var lots = database.Lots.Where(lot => lot.OwnerUserId == user.Id);
         lots = status switch
         {
@@ -118,16 +119,16 @@ public sealed class InventoryApplicationService(
         return Results.Ok(new ListLotsResponse(items.Select(item => ToResponse(item.Lot, item.Product.DisplayName)).ToList(), nextCursor));
     }
 
-    private async Task<IResult> GetCoreAsync(Guid lotId, CurrentUserService currentUser, ApplicationDbContext database, CancellationToken cancellationToken)
+    private async Task<IResult> GetCoreAsync(Guid lotId, ICurrentUserAccessor currentUser, ApplicationDbContext database, CancellationToken cancellationToken)
     {
-        var user = await currentUser.GetOrCreateAsync(cancellationToken);
+        var user = await currentUser.GetCurrentAsync(cancellationToken);
         var record = await FindLotAsync(lotId, user.Id, database, cancellationToken);
         return record is null || record.Value.Lot.DeletedAt is not null
             ? Problem(404, "resource_not_found", "The inventory lot was not found.")
             : WithEtag(ToResponse(record.Value.Lot, record.Value.Product.DisplayName));
     }
 
-    private async Task<IResult> CreateCoreAsync(CreateLotRequest request, HttpRequest httpRequest, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
+    private async Task<IResult> CreateCoreAsync(CreateLotRequest request, HttpRequest httpRequest, ICurrentUserAccessor currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
     {
         if (!TryIdempotencyKey(httpRequest, out var key))
         {
@@ -146,7 +147,7 @@ public sealed class InventoryApplicationService(
             return Problem(422, "domain_rule_violated", quantityError ?? metadataError ?? "The product name is invalid.", errors);
         }
 
-        var user = await currentUser.GetOrCreateAsync(cancellationToken);
+        var user = await currentUser.GetCurrentAsync(cancellationToken);
         var hash = Hash(new
         {
             ProductName = productName,
@@ -198,7 +199,7 @@ public sealed class InventoryApplicationService(
         return WithEtag(response, StatusCodes.Status201Created);
     }
 
-    private async Task<IResult> UpdateCoreAsync(Guid lotId, UpdateLotRequest request, HttpRequest requestContext, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
+    private async Task<IResult> UpdateCoreAsync(Guid lotId, UpdateLotRequest request, HttpRequest requestContext, ICurrentUserAccessor currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
     {
         var validMetadata = ValidateMetadata(request.StorageLocation, request.CustomLocation, request.PackageState, request.Notes, out var metadataError);
         var validProductName = request.ProductName is null || ValidateProductName(request.ProductName, out _, out _);
@@ -225,7 +226,7 @@ public sealed class InventoryApplicationService(
         });
     }
 
-    private async Task<IResult> AdjustCoreAsync(Guid lotId, AdjustmentRequest request, HttpRequest requestContext, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
+    private async Task<IResult> AdjustCoreAsync(Guid lotId, AdjustmentRequest request, HttpRequest requestContext, ICurrentUserAccessor currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
     {
         if (!TryIdempotencyKey(requestContext, out var key))
         {
@@ -238,7 +239,7 @@ public sealed class InventoryApplicationService(
         }
         var adjustment = command!;
 
-        var user = await currentUser.GetOrCreateAsync(cancellationToken);
+        var user = await currentUser.GetCurrentAsync(cancellationToken);
         var hash = Hash(new
         {
             LotId = lotId,
@@ -274,7 +275,7 @@ public sealed class InventoryApplicationService(
         }, idempotencyKey: key, idempotencyScope: "inventory.lots.adjust", idempotencyHash: hash);
     }
 
-    private async Task<IResult> DeleteCoreAsync(Guid lotId, HttpRequest requestContext, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken) =>
+    private async Task<IResult> DeleteCoreAsync(Guid lotId, HttpRequest requestContext, ICurrentUserAccessor currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken) =>
         await MutateAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken, (lot, _, now) =>
         {
             var domainLot = ToDomain(lot);
@@ -283,9 +284,9 @@ public sealed class InventoryApplicationService(
             return ToRecord(transaction);
         }, StatusCodes.Status204NoContent);
 
-    private async Task<IResult> HistoryCoreAsync(Guid lotId, CurrentUserService currentUser, ApplicationDbContext database, CancellationToken cancellationToken)
+    private async Task<IResult> HistoryCoreAsync(Guid lotId, ICurrentUserAccessor currentUser, ApplicationDbContext database, CancellationToken cancellationToken)
     {
-        var user = await currentUser.GetOrCreateAsync(cancellationToken);
+        var user = await currentUser.GetCurrentAsync(cancellationToken);
         if (await FindLotAsync(lotId, user.Id, database, cancellationToken) is null)
         {
             return Problem(404, "resource_not_found", "The inventory lot was not found.");
@@ -295,7 +296,7 @@ public sealed class InventoryApplicationService(
         return Results.Ok(transactions.Select(item => new LotHistoryResponse(item.Id, item.Type, ToQuantity(item.PreviousMeasuredValue, item.PreviousMeasuredUnit, item.PreviousAvailabilityState), ToQuantity(item.ResultingMeasuredValue, item.ResultingMeasuredUnit, item.ResultingAvailabilityState), item.ReasonCode, item.OccurredAt)));
     }
 
-    private async Task<IResult> MutateAsync(Guid lotId, HttpRequest request, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider clock, CancellationToken cancellationToken, Func<LotRecord, ProductRecord, DateTimeOffset, TransactionRecord?> operation, int successStatus = StatusCodes.Status200OK, Guid? idempotencyKey = null, string? idempotencyScope = null, string? idempotencyHash = null)
+    private async Task<IResult> MutateAsync(Guid lotId, HttpRequest request, ICurrentUserAccessor currentUser, ApplicationDbContext database, TimeProvider clock, CancellationToken cancellationToken, Func<LotRecord, ProductRecord, DateTimeOffset, TransactionRecord?> operation, int successStatus = StatusCodes.Status200OK, Guid? idempotencyKey = null, string? idempotencyScope = null, string? idempotencyHash = null)
     {
         var precondition = ReadVersion(request, out var version);
         if (precondition == VersionPrecondition.Missing)
@@ -310,7 +311,7 @@ public sealed class InventoryApplicationService(
             return Problem(412, "precondition_failed", "The inventory lot was modified.");
         }
 
-        var user = await currentUser.GetOrCreateAsync(cancellationToken);
+        var user = await currentUser.GetCurrentAsync(cancellationToken);
         var item = await FindLotAsync(lotId, user.Id, database, cancellationToken);
         if (item is null || item.Value.Lot.DeletedAt is not null)
         {

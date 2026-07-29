@@ -3,6 +3,7 @@ using KitchenFlow.Api.Observability;
 using KitchenFlow.Api.Services;
 using KitchenFlow.Infrastructure.Persistence;
 using KitchenFlow.Modules.Inventory.Application;
+using KitchenFlow.Modules.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -33,6 +34,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<CurrentUserService>();
+builder.Services.AddScoped<ICurrentUserAccessor>(provider => provider.GetRequiredService<CurrentUserService>());
 builder.Services.AddScoped<InventoryApplicationService>();
 builder.Services.AddSingleton<InventoryLotLifecycleUseCase>();
 builder.Services.AddAntiforgery(options => { options.HeaderName = "X-CSRF-TOKEN"; options.Cookie.Name = "__Host-kitchenflow-antiforgery"; options.Cookie.Path = "/"; options.Cookie.SecurePolicy = CookieSecurePolicy.Always; });
@@ -80,7 +82,7 @@ api.MapPost("/auth/logout", async (HttpContext context, IAntiforgery antiforgery
 }).RequireAuthorization().Produces(StatusCodes.Status302Found).ProducesProblem(400).ProducesProblem(401);
 api.MapGet("/session", async (HttpContext context, IAntiforgery antiforgery, CurrentUserService currentUser, CancellationToken cancellationToken) =>
 {
-    var user = await currentUser.GetOrCreateAsync(cancellationToken);
+    var user = await currentUser.GetCurrentAsync(cancellationToken);
     var tokens = antiforgery.GetAndStoreTokens(context);
     return Results.Ok(new SessionResponse(user.Id, tokens.RequestToken!, ["en", "pt-BR", "es"]));
 }).RequireAuthorization().Produces<SessionResponse>().ProducesProblem(401);

@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** PostgreSQL transaction/idempotency integrity constraints are migrated and integration-tested; idempotency hashes canonicalize semantic create and adjustment values before PostgreSQL replay lookup.
-- **Last completed step:** Corrected canonical payload hashing so insignificant whitespace and decimal scale cannot create a false idempotency-key conflict.
+- **Current checkpoint:** Inventory orchestration resolves identity through the module-owned `ICurrentUserAccessor` contract rather than an API concrete type; persistence-port extraction remains next.
+- **Last completed step:** Introduced the inward-facing current-user application contract and wired the API identity resolver as its adapter.
 - **Exact next action:** Move the application-service contract into `KitchenFlow.Modules.Inventory.Application` and provide an infrastructure persistence adapter, so the composition-root service becomes a thin adapter rather than the authoritative use-case implementation.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
 - **Validation performed:** GitHub Actions runs `30484702156` and `30485251129` (the latter failed during fresh PostgreSQL 18 Compose startup before its gates); focused migration constraints and idempotency canonicalization tests; Release solution build; formatting verification; migration downgrade and upgrade against fresh Compose PostgreSQL; PostgreSQL and Keycloak readiness/discovery.
 - **Known failures or limitations:** The application service is still in the API composition root and directly uses persistence. Module persistence ports/adapters, automated real-Keycloak login/two-user smoke, operational runbooks, and a successful rerun of the expanded GitHub Actions workflow remain unfinished.
-- **Working tree state:** Idempotency canonicalization checkpoint is ready to commit with synchronized plan and registry updates.
+- **Working tree state:** Module-owned current-user accessor checkpoint is ready to commit with synchronized plan and registry updates.
 
 ## Progress log
+
+### 2026-07-29T19:49:10Z — Codex backend implementation agent
+
+- **Checkpoint:** Introduced the module-owned current-user application boundary.
+- **Changes included in the commit:** Added documented `ICurrentUserAccessor` in `KitchenFlow.Modules.Identity`; made the API OIDC issuer/subject resolver its scoped adapter; changed inventory orchestration and session provisioning to depend on the interface rather than the API concrete resolver.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore` (zero warnings/errors); `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --filter FullyQualifiedName~AuthenticatedSessionProvisionsInternalUserAndReturnsCsrfToken --no-restore` (1 passed); formatting verification; `git diff --check`.
+- **Result:** Inventory application code now consumes an inward identity contract, removing one direct API-service dependency ahead of persistence-port extraction.
+- **Known failures or unverified behavior:** The application service still directly uses EF persistence. The pending GitHub Actions runs have not yet completed successfully. Automated real-Keycloak login/two-user smoke and operational runbooks remain open.
+- **Blockers:** None.
+- **Next action:** Commit and push this identity-boundary checkpoint, inspect GitHub Actions, then replace direct EF access in the inventory application service with an Infrastructure implementation of a module persistence port.
 
 ### 2026-07-29T19:47:16Z — Codex backend implementation agent
 
