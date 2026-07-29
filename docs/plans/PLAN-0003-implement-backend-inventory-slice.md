@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Measured correction and availability-state transition history are verified against PostgreSQL.
-- **Last completed step:** Added immutable history coverage for `Correct` and `AvailabilityChanged` transactions.
-- **Exact next action:** Add observability/redaction checks, then perform interactive browser validation and final migration/contract verification.
+- **Current checkpoint:** Default OIDC and EF diagnostic paths are explicitly configured to avoid private-content logging.
+- **Last completed step:** Added PII suppression and restrictive logging filters; completed clean release-build validation.
+- **Exact next action:** Perform interactive browser validation and final migration/contract verification; add a dedicated telemetry exporter/redaction assertion if a test exporter is introduced.
 - **Blockers:** None.
-- **Partially modified areas:** PostgreSQL API adjustment/history coverage.
-- **Validation performed:** `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`. The integration test project completed successfully with seventeen tests.
-- **Known failures or limitations:** Telemetry-redaction checks, interactive graphical-browser validation, and final migration/contract verification remain unfinished. The initial domain remains bounded to PLAN-0003 manual-lot operations.
-- **Working tree state:** Test changes are ready to commit with this synchronized plan state.
+- **Partially modified areas:** API logging and identity-model diagnostics configuration.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; inspected default ASP.NET Core/OpenTelemetry behavior (no request-body/header capture is configured). The final clean build completed with zero warnings/errors after removing two exact untracked malformed build-artifact directories.
+- **Known failures or limitations:** No test exporter is configured, so telemetry redaction is enforced by configuration and default instrumentation behavior rather than a captured-span assertion. Interactive graphical-browser validation and final end-to-end migration/contract verification remain unfinished.
+- **Working tree state:** API configuration changes are ready to commit with this synchronized plan state.
 
 ## Progress log
+
+### 2026-07-29T11:05:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Hardened default diagnostics against private-content leakage.
+- **Changes included in the commit:** Disabled IdentityModel PII output and raised authentication and EF command logging thresholds to warning; retained OpenTelemetry instrumentation without request-body or header capture configuration.
+- **Validation performed:** Release build and formatting verification. An initial build emitted a transient copy warning caused by two identified untracked malformed Windows-style build-artifact directories; removed only those generated directories and reran the build cleanly.
+- **Result:** Final release build passed with zero warnings/errors. Default API diagnostics no longer emit EF command text/parameters at information level, and identity-model PII output is disabled.
+- **Known failures or unverified behavior:** A captured telemetry exporter test is not yet present. Interactive graphical-browser validation and final migration/OpenAPI end-to-end verification remain unfinished.
+- **Blockers:** None.
+- **Next action:** Commit the logging safeguard, then execute final browser, migration, compose, and OpenAPI evidence collection.
 
 ### 2026-07-29T10:45:00Z — Codex backend implementation agent
 

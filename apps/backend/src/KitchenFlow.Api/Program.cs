@@ -8,11 +8,15 @@ using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Logging;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
+IdentityModelEventSource.ShowPII = false;
+builder.Logging.AddFilter("Microsoft.AspNetCore.Authentication", LogLevel.Warning);
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
 var connectionString = builder.Configuration.GetConnectionString("KitchenFlow");
 if (string.IsNullOrWhiteSpace(connectionString))
 {
