@@ -54,5 +54,10 @@ public sealed class TelemetryRedactionTests
         Assert.Contains(createParameters.EnumerateArray(), parameter => parameter.GetProperty("name").GetString() == "X-CSRF-TOKEN");
         Assert.Contains(createParameters.EnumerateArray(), parameter => parameter.GetProperty("name").GetString() == "Idempotency-Key");
         Assert.True(sessionResponses.GetProperty("200").GetProperty("content").GetProperty("application/json").TryGetProperty("schema", out _));
+
+        var problemProperties = document.GetProperty("components").GetProperty("schemas").GetProperty("ProblemDetails").GetProperty("properties");
+        Assert.True(problemProperties.TryGetProperty("errorCode", out _));
+        Assert.True(problemProperties.TryGetProperty("traceId", out _));
+        Assert.True(problemProperties.TryGetProperty("errors", out _));
     }
 }

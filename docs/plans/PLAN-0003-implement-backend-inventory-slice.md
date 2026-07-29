@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend implementation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T14:35:00Z
+- **Last updated:** 2026-07-29T15:00:00Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, open)
 - **Related implementation plan:** PLAN-0002
@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Session and unauthenticated-error contracts are typed and tested; complete Problem Details schemas/examples and snapshot regeneration remain active.
-- **Last completed step:** Replaced the anonymous session body with a documented response contract and made unauthenticated API behavior return stable Problem Details.
-- **Exact next action:** Add field-level validation/error schemas and OpenAPI examples, regenerate the checked-in snapshot through the reproducible export workflow, then resume application-service extraction.
+- **Current checkpoint:** Field-level validation errors and Problem Details schema are implemented and tested; examples, enum/decimal schema details, and snapshot regeneration remain active.
+- **Last completed step:** Added `errors`, `errorCode`, and `traceId` to runtime errors and to the generated OpenAPI Problem Details schema.
+- **Exact next action:** Add OpenAPI examples and precise enum/decimal schema details, regenerate the checked-in snapshot through the reproducible export workflow, then resume application-service extraction.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
 - **Validation performed:** `dotnet test apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`.
 - **Known failures or limitations:** Endpoint orchestration still accesses EF directly; explicit application services/ports, complete Problem Details/OpenAPI, XML documentation/enforcement, expanded test/CI, and runbook corrections remain unfinished. The current snapshot is not a stable PLAN-0004 contract.
-- **Working tree state:** The session/error contract checkpoint is ready to commit; snapshot/drift validation is intentionally pending.
+- **Working tree state:** The field-error and Problem Details contract checkpoint is ready to commit; snapshot/drift validation is intentionally pending.
 
 ## Progress log
+
+### 2026-07-29T15:00:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Delivered field-level validation errors and their OpenAPI schema.
+- **Changes included in the commit:** Added `errors` keyed by request field and `traceId` to inventory validation Problems; mapped list, idempotency-header, create, and update validation failures to concrete fields; documented `errorCode`, `traceId`, and `errors` on the runtime Problem Details schema; added integration assertions for the error body and generated schema.
+- **Validation performed:** Release build; PostgreSQL/Testcontainers integration-test project; formatting verification; diff whitespace verification.
+- **Result:** Clients can deterministically associate validation failures with request fields and generated clients can discover the stable Problem Details extensions.
+- **Known failures or unverified behavior:** OpenAPI examples, enum/decimal schema customization, snapshot regeneration/drift, XML documentation enforcement, application services, CI, and runbooks remain open.
+- **Blockers:** None.
+- **Next action:** Add examples and precise enum/decimal schema metadata, then regenerate and drift-check the snapshot.
 
 ### 2026-07-29T14:35:00Z — Codex backend implementation agent
 

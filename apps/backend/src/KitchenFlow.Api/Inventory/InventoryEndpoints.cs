@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using KitchenFlow.Api.Services;
@@ -45,17 +46,17 @@ public static class InventoryEndpoints
     {
         if (pageSize is < 1 or > 100)
         {
-            return Problem(400, "validation_failed", "pageSize must be between 1 and 100.");
+            return Problem(400, "validation_failed", "pageSize must be between 1 and 100.", FieldErrors("pageSize", "pageSize must be between 1 and 100."));
         }
 
         if (status is not null && status is not ("active" or "depleted" or "deleted"))
         {
-            return Problem(400, "validation_failed", "status must be active, depleted, or deleted.");
+            return Problem(400, "validation_failed", "status must be active, depleted, or deleted.", FieldErrors("status", "status must be active, depleted, or deleted."));
         }
 
         if (storageLocation is not null && storageLocation is not ("Pantry" or "Refrigerator" or "Freezer" or "Other"))
         {
-            return Problem(400, "validation_failed", "storageLocation is invalid.");
+            return Problem(400, "validation_failed", "storageLocation is invalid.", FieldErrors("storageLocation", "storageLocation is invalid."));
         }
 
         CursorPosition? position = null;
@@ -120,7 +121,7 @@ public static class InventoryEndpoints
     {
         if (!TryIdempotencyKey(httpRequest, out var key))
         {
-            return Problem(400, "validation_failed", "A UUID Idempotency-Key header is required.");
+            return Problem(400, "validation_failed", "A UUID Idempotency-Key header is required.", FieldErrors("Idempotency-Key", "A UUID Idempotency-Key header is required."));
         }
 
         var validProductName = ValidateProductName(request.ProductName, out var productName, out var normalizedProductName);
@@ -128,7 +129,11 @@ public static class InventoryEndpoints
         var validMetadata = ValidateMetadata(request.StorageLocation, request.CustomLocation, request.PackageState, request.Notes, out var metadataError);
         if (!validProductName || !validQuantity || !validMetadata)
         {
-            return Problem(422, "domain_rule_violated", quantityError ?? metadataError ?? "The product name is invalid.");
+            var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
+            if (!validProductName) { errors["productName"] = ["The product name is invalid."]; }
+            if (!validQuantity) { errors["quantity"] = [quantityError!]; }
+            if (!validMetadata) { errors[MetadataField(metadataError)] = [metadataError!]; }
+            return Problem(422, "domain_rule_violated", quantityError ?? metadataError ?? "The product name is invalid.", errors);
         }
 
         var user = await currentUser.GetOrCreateAsync(cancellationToken);
@@ -184,7 +189,7 @@ public static class InventoryEndpoints
         var validProductName = request.ProductName is null || ValidateProductName(request.ProductName, out _, out _);
         if (!validMetadata || !validProductName)
         {
-            return Problem(422, "domain_rule_violated", metadataError ?? "The product name is invalid.");
+            return Problem(422, "domain_rule_violated", metadataError ?? "The product name is invalid.", FieldErrors(!validMetadata ? MetadataField(metadataError) : "productName", metadataError ?? "The product name is invalid."));
         }
 
         return await MutateAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken, (lot, product, now) =>
@@ -209,7 +214,7 @@ public static class InventoryEndpoints
     {
         if (!TryIdempotencyKey(requestContext, out var key))
         {
-            return Problem(400, "validation_failed", "A UUID Idempotency-Key header is required.");
+            return Problem(400, "validation_failed", "A UUID Idempotency-Key header is required.", FieldErrors("Idempotency-Key", "A UUID Idempotency-Key header is required."));
         }
 
         var user = await currentUser.GetOrCreateAsync(cancellationToken);
@@ -476,7 +481,24 @@ public static class InventoryEndpoints
             return false;
         }
     }
-    private static IResult Problem(int status, string code, string detail) => Results.Problem(detail: detail, statusCode: status, extensions: new Dictionary<string, object?> { ["errorCode"] = code });
+    private static IResult Problem(int status, string code, string detail, IReadOnlyDictionary<string, string[]>? errors = null)
+    {
+        var extensions = new Dictionary<string, object?>
+        {
+            ["errorCode"] = code,
+            ["traceId"] = Activity.Current?.Id
+        };
+        if (errors is not null)
+        {
+            extensions["errors"] = errors;
+        }
+
+        return Results.Problem(detail: detail, statusCode: status, extensions: extensions);
+    }
+
+    private static IReadOnlyDictionary<string, string[]> FieldErrors(string field, string error) => new Dictionary<string, string[]>(StringComparer.Ordinal) { [field] = [error] };
+
+    private static string MetadataField(string? error) => error?.StartsWith("Notes", StringComparison.Ordinal) == true ? "notes" : error?.StartsWith("The package", StringComparison.Ordinal) == true ? "packageState" : "storageLocation";
 
     private sealed record CursorPosition(DateTimeOffset UpdatedAt, Guid LotId);
 

@@ -17,6 +17,26 @@ internal static class InventoryOpenApiTransformer
             Description = "Backend-managed, secure HttpOnly session cookie. Browser code must not read or store OIDC tokens."
         };
 
+        if (components.Schemas is { } schemas && schemas.TryGetValue("ProblemDetails", out var problemSchema) && problemSchema is OpenApiSchema problemDetails)
+        {
+            (problemDetails.Properties ??= new Dictionary<string, IOpenApiSchema>())["errorCode"] = new OpenApiSchema
+            {
+                Description = "Stable machine-readable KitchenFlow error code.",
+                Type = JsonSchemaType.String
+            };
+            problemDetails.Properties["traceId"] = new OpenApiSchema
+            {
+                Description = "Correlation identifier suitable for support without exposing private request data.",
+                Type = JsonSchemaType.String
+            };
+            problemDetails.Properties["errors"] = new OpenApiSchema
+            {
+                Description = "Field-level validation messages keyed by request field name.",
+                Type = JsonSchemaType.Object,
+                AdditionalProperties = new OpenApiSchema { Type = JsonSchemaType.Array }
+            };
+        }
+
         foreach (var (path, pathItem) in document.Paths)
         {
             if (!path.StartsWith("/api/v1/", StringComparison.Ordinal))

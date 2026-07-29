@@ -233,6 +233,8 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
 
         Assert.Equal((System.Net.HttpStatusCode)422, response.StatusCode);
         Assert.Equal("domain_rule_violated", problem.GetProperty("errorCode").GetString());
+        Assert.True(problem.TryGetProperty("traceId", out _));
+        Assert.True(problem.GetProperty("errors").TryGetProperty("quantity", out _));
     }
 
     [Fact]
