@@ -68,6 +68,29 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task PostgreSqlRejectsOrphanedLotsAndNegativeMeasuredQuantities()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var scope = factory.Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        var ownerId = Guid.NewGuid();
+        var productId = Guid.NewGuid();
+
+        database.Lots.Add(new LotRecord { Id = Guid.NewGuid(), OwnerUserId = ownerId, ProductId = productId, MeasuredValue = 1m, MeasuredUnit = "Gram", StorageLocation = "Pantry", Version = 1, CreatedAt = now, UpdatedAt = now });
+        await Assert.ThrowsAsync<DbUpdateException>(() => database.SaveChangesAsync());
+        database.ChangeTracker.Clear();
+
+        database.Users.Add(new InternalUser(ownerId, "https://integration.test", $"constraint-{ownerId:N}", now));
+        database.Products.Add(new ProductRecord { Id = productId, OwnerUserId = ownerId, DisplayName = "Constraint tomato", NormalizedSearchName = "CONSTRAINT TOMATO", CreatedAt = now, UpdatedAt = now });
+        await database.SaveChangesAsync();
+        database.Lots.Add(new LotRecord { Id = Guid.NewGuid(), OwnerUserId = ownerId, ProductId = productId, MeasuredValue = -1m, MeasuredUnit = "Gram", StorageLocation = "Pantry", Version = 1, CreatedAt = now, UpdatedAt = now });
+
+        await Assert.ThrowsAsync<DbUpdateException>(() => database.SaveChangesAsync());
+    }
+
+    [Fact]
     public async Task MutationRequiresCsrfToken()
     {
         await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
