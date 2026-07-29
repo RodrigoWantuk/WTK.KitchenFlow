@@ -483,13 +483,13 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Phase 1 solution and dependency foundation is complete and buildable.
-- **Last completed step:** Created the exact required solution/project structure, central SDK/package/format settings, lock files, baseline test, and backend CI workflow.
-- **Exact next action:** Add PostgreSQL/Keycloak compose assets, development realm, OIDC session configuration, and internal-user provisioning.
+- **Current checkpoint:** The dependency-free inventory domain foundation is complete and unit-tested.
+- **Last completed step:** Added typed product, quantity, storage, private-note, expiration, lot, and immutable transaction domain behavior.
+- **Exact next action:** Add EF Core/Npgsql persistence, user identity persistence, migrations, and compose-backed PostgreSQL/Keycloak infrastructure.
 - **Blockers:** None.
 - **Partially modified areas:** None.
 - **Validation performed:** Baseline verification plus `dotnet restore apps/backend/KitchenFlow.slnx --force-evaluate`; `dotnet restore apps/backend/KitchenFlow.slnx --locked-mode`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; and `dotnet test apps/backend/KitchenFlow.slnx -c Release --no-build`. Restore, formatting, and build passed with zero warnings/errors; the baseline unit test passed. The still-empty integration and architecture test assemblies report no discovered tests.
-- **Known failures or limitations:** Persistence, authentication, API behavior, migrations, OpenAPI, compose services, and their tests do not exist yet; those belong to later phases.
+- **Known failures or limitations:** Persistence, authentication, API behavior, migrations, OpenAPI, compose services, and their tests do not exist yet; those belong to later phases. The initial domain is deliberately bounded to the PLAN-0003 manual lot operations and does not implement broader lifecycle transitions or derived lots.
 - **Working tree state:** Build outputs are ignored; tracked solution foundation is ready for validation.
 
 ## Progress log
@@ -511,6 +511,15 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Result:** Restore, formatting, and Release build passed with zero warnings/errors; the baseline unit test passed. Empty integration and architecture assemblies have no test cases at this checkpoint.
 - **Next action:** Implement local PostgreSQL/Keycloak infrastructure and secure identity/session foundation.
 - **Blockers or handoff notes:** No runtime service or production credential has been added.
+
+### 2026-07-28T00:20:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Added the dependency-free inventory domain foundation.
+- **Changes included in the commit:** Added validated product names, measured and qualitative quantities, storage, notes, expiration provenance, product/lot entities, version increments, explicit adjustment/delete behavior, and immutable transaction records with unit coverage.
+- **Validation performed:** `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.UnitTests/KitchenFlow.UnitTests.csproj -c Release --no-build`.
+- **Result:** Formatting and build pass with zero warnings/errors; five unit tests pass.
+- **Next action:** Persist the domain through EF Core/Npgsql and establish local service infrastructure.
+- **Blockers or handoff notes:** The first test assertion incorrectly treated consuming all remaining quantity as invalid; it was corrected to test only a negative-result adjustment, matching the accepted nonnegative rule.
 
 ### 2026-07-29T00:25:00Z — AI planning agent
 
