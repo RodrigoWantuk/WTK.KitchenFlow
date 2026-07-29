@@ -52,7 +52,10 @@ internal static class InventoryOpenApiTransformer
 
                 foreach (var response in (operation.Responses ?? []).Where(response => response.Key is "200" or "201"))
                 {
-                    response.Value.Headers!["ETag"] = new OpenApiHeader { Description = "Opaque current version required by If-Match on subsequent mutations." };
+                    if (response.Value is OpenApiResponse typedResponse)
+                    {
+                        (typedResponse.Headers ??= new Dictionary<string, IOpenApiHeader>())["ETag"] = new OpenApiHeader { Description = "Opaque current version required by If-Match on subsequent mutations." };
+                    }
                 }
             }
         }

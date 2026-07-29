@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend implementation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T14:00:00Z
+- **Last updated:** 2026-07-29T14:15:00Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, open)
 - **Related implementation plan:** PLAN-0002
@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** OpenAPI runtime customization is implemented and compiles; runtime export, snapshot regeneration, and contract assertions are the immediate validation work before this contract phase can be accepted.
-- **Last completed step:** Added a transformer that declares backend cookie-session security and mutation/concurrency headers on the runtime document.
-- **Exact next action:** Start the API against PostgreSQL, export and inspect the OpenAPI runtime document, add contract assertions/examples/problem schemas, regenerate the snapshot, then resume application-service extraction.
+- **Current checkpoint:** The runtime OpenAPI document exports successfully with backend-session security and mutation/concurrency headers; snapshot regeneration and complete schema/example assertions remain active.
+- **Last completed step:** Fixed response-header initialization in the transformer and validated the runtime document against PostgreSQL-backed API startup.
+- **Exact next action:** Add complete Problem Details/session schemas and examples, regenerate the checked-in snapshot through the reproducible export workflow, then resume application-service extraction.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
 - **Validation performed:** `dotnet test apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`.
 - **Known failures or limitations:** Endpoint orchestration still accesses EF directly; explicit application services/ports, complete Problem Details/OpenAPI, XML documentation/enforcement, expanded test/CI, and runbook corrections remain unfinished. The current snapshot is not a stable PLAN-0004 contract.
-- **Working tree state:** The compiling OpenAPI transformer checkpoint is ready to commit; runtime export/drift validation is intentionally pending.
+- **Working tree state:** The runtime-export-validated transformer fix is ready to commit; snapshot/drift validation is intentionally pending.
 
 ## Progress log
+
+### 2026-07-29T14:15:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Validated the OpenAPI transformer against the running PostgreSQL-backed API and corrected its response-header initialization defect.
+- **Changes included in the commit:** Initialized concrete OpenAPI response header maps before adding `ETag`, preventing a runtime OpenAPI `500` for generated responses without headers.
+- **Validation performed:** Applied the integrity migration to Compose PostgreSQL; started the Release API over local HTTPS; fetched `/openapi/v1.json`; inspected the emitted `kitchenflowSession` scheme and create-operation CSRF/idempotency parameters plus `201` ETag header.
+- **Result:** Runtime OpenAPI export succeeds and exposes the expected security/header metadata.
+- **Known failures or unverified behavior:** The checked-in snapshot is stale until regeneration; Problem Details/session schemas, examples, enum/decimal details, and drift/CI coverage remain open. No stable frontend-contract claim is made.
+- **Blockers:** None.
+- **Next action:** Complete the remaining schema/example transformation and regenerate/validate the OpenAPI snapshot.
 
 ### 2026-07-29T14:00:00Z — Codex backend implementation agent
 
