@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Real Keycloak Authorization Code + PKCE smoke successfully establishes a backend-managed HTTPS session.
-- **Last completed step:** Corrected local OIDC configuration/HTTPS ports, identity issuer derivation, session UUID response, and development realm fixture profile data.
-- **Exact next action:** Add remaining two-user mutation and adjustment edge-case coverage, rate-limit/telemetry checks, and interactive browser validation.
+- **Current checkpoint:** Mutation/authentication rate limits and two-user update/delete isolation are automatically verified.
+- **Last completed step:** Added fixed-window rate-limit policies and expanded owner-scoped mutation tests.
+- **Exact next action:** Add adjustment edge-case and redaction checks, then perform interactive browser validation and final migration/contract verification.
 - **Blockers:** None.
-- **Partially modified areas:** API authentication/session composition, identity mapping, local HTTPS launch configuration, development realm fixture, backend local-development documentation, and environment template.
-- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/KitchenFlow.slnx -c Release --no-build`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; fetched the live API OpenAPI document; `scripts/backend/check-openapi.sh`; compose Keycloak Authorization Code + PKCE login/callback/session smoke over `https://localhost:7443`.
-- **Known failures or limitations:** The real-provider smoke is automated with a noninteractive HTTPS client that submits Keycloak's form-post callback; interactive graphical-browser validation, broader two-user mutation coverage, adjustment edge cases, rate limits, and telemetry-redaction checks remain unfinished. The initial domain remains bounded to PLAN-0003 manual-lot operations.
-- **Working tree state:** Source, realm, documentation, and environment changes are ready to commit with this synchronized plan state.
+- **Partially modified areas:** API rate-limit composition, inventory endpoint policy metadata, and PostgreSQL API ownership tests.
+- **Validation performed:** `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`. The PostgreSQL API test project completed successfully with fourteen tests.
+- **Known failures or limitations:** Adjustment edge cases, telemetry-redaction checks, interactive graphical-browser validation, and final migration/contract verification remain unfinished. The initial domain remains bounded to PLAN-0003 manual-lot operations.
+- **Working tree state:** Source and test changes are ready to commit with this synchronized plan state.
 
 ## Progress log
+
+### 2026-07-29T10:20:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Added mutation/authentication rate limiting and cross-user mutation isolation checks.
+- **Changes included in the commit:** Added fixed-window policies for authentication initiation and authenticated state-changing inventory routes; mapped rejections to `429 rate_limit_exceeded`; added a second authenticated test identity and PostgreSQL assertions that it receives `404` for another user's update and delete attempts.
+- **Validation performed:** `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`.
+- **Result:** The integration test project completed successfully with fourteen tests. Owner scope applies before ETag/mutation behavior for the foreign user.
+- **Known failures or unverified behavior:** Adjustment edge cases, telemetry/redaction checks, interactive graphical-browser validation, and final migration/contract verification remain unfinished.
+- **Blockers:** None.
+- **Next action:** Add adjustment and privacy-observability coverage, then perform final browser, migration, and contract validation.
 
 ### 2026-07-29T10:05:00Z — Codex backend implementation agent
 

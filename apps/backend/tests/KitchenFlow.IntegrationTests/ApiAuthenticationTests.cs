@@ -237,6 +237,26 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         Assert.Equal("trimmed note", body.GetProperty("notes").GetString());
     }
 
+    [Fact]
+    public async Task AuthenticatedUserCannotMutateAnotherUsersLot()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var owner = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        using var other = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        other.DefaultRequestHeaders.Add("X-Test-Subject", "integration-user-b");
+        var ownerCsrf = await GetCsrfAsync(owner);
+        var otherCsrf = await GetCsrfAsync(other);
+        var created = await CreateAsync(owner, ownerCsrf, Guid.NewGuid().ToString());
+        var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+
+        var update = await UpdateAsync(other, otherCsrf, lotId, created.Headers.ETag!.Tag);
+        var delete = await DeleteAsync(other, otherCsrf, lotId, created.Headers.ETag!.Tag);
+
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, update.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, delete.StatusCode);
+    }
+
     private static object CreateLot(string productName = "Test tomato") => new { productName, quantity = new { measuredValue = 100m, unit = "Gram", availabilityState = (string?)null }, storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null };
 
     private static async Task<string> GetCsrfAsync(HttpClient client)
@@ -332,7 +352,8 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            var identity = new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "integration-user"), new Claim("iss", "https://integration.test")], TestScheme);
+            var subject = Request.Headers["X-Test-Subject"].FirstOrDefault() ?? "integration-user";
+            var identity = new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, subject), new Claim("iss", "https://integration.test")], TestScheme);
             return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(identity), TestScheme)));
         }
     }

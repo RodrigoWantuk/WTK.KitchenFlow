@@ -31,11 +31,11 @@ public static class InventoryEndpoints
             return await next(context);
         });
         group.MapGet("/lots", ListAsync);
-        group.MapPost("/lots", CreateAsync);
+        group.MapPost("/lots", CreateAsync).RequireRateLimiting("mutation");
         group.MapGet("/lots/{lotId:guid}", GetAsync);
-        group.MapPatch("/lots/{lotId:guid}", UpdateAsync);
-        group.MapPost("/lots/{lotId:guid}/adjustments", AdjustAsync);
-        group.MapDelete("/lots/{lotId:guid}", DeleteAsync);
+        group.MapPatch("/lots/{lotId:guid}", UpdateAsync).RequireRateLimiting("mutation");
+        group.MapPost("/lots/{lotId:guid}/adjustments", AdjustAsync).RequireRateLimiting("mutation");
+        group.MapDelete("/lots/{lotId:guid}", DeleteAsync).RequireRateLimiting("mutation");
         group.MapGet("/lots/{lotId:guid}/history", HistoryAsync);
         return group;
     }
