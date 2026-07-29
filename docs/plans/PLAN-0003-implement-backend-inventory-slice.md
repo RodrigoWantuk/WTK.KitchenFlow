@@ -665,3 +665,12 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Result:** Update mutations return `428 precondition_required` without a version and `412 precondition_failed` for stale state.
 - **Next action:** Complete adjustment idempotency/history tests, expand two-user mutation isolation, and validate real Keycloak login/logout.
 - **Blockers or handoff notes:** Complete adjustment replay and query pagination behavior are still unfinished.
+
+### 2026-07-29T03:50:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Implemented and verified PostgreSQL-backed adjustment idempotency.
+- **Changes included in the commit:** Stored completed adjustment response semantics and ETag data; added replay-without-duplicate-history and different-payload conflict tests.
+- **Validation performed:** Release build and PostgreSQL API integration suite (9 passed).
+- **Result:** Identical adjustment replay returns the original result; a changed payload with the same key returns `409 idempotency_key_reused`; transaction history remains immutable and unduplicated.
+- **Next action:** Add adjustment/list/deletion isolation tests, cursor pagination, final contract examples, and real Keycloak login/logout smoke validation.
+- **Blockers or handoff notes:** Query cursor and complete real-provider authentication validation remain unfinished.

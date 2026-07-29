@@ -114,6 +114,45 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         Assert.Equal(System.Net.HttpStatusCode.PreconditionFailed, stale.StatusCode);
     }
 
+    [Fact]
+    public async Task AdjustmentReplayDoesNotDuplicateHistory()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var created = await CreateAsync(client, csrf, Guid.NewGuid().ToString());
+        var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+        var etag = created.Headers.ETag!.Tag;
+        var key = Guid.NewGuid().ToString();
+
+        var first = await AdjustAsync(client, csrf, lotId, etag, key, 25m);
+        var second = await AdjustAsync(client, csrf, lotId, etag, key, 25m);
+        var history = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots/{lotId}/history");
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, first.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.OK, second.StatusCode);
+        Assert.Equal(2, history.GetArrayLength());
+    }
+
+    [Fact]
+    public async Task AdjustmentKeyReuseWithDifferentPayloadReturnsConflict()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var created = await CreateAsync(client, csrf, Guid.NewGuid().ToString());
+        var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+        var etag = created.Headers.ETag!.Tag;
+        var key = Guid.NewGuid().ToString();
+
+        await AdjustAsync(client, csrf, lotId, etag, key, 25m);
+        var reused = await AdjustAsync(client, csrf, lotId, etag, key, 20m);
+
+        Assert.Equal(System.Net.HttpStatusCode.Conflict, reused.StatusCode);
+    }
+
     private static object CreateLot() => new { productName = "Test tomato", quantity = new { measuredValue = 100m, unit = "Gram", availabilityState = (string?)null }, storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null };
 
     private static async Task<string> GetCsrfAsync(HttpClient client)
@@ -139,6 +178,15 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
             request.Headers.TryAddWithoutValidation("If-Match", etag);
         }
 
+        return await client.SendAsync(request);
+    }
+
+    private static async Task<HttpResponseMessage> AdjustAsync(HttpClient client, string csrf, Guid lotId, string etag, string key, decimal value)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/inventory/lots/{lotId}/adjustments") { Content = JsonContent.Create(new { type = "Consume", value, availabilityState = (string?)null, reasonCode = "meal", note = (string?)null }) };
+        request.Headers.Add("X-CSRF-TOKEN", csrf);
+        request.Headers.TryAddWithoutValidation("If-Match", etag);
+        request.Headers.Add("Idempotency-Key", key);
         return await client.SendAsync(request);
     }
 

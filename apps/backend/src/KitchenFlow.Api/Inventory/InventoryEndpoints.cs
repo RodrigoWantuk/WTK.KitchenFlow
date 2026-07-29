@@ -117,9 +117,28 @@ public static class InventoryEndpoints
 
     private static async Task<IResult> AdjustAsync(Guid lotId, AdjustmentRequest request, HttpRequest requestContext, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
     {
-        if (!TryIdempotencyKey(requestContext, out _))
+        if (!TryIdempotencyKey(requestContext, out var key))
         {
             return Problem(400, "validation_failed", "A UUID Idempotency-Key header is required.");
+        }
+
+        var user = await currentUser.GetOrCreateAsync(cancellationToken);
+        var hash = Hash(new { LotId = lotId, Request = request });
+        var prior = await database.IdempotencyRecords.SingleOrDefaultAsync(record => record.OwnerUserId == user.Id && record.Scope == "inventory.lots.adjust" && record.Key == key, cancellationToken);
+        if (prior is not null)
+        {
+            if (prior.RequestHash != hash)
+            {
+                return Problem(409, "idempotency_key_reused", "The Idempotency-Key was used for a different request.");
+            }
+
+            if (prior.CompletedAt is null)
+            {
+                return Problem(409, "idempotency_in_progress", "The request is still being processed.");
+            }
+
+            var replay = JsonSerializer.Deserialize<LotResponse>(prior.ResponseBody!)!;
+            return WithEtag(replay, replay.Version);
         }
 
         return await MutateAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken, (lot, now) =>
@@ -142,8 +161,8 @@ public static class InventoryEndpoints
                 throw new InvalidOperationException("The adjustment is invalid for this lot.");
             }
 
-            return new TransactionRecord { Id = Guid.NewGuid(), OwnerUserId = lot.OwnerUserId, LotId = lot.Id, Type = request.Type, PreviousMeasuredValue = previous.MeasuredValue, PreviousMeasuredUnit = previous.Unit, PreviousAvailabilityState = previous.AvailabilityState, ResultingMeasuredValue = lot.MeasuredValue, ResultingMeasuredUnit = lot.MeasuredUnit, ResultingAvailabilityState = lot.AvailabilityState, ReasonCode = request.ReasonCode, Note = request.Note, OccurredAt = now };
-        });
+            return new TransactionRecord { Id = Guid.NewGuid(), OwnerUserId = lot.OwnerUserId, LotId = lot.Id, Type = request.Type, PreviousMeasuredValue = previous.MeasuredValue, PreviousMeasuredUnit = previous.Unit, PreviousAvailabilityState = previous.AvailabilityState, ResultingMeasuredValue = lot.MeasuredValue, ResultingMeasuredUnit = lot.MeasuredUnit, ResultingAvailabilityState = lot.AvailabilityState, ReasonCode = request.ReasonCode, Note = request.Note, IdempotencyKey = key, OccurredAt = now };
+        }, idempotencyKey: key, idempotencyScope: "inventory.lots.adjust", idempotencyHash: hash);
     }
 
     private static async Task<IResult> DeleteAsync(Guid lotId, HttpRequest requestContext, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken) =>
@@ -161,7 +180,7 @@ public static class InventoryEndpoints
         return Results.Ok(history);
     }
 
-    private static async Task<IResult> MutateAsync(Guid lotId, HttpRequest request, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider clock, CancellationToken cancellationToken, Func<LotRecord, DateTimeOffset, TransactionRecord?> operation, int successStatus = StatusCodes.Status200OK)
+    private static async Task<IResult> MutateAsync(Guid lotId, HttpRequest request, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider clock, CancellationToken cancellationToken, Func<LotRecord, DateTimeOffset, TransactionRecord?> operation, int successStatus = StatusCodes.Status200OK, Guid? idempotencyKey = null, string? idempotencyScope = null, string? idempotencyHash = null)
     {
         if (!TryVersion(request, out var version))
         {
@@ -192,8 +211,13 @@ public static class InventoryEndpoints
             }
 
             database.AuditEvents.Add(new AuditEventRecord { Id = Guid.NewGuid(), ActorUserId = user.Id, EventName = "inventory.lot.updated", TargetType = "inventory_lot", TargetId = lotId, CorrelationId = request.HttpContext.TraceIdentifier, MetadataJson = "{}", OccurredAt = now });
+            var response = ToResponse(item.Value.Lot, item.Value.Product.DisplayName);
+            if (idempotencyKey is not null)
+            {
+                database.IdempotencyRecords.Add(new IdempotencyRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, Scope = idempotencyScope!, Key = idempotencyKey.Value, RequestHash = idempotencyHash!, StatusCode = StatusCodes.Status200OK, ResponseBody = JsonSerializer.Serialize(response), ETag = Etag(item.Value.Lot.Version), CreatedAt = now, CompletedAt = now });
+            }
             await database.SaveChangesAsync(cancellationToken);
-            return successStatus == 204 ? Results.NoContent() : WithEtag(ToResponse(item.Value.Lot, item.Value.Product.DisplayName), item.Value.Lot.Version);
+            return successStatus == 204 ? Results.NoContent() : WithEtag(response, item.Value.Lot.Version);
         }
         catch (DbUpdateConcurrencyException) { return Problem(412, "precondition_failed", "The inventory lot was modified."); }
         catch (InvalidOperationException exception) { return Problem(422, "domain_rule_violated", exception.Message); }
