@@ -1,6 +1,6 @@
 # PLAN-0003: Implement Backend Foundation and Inventory Core
 
-- **Status:** In Progress
+- **Status:** Blocked
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** Codex backend implementation agent
@@ -483,13 +483,13 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Sensitive telemetry tags are removed before export and verified by an automated test; browser validation remains environment-limited.
+- **Current checkpoint:** All executable backend gates pass; plan completion awaits the required interactive browser journey.
 - **Last completed step:** Added an OpenTelemetry processor and captured-tag redaction test.
-- **Exact next action:** Run the documented interactive browser login/logout/create/list check on a supported workstation, then open the PR after recording that result.
+- **Exact next action:** On a supported workstation, run the interactive browser login/logout/create/list check against local compose dependencies, record the result, then reopen PLAN-0003 and open the PR if it passes.
 - **Blockers:** Interactive browser validation requires a supported workstation/browser session outside this container.
 - **Partially modified areas:** API OpenTelemetry redaction processor and integration test coverage.
 - **Validation performed:** `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`; formatting verification; attempted Chrome DevTools DOM navigation with headless GPU-disabled flags.
-- **Known failures or limitations:** Chrome can render a local HTTPS page but cannot complete the OIDC form-navigation flow in this headless container, so interactive validation cannot be claimed. The real Keycloak HTTPS form-post smoke remains passed.
+- **Known failures or limitations:** Chrome can render a local HTTPS page but cannot complete the OIDC form-navigation flow in this headless container, so interactive validation cannot be claimed. The real Keycloak HTTPS form-post smoke remains passed. No automated backend check is failing.
 - **Working tree state:** Source, test, plan, and registry changes are ready to commit.
 
 ## Progress log
@@ -503,6 +503,16 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Known failures or unverified behavior:** Interactive graphical-browser login/logout/create/list remains unverified only because of the host browser environment. The earlier real Keycloak form-post HTTPS smoke is still valid.
 - **Blockers:** Interactive browser validation requires a supported workstation/browser session outside this container.
 - **Next action:** Execute the documented graphical-browser check on a supported host, record it, then open the PLAN-0003 pull request.
+
+### 2026-07-29T11:50:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Reached the only remaining external validation gate and marked PLAN-0003 blocked truthfully.
+- **Changes included in the commit:** Updated execution and registry state only; no implementation behavior changed.
+- **Validation performed:** Locked restore; clean zero-warning release build; formatting; complete automated tests (2 architecture, 5 unit, 18 PostgreSQL integration); migration upgrade against compose PostgreSQL; compose PostgreSQL/Keycloak health; OpenAPI drift verification; real Keycloak HTTPS form-post smoke; two headless Chrome attempts.
+- **Result:** Every available noninteractive backend validation passes. The browser attempts cannot complete the required graphical OIDC form navigation because the container lacks a supported display/browser service environment.
+- **Known failures or unverified behavior:** Interactive graphical-browser login, logout, create, and list verification remains unperformed. No automatic test failure is outstanding.
+- **Blockers:** A supported workstation/browser session is required to execute the accepted manual browser gate.
+- **Next action:** Run the documented graphical-browser check on a supported host, record the evidence, set this plan back to `In Progress`, and open the PR after a passing result.
 
 ### 2026-07-29T11:20:00Z — Codex backend implementation agent
 
