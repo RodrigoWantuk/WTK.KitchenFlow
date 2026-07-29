@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** All executable backend gates pass; plan completion awaits the required interactive browser journey.
-- **Last completed step:** Added an OpenTelemetry processor and captured-tag redaction test.
+- **Current checkpoint:** Generated OpenAPI now declares the complete inventory success/problem response contract and is tested against the runtime document.
+- **Last completed step:** Added endpoint response metadata, regenerated the snapshot, and added OpenAPI contract coverage.
 - **Exact next action:** On a supported workstation, run the interactive browser login/logout/create/list check against local compose dependencies, record the result, then reopen PLAN-0003 and open the PR if it passes.
 - **Blockers:** Interactive browser validation requires a supported workstation/browser session outside this container.
-- **Partially modified areas:** API OpenTelemetry redaction processor and integration test coverage.
-- **Validation performed:** `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`; formatting verification; attempted Chrome DevTools DOM navigation with headless GPU-disabled flags.
+- **Partially modified areas:** Inventory endpoint OpenAPI metadata, checked-in OpenAPI snapshot, and runtime contract test.
+- **Validation performed:** Release build; PostgreSQL integration test project including runtime OpenAPI response-code assertions; formatting; live API OpenAPI export; `scripts/backend/check-openapi.sh`.
 - **Known failures or limitations:** Chrome can render a local HTTPS page but cannot complete the OIDC form-navigation flow in this headless container, so interactive validation cannot be claimed. The real Keycloak HTTPS form-post smoke remains passed. No automated backend check is failing.
-- **Working tree state:** Source, test, plan, and registry changes are ready to commit.
+- **Working tree state:** Source, snapshot, test, plan, and registry changes are ready to commit.
 
 ## Progress log
+
+### 2026-07-29T12:05:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Corrected and tested the generated OpenAPI response contract.
+- **Changes included in the commit:** Declared typed success and Problem Details responses for all inventory routes; changed create documentation from the incorrect inferred `200` to `201`; regenerated the OpenAPI 3.1 snapshot; added a runtime-document contract test for create/update response codes.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; live OpenAPI export; `scripts/backend/check-openapi.sh`.
+- **Result:** Build, integration tests, formatting, and drift verification complete successfully. The generated contract now exposes `201`, `400`, `409`, and `422` for lot creation and documented precondition/problem responses for update and adjustment operations.
+- **Known failures or unverified behavior:** The required interactive graphical-browser check remains blocked by this container; all remaining backend contract work is complete.
+- **Blockers:** A supported workstation/browser session is required for the final manual browser gate.
+- **Next action:** Run the documented graphical-browser login/logout/create/list check on a supported host, record it, change the plan from `Blocked` to `Completed`, and open the PLAN-0003 PR.
 
 ### 2026-07-29T11:35:00Z — Codex backend implementation agent
 

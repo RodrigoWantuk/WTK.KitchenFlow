@@ -30,13 +30,13 @@ public static class InventoryEndpoints
 
             return await next(context);
         });
-        group.MapGet("/lots", ListAsync);
-        group.MapPost("/lots", CreateAsync).RequireRateLimiting("mutation");
-        group.MapGet("/lots/{lotId:guid}", GetAsync);
-        group.MapPatch("/lots/{lotId:guid}", UpdateAsync).RequireRateLimiting("mutation");
-        group.MapPost("/lots/{lotId:guid}/adjustments", AdjustAsync).RequireRateLimiting("mutation");
-        group.MapDelete("/lots/{lotId:guid}", DeleteAsync).RequireRateLimiting("mutation");
-        group.MapGet("/lots/{lotId:guid}/history", HistoryAsync);
+        group.MapGet("/lots", ListAsync).Produces<ListLotsResponse>().ProducesProblem(400);
+        group.MapPost("/lots", CreateAsync).RequireRateLimiting("mutation").Produces<LotResponse>(StatusCodes.Status201Created).ProducesProblem(400).ProducesProblem(409).ProducesProblem(422);
+        group.MapGet("/lots/{lotId:guid}", GetAsync).Produces<LotResponse>().ProducesProblem(404);
+        group.MapPatch("/lots/{lotId:guid}", UpdateAsync).RequireRateLimiting("mutation").Produces<LotResponse>().ProducesProblem(404).ProducesProblem(412).ProducesProblem(422).ProducesProblem(428);
+        group.MapPost("/lots/{lotId:guid}/adjustments", AdjustAsync).RequireRateLimiting("mutation").Produces<LotResponse>().ProducesProblem(400).ProducesProblem(404).ProducesProblem(409).ProducesProblem(412).ProducesProblem(422).ProducesProblem(428);
+        group.MapDelete("/lots/{lotId:guid}", DeleteAsync).RequireRateLimiting("mutation").Produces(StatusCodes.Status204NoContent).ProducesProblem(404).ProducesProblem(412).ProducesProblem(428);
+        group.MapGet("/lots/{lotId:guid}/history", HistoryAsync).Produces<IReadOnlyList<LotHistoryResponse>>().ProducesProblem(404);
         return group;
     }
 

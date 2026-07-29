@@ -1,5 +1,9 @@
 using System.Diagnostics;
+using System.Net.Http.Json;
+using System.Text.Json;
 using KitchenFlow.Api.Observability;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace KitchenFlow.IntegrationTests;
 
@@ -25,5 +29,21 @@ public sealed class TelemetryRedactionTests
         Assert.DoesNotContain(activity.TagObjects, tag => tag.Key.Contains("note", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(activity.TagObjects, tag => tag.Key.Contains("body", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(activity.TagObjects, tag => tag.Key == "http.response.status_code" && (int)tag.Value! == 200);
+    }
+
+    [Fact]
+    public async Task GeneratedOpenApiDeclaresInventorySuccessAndProblemResponses()
+    {
+        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder => builder.UseSetting("ConnectionStrings:KitchenFlow", "Host=127.0.0.1;Database=kitchenflow_contract_test;Username=test;Password=test"));
+        using var client = factory.CreateClient();
+
+        var document = await client.GetFromJsonAsync<JsonElement>("/openapi/v1.json");
+        var createResponses = document.GetProperty("paths").GetProperty("/api/v1/inventory/lots").GetProperty("post").GetProperty("responses");
+        var updateResponses = document.GetProperty("paths").GetProperty("/api/v1/inventory/lots/{lotId}").GetProperty("patch").GetProperty("responses");
+
+        Assert.True(createResponses.TryGetProperty("201", out _));
+        Assert.True(createResponses.TryGetProperty("422", out _));
+        Assert.True(updateResponses.TryGetProperty("428", out _));
+        Assert.True(updateResponses.TryGetProperty("412", out _));
     }
 }
