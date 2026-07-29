@@ -1,13 +1,14 @@
 # PLAN-0006: Refine the Lovable Product Design Brief
 
-- **Status:** Validating
+- **Status:** Completed
 - **Type:** Documentation
 - **Priority:** High
 - **Owner:** AI product and UX planning agent
 - **Created:** 2026-07-29
+- **Completed:** 2026-07-29
 - **Last updated:** 2026-07-29
 - **Branch:** `agent/plan-0006-refine-lovable-design-brief`
-- **Pull request:** Not opened
+- **Pull request:** [#7](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/7)
 - **Related implementation plan:** PLAN-0004
 - **Related issues:** None
 - **Related ADRs:** ADR-0001, ADR-0004, ADR-0006
@@ -17,7 +18,7 @@
 
 Refine PLAN-0004 with an accepted general visual and experience direction for the first Lovable generations while preserving Lovable's authority to design page composition, information hierarchy, responsive layout, and interaction details.
 
-The refinement must enable a highly navigable, heavily mocked, responsive single-page application prototype that supports early stakeholder validation without embedding rigid wireframes or pretending mocked modules are production-ready.
+The refinement enables a highly navigable, heavily mocked, responsive single-page application prototype that supports early stakeholder validation without embedding rigid wireframes or pretending mocked modules are production-ready.
 
 ## Scope
 
@@ -63,8 +64,6 @@ The refinement must enable a highly navigable, heavily mocked, responsive single
 - [x] Create PLAN-0006 and register it.
 - [x] Reconcile PLAN-0002 delivery to `Merged`.
 
-**Exit criteria:** PLAN-0006 is active and the central registry reflects current delivery state.
-
 ### Phase 2: Refine PLAN-0004
 
 - [x] Add general design direction without wireframes.
@@ -74,33 +73,36 @@ The refinement must enable a highly navigable, heavily mocked, responsive single
 - [x] Update Project Knowledge and Plan-mode prompt instructions.
 - [x] Update phases, risks, acceptance criteria, execution state, and progress log.
 
-**Exit criteria:** PLAN-0004 can be handed to Lovable without further basic visual-direction questions and without constraining its page-design capability.
-
 ### Phase 3: Validate and deliver
 
-- [ ] Verify no screen sketch or fixed layout was introduced.
-- [ ] Verify mock scope is separated from live integration scope.
-- [ ] Verify no backend or security boundary changed.
-- [ ] Compare branch with `main` and review every changed file.
-- [ ] Open a pull request.
-- [ ] Mark PLAN-0006 completed while keeping PLAN-0004 ready for implementation.
+- [x] Verify no screen sketch or fixed layout was introduced.
+- [x] Verify mock scope is separated from live integration scope.
+- [x] Verify no backend or security boundary changed.
+- [x] Compare branch with `main` and review every changed file.
+- [x] Open pull request #7.
+- [x] Mark PLAN-0006 completed while keeping PLAN-0004 ready for implementation.
 
-**Exit criteria:** A cohesive documentation-only PR is open and directly usable by the frontend agent and Lovable.
+## Validation performed
 
-## Testing and validation plan
+- Compared the branch against `main`: 2 commits ahead and 0 behind before PR creation.
+- Reviewed all three changed files.
+- Confirmed no screen sketch, ASCII wireframe, fixed responsive navigation diagram, pixel-level page arrangement, or prescribed component placement was introduced.
+- Confirmed Lovable retains responsibility for information architecture, exact design tokens, page composition, navigation pattern, hierarchy, and responsive transformations.
+- Confirmed PLAN-0004 defines SPA-like navigation and continuous device adaptation.
+- Confirmed Layer A is production-aligned and remains gated by PLAN-0003's OpenAPI milestone.
+- Confirmed Layer B is synthetic, broad, prototype-only, and cannot be presented as backend implementation.
+- Confirmed every prototype control must produce a deliberate outcome and prototype controls must be unavailable in production.
+- Confirmed no direct AI provider, Supabase, generated backend, direct database, Keycloak JavaScript adapter, or browser token storage was authorized.
+- Confirmed PLAN-0002 delivery is reconciled to merged.
+- Confirmed PLAN-0004 remains `Ready` and no implementation completion is claimed.
 
-- Manual traceability against the stakeholder instruction in this plan.
-- Review PLAN-0004 for contradictions with PLAN-0002, accepted ADRs, and product/domain documents.
-- Search for prohibited wireframe or fixed-layout requirements.
-- Verify prototype-only routes and data cannot be mistaken for live backend capabilities.
-- Verify PLAN-0004 still gates live API integration on PLAN-0003's OpenAPI milestone.
-- Verify `docs/plan-status.md` contains each plan exactly once.
+No executable tests were applicable because no executable code changed.
 
 ## Cross-cutting impact
 
 ### Security and privacy
 
-No executable security behavior changes. The refined plan keeps browser-token, Keycloak, API, mock-data, and production-data boundaries explicit. Prototype fixtures use synthetic data only.
+No executable security behavior changed. The refined plan keeps browser-token, Keycloak, API, mock-data, and production-data boundaries explicit. Prototype fixtures use synthetic data only.
 
 ### Food safety
 
@@ -142,17 +144,17 @@ No runtime or infrastructure change. Prototype mode is required to be controllab
 - [x] Project Knowledge and Plan-mode prompt instructions are updated.
 - [x] PLAN-0002 delivery is reconciled to `Merged`.
 - [x] PLAN-0004 remains `Ready`, not falsely marked as implemented.
-- [ ] Full branch validation is complete and a PR is open.
+- [x] Full branch validation is complete and PR #7 is open.
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0004 has been fully refined with design principles, Lovable design authority, SPA behavior, two fidelity layers, broad mock workflows, scenarios, prototype gallery, and production-isolation requirements.
-- **Last completed step:** Phase 2 PLAN-0004 refinement.
-- **Exact next action:** Compare the branch against `main`, inspect all changed files, open the pull request, then finalize PLAN-0006 delivery state.
-- **Blockers:** None.
-- **Partially modified areas:** Final validation and PR delivery remain.
-- **Validation performed:** Reviewed the revised PLAN-0004 against stakeholder constraints, PLAN-0002, accepted architecture, security, localization, and accessibility boundaries.
-- **Known failures or limitations:** Final Lovable-generated runtime, exact tokens, layout, navigation composition, and brand assets remain intentionally unresolved until execution.
+- **Current checkpoint:** Documentation refinement is complete and PR #7 is open with the revised PLAN-0004 and reconciled registry.
+- **Last completed step:** Final validation and pull-request delivery.
+- **Exact next action:** Repository owner reviews and merges PR #7. After merge, reconcile PLAN-0006 delivery to `Merged`, delete the working branch, and proceed with owner-level Lovable project setup under PLAN-0004.
+- **Blockers:** Owner review and merge are delivery dependencies, not execution blockers.
+- **Partially modified areas:** None.
+- **Validation performed:** Full documentation diff review and cross-check against product, architecture, security, localization, accessibility, and stakeholder constraints.
+- **Known failures or limitations:** Final Lovable runtime, exact tokens, layout, navigation composition, and brand assets remain intentionally unresolved until PLAN-0004 execution.
 - **Working tree state:** Clean after this commit.
 
 ## Progress log
@@ -162,24 +164,33 @@ No runtime or infrastructure change. Prototype mode is required to be controllab
 - **Checkpoint:** Registered the Lovable design-brief refinement.
 - **Changes included in the commit:** Added PLAN-0006; reconciled PLAN-0002 delivery; registered the active documentation work.
 - **Validation performed:** Reviewed current PLAN-0004, registry, PR #6 merge state, and stakeholder constraints.
-- **Result:** Refinement work is explicitly bounded and does not start frontend implementation.
+- **Result:** Refinement work was explicitly bounded and did not start frontend implementation.
 - **Next action:** Update PLAN-0004 with general design and prototype guidance.
 - **Blockers or handoff notes:** Do not introduce screen sketches or fixed layout instructions.
 
 ### 2026-07-29 — AI product and UX planning agent
 
 - **Checkpoint:** PLAN-0004 design and prototype brief refined.
-- **Changes included in the commit:** Rewrote PLAN-0004 to add general product personality, color/type/icon/image/motion direction, SPA and responsive principles, two fidelity layers, broad mock workflows, synthetic scenarios, development-only gallery, no-dead-control rule, mock/live isolation, refined Project Knowledge and Plan-mode prompt, tests, phases, risks, and acceptance criteria.
+- **Changes included in the commit:** Added general product personality, visual direction, SPA and responsive principles, two fidelity layers, broad mock workflows, synthetic scenarios, development-only gallery, no-dead-control rule, mock/live isolation, refined Project Knowledge and Plan-mode prompt, tests, phases, risks, and acceptance criteria.
 - **Validation performed:** Confirmed the document contains no screen sketch, ASCII wireframe, fixed navigation structure, or pixel-level layout. Confirmed only Layer A can connect to PLAN-0003 and Layer B remains synthetic.
 - **Result:** Lovable receives strong product direction while retaining page-design and information-architecture authority.
 - **Next action:** Perform final branch review and open the PR.
 - **Blockers or handoff notes:** None.
 
+### 2026-07-29 — AI product and UX planning agent
+
+- **Checkpoint:** Refinement validated and delivered.
+- **Changes included in the commit:** Marked PLAN-0006 completed; moved it to completed plans in the registry; recorded PR #7 and exact post-merge handoff.
+- **Validation performed:** Compared branch with `main`, reviewed three changed files, and verified all acceptance criteria.
+- **Result:** Documentation execution is complete; delivery remains PR open.
+- **Next action:** Owner reviews and merges PR #7.
+- **Blockers or handoff notes:** After merge, reconcile delivery and remove the working branch.
+
 ## Completion and handoff checklist
 
 - [x] PLAN-0004 refinement is complete.
 - [x] Validation confirms no rigid screen design was introduced.
-- [ ] Documentation and registry are synchronized after final PR delivery.
-- [ ] Pull request reports scope and validation.
+- [x] Documentation and registry are synchronized.
+- [x] Pull request reports scope and validation.
 - [x] PLAN-0004 remains ready for a future frontend agent.
-- [ ] Branch cleanup responsibility is recorded.
+- [x] Branch cleanup responsibility is recorded.
