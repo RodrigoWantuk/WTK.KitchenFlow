@@ -338,6 +338,27 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task AdjustmentValidationReturnsFieldErrorsAndTraceIdentifier()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var created = await CreateAsync(client, csrf, Guid.NewGuid().ToString());
+        var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+
+        var rejected = await AdjustmentAsync(client, csrf, lotId, created.Headers.ETag!.Tag, Guid.NewGuid().ToString(), new { type = "Consume", value = 0m, availabilityState = "Low", reasonCode = "", note = (string?)null });
+        var problem = await rejected.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal((System.Net.HttpStatusCode)422, rejected.StatusCode);
+        Assert.Equal("domain_rule_violated", problem.GetProperty("errorCode").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(problem.GetProperty("traceId").GetString()));
+        Assert.True(problem.GetProperty("errors").TryGetProperty("value", out _));
+        Assert.True(problem.GetProperty("errors").TryGetProperty("availabilityState", out _));
+        Assert.True(problem.GetProperty("errors").TryGetProperty("reasonCode", out _));
+    }
+
+    [Fact]
     public async Task CorrectRecordsPreviousAndResultingMeasuredQuantity()
     {
         await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);

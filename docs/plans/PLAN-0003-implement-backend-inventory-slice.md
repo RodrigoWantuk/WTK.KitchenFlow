@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend implementation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T16:46:43Z
+- **Last updated:** 2026-07-29T17:30:51Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, open)
 - **Related implementation plan:** PLAN-0002
@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Inventory routes map HTTP and CSRF only; the application-service seam owns command/query orchestration; client-visible lot versions are protected opaque tokens; PostgreSQL FK and quantity constraints are verified directly.
-- **Last completed step:** Added direct PostgreSQL integration coverage for orphaned-lot and negative-quantity rejection.
+- **Current checkpoint:** Inventory routes map HTTP and CSRF only; the application-service seam owns command/query orchestration; versions are protected opaque tokens; PostgreSQL constraints and field-level adjustment failures are directly verified.
+- **Last completed step:** Completed adjustment command validation for type, value, quantity mode, reason, and note, with deterministic field errors and nonempty trace IDs.
 - **Exact next action:** Move the application-service contract into `KitchenFlow.Modules.Inventory.Application` and provide an infrastructure persistence adapter, so the composition-root service becomes a thin adapter rather than the authoritative use-case implementation.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
-- **Validation performed:** Release build; targeted opaque-version and PostgreSQL-constraint integration tests; formatting verification; live HTTPS OpenAPI export; reproducible snapshot export and drift check; diff whitespace verification.
+- **Validation performed:** Release build; targeted opaque-version, PostgreSQL-constraint, and adjustment-error integration tests; formatting verification; live HTTPS OpenAPI export; reproducible snapshot export and drift check; diff whitespace verification.
 - **Known failures or limitations:** The application service is still in the API composition root and directly uses persistence. The required module-owned application contracts/ports and infrastructure adapter, complete XML documentation enforcement, broadened tests/CI, and operational runbooks remain unfinished. The regenerated snapshot is not yet a stable PLAN-0004 milestone because the broader correction work remains open.
-- **Working tree state:** PostgreSQL constraint-verification checkpoint is ready to commit with synchronized plan and registry updates.
+- **Working tree state:** Adjustment-validation checkpoint is ready to commit with synchronized plan and registry updates.
 
 ## Progress log
+
+### 2026-07-29T17:30:51Z — Codex backend implementation agent
+
+- **Checkpoint:** Completed field-level validation for inventory adjustment commands.
+- **Changes included in the commit:** Validated adjustment type, measured versus availability mode, decimal precision and sign, availability values, required bounded reason code, and bounded note before idempotency/persistence work; returned `422 domain_rule_violated` with an `errors` entry for every invalid field; guaranteed a nonempty Problem Details `traceId`; added an API integration test for multi-field adjustment failure.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx --configuration Release --no-restore`; targeted `AdjustmentValidationReturnsFieldErrorsAndTraceIdentifier` PostgreSQL/Testcontainers integration test (1 passed); `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; `git diff --check`.
+- **Result:** Invalid adjustment requests now fail before mutation with machine-readable field diagnostics and a support correlation identifier, while valid commands retain their idempotency and concurrency behavior.
+- **Known failures or unverified behavior:** The service boundary remains API-owned and persistence-coupled. Module application contracts/ports and an infrastructure adapter, XML documentation enforcement, broadened tests/CI, and operational runbooks remain open.
+- **Blockers:** None.
+- **Next action:** Define module-owned inventory use-case contracts and a persistence port, then move authoritative orchestration behind an infrastructure adapter.
 
 ### 2026-07-29T16:46:43Z — Codex backend implementation agent
 

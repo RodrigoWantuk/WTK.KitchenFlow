@@ -225,6 +225,11 @@ public sealed class InventoryApplicationService(
             return Problem(400, "validation_failed", "A UUID Idempotency-Key header is required.", FieldErrors("Idempotency-Key", "A UUID Idempotency-Key header is required."));
         }
 
+        if (!ValidateAdjustment(request, out var adjustmentErrors))
+        {
+            return Problem(422, "domain_rule_violated", adjustmentErrors.First().Value[0], adjustmentErrors);
+        }
+
         var user = await currentUser.GetOrCreateAsync(cancellationToken);
         var hash = Hash(new
         {
@@ -464,6 +469,56 @@ public sealed class InventoryApplicationService(
         error = measured || available ? null : "Quantity must be either a positive canonical measured value with a maximum of three decimal places or an availability state.";
         return error is null;
     }
+    private static bool ValidateAdjustment(AdjustmentRequest request, out IReadOnlyDictionary<string, string[]> errors)
+    {
+        var validationErrors = new Dictionary<string, string[]>(StringComparer.Ordinal);
+        var measuredCommand = request.Type is "Consume" or "Discard" or "Correct";
+        var availabilityCommand = request.Type == "AvailabilityChanged";
+        if (!measuredCommand && !availabilityCommand)
+        {
+            validationErrors["type"] = ["type must be Consume, Discard, Correct, or AvailabilityChanged."];
+        }
+
+        if (string.IsNullOrWhiteSpace(request.ReasonCode) || request.ReasonCode.Trim().Length > 100)
+        {
+            validationErrors["reasonCode"] = ["reasonCode is required and must be at most 100 characters."];
+        }
+
+        if (request.Note is not null && request.Note.Trim().Length > 1000)
+        {
+            validationErrors["note"] = ["note must be at most 1000 characters."];
+        }
+
+        if (measuredCommand)
+        {
+            var hasValidValue = request.Value is { } value && decimal.Round(value, 3) == value && (request.Type == "Correct" ? value >= 0m : value > 0m);
+            if (!hasValidValue)
+            {
+                validationErrors["value"] = [request.Type == "Correct" ? "value must be a nonnegative decimal with at most three decimal places." : "value must be a positive decimal with at most three decimal places."];
+            }
+
+            if (request.AvailabilityState is not null)
+            {
+                validationErrors["availabilityState"] = ["availabilityState is only valid for AvailabilityChanged."];
+            }
+        }
+
+        if (availabilityCommand)
+        {
+            if (request.Value is not null)
+            {
+                validationErrors["value"] = ["value must be omitted for AvailabilityChanged."];
+            }
+
+            if (request.AvailabilityState is not ("Available" or "Low" or "Unavailable"))
+            {
+                validationErrors["availabilityState"] = ["availabilityState must be Available, Low, or Unavailable."];
+            }
+        }
+
+        errors = validationErrors;
+        return validationErrors.Count == 0;
+    }
     private static string Hash<T>(T value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value))));
 
     private async Task<IResult> ReplayAfterIdempotencyRaceAsync(ApplicationDbContext database, Guid ownerUserId, string scope, Guid key, string hash, int successStatus, CancellationToken cancellationToken)
@@ -506,7 +561,7 @@ public sealed class InventoryApplicationService(
         var extensions = new Dictionary<string, object?>
         {
             ["errorCode"] = code,
-            ["traceId"] = Activity.Current?.Id
+            ["traceId"] = Activity.Current?.Id ?? ActivityTraceId.CreateRandom().ToString()
         };
         if (errors is not null)
         {
