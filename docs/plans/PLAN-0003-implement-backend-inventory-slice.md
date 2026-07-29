@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Strict manual-lot validation and metadata correction, including product-name correction, are verified against PostgreSQL.
-- **Last completed step:** Added noncanonical-quantity rejection and metadata correction API coverage and refreshed OpenAPI.
-- **Exact next action:** Add remaining two-user mutation and adjustment edge-case coverage, then run the real Keycloak authentication smoke validation.
+- **Current checkpoint:** Real Keycloak Authorization Code + PKCE smoke successfully establishes a backend-managed HTTPS session.
+- **Last completed step:** Corrected local OIDC configuration/HTTPS ports, identity issuer derivation, session UUID response, and development realm fixture profile data.
+- **Exact next action:** Add remaining two-user mutation and adjustment edge-case coverage, rate-limit/telemetry checks, and interactive browser validation.
 - **Blockers:** None.
-- **Partially modified areas:** Inventory contracts, API validation/mutation handling, inventory domain enum values, PostgreSQL API tests, and OpenAPI snapshot.
-- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`; fetched the live API OpenAPI document; `scripts/backend/check-openapi.sh`. All completed successfully; the integration suite has thirteen tests.
-- **Known failures or limitations:** Broader two-user mutation coverage, additional adjustment edge cases, rate-limit and telemetry-redaction checks, and real Keycloak login/logout smoke validation remain unfinished. The initial domain remains bounded to PLAN-0003 manual-lot operations.
-- **Working tree state:** Source, contract, and test changes are ready to commit with this synchronized plan state.
+- **Partially modified areas:** API authentication/session composition, identity mapping, local HTTPS launch configuration, development realm fixture, backend local-development documentation, and environment template.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/KitchenFlow.slnx -c Release --no-build`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; fetched the live API OpenAPI document; `scripts/backend/check-openapi.sh`; compose Keycloak Authorization Code + PKCE login/callback/session smoke over `https://localhost:7443`.
+- **Known failures or limitations:** The real-provider smoke is automated with a noninteractive HTTPS client that submits Keycloak's form-post callback; interactive graphical-browser validation, broader two-user mutation coverage, adjustment edge cases, rate limits, and telemetry-redaction checks remain unfinished. The initial domain remains bounded to PLAN-0003 manual-lot operations.
+- **Working tree state:** Source, realm, documentation, and environment changes are ready to commit with this synchronized plan state.
 
 ## Progress log
+
+### 2026-07-29T10:05:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Verified a real Keycloak Authorization Code + PKCE backend session over local HTTPS.
+- **Changes included in the commit:** Read documented `KITCHENFLOW_OIDC_*` configuration; aligned launch profiles to ports `7080` and `7443`; persisted configured local Data Protection keys; enforced secure host-cookie paths; derived internal identity from the actual OIDC claim issuer and subject; returned the internal UUID from `/api/v1/session`; protected logout with antiforgery and invoked local/OIDC sign-out; added synthetic Keycloak profile fields required by the provider's login flow; documented local configuration.
+- **Validation performed:** Release build; full test solution (2 architecture, 5 unit, 13 PostgreSQL integration tests); formatting verification; live OpenAPI export and drift verification; compose PostgreSQL/Keycloak readiness; live HTTPS OIDC challenge, Keycloak login, form-post callback, and `/api/v1/session` validation.
+- **Result:** All automated tests passed. The real-provider smoke returned a backend session with an internal user UUID and CSRF token and confirmed that no access or refresh token is exposed in the session response.
+- **Known failures or unverified behavior:** The real-provider path was driven by a noninteractive HTTPS client, so interactive graphical-browser login/logout remains unverified. Broader two-user mutation coverage, adjustment edge cases, rate limiting, and telemetry-redaction checks remain unfinished.
+- **Blockers:** None.
+- **Next action:** Add remaining authorization/reliability tests and telemetry/rate-limit behavior, then perform interactive browser validation before completion.
 
 ### 2026-07-29T04:45:00Z — Codex backend implementation agent
 

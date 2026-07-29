@@ -10,8 +10,9 @@ public sealed class CurrentUserService(ApplicationDbContext database, TimeProvid
     public async Task<InternalUser> GetOrCreateAsync(CancellationToken cancellationToken)
     {
         var principal = httpContextAccessor.HttpContext?.User ?? new ClaimsPrincipal();
-        var subject = principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? principal.FindFirstValue("sub");
-        var issuer = principal.FindFirstValue("iss") ?? principal.Identity?.AuthenticationType;
+        var subjectClaim = principal.FindFirst("sub") ?? principal.FindFirst(ClaimTypes.NameIdentifier);
+        var subject = subjectClaim?.Value;
+        var issuer = principal.FindFirstValue("iss") ?? principal.Claims.Select(claim => claim.Issuer).FirstOrDefault(claimIssuer => !string.IsNullOrWhiteSpace(claimIssuer) && claimIssuer != ClaimsIdentity.DefaultIssuer);
         if (string.IsNullOrWhiteSpace(subject) || string.IsNullOrWhiteSpace(issuer))
         {
             throw new UnauthorizedAccessException("The authenticated identity is incomplete.");
