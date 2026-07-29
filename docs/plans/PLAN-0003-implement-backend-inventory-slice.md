@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend implementation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T19:07:59Z
+- **Last updated:** 2026-07-29T19:18:40Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, open)
 - **Related implementation plan:** PLAN-0002
@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Inventory routes map HTTP and CSRF only; module-owned typed commands and lifecycle use cases execute adjustment and deletion transitions; SharedKernel and Inventory enforce XML documentation.
-- **Last completed step:** Documented every public Inventory entity and transaction member and enabled its XML documentation gate.
+- **Current checkpoint:** Inventory routes map HTTP and CSRF only; module-owned typed commands and lifecycle use cases execute adjustment and deletion transitions; SharedKernel and Inventory enforce XML documentation; CI now includes infrastructure, migration, and contract gates.
+- **Last completed step:** Expanded backend GitHub Actions validation with dependency, Compose, migration, health, OpenAPI export, and drift checks.
 - **Exact next action:** Move the application-service contract into `KitchenFlow.Modules.Inventory.Application` and provide an infrastructure persistence adapter, so the composition-root service becomes a thin adapter rather than the authoritative use-case implementation.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
-- **Validation performed:** Release build; six unit tests; formatting verification; diff whitespace verification; Inventory XML documentation enforcement build.
-- **Known failures or limitations:** The application service is still in the API composition root and directly uses persistence. XML documentation/enforcement for Identity, Infrastructure, and API public surface, module-owned application contracts/ports and infrastructure adapters, broadened tests/CI, and operational runbooks remain unfinished. The regenerated snapshot is not yet a stable PLAN-0004 milestone because the broader correction work remains open.
-- **Working tree state:** Inventory XML-documentation enforcement checkpoint is ready to commit with synchronized plan and registry updates.
+- **Validation performed:** Compose configuration validation; workflow diff whitespace verification; prior Release build, unit tests, formatting, and XML enforcement remain valid.
+- **Known failures or limitations:** The application service is still in the API composition root and directly uses persistence. XML documentation/enforcement for Identity, Infrastructure, and API public surface, module-owned application contracts/ports and infrastructure adapters, automated real-Keycloak login/two-user smoke, and operational runbooks remain unfinished. GitHub Actions has not run this new workflow revision yet, and Ruby YAML parsing was unavailable locally.
+- **Working tree state:** CI infrastructure/migration/OpenAPI checkpoint is ready to commit with synchronized plan and registry updates.
 
 ## Progress log
+
+### 2026-07-29T19:18:40Z — Codex backend implementation agent
+
+- **Checkpoint:** Expanded reproducible backend CI gates beyond restore/build/test.
+- **Changes included in the commit:** Added dependency vulnerability listing, Compose startup, PostgreSQL/Keycloak readiness, empty-database migration then upgrade, API readiness, OpenAPI export, checked-in snapshot verification, and drift check to the backend GitHub Actions workflow.
+- **Validation performed:** `docker compose -f infrastructure/compose/compose.dev.yml config --quiet`; `git diff --check`. Ruby was unavailable for local YAML parsing; the workflow has not yet executed in GitHub Actions.
+- **Result:** Pull requests touching the backend now have a reproducible CI definition for migration and OpenAPI drift safety in addition to formatting, build, and automated tests.
+- **Known failures or unverified behavior:** CI execution on GitHub is pending. Automated interactive Keycloak login and two-user browser smoke are not yet represented in CI. Module persistence ports/adapters, remaining project XML enforcement, and runbooks remain open.
+- **Blockers:** None.
+- **Next action:** Inspect the GitHub Actions result for this SHA, then implement the remaining module persistence-port extraction.
 
 ### 2026-07-29T19:07:59Z — Codex backend implementation agent
 

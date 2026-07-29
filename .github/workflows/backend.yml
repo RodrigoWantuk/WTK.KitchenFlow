@@ -30,6 +30,32 @@ jobs:
         with:
           dotnet-version: 10.0.302
       - run: dotnet restore KitchenFlow.slnx --locked-mode
+      - run: dotnet list KitchenFlow.slnx package --vulnerable --include-transitive
       - run: dotnet format KitchenFlow.slnx --verify-no-changes --no-restore
       - run: dotnet build KitchenFlow.slnx -c Release --no-restore
       - run: dotnet test KitchenFlow.slnx -c Release --no-build
+      - name: Start required local dependencies
+        working-directory: .
+        run: docker compose -f infrastructure/compose/compose.dev.yml up -d postgres keycloak
+      - name: Wait for PostgreSQL and Keycloak readiness
+        working-directory: .
+        run: |
+          timeout 120 bash -c 'until docker compose -f infrastructure/compose/compose.dev.yml ps --status running postgres | grep -q postgres; do sleep 2; done'
+          timeout 120 bash -c 'until curl --fail --silent http://127.0.0.1:8080/realms/kitchenflow/.well-known/openid-configuration >/dev/null; do sleep 2; done'
+      - name: Apply empty-database migration and upgrade
+        working-directory: .
+        run: |
+          dotnet tool install --tool-path /tmp/kitchenflow-tools dotnet-ef --version 10.0.3
+          /tmp/kitchenflow-tools/dotnet-ef database update 20260729013459_InitialInventorySlice --project apps/backend/src/KitchenFlow.Infrastructure/KitchenFlow.Infrastructure.csproj --startup-project apps/backend/src/KitchenFlow.Api/KitchenFlow.Api.csproj --configuration Release --no-build
+          /tmp/kitchenflow-tools/dotnet-ef database update --project apps/backend/src/KitchenFlow.Infrastructure/KitchenFlow.Infrastructure.csproj --startup-project apps/backend/src/KitchenFlow.Api/KitchenFlow.Api.csproj --configuration Release --no-build
+      - name: Export and verify OpenAPI drift
+        working-directory: .
+        env:
+          KITCHENFLOW_DB_CONNECTION: Host=127.0.0.1;Port=5432;Database=kitchenflow;Username=kitchenflow_dev;Password=development-only-change-me
+          KITCHENFLOW_OPENAPI_URL: http://127.0.0.1:7080/openapi/v1.json
+        run: |
+          dotnet run --project apps/backend/src/KitchenFlow.Api/KitchenFlow.Api.csproj --configuration Release --no-build --urls http://127.0.0.1:7080 >/tmp/kitchenflow-api.log 2>&1 &
+          timeout 120 bash -c 'until curl --fail --silent http://127.0.0.1:7080/health/ready >/dev/null; do sleep 2; done'
+          bash scripts/backend/export-openapi.sh
+          git diff --exit-code -- packages/contracts/openapi/kitchenflow-v1.json
+          bash scripts/backend/check-openapi.sh
