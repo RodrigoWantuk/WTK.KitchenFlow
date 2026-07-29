@@ -483,9 +483,9 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Runtime health, readiness, and unauthenticated API behavior are validated against real PostgreSQL.
-- **Last completed step:** Corrected database configuration precedence and API cookie challenge behavior.
-- **Exact next action:** Complete idempotency replay for adjustments, pagination/query filters, integration/architecture tests, OpenAPI artifact tooling, and authenticated smoke tests.
+- **Current checkpoint:** OpenAPI snapshot plus architecture and real-PostgreSQL migration tests pass.
+- **Last completed step:** Added executable architecture boundary and Testcontainers migration tests.
+- **Exact next action:** Add API isolation/security tests and run real Keycloak authentication smoke validation.
 - **Blockers:** None.
 - **Partially modified areas:** None.
 - **Validation performed:** Previous foundation validation plus `dotnet restore apps/backend/KitchenFlow.slnx --force-evaluate` and `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`. Restore and build passed with zero warnings/errors after compatible dependency pins were selected.
@@ -621,3 +621,11 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - [ ] PR reports all validation and limitations.
 - [ ] No hidden partial work remains.
 - [ ] Branch cleanup responsibility is recorded.
+### 2026-07-29T02:10:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Added executable architecture and real-PostgreSQL migration tests.
+- **Changes included in the commit:** Added module-boundary, persistence-leak, and Testcontainers migration tests.
+- **Validation performed:** Release build; architecture tests (2 passed); PostgreSQL integration test (1 passed).
+- **Result:** Domain boundaries and empty-database migration are now automatically verified.
+- **Next action:** Add API isolation/security tests and run real Keycloak authentication smoke validation.
+- **Blockers or handoff notes:** The endpoint/security test matrix remains incomplete.
