@@ -647,3 +647,12 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Result:** Cross-user lot enumeration by ID is denied without disclosing existence.
 - **Next action:** Add state-changing CSRF, ETag, idempotency, and adjustment behavior tests; complete Keycloak authentication smoke validation.
 - **Blockers or handoff notes:** Full two-user mutation/list/history matrix remains incomplete.
+
+### 2026-07-29T03:10:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Added passing API CSRF and create-idempotency integration tests.
+- **Changes included in the commit:** Added state-changing request rejection without CSRF and completed-create replay assertions using the same idempotency key.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; PostgreSQL API integration suite (6 passed).
+- **Result:** Cookie-authenticated inventory mutations require CSRF; same-key identical create commands return `201` without a duplicate lot.
+- **Next action:** Test different-payload idempotency conflict, ETag preconditions, adjustments/history, and real Keycloak login/logout.
+- **Blockers or handoff notes:** Adjustment idempotency replay and broader mutation isolation coverage remain incomplete.
