@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend implementation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T12:45:00Z
+- **Last updated:** 2026-07-29T13:00:00Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, open)
 - **Related implementation plan:** PLAN-0002
@@ -483,16 +483,27 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Current `main` is merged; the immediate environment and quality defects from review are corrected, while the architecture/domain refactor remains the active substantial outcome.
-- **Last completed step:** Restored HTTPS-only cookie development, the PostgreSQL data-directory mount, Markdown/Makefile editor rules, and a meaningful unit invariant in place of the no-op test.
-- **Exact next action:** Refactor inventory endpoint execution into module application services backed by authoritative domain behavior, then add persistence constraints and concurrency-safe idempotency.
+- **Current checkpoint:** Current `main`, immediate review defects, and PostgreSQL referential/domain integrity are corrected; the module application-service/domain refactor is the active substantial outcome.
+- **Last completed step:** Added the referential-integrity migration and database constraints that prevent orphaned, cross-owner, invalid-unit/state, negative-value, and invalid storage/provenance records.
+- **Exact next action:** Refactor inventory endpoint execution into module application services backed by authoritative domain behavior, then make idempotency concurrency-safe and expand migration-constraint tests.
 - **Blockers:** None.
-- **Partially modified areas:** Backend local-development configuration, repository formatting settings, unit-test coverage, and active-plan state.
-- **Validation performed:** Fetched `origin/main` at `dd2b6005a0a1c2af00f945e8645b44565ad1a85a`; read the consolidated PR #9 review and all unresolved review threads; `docker compose -f infrastructure/compose/compose.dev.yml config`.
-- **Known failures or limitations:** The application/domain, persistence-integrity, OpenAPI, error-contract, concurrency, documentation, CI, and runbook corrections remain unfinished. The current snapshot is not a stable PLAN-0004 contract.
-- **Working tree state:** The baseline-correction commit is ready to create; larger refactoring has not started in the working tree.
+- **Partially modified areas:** EF Core model, generated integrity migration/model snapshot, and active-plan state.
+- **Validation performed:** `dotnet tool run dotnet-ef migrations add EnforceInventoryReferentialIntegrity --project apps/backend/src/KitchenFlow.Infrastructure/KitchenFlow.Infrastructure.csproj --startup-project apps/backend/src/KitchenFlow.Api/KitchenFlow.Api.csproj --output-dir Persistence/Migrations`; `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`.
+- **Known failures or limitations:** The application/domain, idempotency-concurrency, OpenAPI/error-contract, XML documentation, expanded test/CI, and runbook corrections remain unfinished. The current snapshot is not a stable PLAN-0004 contract. EF tooling reports a non-failing local `10.0.3` tool versus `10.0.4` runtime advisory.
+- **Working tree state:** The referential-integrity migration checkpoint is ready to commit.
 
 ## Progress log
+
+### 2026-07-29T13:00:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Enforced PostgreSQL referential and owner integrity for the inventory slice.
+- **Changes included in the commit:** Added `EnforceInventoryReferentialIntegrity`; foreign keys from user-owned records to internal users; composite `(Id, OwnerUserId)` keys ensuring lots use an owned product and transactions use an owned lot; nonnegative measured values; controlled units, availability, package state, storage/custom-location, and expiration-provenance constraints.
+- **Documentation and code documentation delivered:** Updated the active plan and registry with the database-invariant correction and the remaining architecture work.
+- **Validation performed:** Generated the migration with `dotnet-ef`; Release build; PostgreSQL/Testcontainers integration test project.
+- **Result:** The migration compiles and the existing PostgreSQL API/migration suite passes with the stricter schema.
+- **Known failures or unverified behavior:** Dedicated constraint-violation assertions, module application services, concurrent idempotency, OpenAPI/error contract, XML documentation, CI, and runbook corrections remain open.
+- **Blockers:** None.
+- **Next action:** Move executable inventory behavior into application services that use the inventory domain model, then add direct constraint and concurrency coverage.
 
 ### 2026-07-29T12:45:00Z — Codex backend implementation agent
 
