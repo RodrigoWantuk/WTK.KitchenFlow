@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend implementation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T19:18:40Z
+- **Last updated:** 2026-07-29T19:27:24Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, open)
 - **Related implementation plan:** PLAN-0002
@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Inventory routes map HTTP and CSRF only; module-owned typed commands and lifecycle use cases execute adjustment and deletion transitions; SharedKernel and Inventory enforce XML documentation; CI now includes infrastructure, migration, and contract gates.
-- **Last completed step:** Expanded backend GitHub Actions validation with dependency, Compose, migration, health, OpenAPI export, and drift checks.
+- **Current checkpoint:** Inventory routes map HTTP and CSRF only; SharedKernel, Inventory, and Identity enforce XML documentation; CI defines infrastructure, migration, and contract gates.
+- **Last completed step:** Added XML documentation and CS1591 enforcement to Identity's internal OIDC identity mapping.
 - **Exact next action:** Move the application-service contract into `KitchenFlow.Modules.Inventory.Application` and provide an infrastructure persistence adapter, so the composition-root service becomes a thin adapter rather than the authoritative use-case implementation.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
-- **Validation performed:** Compose configuration validation; workflow diff whitespace verification; prior Release build, unit tests, formatting, and XML enforcement remain valid.
-- **Known failures or limitations:** The application service is still in the API composition root and directly uses persistence. XML documentation/enforcement for Identity, Infrastructure, and API public surface, module-owned application contracts/ports and infrastructure adapters, automated real-Keycloak login/two-user smoke, and operational runbooks remain unfinished. GitHub Actions has not run this new workflow revision yet, and Ruby YAML parsing was unavailable locally.
-- **Working tree state:** CI infrastructure/migration/OpenAPI checkpoint is ready to commit with synchronized plan and registry updates.
+- **Validation performed:** Identity XML documentation enforcement build; Release build; formatting verification; diff whitespace verification.
+- **Known failures or limitations:** The application service is still in the API composition root and directly uses persistence. Infrastructure XML enforcement has 71 documented missing members, primarily EF persistence records; API XML enforcement, module ports/adapters, automated real-Keycloak login/two-user smoke, and operational runbooks remain unfinished. GitHub Actions has not run this new workflow revision yet, and Ruby YAML parsing was unavailable locally.
+- **Working tree state:** Identity XML-documentation enforcement checkpoint is ready to commit with synchronized plan and registry updates.
 
 ## Progress log
+
+### 2026-07-29T19:27:24Z — Codex backend implementation agent
+
+- **Checkpoint:** Completed Identity module XML documentation and enforcement.
+- **Changes included in the commit:** Documented the internal user OIDC issuer/subject mapping and all its public members; enabled XML documentation generation and `CS1591` warnings-as-errors for `KitchenFlow.Modules.Identity`.
+- **Validation performed:** `dotnet build apps/backend/src/KitchenFlow.Modules.Identity/KitchenFlow.Modules.Identity.csproj --configuration Release --no-restore /p:GenerateDocumentationFile=true /p:WarningsAsErrors=CS1591`; `dotnet build apps/backend/KitchenFlow.slnx --configuration Release --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; `git diff --check`.
+- **Result:** Identity now rejects undocumented public API at build time. The Infrastructure diagnostic identified 71 remaining public XML comments before its equivalent enforcement can be enabled.
+- **Known failures or unverified behavior:** Infrastructure/API XML enforcement, module persistence ports/adapters, real-Keycloak automated smoke, CI execution evidence, and runbooks remain open.
+- **Blockers:** None.
+- **Next action:** Document Infrastructure persistence records and enable Infrastructure XML enforcement, then return to persistence-port extraction.
 
 ### 2026-07-29T19:18:40Z — Codex backend implementation agent
 
