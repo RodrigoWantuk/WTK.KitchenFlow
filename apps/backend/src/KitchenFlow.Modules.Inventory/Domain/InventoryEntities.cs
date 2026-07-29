@@ -1,5 +1,6 @@
 namespace KitchenFlow.Modules.Inventory.Domain;
 
+/// <summary>User-owned product referenced by one or more inventory lots.</summary>
 public sealed class Product
 {
     private Product(Guid id, Guid ownerUserId, ProductName name, DateTimeOffset now)
@@ -12,20 +13,28 @@ public sealed class Product
         UpdatedAt = now;
     }
 
+    /// <summary>Gets the internal product identifier.</summary>
     public Guid Id { get; private set; }
 
+    /// <summary>Gets the internal owner identifier.</summary>
     public Guid OwnerUserId { get; private set; }
 
+    /// <summary>Gets the user-visible product name.</summary>
     public string DisplayName { get; private set; }
 
+    /// <summary>Gets the normalized product search value.</summary>
     public string NormalizedSearchName { get; private set; }
 
+    /// <summary>Gets the UTC creation instant.</summary>
     public DateTimeOffset CreatedAt { get; private set; }
 
+    /// <summary>Gets the UTC instant of the last correction.</summary>
     public DateTimeOffset UpdatedAt { get; private set; }
 
+    /// <summary>Gets whether the product is soft-deleted.</summary>
     public bool IsDeleted { get; private set; }
 
+    /// <summary>Creates a product owned by one internal user.</summary>
     public static Product Create(Guid ownerUserId, ProductName name, DateTimeOffset now) =>
         new(Guid.NewGuid(), ownerUserId, name, now);
 
@@ -45,6 +54,7 @@ public sealed class Product
     }
 }
 
+/// <summary>Authoritative user-owned inventory lot with quantity, lifecycle, and concurrency state.</summary>
 public sealed class InventoryLot
 {
     private InventoryLot(
@@ -71,32 +81,46 @@ public sealed class InventoryLot
         UpdatedAt = now;
     }
 
+    /// <summary>Gets the internal lot identifier.</summary>
     public Guid Id { get; private set; }
 
+    /// <summary>Gets the internal owner identifier.</summary>
     public Guid OwnerUserId { get; private set; }
 
+    /// <summary>Gets the referenced user-owned product identifier.</summary>
     public Guid ProductId { get; private set; }
 
+    /// <summary>Gets the measured or qualitative quantity mode.</summary>
     public LotQuantity Quantity { get; private set; }
 
+    /// <summary>Gets the required storage location.</summary>
     public LotStorage Storage { get; private set; }
 
+    /// <summary>Gets the optional package state.</summary>
     public PackageState? PackageState { get; private set; }
 
+    /// <summary>Gets optional printed expiration evidence.</summary>
     public PrintedExpiration? PrintedExpiration { get; private set; }
 
+    /// <summary>Gets optional private notes.</summary>
     public PrivateNotes? Notes { get; private set; }
 
+    /// <summary>Gets the internal monotonically increasing concurrency version.</summary>
     public long Version { get; private set; }
 
+    /// <summary>Gets the UTC creation instant.</summary>
     public DateTimeOffset CreatedAt { get; private set; }
 
+    /// <summary>Gets the UTC instant of the last successful mutation.</summary>
     public DateTimeOffset UpdatedAt { get; private set; }
 
+    /// <summary>Gets the soft-deletion instant, when deleted.</summary>
     public DateTimeOffset? DeletedAt { get; private set; }
 
+    /// <summary>Gets whether the lot is soft-deleted.</summary>
     public bool IsDeleted => DeletedAt is not null;
 
+    /// <summary>Creates an active lot with initial version one.</summary>
     public static InventoryLot Create(
         Guid ownerUserId,
         Guid productId,
@@ -132,6 +156,7 @@ public sealed class InventoryLot
         return lot;
     }
 
+    /// <summary>Corrects mutable metadata and advances the concurrency version.</summary>
     public void UpdateMetadata(
         LotStorage storage,
         PackageState? packageState,
@@ -147,6 +172,7 @@ public sealed class InventoryLot
         Touch(now);
     }
 
+    /// <summary>Applies a measured consume, discard, or resulting-quantity correction.</summary>
     public InventoryTransaction AdjustMeasured(
         InventoryTransactionType type,
         decimal value,
@@ -180,6 +206,7 @@ public sealed class InventoryLot
         return InventoryTransaction.Create(Id, OwnerUserId, type, previous, resulting, reasonCode, note, idempotencyKey, now);
     }
 
+    /// <summary>Changes qualitative availability and records immutable history.</summary>
     public InventoryTransaction ChangeAvailability(
         AvailabilityState state,
         string? reasonCode,
@@ -199,6 +226,7 @@ public sealed class InventoryLot
         return InventoryTransaction.Create(Id, OwnerUserId, InventoryTransactionType.AvailabilityChanged, previous, resulting, reasonCode, note, idempotencyKey, now);
     }
 
+    /// <summary>Soft-deletes the lot and records immutable deletion history.</summary>
     public InventoryTransaction Delete(string? reasonCode, string? note, DateTimeOffset now)
     {
         EnsureActive();
@@ -222,6 +250,7 @@ public sealed class InventoryLot
     }
 }
 
+/// <summary>Immutable record of an inventory lifecycle transition.</summary>
 public sealed class InventoryTransaction
 {
     private InventoryTransaction(
@@ -248,26 +277,37 @@ public sealed class InventoryTransaction
         OccurredAt = occurredAt;
     }
 
+    /// <summary>Gets the transaction identifier.</summary>
     public Guid Id { get; private set; }
 
+    /// <summary>Gets the affected lot identifier.</summary>
     public Guid LotId { get; private set; }
 
+    /// <summary>Gets the transaction owner identifier.</summary>
     public Guid OwnerUserId { get; private set; }
 
+    /// <summary>Gets the immutable transition type.</summary>
     public InventoryTransactionType Type { get; private set; }
 
+    /// <summary>Gets the quantity before the transition, when applicable.</summary>
     public LotQuantity? PreviousQuantity { get; private set; }
 
+    /// <summary>Gets the quantity after the transition, when applicable.</summary>
     public LotQuantity? ResultingQuantity { get; private set; }
 
+    /// <summary>Gets the stable reason code, when supplied.</summary>
     public string? ReasonCode { get; private set; }
 
+    /// <summary>Gets the optional private note.</summary>
     public string? Note { get; private set; }
 
+    /// <summary>Gets the client idempotency key, when applicable.</summary>
     public Guid? IdempotencyKey { get; private set; }
 
+    /// <summary>Gets the UTC transition instant.</summary>
     public DateTimeOffset OccurredAt { get; private set; }
 
+    /// <summary>Creates an immutable lifecycle transaction.</summary>
     public static InventoryTransaction Create(
         Guid lotId,
         Guid ownerUserId,

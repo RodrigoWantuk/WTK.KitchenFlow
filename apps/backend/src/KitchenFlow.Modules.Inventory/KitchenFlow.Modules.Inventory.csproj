@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <AssemblyName>KitchenFlow.Modules.Inventory</AssemblyName>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
