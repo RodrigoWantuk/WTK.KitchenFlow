@@ -22,16 +22,18 @@
             ]
           },
           "type": {
+            "enum": [
+              "Consume",
+              "Discard",
+              "Correct",
+              "AvailabilityChanged"
+            ],
             "type": "string"
           },
           "value": {
-            "format": "double",
+            "format": "decimal",
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
-            "type": [
-              "null",
-              "number",
-              "string"
-            ]
+            "type": "number"
           }
         },
         "required": [
@@ -58,10 +60,12 @@
             ]
           },
           "packageState": {
-            "type": [
-              "null",
-              "string"
-            ]
+            "enum": [
+              "Sealed",
+              "Opened",
+              "Unknown"
+            ],
+            "type": "string"
           },
           "printedExpirationDate": {
             "format": "date",
@@ -77,6 +81,12 @@
             "$ref": "#/components/schemas/QuantityRequest"
           },
           "storageLocation": {
+            "enum": [
+              "Pantry",
+              "Refrigerator",
+              "Freezer",
+              "Other"
+            ],
             "type": "string"
           }
         },
@@ -247,6 +257,17 @@
               "string"
             ]
           },
+          "errorCode": {
+            "description": "Stable machine-readable KitchenFlow error code.",
+            "type": "string"
+          },
+          "errors": {
+            "additionalProperties": {
+              "type": "array"
+            },
+            "description": "Field-level validation messages keyed by request field name.",
+            "type": "object"
+          },
           "instance": {
             "type": [
               "null",
@@ -268,6 +289,10 @@
               "string"
             ]
           },
+          "traceId": {
+            "description": "Correlation identifier suitable for support without exposing private request data.",
+            "type": "string"
+          },
           "type": {
             "type": [
               "null",
@@ -280,25 +305,25 @@
       "QuantityRequest": {
         "properties": {
           "availabilityState": {
-            "type": [
-              "null",
-              "string"
-            ]
+            "enum": [
+              "Available",
+              "Low",
+              "Unavailable"
+            ],
+            "type": "string"
           },
           "measuredValue": {
-            "format": "double",
+            "format": "decimal",
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
-            "type": [
-              "null",
-              "number",
-              "string"
-            ]
+            "type": "number"
           },
           "unit": {
-            "type": [
-              "null",
-              "string"
-            ]
+            "enum": [
+              "Gram",
+              "Milliliter",
+              "Unit"
+            ],
+            "type": "string"
           }
         },
         "required": [
@@ -311,31 +336,54 @@
       "QuantityResponse": {
         "properties": {
           "availabilityState": {
-            "type": [
-              "null",
-              "string"
-            ]
+            "enum": [
+              "Available",
+              "Low",
+              "Unavailable"
+            ],
+            "type": "string"
           },
           "measuredValue": {
-            "format": "double",
+            "format": "decimal",
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
-            "type": [
-              "null",
-              "number",
-              "string"
-            ]
+            "type": "number"
           },
           "unit": {
-            "type": [
-              "null",
-              "string"
-            ]
+            "enum": [
+              "Gram",
+              "Milliliter",
+              "Unit"
+            ],
+            "type": "string"
           }
         },
         "required": [
           "measuredValue",
           "unit",
           "availabilityState"
+        ],
+        "type": "object"
+      },
+      "SessionResponse": {
+        "properties": {
+          "csrfToken": {
+            "type": "string"
+          },
+          "supportedLocales": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "userId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "csrfToken",
+          "supportedLocales"
         ],
         "type": "object"
       },
@@ -354,10 +402,12 @@
             ]
           },
           "packageState": {
-            "type": [
-              "null",
-              "string"
-            ]
+            "enum": [
+              "Sealed",
+              "Opened",
+              "Unknown"
+            ],
+            "type": "string"
           },
           "printedExpirationDate": {
             "format": "date",
@@ -373,6 +423,12 @@
             ]
           },
           "storageLocation": {
+            "enum": [
+              "Pantry",
+              "Refrigerator",
+              "Freezer",
+              "Other"
+            ],
             "type": "string"
           }
         },
@@ -385,6 +441,14 @@
           "notes"
         ],
         "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "kitchenflowSession": {
+        "description": "Backend-managed, secure HttpOnly session cookie. Browser code must not read or store OIDC tokens.",
+        "in": "cookie",
+        "name": "__Host-kitchenflow-session",
+        "type": "apiKey"
       }
     }
   },
@@ -403,11 +467,17 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Required CSRF token issued by GET /api/v1/session.",
+            "in": "header",
+            "name": "X-CSRF-TOKEN",
+            "required": true
           }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "302": {
+            "description": "Found"
           }
         },
         "tags": [
@@ -417,11 +487,44 @@
     },
     "/api/v1/auth/logout": {
       "post": {
+        "parameters": [
+          {
+            "description": "Required CSRF token issued by GET /api/v1/session.",
+            "in": "header",
+            "name": "X-CSRF-TOKEN",
+            "required": true
+          }
+        ],
         "responses": {
-          "200": {
-            "description": "OK"
+          "302": {
+            "description": "Found"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
           }
         },
+        "security": [
+          {
+            "kitchenflowSession": []
+          }
+        ],
         "tags": [
           "KitchenFlow.Api"
         ]
@@ -480,7 +583,12 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "OK",
+            "headers": {
+              "ETag": {
+                "description": "Opaque current version required by If-Match on subsequent mutations."
+              }
+            }
           },
           "400": {
             "content": {
@@ -493,14 +601,51 @@
             "description": "Bad Request"
           }
         },
+        "security": [
+          {
+            "kitchenflowSession": []
+          }
+        ],
         "tags": [
           "InventoryEndpoints"
         ]
       },
       "post": {
+        "parameters": [
+          {
+            "description": "Required CSRF token issued by GET /api/v1/session.",
+            "in": "header",
+            "name": "X-CSRF-TOKEN",
+            "required": true
+          },
+          {
+            "description": "Required UUID key for semantic create or adjustment replay.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
+              "examples": {
+                "measuredLot": {
+                  "summary": "A manually entered measured pantry lot.",
+                  "value": {
+                    "customLocation": null,
+                    "notes": null,
+                    "packageState": "Sealed",
+                    "printedExpirationDate": "2026-12-31",
+                    "productName": "Red lentils",
+                    "quantity": {
+                      "availabilityState": null,
+                      "measuredValue": 500,
+                      "unit": "Gram"
+                    },
+                    "storageLocation": "Pantry"
+                  }
+                }
+              },
               "schema": {
                 "$ref": "#/components/schemas/CreateLotRequest"
               }
@@ -517,7 +662,12 @@
                 }
               }
             },
-            "description": "Created"
+            "description": "Created",
+            "headers": {
+              "ETag": {
+                "description": "Opaque current version required by If-Match on subsequent mutations."
+              }
+            }
           },
           "400": {
             "content": {
@@ -542,6 +692,15 @@
           "422": {
             "content": {
               "application/problem+json": {
+                "examples": {
+                  "invalidQuantity": {
+                    "summary": "A measured and availability quantity cannot be supplied together.",
+                    "value": {
+                      "errorCode": "domain_rule_violated",
+                      "status": 422
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -550,6 +709,11 @@
             "description": "Unprocessable Entity"
           }
         },
+        "security": [
+          {
+            "kitchenflowSession": []
+          }
+        ],
         "tags": [
           "InventoryEndpoints"
         ]
@@ -566,6 +730,18 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "description": "Required CSRF token issued by GET /api/v1/session.",
+            "in": "header",
+            "name": "X-CSRF-TOKEN",
+            "required": true
+          },
+          {
+            "description": "Required opaque concurrency ETag from the current lot representation.",
+            "in": "header",
+            "name": "If-Match",
+            "required": true
           }
         ],
         "responses": {
@@ -603,6 +779,11 @@
             "description": "Precondition Required"
           }
         },
+        "security": [
+          {
+            "kitchenflowSession": []
+          }
+        ],
         "tags": [
           "InventoryEndpoints"
         ]
@@ -628,7 +809,12 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "OK",
+            "headers": {
+              "ETag": {
+                "description": "Opaque current version required by If-Match on subsequent mutations."
+              }
+            }
           },
           "404": {
             "content": {
@@ -641,6 +827,11 @@
             "description": "Not Found"
           }
         },
+        "security": [
+          {
+            "kitchenflowSession": []
+          }
+        ],
         "tags": [
           "InventoryEndpoints"
         ]
@@ -655,6 +846,18 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "description": "Required CSRF token issued by GET /api/v1/session.",
+            "in": "header",
+            "name": "X-CSRF-TOKEN",
+            "required": true
+          },
+          {
+            "description": "Required opaque concurrency ETag from the current lot representation.",
+            "in": "header",
+            "name": "If-Match",
+            "required": true
           }
         ],
         "requestBody": {
@@ -676,7 +879,12 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "OK",
+            "headers": {
+              "ETag": {
+                "description": "Opaque current version required by If-Match on subsequent mutations."
+              }
+            }
           },
           "404": {
             "content": {
@@ -719,6 +927,11 @@
             "description": "Precondition Required"
           }
         },
+        "security": [
+          {
+            "kitchenflowSession": []
+          }
+        ],
         "tags": [
           "InventoryEndpoints"
         ]
@@ -735,11 +948,41 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "description": "Required CSRF token issued by GET /api/v1/session.",
+            "in": "header",
+            "name": "X-CSRF-TOKEN",
+            "required": true
+          },
+          {
+            "description": "Required opaque concurrency ETag from the current lot representation.",
+            "in": "header",
+            "name": "If-Match",
+            "required": true
+          },
+          {
+            "description": "Required UUID key for semantic create or adjustment replay.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true
           }
         ],
         "requestBody": {
           "content": {
             "application/json": {
+              "examples": {
+                "consume": {
+                  "summary": "Consumes a measured quantity from the current lot version.",
+                  "value": {
+                    "availabilityState": null,
+                    "note": null,
+                    "reasonCode": "meal",
+                    "type": "Consume",
+                    "value": 125
+                  }
+                }
+              },
               "schema": {
                 "$ref": "#/components/schemas/AdjustmentRequest"
               }
@@ -756,7 +999,12 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "OK",
+            "headers": {
+              "ETag": {
+                "description": "Opaque current version required by If-Match on subsequent mutations."
+              }
+            }
           },
           "400": {
             "content": {
@@ -781,6 +1029,15 @@
           "409": {
             "content": {
               "application/problem+json": {
+                "examples": {
+                  "reusedIdempotencyKey": {
+                    "summary": "The key was used for a different semantic command.",
+                    "value": {
+                      "errorCode": "idempotency_key_reused",
+                      "status": 409
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -791,6 +1048,15 @@
           "412": {
             "content": {
               "application/problem+json": {
+                "examples": {
+                  "staleEtag": {
+                    "summary": "The supplied opaque ETag is no longer current.",
+                    "value": {
+                      "errorCode": "precondition_failed",
+                      "status": 412
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -819,6 +1085,11 @@
             "description": "Precondition Required"
           }
         },
+        "security": [
+          {
+            "kitchenflowSession": []
+          }
+        ],
         "tags": [
           "InventoryEndpoints"
         ]
@@ -849,7 +1120,12 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "OK",
+            "headers": {
+              "ETag": {
+                "description": "Opaque current version required by If-Match on subsequent mutations."
+              }
+            }
           },
           "404": {
             "content": {
@@ -862,6 +1138,11 @@
             "description": "Not Found"
           }
         },
+        "security": [
+          {
+            "kitchenflowSession": []
+          }
+        ],
         "tags": [
           "InventoryEndpoints"
         ]
@@ -871,9 +1152,36 @@
       "get": {
         "responses": {
           "200": {
-            "description": "OK"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "ETag": {
+                "description": "Opaque current version required by If-Match on subsequent mutations."
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
           }
         },
+        "security": [
+          {
+            "kitchenflowSession": []
+          }
+        ],
         "tags": [
           "KitchenFlow.Api"
         ]
@@ -906,7 +1214,7 @@
   },
   "servers": [
     {
-      "url": "http://127.0.0.1:7080/"
+      "url": "https://127.0.0.1:7443/"
     }
   ],
   "tags": [

@@ -55,7 +55,17 @@ public sealed class TelemetryRedactionTests
         Assert.Contains(createParameters.EnumerateArray(), parameter => parameter.GetProperty("name").GetString() == "Idempotency-Key");
         Assert.True(sessionResponses.GetProperty("200").GetProperty("content").GetProperty("application/json").TryGetProperty("schema", out _));
 
-        var problemProperties = document.GetProperty("components").GetProperty("schemas").GetProperty("ProblemDetails").GetProperty("properties");
+        var schemas = document.GetProperty("components").GetProperty("schemas");
+        var measuredValue = schemas.GetProperty("QuantityRequest").GetProperty("properties").GetProperty("measuredValue");
+        var quantityUnit = schemas.GetProperty("QuantityRequest").GetProperty("properties").GetProperty("unit");
+        var adjustmentType = schemas.GetProperty("AdjustmentRequest").GetProperty("properties").GetProperty("type");
+
+        Assert.Equal("number", measuredValue.GetProperty("type").GetString());
+        Assert.Equal("decimal", measuredValue.GetProperty("format").GetString());
+        Assert.Contains(quantityUnit.GetProperty("enum").EnumerateArray(), value => value.GetString() == "Gram");
+        Assert.Contains(adjustmentType.GetProperty("enum").EnumerateArray(), value => value.GetString() == "AvailabilityChanged");
+
+        var problemProperties = schemas.GetProperty("ProblemDetails").GetProperty("properties");
         Assert.True(problemProperties.TryGetProperty("errorCode", out _));
         Assert.True(problemProperties.TryGetProperty("traceId", out _));
         Assert.True(problemProperties.TryGetProperty("errors", out _));

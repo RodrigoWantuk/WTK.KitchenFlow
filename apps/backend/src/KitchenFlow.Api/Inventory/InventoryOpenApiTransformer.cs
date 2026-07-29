@@ -38,6 +38,19 @@ internal static class InventoryOpenApiTransformer
             };
         }
 
+        ConfigureDecimal(components, "QuantityRequest", "measuredValue");
+        ConfigureDecimal(components, "QuantityResponse", "measuredValue");
+        ConfigureDecimal(components, "AdjustmentRequest", "value");
+        ConfigureStringEnum(components, "QuantityRequest", "unit", "Gram", "Milliliter", "Unit");
+        ConfigureStringEnum(components, "QuantityResponse", "unit", "Gram", "Milliliter", "Unit");
+        ConfigureStringEnum(components, "QuantityRequest", "availabilityState", "Available", "Low", "Unavailable");
+        ConfigureStringEnum(components, "QuantityResponse", "availabilityState", "Available", "Low", "Unavailable");
+        ConfigureStringEnum(components, "CreateLotRequest", "storageLocation", "Pantry", "Refrigerator", "Freezer", "Other");
+        ConfigureStringEnum(components, "UpdateLotRequest", "storageLocation", "Pantry", "Refrigerator", "Freezer", "Other");
+        ConfigureStringEnum(components, "CreateLotRequest", "packageState", "Sealed", "Opened", "Unknown");
+        ConfigureStringEnum(components, "UpdateLotRequest", "packageState", "Sealed", "Opened", "Unknown");
+        ConfigureStringEnum(components, "AdjustmentRequest", "type", "Consume", "Discard", "Correct", "AvailabilityChanged");
+
         foreach (var (path, pathItem) in document.Paths)
         {
             if (!path.StartsWith("/api/v1/", StringComparison.Ordinal))
@@ -93,6 +106,30 @@ internal static class InventoryOpenApiTransformer
         Required = true,
         Description = description
     };
+
+    private static void ConfigureDecimal(OpenApiComponents components, string schemaName, string propertyName)
+    {
+        if (TryGetProperty(components, schemaName, propertyName, out var property))
+        {
+            property.Type = JsonSchemaType.Number;
+            property.Format = "decimal";
+        }
+    }
+
+    private static void ConfigureStringEnum(OpenApiComponents components, string schemaName, string propertyName, params string[] values)
+    {
+        if (TryGetProperty(components, schemaName, propertyName, out var property))
+        {
+            property.Type = JsonSchemaType.String;
+            property.Enum = values.Select(value => (JsonNode)JsonValue.Create(value)!).ToList();
+        }
+    }
+
+    private static bool TryGetProperty(OpenApiComponents components, string schemaName, string propertyName, out OpenApiSchema property)
+    {
+        property = null!;
+        return components.Schemas is { } schemas && schemas.TryGetValue(schemaName, out var schema) && schema is OpenApiSchema typedSchema && typedSchema.Properties is { } properties && properties.TryGetValue(propertyName, out var candidate) && candidate is OpenApiSchema typedProperty && (property = typedProperty) is not null;
+    }
 
     private static void AddExamples(string path, HttpMethod method, OpenApiOperation operation)
     {

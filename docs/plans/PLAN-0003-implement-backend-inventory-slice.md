@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend implementation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T15:20:00Z
+- **Last updated:** 2026-07-29T16:36:49Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, open)
 - **Related implementation plan:** PLAN-0002
@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Runtime OpenAPI examples cover create, adjustment, validation, stale ETag, and reused idempotency key; enum/decimal schema details and snapshot regeneration remain active.
-- **Last completed step:** Added and runtime-validated request and Problem Details examples without compromising OpenAPI export.
-- **Exact next action:** Add precise enum/decimal schema details, regenerate the checked-in snapshot through the reproducible export workflow, then resume application-service extraction.
+- **Current checkpoint:** The runtime and checked-in OpenAPI 3.1 contract now declare precise inventory enums, decimal quantities, security/header requirements, examples, and reproducible export/drift commands; application-service extraction is active.
+- **Last completed step:** Regenerated and drift-validated the OpenAPI snapshot from the local HTTPS API after adding enum and decimal schema constraints.
+- **Exact next action:** Extract create, read/list, metadata update, adjustment, and deletion use cases into the inventory module application layer, leaving endpoints as HTTP mapping only.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
-- **Validation performed:** `dotnet test apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`.
-- **Known failures or limitations:** Endpoint orchestration still accesses EF directly; explicit application services/ports, complete Problem Details/OpenAPI, XML documentation/enforcement, expanded test/CI, and runbook corrections remain unfinished. The current snapshot is not a stable PLAN-0004 contract.
-- **Working tree state:** The OpenAPI-example checkpoint is ready to commit; snapshot/drift validation is intentionally pending.
+- **Validation performed:** Release build; targeted OpenAPI integration tests; full solution tests; formatting verification; Compose PostgreSQL migration check; live HTTPS OpenAPI export; `scripts/backend/export-openapi.sh`; `scripts/backend/check-openapi.sh`; diff whitespace verification.
+- **Known failures or limitations:** Endpoint orchestration still accesses EF directly; explicit application services/ports, remaining Problem Details completion, XML documentation/enforcement, expanded tests/CI, and runbook corrections remain unfinished. The snapshot is regenerated and drift-checked, but is not yet a stable PLAN-0004 milestone because the broader correction work remains open.
+- **Working tree state:** OpenAPI schema/snapshot checkpoint is ready to commit with synchronized plan and registry updates.
 
 ## Progress log
+
+### 2026-07-29T16:36:49Z — Codex backend implementation agent
+
+- **Checkpoint:** Completed the reproducible OpenAPI enum/decimal schema and snapshot-drift checkpoint.
+- **Changes included in the commit:** Declared the canonical quantity-unit, availability, storage, package-state, and adjustment-type enums in the emitted OpenAPI schemas; represented measured quantities and adjustment values as `number` with `decimal` format; added contract assertions; added `scripts/backend/export-openapi.sh`; updated the drift checker for the HTTPS development endpoint; regenerated `packages/contracts/openapi/kitchenflow-v1.json`; normalized the generated migration source encoding so formatting can verify the solution.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx --configuration Release --no-restore`; targeted `TelemetryRedactionTests` (2 passed); `dotnet test apps/backend/KitchenFlow.slnx --configuration Release --no-build` (exit code 0); `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; `dotnet ef database update --project apps/backend/src/KitchenFlow.Infrastructure/KitchenFlow.Infrastructure.csproj --startup-project apps/backend/src/KitchenFlow.Api/KitchenFlow.Api.csproj --configuration Release --no-build` against Compose PostgreSQL (no pending migrations); live `curl --insecure https://127.0.0.1:7443/openapi/v1.json`; `bash scripts/backend/export-openapi.sh`; `bash scripts/backend/check-openapi.sh`; `git diff --check`.
+- **Result:** The checked-in OpenAPI 3.1 snapshot deterministically matches the live local HTTPS API and exposes contract-safe decimal and enum metadata in addition to the prior session, security, ETag, CSRF, idempotency, response, and example metadata.
+- **Known failures or unverified behavior:** The endpoint layer still directly orchestrates EF; the required inventory application services/ports, complete XML documentation enforcement, broadened architectural/contract/security tests, CI gates, and operational runbooks remain unfinished. This is not yet a stable PLAN-0004 integration milestone.
+- **Blockers:** None.
+- **Next action:** Extract the inventory command and query use cases into the module application layer and add an architecture test preventing endpoints from directly depending on persistence.
 
 ### 2026-07-29T15:20:00Z — Codex backend implementation agent
 

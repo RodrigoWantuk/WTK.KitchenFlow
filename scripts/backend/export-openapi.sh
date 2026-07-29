@@ -7,4 +7,5 @@ temporary_file="$(mktemp)"
 trap 'rm -f "$temporary_file"' EXIT
 
 curl --fail --silent --show-error --insecure "$api_url" | jq --sort-keys . > "$temporary_file"
-jq --sort-keys . "$snapshot" | diff --unified -- "$temporary_file" -
+mv "$temporary_file" "$snapshot"
+
