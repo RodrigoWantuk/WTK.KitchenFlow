@@ -69,7 +69,9 @@ public static class InventoryEndpoints
     {
         var user = await currentUser.GetOrCreateAsync(cancellationToken);
         var record = await FindLotAsync(lotId, user.Id, database, cancellationToken);
-        return record is null ? Problem(404, "resource_not_found", "The inventory lot was not found.") : WithEtag(ToResponse(record.Value.Lot, record.Value.Product.DisplayName), record.Value.Lot.Version);
+        return record is null || record.Value.Lot.DeletedAt is not null
+            ? Problem(404, "resource_not_found", "The inventory lot was not found.")
+            : WithEtag(ToResponse(record.Value.Lot, record.Value.Product.DisplayName), record.Value.Lot.Version);
     }
 
     private static async Task<IResult> CreateAsync(CreateLotRequest request, HttpRequest httpRequest, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)

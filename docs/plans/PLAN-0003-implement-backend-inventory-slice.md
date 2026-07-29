@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** OpenAPI snapshot plus architecture and real-PostgreSQL migration tests pass.
-- **Last completed step:** Added executable architecture boundary and Testcontainers migration tests.
-- **Exact next action:** Add API isolation/security tests and run real Keycloak authentication smoke validation.
+- **Current checkpoint:** Soft deletion now hides a lot from detail reads while retaining immutable owner-scoped history.
+- **Last completed step:** Added and passed the soft-delete API integration test against PostgreSQL.
+- **Exact next action:** Implement and test cursor-based lot pagination and list filters, then run real Keycloak authentication smoke validation.
 - **Blockers:** None.
-- **Partially modified areas:** None.
-- **Validation performed:** Previous foundation validation plus `dotnet restore apps/backend/KitchenFlow.slnx --force-evaluate` and `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`. Restore and build passed with zero warnings/errors after compatible dependency pins were selected.
-- **Known failures or limitations:** Migrations, authentication, API behavior, OpenAPI export, compose services, and integration tests do not exist yet. The initial domain is deliberately bounded to the PLAN-0003 manual lot operations and does not implement broader lifecycle transitions or derived lots.
-- **Working tree state:** Build outputs are ignored; tracked solution foundation is ready for validation.
+- **Partially modified areas:** Inventory detail endpoint and PostgreSQL API integration tests.
+- **Validation performed:** `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj --no-restore` completed successfully after rebuilding the test project; the suite includes the deletion/history assertion.
+- **Known failures or limitations:** Cursor pagination, list filters, broader two-user mutation coverage, and real Keycloak login/logout smoke validation remain unfinished. The initial domain remains bounded to PLAN-0003 manual-lot operations.
+- **Working tree state:** Source and test changes are ready to commit with this synchronized plan state.
 
 ## Progress log
+
+### 2026-07-29T04:05:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Verified soft deletion hides the lot detail while retaining immutable history.
+- **Changes included in the commit:** Updated the owner-scoped detail query behavior to return `404 resource_not_found` for soft-deleted lots; added a PostgreSQL-backed API test that creates, deletes, reads, and retrieves history for one lot.
+- **Validation performed:** `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj --no-restore`.
+- **Result:** The integration test project completed successfully after the correction; deletion returns `204`, the deleted detail returns `404`, and the owner history contains the initial and `Deleted` transactions.
+- **Known failures or unverified behavior:** Cursor pagination, list filters, full mutation isolation matrix, and real Keycloak browser login/logout are not yet verified.
+- **Blockers:** None.
+- **Next action:** Implement and test cursor-based lot pagination and list filters, then validate the real Keycloak authentication flow.
 
 ### 2026-07-28T00:00:00Z — Codex backend implementation agent
 

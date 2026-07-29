@@ -153,6 +153,24 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         Assert.Equal(System.Net.HttpStatusCode.Conflict, reused.StatusCode);
     }
 
+    [Fact]
+    public async Task DeleteSoftDeletesLotAndRetainsHistory()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var created = await CreateAsync(client, csrf, Guid.NewGuid().ToString());
+        var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+        var deleted = await DeleteAsync(client, csrf, lotId, created.Headers.ETag!.Tag);
+        var get = await client.GetAsync($"/api/v1/inventory/lots/{lotId}");
+        var history = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots/{lotId}/history");
+
+        Assert.Equal(System.Net.HttpStatusCode.NoContent, deleted.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, get.StatusCode);
+        Assert.Equal(2, history.GetArrayLength());
+    }
+
     private static object CreateLot() => new { productName = "Test tomato", quantity = new { measuredValue = 100m, unit = "Gram", availabilityState = (string?)null }, storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null };
 
     private static async Task<string> GetCsrfAsync(HttpClient client)
@@ -187,6 +205,14 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         request.Headers.Add("X-CSRF-TOKEN", csrf);
         request.Headers.TryAddWithoutValidation("If-Match", etag);
         request.Headers.Add("Idempotency-Key", key);
+        return await client.SendAsync(request);
+    }
+
+    private static async Task<HttpResponseMessage> DeleteAsync(HttpClient client, string csrf, Guid lotId, string etag)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/inventory/lots/{lotId}");
+        request.Headers.Add("X-CSRF-TOKEN", csrf);
+        request.Headers.TryAddWithoutValidation("If-Match", etag);
         return await client.SendAsync(request);
     }
 
