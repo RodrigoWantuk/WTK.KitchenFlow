@@ -123,6 +123,24 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task CreateReplayCanonicalizesEquivalentWhitespaceAndDecimalScale()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var key = Guid.NewGuid().ToString();
+
+        var first = await CreateAsync(client, csrf, key, "Canonical tomato", 100m);
+        var second = await CreateAsync(client, csrf, key, "  Canonical tomato  ", 100.0m);
+        var list = await client.GetFromJsonAsync<JsonElement>("/api/v1/inventory/lots?search=Canonical%20tomato");
+
+        Assert.Equal(System.Net.HttpStatusCode.Created, first.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.Created, second.StatusCode);
+        Assert.Equal(1, list.GetProperty("items").GetArrayLength());
+    }
+
+    [Fact]
     public async Task LotRepresentationUsesAnOpaqueVersionTokenThatMatchesItsEtag()
     {
         await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
@@ -397,7 +415,7 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         Assert.Equal("checked", history[0].GetProperty("reasonCode").GetString());
     }
 
-    private static object CreateLot(string productName = "Test tomato") => new { productName, quantity = new { measuredValue = 100m, unit = "Gram", availabilityState = (string?)null }, storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null };
+    private static object CreateLot(string productName = "Test tomato", decimal measuredValue = 100m) => new { productName, quantity = new { measuredValue, unit = "Gram", availabilityState = (string?)null }, storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null };
 
     private static async Task<string> GetCsrfAsync(HttpClient client)
     {
@@ -405,9 +423,9 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         return session.GetProperty("csrfToken").GetString()!;
     }
 
-    private static async Task<HttpResponseMessage> CreateAsync(HttpClient client, string csrf, string key, string productName = "Test tomato")
+    private static async Task<HttpResponseMessage> CreateAsync(HttpClient client, string csrf, string key, string productName = "Test tomato", decimal measuredValue = 100m)
     {
-        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/inventory/lots") { Content = JsonContent.Create(CreateLot(productName)) };
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/inventory/lots") { Content = JsonContent.Create(CreateLot(productName, measuredValue)) };
         request.Headers.Add("Idempotency-Key", key);
         request.Headers.Add("X-CSRF-TOKEN", csrf);
         return await client.SendAsync(request);

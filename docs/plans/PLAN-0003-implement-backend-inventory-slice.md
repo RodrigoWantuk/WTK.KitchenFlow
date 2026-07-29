@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** PostgreSQL transaction/idempotency integrity constraints are migrated and integration-tested; the local Compose topology starts PostgreSQL 18 and Keycloak correctly from an empty volume.
-- **Last completed step:** Reproduced the second GitHub Actions failure, corrected the PostgreSQL 18 volume mount, and added history/idempotency persistence constraints with a migration.
+- **Current checkpoint:** PostgreSQL transaction/idempotency integrity constraints are migrated and integration-tested; idempotency hashes canonicalize semantic create and adjustment values before PostgreSQL replay lookup.
+- **Last completed step:** Corrected canonical payload hashing so insignificant whitespace and decimal scale cannot create a false idempotency-key conflict.
 - **Exact next action:** Move the application-service contract into `KitchenFlow.Modules.Inventory.Application` and provide an infrastructure persistence adapter, so the composition-root service becomes a thin adapter rather than the authoritative use-case implementation.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
-- **Validation performed:** GitHub Actions runs `30484702156` and `30485251129` (the latter failed during fresh PostgreSQL 18 Compose startup before its gates); focused migration constraints test; Release solution build; formatting verification; migration downgrade and upgrade against fresh Compose PostgreSQL; PostgreSQL and Keycloak readiness/discovery.
+- **Validation performed:** GitHub Actions runs `30484702156` and `30485251129` (the latter failed during fresh PostgreSQL 18 Compose startup before its gates); focused migration constraints and idempotency canonicalization tests; Release solution build; formatting verification; migration downgrade and upgrade against fresh Compose PostgreSQL; PostgreSQL and Keycloak readiness/discovery.
 - **Known failures or limitations:** The application service is still in the API composition root and directly uses persistence. Module persistence ports/adapters, automated real-Keycloak login/two-user smoke, operational runbooks, and a successful rerun of the expanded GitHub Actions workflow remain unfinished.
-- **Working tree state:** PostgreSQL 18 Compose compatibility and inventory history-integrity migration checkpoint is ready to commit with synchronized plan and registry updates.
+- **Working tree state:** Idempotency canonicalization checkpoint is ready to commit with synchronized plan and registry updates.
 
 ## Progress log
+
+### 2026-07-29T19:47:16Z — Codex backend implementation agent
+
+- **Checkpoint:** Canonicalized semantic idempotency payload hashes.
+- **Changes included in the commit:** Converted validated measured quantities to invariant, three-decimal canonical strings before create and adjustment request hashing; added an integration test that replays one create command using equivalent product-name whitespace and decimal scales.
+- **Validation performed:** `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --filter FullyQualifiedName~CreateReplayCanonicalizesEquivalentWhitespaceAndDecimalScale --no-restore` (1 passed); prior Release build, formatting, migration, and Compose validation remain recorded in the preceding checkpoint.
+- **Result:** Equivalent domain commands now share an idempotency hash and replay the completed semantic response instead of spuriously returning `409 idempotency_key_reused`.
+- **Known failures or unverified behavior:** The fixed commit has not yet been pushed or run in GitHub Actions. The application service remains in the API composition root with direct persistence access; module persistence ports/adapters, automated real-Keycloak login/two-user smoke, and operational runbooks remain open.
+- **Blockers:** None.
+- **Next action:** Commit and push canonical idempotency hashing, inspect the GitHub Actions workflow, then extract the inventory persistence port and module-owned application service.
 
 ### 2026-07-29T19:45:33Z — Codex backend implementation agent
 

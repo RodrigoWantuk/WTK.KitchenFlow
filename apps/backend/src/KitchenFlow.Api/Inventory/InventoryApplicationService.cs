@@ -150,7 +150,12 @@ public sealed class InventoryApplicationService(
         var hash = Hash(new
         {
             ProductName = productName,
-            Quantity = new { request.Quantity.MeasuredValue, request.Quantity.Unit, request.Quantity.AvailabilityState },
+            Quantity = new
+            {
+                MeasuredValue = request.Quantity.MeasuredValue?.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture),
+                request.Quantity.Unit,
+                request.Quantity.AvailabilityState
+            },
             request.StorageLocation,
             CustomLocation = request.CustomLocation?.Trim(),
             request.PackageState,
@@ -238,7 +243,7 @@ public sealed class InventoryApplicationService(
         {
             LotId = lotId,
             adjustment.Type,
-            adjustment.Value,
+            Value = adjustment.Value?.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture),
             adjustment.AvailabilityState,
             adjustment.ReasonCode,
             adjustment.Note
