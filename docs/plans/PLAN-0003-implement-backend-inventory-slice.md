@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Measured consumption lower-bound enforcement is verified against PostgreSQL history.
-- **Last completed step:** Added a negative-quantity rejection test for an inventory adjustment.
-- **Exact next action:** Add remaining availability/correction edge cases and redaction checks, then perform interactive browser validation and final migration/contract verification.
+- **Current checkpoint:** Measured correction and availability-state transition history are verified against PostgreSQL.
+- **Last completed step:** Added immutable history coverage for `Correct` and `AvailabilityChanged` transactions.
+- **Exact next action:** Add observability/redaction checks, then perform interactive browser validation and final migration/contract verification.
 - **Blockers:** None.
-- **Partially modified areas:** PostgreSQL API adjustment validation coverage.
-- **Validation performed:** `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`. Both completed successfully; the integration suite has fifteen tests.
-- **Known failures or limitations:** Availability/correction adjustment edge cases, telemetry-redaction checks, interactive graphical-browser validation, and final migration/contract verification remain unfinished. The initial domain remains bounded to PLAN-0003 manual-lot operations.
+- **Partially modified areas:** PostgreSQL API adjustment/history coverage.
+- **Validation performed:** `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`. The integration test project completed successfully with seventeen tests.
+- **Known failures or limitations:** Telemetry-redaction checks, interactive graphical-browser validation, and final migration/contract verification remain unfinished. The initial domain remains bounded to PLAN-0003 manual-lot operations.
 - **Working tree state:** Test changes are ready to commit with this synchronized plan state.
 
 ## Progress log
+
+### 2026-07-29T10:45:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Verified all manual-lot adjustment transaction types that mutate quantities or availability.
+- **Changes included in the commit:** Added PostgreSQL API coverage for a `Correct` transaction's previous/resulting measured snapshots and an `AvailabilityChanged` transaction's resulting state and mandatory reason code.
+- **Validation performed:** `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-restore`.
+- **Result:** Seventeen PostgreSQL API tests pass. Correct and availability transitions return the resulting lot representation and append the expected immutable history entries.
+- **Known failures or unverified behavior:** Telemetry/redaction checks, interactive graphical-browser validation, and final migration/contract verification remain unfinished.
+- **Blockers:** None.
+- **Next action:** Add observability/redaction verification and execute final browser, migration, and contract validation.
 
 ### 2026-07-29T10:30:00Z — Codex backend implementation agent
 

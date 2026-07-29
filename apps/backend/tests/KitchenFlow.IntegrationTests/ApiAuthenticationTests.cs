@@ -274,6 +274,45 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         Assert.Equal(1, history.GetArrayLength());
     }
 
+    [Fact]
+    public async Task CorrectRecordsPreviousAndResultingMeasuredQuantity()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var created = await CreateAsync(client, csrf, Guid.NewGuid().ToString());
+        var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+
+        var corrected = await AdjustmentAsync(client, csrf, lotId, created.Headers.ETag!.Tag, Guid.NewGuid().ToString(), new { type = "Correct", value = 75m, availabilityState = (string?)null, reasonCode = "counted", note = (string?)null });
+        var history = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots/{lotId}/history");
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, corrected.StatusCode);
+        Assert.Equal(75m, (await corrected.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("quantity").GetProperty("measuredValue").GetDecimal());
+        Assert.Equal("Correct", history[0].GetProperty("type").GetString());
+        Assert.Equal(100m, history[0].GetProperty("previousQuantity").GetProperty("measuredValue").GetDecimal());
+        Assert.Equal(75m, history[0].GetProperty("resultingQuantity").GetProperty("measuredValue").GetDecimal());
+    }
+
+    [Fact]
+    public async Task AvailabilityChangeRequiresAndRecordsReason()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var created = await CreateAvailabilityAsync(client, csrf, Guid.NewGuid().ToString(), "Low");
+        var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+
+        var changed = await AdjustmentAsync(client, csrf, lotId, created.Headers.ETag!.Tag, Guid.NewGuid().ToString(), new { type = "AvailabilityChanged", value = (decimal?)null, availabilityState = "Available", reasonCode = "checked", note = (string?)null });
+        var history = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots/{lotId}/history");
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, changed.StatusCode);
+        Assert.Equal("Available", (await changed.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("quantity").GetProperty("availabilityState").GetString());
+        Assert.Equal("AvailabilityChanged", history[0].GetProperty("type").GetString());
+        Assert.Equal("checked", history[0].GetProperty("reasonCode").GetString());
+    }
+
     private static object CreateLot(string productName = "Test tomato") => new { productName, quantity = new { measuredValue = 100m, unit = "Gram", availabilityState = (string?)null }, storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null };
 
     private static async Task<string> GetCsrfAsync(HttpClient client)
@@ -285,6 +324,14 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
     private static async Task<HttpResponseMessage> CreateAsync(HttpClient client, string csrf, string key, string productName = "Test tomato")
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/inventory/lots") { Content = JsonContent.Create(CreateLot(productName)) };
+        request.Headers.Add("Idempotency-Key", key);
+        request.Headers.Add("X-CSRF-TOKEN", csrf);
+        return await client.SendAsync(request);
+    }
+
+    private static async Task<HttpResponseMessage> CreateAvailabilityAsync(HttpClient client, string csrf, string key, string availabilityState)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/inventory/lots") { Content = JsonContent.Create(new { productName = "Availability tomato", quantity = new { measuredValue = (decimal?)null, unit = (string?)null, availabilityState }, storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null }) };
         request.Headers.Add("Idempotency-Key", key);
         request.Headers.Add("X-CSRF-TOKEN", csrf);
         return await client.SendAsync(request);
@@ -304,7 +351,12 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
 
     private static async Task<HttpResponseMessage> AdjustAsync(HttpClient client, string csrf, Guid lotId, string etag, string key, decimal value)
     {
-        var request = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/inventory/lots/{lotId}/adjustments") { Content = JsonContent.Create(new { type = "Consume", value, availabilityState = (string?)null, reasonCode = "meal", note = (string?)null }) };
+        return await AdjustmentAsync(client, csrf, lotId, etag, key, new { type = "Consume", value, availabilityState = (string?)null, reasonCode = "meal", note = (string?)null });
+    }
+
+    private static async Task<HttpResponseMessage> AdjustmentAsync(HttpClient client, string csrf, Guid lotId, string etag, string key, object payload)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/inventory/lots/{lotId}/adjustments") { Content = JsonContent.Create(payload) };
         request.Headers.Add("X-CSRF-TOKEN", csrf);
         request.Headers.TryAddWithoutValidation("If-Match", etag);
         request.Headers.Add("Idempotency-Key", key);
