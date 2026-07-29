@@ -292,9 +292,17 @@ public sealed class InventoryApplicationService(
 
     private async Task<IResult> MutateAsync(Guid lotId, HttpRequest request, CurrentUserService currentUser, ApplicationDbContext database, TimeProvider clock, CancellationToken cancellationToken, Func<LotRecord, ProductRecord, DateTimeOffset, TransactionRecord?> operation, int successStatus = StatusCodes.Status200OK, Guid? idempotencyKey = null, string? idempotencyScope = null, string? idempotencyHash = null)
     {
-        if (!TryVersion(request, out var version))
+        var precondition = ReadVersion(request, out var version);
+        if (precondition == VersionPrecondition.Missing)
         {
             return Problem(428, "precondition_required", "If-Match is required.");
+        }
+
+        if (precondition == VersionPrecondition.Invalid)
+        {
+            // An opaque token that cannot be opened cannot represent the current version. Treat it
+            // as stale rather than as an omitted precondition, without revealing token internals.
+            return Problem(412, "precondition_failed", "The inventory lot was modified.");
         }
 
         var user = await currentUser.GetOrCreateAsync(cancellationToken);
@@ -431,16 +439,23 @@ public sealed class InventoryApplicationService(
     private static IResult WithEtag(LotResponse response, int status = 200) => new EtagResult<LotResponse>(response, ToEtag(response.Version), status);
     private static string ToEtag(string version) => $"\"{version}\"";
     private string CreateVersionToken(long version) => dataProtection.CreateProtector("KitchenFlow.Inventory.LotVersion.v1").Protect(version.ToString(System.Globalization.CultureInfo.InvariantCulture));
-    private bool TryVersion(HttpRequest request, out long version)
+    private VersionPrecondition ReadVersion(HttpRequest request, out long version)
     {
         version = 0;
+        if (string.IsNullOrWhiteSpace(request.Headers.IfMatch))
+        {
+            return VersionPrecondition.Missing;
+        }
+
         try
         {
-            return long.TryParse(dataProtection.CreateProtector("KitchenFlow.Inventory.LotVersion.v1").Unprotect(request.Headers.IfMatch.ToString().Trim('"')), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out version);
+            return long.TryParse(dataProtection.CreateProtector("KitchenFlow.Inventory.LotVersion.v1").Unprotect(request.Headers.IfMatch.ToString().Trim('"')), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out version)
+                ? VersionPrecondition.Valid
+                : VersionPrecondition.Invalid;
         }
         catch (CryptographicException)
         {
-            return false;
+            return VersionPrecondition.Invalid;
         }
     }
     private static bool TryIdempotencyKey(HttpRequest request, out Guid key) => Guid.TryParse(request.Headers["Idempotency-Key"], out key);
@@ -522,6 +537,13 @@ public sealed class InventoryApplicationService(
     private static string MetadataField(string? error) => error?.StartsWith("Notes", StringComparison.Ordinal) == true ? "notes" : error?.StartsWith("The package", StringComparison.Ordinal) == true ? "packageState" : "storageLocation";
 
     private sealed record CursorPosition(DateTimeOffset UpdatedAt, Guid LotId);
+
+    private enum VersionPrecondition
+    {
+        Missing,
+        Valid,
+        Invalid
+    }
 
     private sealed class EtagResult<T>(T body, string etag, int statusCode) : IResult
     {

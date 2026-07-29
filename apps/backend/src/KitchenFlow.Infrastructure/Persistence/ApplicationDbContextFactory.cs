@@ -3,8 +3,14 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace KitchenFlow.Infrastructure.Persistence;
 
+/// <summary>
+/// Creates the design-time PostgreSQL context used exclusively by Entity Framework migration
+/// tooling. The development fallback is intentionally non-production and documented in the local
+/// environment guide.
+/// </summary>
 public sealed class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
 {
+    /// <inheritdoc />
     public ApplicationDbContext CreateDbContext(string[] args)
     {
         var connectionString = Environment.GetEnvironmentVariable("KITCHENFLOW_DB_CONNECTION")

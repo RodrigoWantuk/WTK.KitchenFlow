@@ -87,4 +87,5 @@ api.MapGet("/session", async (HttpContext context, IAntiforgery antiforgery, Cur
 api.MapGroup("/inventory").RequireAuthorization().MapInventoryEndpoints();
 app.Run();
 
+/// <summary>Exposes the application entry point to the integration-test host.</summary>
 public partial class Program;

@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Inventory routes map HTTP and CSRF only; SharedKernel, Inventory, and Identity enforce XML documentation; CI infrastructure, migration, and contract gates have a deterministic OpenAPI server declaration.
-- **Last completed step:** Fixed environment-dependent OpenAPI `servers` drift exposed by the local CI-path validation.
+- **Current checkpoint:** SharedKernel, Inventory, Identity, Infrastructure, and API enforce XML documentation; invalid opaque `If-Match` values correctly fail as stale preconditions; the first CI execution exposed and locally verified that contract defect.
+- **Last completed step:** Reproduced the GitHub Actions failure, corrected invalid opaque version-token classification, and completed API/Infrastructure XML documentation enforcement.
 - **Exact next action:** Move the application-service contract into `KitchenFlow.Modules.Inventory.Application` and provide an infrastructure persistence adapter, so the composition-root service becomes a thin adapter rather than the authoritative use-case implementation.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
-- **Validation performed:** Compose startup/readiness; migration downgrade/upgrade; API health; OpenAPI export/drift through HTTP CI listener; targeted contract tests; Release build; formatting verification.
-- **Known failures or limitations:** The application service is still in the API composition root and directly uses persistence. Infrastructure XML enforcement has 71 documented missing members, primarily EF persistence records; API XML enforcement, module ports/adapters, automated real-Keycloak login/two-user smoke, and operational runbooks remain unfinished. GitHub Actions has not run this new workflow revision yet.
-- **Working tree state:** Deterministic OpenAPI server/drift checkpoint is ready to commit with synchronized plan and registry updates.
+- **Validation performed:** GitHub Actions run `30484702156` (failed only on the stale-version assertion before this fix); focused PostgreSQL integration test; complete Release test suite; Release solution build; formatting verification; diff check.
+- **Known failures or limitations:** The application service is still in the API composition root and directly uses persistence. Module persistence ports/adapters, automated real-Keycloak login/two-user smoke, operational runbooks, and a successful rerun of the expanded GitHub Actions workflow remain unfinished.
+- **Working tree state:** Opaque precondition classification and API/Infrastructure documentation-enforcement checkpoint is ready to commit with synchronized plan and registry updates.
 
 ## Progress log
+
+### 2026-07-29T19:37:08Z — Codex backend implementation agent
+
+- **Checkpoint:** Corrected the first expanded CI failure and completed API/Infrastructure XML documentation enforcement.
+- **Changes included in the commit:** Classified malformed or unverifiable opaque `If-Match` tokens as `412 precondition_failed` while preserving `428 precondition_required` for absent headers; documented all public EF persistence records, context, design-time factory, current-user resolver, telemetry redactor, and test-host entry point; enabled generated XML documentation and `CS1591` warnings-as-errors in the API and Infrastructure projects.
+- **Validation performed:** Inspected failed GitHub Actions run `30484702156`, which failed only because `UpdateRequiresCurrentEtagAndRejectsStaleVersion` received `428` instead of `412`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --filter FullyQualifiedName~UpdateRequiresCurrentEtagAndRejectsStaleVersion --no-restore` (1 passed); `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore` (zero warnings/errors); `dotnet format apps/backend/KitchenFlow.slnx whitespace --verify-no-changes --no-restore`; `dotnet test apps/backend/KitchenFlow.slnx -c Release --no-build` (architecture 3 passed, unit 6 passed, integration process exited zero); `git diff --check`.
+- **Result:** The observed CI defect is reproducibly corrected locally, and new public API/Infrastructure foundations cannot be added without XML documentation.
+- **Known failures or unverified behavior:** The fixed commit has not yet been pushed or rerun in GitHub Actions. The application service remains in the API composition root with direct persistence access; module persistence ports/adapters, automated real-Keycloak login/two-user smoke, and operational runbooks remain open.
+- **Blockers:** None.
+- **Next action:** Commit and push this correction, inspect the replacement CI run, then extract the inventory persistence port and module-owned application service.
 
 ### 2026-07-29T19:29:44Z — Codex backend implementation agent
 

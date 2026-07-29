@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <AssemblyName>KitchenFlow.Api</AssemblyName>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>

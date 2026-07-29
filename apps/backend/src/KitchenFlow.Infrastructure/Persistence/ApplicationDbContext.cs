@@ -3,20 +3,32 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KitchenFlow.Infrastructure.Persistence;
 
+/// <summary>
+/// Entity Framework Core persistence boundary for KitchenFlow identity, inventory, audit, and
+/// idempotency records. Composite owner keys prevent cross-user links at the database boundary.
+/// </summary>
+/// <param name="options">Configured PostgreSQL context options.</param>
 public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
 {
+    /// <summary>Gets the authoritative internal OIDC identity mappings.</summary>
     public DbSet<InternalUser> Users => Set<InternalUser>();
 
+    /// <summary>Gets the user-owned product persistence records.</summary>
     public DbSet<ProductRecord> Products => Set<ProductRecord>();
 
+    /// <summary>Gets the user-owned inventory lot persistence records.</summary>
     public DbSet<LotRecord> Lots => Set<LotRecord>();
 
+    /// <summary>Gets immutable inventory lifecycle transaction records.</summary>
     public DbSet<TransactionRecord> Transactions => Set<TransactionRecord>();
 
+    /// <summary>Gets immutable audit event records.</summary>
     public DbSet<AuditEventRecord> AuditEvents => Set<AuditEventRecord>();
 
+    /// <summary>Gets PostgreSQL-backed idempotency records.</summary>
     public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
 
+    /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<InternalUser>(entity =>
@@ -105,77 +117,137 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     }
 }
 
+/// <summary>Persistence representation of a product owned by one internal user.</summary>
 public sealed class ProductRecord
 {
+    /// <summary>Gets or sets the product identifier.</summary>
     public Guid Id { get; set; }
+    /// <summary>Gets or sets the authoritative owner identifier.</summary>
     public Guid OwnerUserId { get; set; }
+    /// <summary>Gets or sets the human-readable product name.</summary>
     public required string DisplayName { get; set; }
+    /// <summary>Gets or sets the normalized product search name.</summary>
     public required string NormalizedSearchName { get; set; }
+    /// <summary>Gets or sets the UTC creation instant.</summary>
     public DateTimeOffset CreatedAt { get; set; }
+    /// <summary>Gets or sets the UTC instant of the latest product metadata change.</summary>
     public DateTimeOffset UpdatedAt { get; set; }
+    /// <summary>Gets or sets whether the product is soft-deleted.</summary>
     public bool IsDeleted { get; set; }
 }
 
+/// <summary>Persistence representation of one user-owned physical inventory lot.</summary>
 public sealed class LotRecord
 {
+    /// <summary>Gets or sets the lot identifier.</summary>
     public Guid Id { get; set; }
+    /// <summary>Gets or sets the authoritative owner identifier.</summary>
     public Guid OwnerUserId { get; set; }
+    /// <summary>Gets or sets the associated user-owned product identifier.</summary>
     public Guid ProductId { get; set; }
+    /// <summary>Gets or sets the measured amount using PostgreSQL <c>numeric(18,3)</c>, if measured.</summary>
     public decimal? MeasuredValue { get; set; }
+    /// <summary>Gets or sets the canonical unit when <see cref="MeasuredValue"/> is present.</summary>
     public string? MeasuredUnit { get; set; }
+    /// <summary>Gets or sets the qualitative availability state when the lot is not measured.</summary>
     public string? AvailabilityState { get; set; }
+    /// <summary>Gets or sets the required storage location.</summary>
     public required string StorageLocation { get; set; }
+    /// <summary>Gets or sets the required custom location for the <c>Other</c> location.</summary>
     public string? CustomLocation { get; set; }
+    /// <summary>Gets or sets the optional package state.</summary>
     public string? PackageState { get; set; }
+    /// <summary>Gets or sets the optional user-entered printed expiration calendar date.</summary>
     public DateOnly? PrintedExpirationDate { get; set; }
+    /// <summary>Gets or sets the provenance of the printed expiration date.</summary>
     public string? ExpirationProvenance { get; set; }
+    /// <summary>Gets or sets optional private notes, which must never be emitted in telemetry.</summary>
     public string? Notes { get; set; }
+    /// <summary>Gets or sets the internal optimistic-concurrency version; it is never exposed directly.</summary>
     public long Version { get; set; }
+    /// <summary>Gets or sets the UTC creation instant.</summary>
     public DateTimeOffset CreatedAt { get; set; }
+    /// <summary>Gets or sets the UTC instant of the last mutation.</summary>
     public DateTimeOffset UpdatedAt { get; set; }
+    /// <summary>Gets or sets the UTC soft-deletion instant, if deleted.</summary>
     public DateTimeOffset? DeletedAt { get; set; }
 }
 
+/// <summary>Immutable persistence representation of an inventory lifecycle transition.</summary>
 public sealed class TransactionRecord
 {
+    /// <summary>Gets or sets the transaction identifier.</summary>
     public Guid Id { get; set; }
+    /// <summary>Gets or sets the authoritative owner identifier.</summary>
     public Guid OwnerUserId { get; set; }
+    /// <summary>Gets or sets the associated lot identifier.</summary>
     public Guid LotId { get; set; }
+    /// <summary>Gets or sets the stable lifecycle transaction type.</summary>
     public required string Type { get; set; }
+    /// <summary>Gets or sets the prior measured amount, if the prior state was measured.</summary>
     public decimal? PreviousMeasuredValue { get; set; }
+    /// <summary>Gets or sets the prior canonical measured unit, if applicable.</summary>
     public string? PreviousMeasuredUnit { get; set; }
+    /// <summary>Gets or sets the prior qualitative availability state, if applicable.</summary>
     public string? PreviousAvailabilityState { get; set; }
+    /// <summary>Gets or sets the resulting measured amount, if the resulting state is measured.</summary>
     public decimal? ResultingMeasuredValue { get; set; }
+    /// <summary>Gets or sets the resulting canonical measured unit, if applicable.</summary>
     public string? ResultingMeasuredUnit { get; set; }
+    /// <summary>Gets or sets the resulting qualitative availability state, if applicable.</summary>
     public string? ResultingAvailabilityState { get; set; }
+    /// <summary>Gets or sets the normalized reason code supplied for the transition.</summary>
     public string? ReasonCode { get; set; }
+    /// <summary>Gets or sets the optional private transition note.</summary>
     public string? Note { get; set; }
+    /// <summary>Gets or sets the client idempotency key when a command supplied one.</summary>
     public Guid? IdempotencyKey { get; set; }
+    /// <summary>Gets or sets the UTC instant at which the transition occurred.</summary>
     public DateTimeOffset OccurredAt { get; set; }
 }
 
+/// <summary>Immutable audit trail record for an authorized action.</summary>
 public sealed class AuditEventRecord
 {
+    /// <summary>Gets or sets the audit event identifier.</summary>
     public Guid Id { get; set; }
+    /// <summary>Gets or sets the internal actor identifier.</summary>
     public Guid ActorUserId { get; set; }
+    /// <summary>Gets or sets the stable event name.</summary>
     public required string EventName { get; set; }
+    /// <summary>Gets or sets the audited resource type.</summary>
     public required string TargetType { get; set; }
+    /// <summary>Gets or sets the audited resource identifier.</summary>
     public Guid TargetId { get; set; }
+    /// <summary>Gets or sets the request correlation identifier without credentials or request bodies.</summary>
     public required string CorrelationId { get; set; }
+    /// <summary>Gets or sets non-sensitive JSON audit metadata.</summary>
     public required string MetadataJson { get; set; }
+    /// <summary>Gets or sets the UTC event instant.</summary>
     public DateTimeOffset OccurredAt { get; set; }
 }
 
+/// <summary>Persistence record used to replay an already completed idempotent command.</summary>
 public sealed class IdempotencyRecord
 {
+    /// <summary>Gets or sets the record identifier.</summary>
     public Guid Id { get; set; }
+    /// <summary>Gets or sets the authoritative command owner identifier.</summary>
     public Guid OwnerUserId { get; set; }
+    /// <summary>Gets or sets the command scope, which partitions idempotency keys.</summary>
     public required string Scope { get; set; }
+    /// <summary>Gets or sets the client-provided UUID idempotency key.</summary>
     public Guid Key { get; set; }
+    /// <summary>Gets or sets the canonical request hash used to detect key reuse conflicts.</summary>
     public required string RequestHash { get; set; }
+    /// <summary>Gets or sets the replayable HTTP status code.</summary>
     public int StatusCode { get; set; }
+    /// <summary>Gets or sets the replayable response body, if the command completed.</summary>
     public string? ResponseBody { get; set; }
+    /// <summary>Gets or sets the replayable opaque ETag, if the command completed.</summary>
     public string? ETag { get; set; }
+    /// <summary>Gets or sets the UTC reservation instant.</summary>
     public DateTimeOffset CreatedAt { get; set; }
+    /// <summary>Gets or sets the UTC completion instant, or <see langword="null"/> while processing.</summary>
     public DateTimeOffset? CompletedAt { get; set; }
 }

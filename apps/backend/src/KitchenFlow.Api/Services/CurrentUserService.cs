@@ -5,8 +5,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KitchenFlow.Api.Services;
 
+/// <summary>
+/// Resolves an authenticated OIDC issuer and subject into the KitchenFlow-owned internal user
+/// mapping. Client payloads never choose this identity.
+/// </summary>
 public sealed class CurrentUserService(ApplicationDbContext database, TimeProvider timeProvider, IHttpContextAccessor httpContextAccessor)
 {
+    /// <summary>Gets the current user's internal identity, creating its issuer-subject mapping atomically when needed.</summary>
+    /// <param name="cancellationToken">Token that cancels the database operation.</param>
+    /// <returns>The internal identity authorized for the current request.</returns>
+    /// <exception cref="UnauthorizedAccessException">Thrown when the authenticated principal lacks a stable issuer or subject.</exception>
     public async Task<InternalUser> GetOrCreateAsync(CancellationToken cancellationToken)
     {
         var principal = httpContextAccessor.HttpContext?.User ?? new ClaimsPrincipal();
