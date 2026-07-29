@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** AI planning agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T00:25:00Z
+- **Last updated:** 2026-07-29T00:40:00Z
 - **Branch:** `agent/plan-0002-first-vertical-slice-plans`
 - **Pull request:** Not opened
 - **Related issues:** None
@@ -36,9 +36,10 @@ Agents executing this plan or its descendants must read, in order:
 8. [`../architecture/overview.md`](../architecture/overview.md)
 9. [`../architecture/principles.md`](../architecture/principles.md)
 10. ADR-0001 through ADR-0006
-11. [`../security/privacy-and-data-protection.md`](../security/privacy-and-data-protection.md)
-12. [`../security/security-and-abuse.md`](../security/security-and-abuse.md)
-13. [`../testing/product-foundation-gates.md`](../testing/product-foundation-gates.md)
+11. [`../development/environment.md`](../development/environment.md)
+12. [`../security/privacy-and-data-protection.md`](../security/privacy-and-data-protection.md)
+13. [`../security/security-and-abuse.md`](../security/security-and-abuse.md)
+14. [`../testing/product-foundation-gates.md`](../testing/product-foundation-gates.md)
 
 When this plan conflicts with a canonical accepted document, the canonical document wins and the conflict must be reported before implementation.
 
@@ -374,10 +375,10 @@ Health endpoints must distinguish liveness from readiness. Readiness includes Po
 
 ### Phase 3: Document development environment
 
-- [ ] Add a canonical Windows/Linux environment document.
-- [ ] Separate host-installed tools from containerized dependencies.
-- [ ] Specify supported version lines, verification commands, ports, resource guidance, and optional services.
-- [ ] Update the documentation index and infrastructure references.
+- [x] Add a canonical Windows/Linux environment document.
+- [x] Separate host-installed tools from containerized dependencies.
+- [x] Specify supported version lines, verification commands, ports, resource guidance, and optional services.
+- [x] Update the documentation index and infrastructure references.
 
 **Exit criteria**
 
@@ -445,11 +446,11 @@ The slice establishes migrations, health endpoints, structured telemetry, local 
 
 - [x] PLAN-0001 delivery is reconciled as merged.
 - [x] PLAN-0003, PLAN-0004, and PLAN-0005 exist and are registered exactly once.
-- [ ] Every `VS-REQ-*` requirement has an implementation owner and independent validation coverage.
-- [ ] Development environment documentation covers Windows and Linux completely.
+- [x] Every `VS-REQ-*` requirement has an implementation owner and independent validation coverage.
+- [x] Development environment documentation covers Windows and Linux completely.
 - [x] Lovable's current existing-repository limitation is handled explicitly.
 - [x] Downstream plans do not silently broaden or reduce the slice.
-- [ ] Required documentation indexes are current.
+- [x] Required documentation indexes are current.
 - [ ] Full branch validation is complete.
 - [ ] Pull request is open.
 - [ ] No unsupported completion claim remains.
@@ -458,13 +459,13 @@ The slice establishes migrations, health endpoints, structured telemetry, local 
 
 This section must be updated before every agent-created commit.
 
-- **Current checkpoint:** PLAN-0003, PLAN-0004, and PLAN-0005 are fully specified and registered with distinct ownership and dependencies.
-- **Last completed step:** Phase 2 execution-plan creation.
-- **Exact next action:** Add the canonical Windows/Linux development environment document and update documentation indexes.
+- **Current checkpoint:** Detailed backend, Lovable frontend, and independent-test plans plus the canonical Windows/Linux development environment are complete and indexed.
+- **Last completed step:** Phase 3 development-environment documentation.
+- **Exact next action:** Validate the complete branch for links, status consistency, requirement traceability, version references, and scope; then open the pull request.
 - **Blockers:** None.
-- **Partially modified areas:** Development environment documentation and final validation remain.
-- **Validation performed:** Cross-checked downstream scope, branches, dependencies, requirement ownership, and explicit Lovable export workflow.
-- **Known failures or limitations:** Exact third-party package patch versions remain implementation-time lockfile decisions unless documented in the environment baseline.
+- **Partially modified areas:** Final validation and PR delivery remain.
+- **Validation performed:** Verified official current .NET, Node, Docker, PostgreSQL, Keycloak, RabbitMQ, OpenTelemetry, and Lovable guidance; separated host tools from container services; reviewed Windows/Linux parity.
+- **Known failures or limitations:** Exact frontend package manager/runtime remains dependent on generated Lovable output; exact production vendors remain intentionally open.
 - **Working tree state:** Clean after this commit.
 
 ## Progress log
@@ -486,6 +487,15 @@ This section must be updated before every agent-created commit.
 - **Result:** Separate agents can execute backend, frontend, and independent validation without relying on the discovery conversation.
 - **Next action:** Document the cross-platform development environment.
 - **Blockers or handoff notes:** PLAN-0004 live API integration waits for PLAN-0003's OpenAPI contract milestone; PLAN-0005 execution waits for stable implementation baselines.
+
+### 2026-07-29T00:40:00Z — AI planning agent
+
+- **Checkpoint:** Cross-platform environment baseline is complete.
+- **Changes included in the commit:** Added development index and full Windows/Linux environment specification; updated documentation and infrastructure indexes; updated PLAN-0002 and registry.
+- **Validation performed:** Cross-checked official release/support pages and ensured the first slice requires only PostgreSQL and Keycloak containers, with observability recommended and future services optional.
+- **Result:** A Windows-native, Windows/WSL2, or Linux agent can install and verify the environment without guessing native service requirements.
+- **Next action:** Run final branch validation and open the PR.
+- **Blockers or handoff notes:** None.
 
 ## Completion and handoff checklist
 

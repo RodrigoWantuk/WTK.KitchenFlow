@@ -1,6 +1,6 @@
 # KitchenFlow Documentation
 
-This directory is the durable source of truth for product, domain, architecture, engineering, AI, quality, security, operations, and work-execution decisions.
+This directory is the durable source of truth for product, domain, architecture, engineering, AI, quality, security, operations, development, and work-execution decisions.
 
 Documentation is part of the product. Code, tests, contracts, plans, and operational behavior must remain consistent with the accepted documents.
 
@@ -13,6 +13,7 @@ discovery/           Structured stakeholder discovery and reference evidence
 product/             Vision, audience, profile, journeys, and release scope
 domain/              Inventory, planning, shopping, recipes, cooking, and invariants
 architecture/        System architecture, principles, and ADRs
+development/         Supported Windows/Linux environment and execution conventions
 ai/                  AI workflows, context, providers, validation, quotas, and cost
 security/            Privacy, data protection, security, and abuse controls
 testing/             Quality strategy, domain gates, test levels, and release gates
@@ -46,6 +47,7 @@ Read:
 - [`product/initial-release.md`](product/initial-release.md)
 - [`domain/README.md`](domain/README.md)
 - all domain documents touched by the workflow
+- [`development/environment.md`](development/environment.md)
 - [`security/privacy-and-data-protection.md`](security/privacy-and-data-protection.md)
 - [`testing/product-foundation-gates.md`](testing/product-foundation-gates.md)
 
@@ -57,12 +59,22 @@ Read:
 - [`domain/planning-and-shopping.md`](domain/planning-and-shopping.md)
 - [`domain/recipes-and-cooking.md`](domain/recipes-and-cooking.md)
 - [`architecture/overview.md`](architecture/overview.md)
+- [`development/environment.md`](development/environment.md)
 - [`ai/overview.md`](ai/overview.md)
 - [`ai/usage-and-cost-governance.md`](ai/usage-and-cost-governance.md)
 - [`security/security-and-abuse.md`](security/security-and-abuse.md)
 - [`operations/platform-and-reliability.md`](operations/platform-and-reliability.md)
 - [`testing/strategy.md`](testing/strategy.md)
 - [`testing/product-foundation-gates.md`](testing/product-foundation-gates.md)
+
+## Testing work
+
+Read the complete implementation-specific test basis plus:
+
+- [`development/environment.md`](development/environment.md)
+- [`testing/strategy.md`](testing/strategy.md)
+- [`testing/product-foundation-gates.md`](testing/product-foundation-gates.md)
+- the applicable implementation plans, accepted ADRs, contracts, migrations, and pinned system-under-test baselines.
 
 ## AI work
 
@@ -78,6 +90,7 @@ No agent may add a direct provider call outside the application-owned AI gateway
 
 Read:
 
+- [`development/environment.md`](development/environment.md)
 - [`security/privacy-and-data-protection.md`](security/privacy-and-data-protection.md)
 - [`security/security-and-abuse.md`](security/security-and-abuse.md)
 - [`operations/platform-and-reliability.md`](operations/platform-and-reliability.md)

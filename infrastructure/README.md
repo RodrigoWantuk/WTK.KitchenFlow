@@ -14,12 +14,27 @@ This directory contains versioned infrastructure and deployment assets for Kitch
 
 Exact cloud, managed-service, infrastructure-as-code, CI/CD, secret-management, and telemetry-storage providers remain open and require plans or ADRs.
 
+## Development environment
+
+The canonical host and container requirements are defined in [`../docs/development/environment.md`](../docs/development/environment.md).
+
+Default development policy:
+
+- install Git, Docker, .NET 10 SDK, Node.js 24 LTS, and CLI diagnostics on the host;
+- run infrastructure dependencies as Linux containers on both Windows and Linux;
+- do not require native PostgreSQL, Keycloak/Java, RabbitMQ/Erlang, Redis, S3 emulator, or Python installations;
+- keep the default Compose profile limited to services required by the active executable slice;
+- pin exact image tags and later digests in committed Compose/configuration files;
+- expose development ports on loopback where practical;
+- document safe environment placeholders without committing secrets.
+
 ## Intended assets
 
 - local and integration Compose definitions;
 - container build definitions;
+- cloud deployment definitions;
+- VPS deployment definitions;
 - environment configuration templates;
-- production deployment definitions;
 - database migration execution;
 - Keycloak configuration automation;
 - RabbitMQ topology and recovery automation;
@@ -42,4 +57,4 @@ Exact cloud, managed-service, infrastructure-as-code, CI/CD, secret-management, 
 - Telemetry excludes unnecessary personal, allergy, prompt, response, and recipe content.
 - Provider-specific choices require an ADR when they create durable cost, security, portability, or operational consequences.
 
-See [`../docs/operations/platform-and-reliability.md`](../docs/operations/platform-and-reliability.md) and [`ADR-0006`](../docs/architecture/decisions/0006-deployment-and-observability.md).
+See [`../docs/operations/platform-and-reliability.md`](../docs/operations/platform-and-reliability.md), [`../docs/development/environment.md`](../docs/development/environment.md), and [`ADR-0006`](../docs/architecture/decisions/0006-deployment-and-observability.md).
