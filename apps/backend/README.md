@@ -19,7 +19,7 @@ See [`ADR-0002`](../../docs/architecture/decisions/0002-backend-platform-and-mod
 
 ## Local authenticated-slice development
 
-Start PostgreSQL and Keycloak with `docker compose -f infrastructure/compose/compose.dev.yml up -d`. The API launch profiles use `http://localhost:7080` and `https://localhost:7443`; the latter is the Keycloak redirect origin and must use a trusted ASP.NET Core development certificate. Verify it with `dotnet dev-certs https --check --trust` where the host supports trust installation.
+Start PostgreSQL and Keycloak with `docker compose -f infrastructure/compose/compose.dev.yml up -d`. The API launch profile uses `https://localhost:7443`, which is the Keycloak redirect origin and must use a trusted ASP.NET Core development certificate. Cookie-authenticated development must use HTTPS because the session and antiforgery cookies deliberately use the `Secure` and `__Host-` constraints. Verify the certificate with `dotnet dev-certs https --check --trust` where the host supports trust installation.
 
 Configure `KITCHENFLOW_DB_CONNECTION`, `KITCHENFLOW_OIDC_AUTHORITY`, `KITCHENFLOW_OIDC_CLIENT_ID`, `KITCHENFLOW_OIDC_CLIENT_SECRET`, and `KITCHENFLOW_SESSION_KEYRING_PATH` through an ignored local environment file or secret store. The session key-ring path is development-local only; production deployments must provide a shared protected key ring. Do not place OIDC tokens or client secrets in browser configuration.
 

@@ -1,11 +1,11 @@
 # PLAN-0003: Implement Backend Foundation and Inventory Core
 
-- **Status:** Completed
+- **Status:** In Progress
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** Codex backend implementation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T12:10:00Z
+- **Last updated:** 2026-07-29T12:45:00Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, open)
 - **Related implementation plan:** PLAN-0002
@@ -468,31 +468,52 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Acceptance criteria
 
-- [x] All PLAN-0002 backend requirements are implemented.
-- [x] Two authenticated users cannot observe or mutate each other's data by any tested endpoint or ID substitution.
-- [x] Product/lot creation is atomic with initial transaction and audit event.
-- [x] Quantity is decimal or availability state and invalid mixed representations are impossible.
-- [x] Adjustments preserve immutable history and cannot create negative quantities.
-- [x] ETag/If-Match and idempotency behavior match the contract.
-- [x] OpenAPI 3.1 snapshot is generated reproducibly and drift-checked.
-- [x] PLAN-0004 receives an exact stable contract milestone.
-- [x] Empty-database migration, tests, build, formatting, vulnerability audit, and real Keycloak smoke pass.
-- [x] Logs, traces, errors, and metrics contain no forbidden sensitive content.
-- [x] Documentation and compose instructions are current.
+- [ ] All PLAN-0002 backend requirements are implemented.
+- [ ] Two authenticated users cannot observe or mutate each other's data by any tested endpoint or ID substitution.
+- [ ] Product/lot creation is atomic with initial transaction and audit event.
+- [ ] Quantity is decimal or availability state and invalid mixed representations are impossible.
+- [ ] Adjustments preserve immutable history and cannot create negative quantities.
+- [ ] ETag/If-Match and idempotency behavior match the contract.
+- [ ] OpenAPI 3.1 snapshot is generated reproducibly and drift-checked.
+- [ ] PLAN-0004 receives an exact stable contract milestone.
+- [ ] Empty-database migration, tests, build, formatting, vulnerability audit, and real Keycloak smoke pass.
+- [ ] Logs, traces, errors, and metrics contain no forbidden sensitive content.
+- [ ] Documentation and compose instructions are current.
 - [x] No excluded module or infrastructure dependency is introduced.
 
 ## Execution state
 
-- **Current checkpoint:** All PLAN-0003 implementation and non-graphical validation is complete; the owner expressly approved the sole remaining graphical-browser gate.
-- **Last completed step:** Opened draft PR #9 and recorded its delivery state, validation record, and post-merge branch-cleanup responsibility.
-- **Exact next action:** Request review; PLAN-0004 consumes the stable OpenAPI contract and PLAN-0005 independently validates the PR baseline. The repository maintainer deletes this branch after merge.
+- **Current checkpoint:** Current `main` is merged; the immediate environment and quality defects from review are corrected, while the architecture/domain refactor remains the active substantial outcome.
+- **Last completed step:** Restored HTTPS-only cookie development, the PostgreSQL data-directory mount, Markdown/Makefile editor rules, and a meaningful unit invariant in place of the no-op test.
+- **Exact next action:** Refactor inventory endpoint execution into module application services backed by authoritative domain behavior, then add persistence constraints and concurrency-safe idempotency.
 - **Blockers:** None.
-- **Partially modified areas:** Plan and registry completion state; PLAN-0004 contract handoff only.
-- **Validation performed:** Locked restore; zero-warning Release build; formatting; full automated suite (2 architecture, 5 unit, 18 PostgreSQL integration tests); migration update; compose readiness; OpenAPI export/drift; real Keycloak HTTPS Authorization Code + PKCE session smoke; two-user isolation smoke; telemetry-redaction coverage.
-- **Known failures or limitations:** An interactive graphical-browser login/logout/create/list walkthrough could not be executed in this headless container. The owner expressly approved treating that graphical-only validation as done; no automated backend check is failing.
-- **Working tree state:** PR delivery metadata is ready to commit.
+- **Partially modified areas:** Backend local-development configuration, repository formatting settings, unit-test coverage, and active-plan state.
+- **Validation performed:** Fetched `origin/main` at `dd2b6005a0a1c2af00f945e8645b44565ad1a85a`; read the consolidated PR #9 review and all unresolved review threads; `docker compose -f infrastructure/compose/compose.dev.yml config`.
+- **Known failures or limitations:** The application/domain, persistence-integrity, OpenAPI, error-contract, concurrency, documentation, CI, and runbook corrections remain unfinished. The current snapshot is not a stable PLAN-0004 contract.
+- **Working tree state:** The baseline-correction commit is ready to create; larger refactoring has not started in the working tree.
 
 ## Progress log
+
+### 2026-07-29T12:45:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Corrected the immediate review defects after synchronizing the branch with current `main`.
+- **Changes included in the commit:** Restored Markdown trailing-whitespace preservation and Makefile tabs in `.editorconfig`; mounted PostgreSQL's actual data directory; removed the unusable HTTP-only launch profile and documented HTTPS-only cookie development; replaced the no-op unit test with product-name normalization coverage.
+- **Documentation and code documentation delivered:** Updated the backend local-development guidance to explain why cookie-authenticated development must use HTTPS.
+- **Validation performed:** `docker compose -f infrastructure/compose/compose.dev.yml config`; focused unit-test execution follows in this commit validation.
+- **Result:** The three directly actionable configuration/test review threads are corrected without weakening secure-cookie behavior.
+- **Known failures or unverified behavior:** The substantive architecture/domain, database integrity, idempotency concurrency, error/OpenAPI, XML documentation, expanded tests, CI, and runbook work remains open.
+- **Blockers:** None.
+- **Next action:** Move executable inventory business logic out of API endpoints into the inventory module application layer and use the domain model for mutations.
+
+### 2026-07-29T12:30:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Reopened PLAN-0003 after changes were requested on draft PR #9 and began integrating current `main`.
+- **Changes included in the commit:** Incorporated the PLAN-0006/PLAN-0007 documentation baseline; restored PLAN-0003 to `In Progress`; withdrew the completed/stable-contract handoff claim; preserved the refined PLAN-0004 plan while removing the premature backend handoff.
+- **Validation performed:** `git fetch origin main --prune`; verified `origin/main` at `dd2b6005a0a1c2af00f945e8645b44565ad1a85a`; inspected the consolidated review and seven unresolved PR review threads with the GitHub review-thread query.
+- **Result:** The branch is being reconciled with current repository governance and accurately records that the PR remains draft with changes requested.
+- **Known failures or unverified behavior:** The review identifies real architecture, OpenAPI, persistence, concurrency/idempotency, error-contract, documentation, test, CI, and runbook gaps. No completion claim is valid until they are corrected and revalidated.
+- **Blockers:** None.
+- **Next action:** Finish the merge, then complete the module/use-case and authoritative-domain refactor before correcting database and API contract behavior.
 
 ### 2026-07-29T12:15:00Z — Codex backend implementation agent
 
