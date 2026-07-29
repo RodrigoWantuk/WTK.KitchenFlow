@@ -1,0 +1,20 @@
+{
+  "realm": "kitchenflow",
+  "enabled": true,
+  "users": [
+    { "username": "inventory-user-a", "enabled": true, "emailVerified": true, "credentials": [{ "type": "password", "value": "development-only-user-a", "temporary": false }] },
+    { "username": "inventory-user-b", "enabled": true, "emailVerified": true, "credentials": [{ "type": "password", "value": "development-only-user-b", "temporary": false }] }
+  ],
+  "clients": [
+    {
+      "clientId": "kitchenflow-backend",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "development-only-change-me",
+      "redirectUris": ["https://localhost:7443/signin-oidc"],
+      "webOrigins": ["https://localhost:7443"],
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false
+    }
+  ]
+}

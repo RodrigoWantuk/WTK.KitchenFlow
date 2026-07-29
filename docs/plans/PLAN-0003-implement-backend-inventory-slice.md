@@ -483,9 +483,9 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** EF Core/Npgsql persistence foundation and internal identity table mapping are buildable.
-- **Last completed step:** Added explicit schema/table mappings for internal users, products, lots, transactions, audit events, and idempotency records.
-- **Exact next action:** Create migrations and local PostgreSQL/Keycloak compose assets, then connect authenticated API use cases to the persistence model.
+- **Current checkpoint:** Initial database migration and local PostgreSQL/Keycloak development assets are present.
+- **Last completed step:** Added the design-time DbContext, generated the initial migration, and added local compose/realm/tool configuration.
+- **Exact next action:** Start compose dependencies, apply the migration to PostgreSQL, and implement authenticated session plus inventory API use cases.
 - **Blockers:** None.
 - **Partially modified areas:** None.
 - **Validation performed:** Previous foundation validation plus `dotnet restore apps/backend/KitchenFlow.slnx --force-evaluate` and `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`. Restore and build passed with zero warnings/errors after compatible dependency pins were selected.
@@ -529,6 +529,15 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Result:** Restore and Release build passed with zero warnings/errors. Initial dependency pins exposed vulnerable/incompatible OpenAPI and telemetry transitive versions; pins were upgraded to Microsoft.OpenApi 2.11.0, OpenTelemetry 1.17.0, EF Core/Npgsql 10.0.3, resolving the build and advisory failures.
 - **Next action:** Add migrations and compose services before API use cases.
 - **Blockers or handoff notes:** No migration has been generated yet; the application does not run persistence automatically on startup.
+
+### 2026-07-28T00:40:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Added initial migration and local dependency assets.
+- **Changes included in the commit:** Added the local `dotnet-ef` tool manifest, safe development environment template, PostgreSQL/Keycloak compose topology, synthetic Keycloak realm/users, DbContext design factory/registration, and generated `InitialInventorySlice` migration.
+- **Validation performed:** `docker compose --env-file .env.example -f infrastructure/compose/compose.dev.yml config`; `dotnet tool restore`; `dotnet restore apps/backend/KitchenFlow.slnx --force-evaluate`; `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet tool run dotnet-ef migrations add InitialInventorySlice --project apps/backend/src/KitchenFlow.Infrastructure/KitchenFlow.Infrastructure.csproj --startup-project apps/backend/src/KitchenFlow.Api/KitchenFlow.Api.csproj --output-dir Persistence/Migrations`.
+- **Result:** Compose configuration and tool restore succeeded; migration generation succeeded. EF reports the local tool is 10.0.3 while runtime is 10.0.4, an advisory to update the tool before final validation.
+- **Next action:** Run containers/migration and implement OIDC, CSRF, endpoint, OpenAPI, and test behavior.
+- **Blockers or handoff notes:** The full PLAN-0003 acceptance suite is not yet implemented or executed.
 
 ### 2026-07-29T00:25:00Z — AI planning agent
 
