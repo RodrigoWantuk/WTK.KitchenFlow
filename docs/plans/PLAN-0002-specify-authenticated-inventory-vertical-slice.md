@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** AI planning agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T00:15:00Z
+- **Last updated:** 2026-07-29T00:25:00Z
 - **Branch:** `agent/plan-0002-first-vertical-slice-plans`
 - **Pull request:** Not opened
 - **Related issues:** None
@@ -169,7 +169,7 @@ The implementation may use richer internal types, but it must preserve these con
 - `Id: Guid`
 - `Issuer: string`
 - `Subject: string`
-- `CreatedAt: Instant/UTC timestamp`
+- `CreatedAt: UTC timestamp`
 - unique constraint on `(Issuer, Subject)`
 
 ### Product
@@ -222,7 +222,7 @@ All routes are under `/api/v1`. OpenAPI 3.1 is generated from the backend and tr
 
 ### Session
 
-- `GET /session` — current authenticated user summary and supported locale metadata.
+- `GET /session` — current authenticated user summary, CSRF token, and supported locale metadata.
 - `POST /auth/login` — initiates backend OIDC challenge; browser navigation endpoint, not JSON credential exchange.
 - `POST /auth/logout` — ends local session and provider session where possible.
 
@@ -326,7 +326,7 @@ Must include:
 
 ## Observability requirements
 
-Every request and background-free mutation path must expose:
+Every request and mutation path must expose:
 
 - correlation/trace identifier;
 - route template, result status, and latency;
@@ -363,10 +363,10 @@ Health endpoints must distinguish liveness from readiness. Readiness includes Po
 
 ### Phase 2: Create execution plans
 
-- [ ] Add detailed PLAN-0003 for backend foundation and inventory core.
-- [ ] Add detailed PLAN-0004 for Lovable frontend shell and inventory UX.
-- [ ] Add detailed PLAN-0005 for independent vertical-slice validation.
-- [ ] Register dependency and concurrency rules for all plans.
+- [x] Add detailed PLAN-0003 for backend foundation and inventory core.
+- [x] Add detailed PLAN-0004 for Lovable frontend shell and inventory UX.
+- [x] Add detailed PLAN-0005 for independent vertical-slice validation.
+- [x] Register dependency and concurrency rules for all plans.
 
 **Exit criteria**
 
@@ -443,12 +443,12 @@ The slice establishes migrations, health endpoints, structured telemetry, local 
 
 ## Acceptance criteria
 
-- [ ] PLAN-0001 delivery is reconciled as merged.
-- [ ] PLAN-0003, PLAN-0004, and PLAN-0005 exist and are registered exactly once.
+- [x] PLAN-0001 delivery is reconciled as merged.
+- [x] PLAN-0003, PLAN-0004, and PLAN-0005 exist and are registered exactly once.
 - [ ] Every `VS-REQ-*` requirement has an implementation owner and independent validation coverage.
 - [ ] Development environment documentation covers Windows and Linux completely.
-- [ ] Lovable's current existing-repository limitation is handled explicitly.
-- [ ] Downstream plans do not silently broaden or reduce the slice.
+- [x] Lovable's current existing-repository limitation is handled explicitly.
+- [x] Downstream plans do not silently broaden or reduce the slice.
 - [ ] Required documentation indexes are current.
 - [ ] Full branch validation is complete.
 - [ ] Pull request is open.
@@ -458,13 +458,13 @@ The slice establishes migrations, health endpoints, structured telemetry, local 
 
 This section must be updated before every agent-created commit.
 
-- **Current checkpoint:** PLAN-0001 merge is reconciled and the exact first authenticated inventory slice is specified in PLAN-0002.
-- **Last completed step:** Phase 1 registration and specification.
-- **Exact next action:** Add PLAN-0003, PLAN-0004, and PLAN-0005 with requirement traceability and explicit agent instructions.
+- **Current checkpoint:** PLAN-0003, PLAN-0004, and PLAN-0005 are fully specified and registered with distinct ownership and dependencies.
+- **Last completed step:** Phase 2 execution-plan creation.
+- **Exact next action:** Add the canonical Windows/Linux development environment document and update documentation indexes.
 - **Blockers:** None.
-- **Partially modified areas:** No downstream plan or environment document exists yet.
-- **Validation performed:** Confirmed PR #5 merge and reviewed the accepted plan templates and foundation documents.
-- **Known failures or limitations:** The connector cannot delete the prior merged branch; branch cleanup remains owner or repository-automation housekeeping.
+- **Partially modified areas:** Development environment documentation and final validation remain.
+- **Validation performed:** Cross-checked downstream scope, branches, dependencies, requirement ownership, and explicit Lovable export workflow.
+- **Known failures or limitations:** Exact third-party package patch versions remain implementation-time lockfile decisions unless documented in the environment baseline.
 - **Working tree state:** Clean after this commit.
 
 ## Progress log
@@ -473,10 +473,19 @@ This section must be updated before every agent-created commit.
 
 - **Checkpoint:** Registered the first vertical-slice planning effort.
 - **Changes included in the commit:** Reconciled PLAN-0001 as merged; added detailed PLAN-0002; updated the central plan registry.
-- **Validation performed:** Confirmed PR #5 `merged=true`, merge commit, current templates, and accepted foundation requirements.
-- **Result:** The exact slice, contracts, data concepts, user routes, nonfunctional requirements, exclusions, and sequencing are now durable.
-- **Next action:** Add the backend, Lovable frontend, and independent test plans.
+- **Validation performed:** Confirmed PR #5 merge, current templates, and accepted foundation requirements.
+- **Result:** Exact slice, contracts, data concepts, user routes, nonfunctional requirements, exclusions, and sequencing are durable.
+- **Next action:** Add backend, Lovable frontend, and independent test plans.
 - **Blockers or handoff notes:** None.
+
+### 2026-07-29T00:25:00Z — AI planning agent
+
+- **Checkpoint:** Downstream execution plans are ready.
+- **Changes included in the commit:** Added PLAN-0003 backend implementation, PLAN-0004 Lovable frontend implementation, and PLAN-0005 independent test plan; updated registry and PLAN-0002 state.
+- **Validation performed:** Checked nonoverlapping branch ownership, dependencies, exact commands, phase exits, security gates, and requirement traceability responsibilities.
+- **Result:** Separate agents can execute backend, frontend, and independent validation without relying on the discovery conversation.
+- **Next action:** Document the cross-platform development environment.
+- **Blockers or handoff notes:** PLAN-0004 live API integration waits for PLAN-0003's OpenAPI contract milestone; PLAN-0005 execution waits for stable implementation baselines.
 
 ## Completion and handoff checklist
 
