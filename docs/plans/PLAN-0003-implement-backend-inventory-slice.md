@@ -483,9 +483,9 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** The protected inventory API foundation builds with owner-scoped persistence, OIDC cookie configuration, CSRF validation, concurrency checks, and audit/transaction writes.
-- **Last completed step:** Added session/auth routes and the inventory endpoint handlers.
-- **Exact next action:** Complete idempotency replay for adjustments, pagination/query filters, integration/architecture tests, OpenAPI artifact tooling, and real authentication smoke tests.
+- **Current checkpoint:** Runtime health, readiness, and unauthenticated API behavior are validated against real PostgreSQL.
+- **Last completed step:** Corrected database configuration precedence and API cookie challenge behavior.
+- **Exact next action:** Complete idempotency replay for adjustments, pagination/query filters, integration/architecture tests, OpenAPI artifact tooling, and authenticated smoke tests.
 - **Blockers:** None.
 - **Partially modified areas:** None.
 - **Validation performed:** Previous foundation validation plus `dotnet restore apps/backend/KitchenFlow.slnx --force-evaluate` and `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`. Restore and build passed with zero warnings/errors after compatible dependency pins were selected.
@@ -574,6 +574,15 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Result:** No behavior or schema change.
 - **Next action:** Continue the unfinished PLAN-0003 validation and contract work.
 - **Blockers or handoff notes:** None.
+
+### 2026-07-28T01:15:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Validated API runtime readiness against real PostgreSQL.
+- **Changes included in the commit:** Corrected empty configured connection-string precedence, returned `401` for unauthenticated API requests instead of an HTML/login redirect, and retained CSRF enforcement for inventory mutations.
+- **Validation performed:** Debug build; ran the API with the compose PostgreSQL connection; `curl /health/live` (200), `curl /health/ready` (200), and unauthenticated `curl /api/v1/session` (401); complete test suite baseline (five unit tests pass, integration/architecture projects currently contain no test cases); package vulnerability audit (no known vulnerable packages).
+- **Result:** Runtime and unauthenticated boundaries behave correctly; the test suite remains incomplete for PLAN-0003.
+- **Next action:** Add contract, behavior, and isolation tests, then validate real Keycloak login.
+- **Blockers or handoff notes:** The API process is a local validation process only; it is not a deployment or completed smoke test.
 
 ### 2026-07-29T00:25:00Z — AI planning agent
 
