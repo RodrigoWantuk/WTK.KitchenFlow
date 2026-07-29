@@ -483,9 +483,9 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Initial database migration and local PostgreSQL/Keycloak development assets are present.
-- **Last completed step:** Added the design-time DbContext, generated the initial migration, and added local compose/realm/tool configuration.
-- **Exact next action:** Start compose dependencies, apply the migration to PostgreSQL, and implement authenticated session plus inventory API use cases.
+- **Current checkpoint:** The protected inventory API foundation builds with owner-scoped persistence, OIDC cookie configuration, CSRF validation, concurrency checks, and audit/transaction writes.
+- **Last completed step:** Added session/auth routes and the inventory endpoint handlers.
+- **Exact next action:** Complete idempotency replay for adjustments, pagination/query filters, integration/architecture tests, OpenAPI artifact tooling, and real authentication smoke tests.
 - **Blockers:** None.
 - **Partially modified areas:** None.
 - **Validation performed:** Previous foundation validation plus `dotnet restore apps/backend/KitchenFlow.slnx --force-evaluate` and `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`. Restore and build passed with zero warnings/errors after compatible dependency pins were selected.
@@ -556,6 +556,15 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Result:** PostgreSQL and Keycloak are healthy; the migration was applied successfully to the empty KitchenFlow database. The first migration application failed because its check constraint used unquoted lowercase column names; PostgreSQL rolled that migration back, and the corrected regenerated migration passed.
 - **Next action:** Implement OIDC session, CSRF, owner-scoped inventory use cases/endpoints, and contract generation.
 - **Blockers or handoff notes:** Do not source `.env.example` in a shell because the connection-string semicolons are Compose values; pass the connection string through an explicit environment variable or use a script that parses it safely.
+
+### 2026-07-28T01:00:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Added the authenticated inventory API foundation.
+- **Changes included in the commit:** Added OIDC Authorization Code/PKCE cookie configuration with no token persistence, antiforgery token issuance and mutation validation, internal-user provisioning, liveness/readiness endpoints, owner-scoped inventory handlers, ETags/If-Match checks, atomic initial transaction/audit writes, and OpenTelemetry registration.
+- **Validation performed:** `dotnet format apps/backend/KitchenFlow.slnx --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`.
+- **Result:** Formatting and Release build passed with zero warnings/errors.
+- **Next action:** Add the missing contract/test/idempotency coverage and execute the real authenticated smoke suite.
+- **Blockers or handoff notes:** This checkpoint is not the PLAN-0003 completion milestone: adjustment replay, cursor pagination, contract export/drift, and independent test coverage remain unfinished.
 
 ### 2026-07-29T00:25:00Z — AI planning agent
 

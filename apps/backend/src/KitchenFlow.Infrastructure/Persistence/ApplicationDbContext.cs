@@ -50,6 +50,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             entity.Property(x => x.PackageState).HasMaxLength(20);
             entity.Property(x => x.ExpirationProvenance).HasMaxLength(30);
             entity.Property(x => x.Notes).HasMaxLength(1000);
+            entity.Property(x => x.Version).IsConcurrencyToken();
             entity.HasIndex(x => new { x.OwnerUserId, x.UpdatedAt, x.Id });
         });
 

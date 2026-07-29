@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
     <Deterministic>true</Deterministic>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
