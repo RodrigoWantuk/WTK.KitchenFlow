@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend implementation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T13:45:00Z
+- **Last updated:** 2026-07-29T14:00:00Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, open)
 - **Related implementation plan:** PLAN-0002
@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Current `main`, immediate review defects, PostgreSQL integrity, concurrent idempotency replay, and domain-owned mutation state transitions are corrected; explicit application-service extraction is the active substantial outcome.
-- **Last completed step:** Routed the executable create, metadata-update, adjustment, and deletion transitions through restored domain entities and immutable domain transactions.
-- **Exact next action:** Extract endpoint orchestration into inventory module application services/ports, then add direct migration-constraint coverage and complete Problem Details/OpenAPI contracts.
+- **Current checkpoint:** OpenAPI runtime customization is implemented and compiles; runtime export, snapshot regeneration, and contract assertions are the immediate validation work before this contract phase can be accepted.
+- **Last completed step:** Added a transformer that declares backend cookie-session security and mutation/concurrency headers on the runtime document.
+- **Exact next action:** Start the API against PostgreSQL, export and inspect the OpenAPI runtime document, add contract assertions/examples/problem schemas, regenerate the snapshot, then resume application-service extraction.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
 - **Validation performed:** `dotnet test apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`.
 - **Known failures or limitations:** Endpoint orchestration still accesses EF directly; explicit application services/ports, complete Problem Details/OpenAPI, XML documentation/enforcement, expanded test/CI, and runbook corrections remain unfinished. The current snapshot is not a stable PLAN-0004 contract.
-- **Working tree state:** The domain-execution checkpoint is ready to commit.
+- **Working tree state:** The compiling OpenAPI transformer checkpoint is ready to commit; runtime export/drift validation is intentionally pending.
 
 ## Progress log
+
+### 2026-07-29T14:00:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Began the OpenAPI contract correction with runtime security and header metadata.
+- **Changes included in the commit:** Added an OpenAPI document transformer for the backend-managed secure session cookie, authenticated operation security requirements, `X-CSRF-TOKEN`, `Idempotency-Key`, `If-Match`, and `ETag` contract metadata.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore` completed with zero warnings/errors.
+- **Result:** The transformer compiles; it is not yet accepted as the stable frontend contract.
+- **Known failures or unverified behavior:** Runtime export, snapshot regeneration, header/security assertions, examples, error schemas, and CI drift enforcement remain open. Application-service extraction also remains open.
+- **Blockers:** None.
+- **Next action:** Validate the transformed runtime OpenAPI document and regenerate the snapshot before making any stable-contract claim.
 
 ### 2026-07-29T13:45:00Z — Codex backend implementation agent
 

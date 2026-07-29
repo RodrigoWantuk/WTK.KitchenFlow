@@ -52,7 +52,7 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("authentication", context => RateLimitPartition.GetFixedWindowLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
     options.AddPolicy("mutation", context => RateLimitPartition.GetFixedWindowLimiter(context.User.FindFirst("sub")?.Value ?? context.User.Identity?.Name ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = 60, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 });
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options => options.AddDocumentTransformer(InventoryOpenApiTransformer.ApplyAsync));
 builder.Services.AddOpenTelemetry().WithTracing(tracing => tracing.AddAspNetCoreInstrumentation().AddEntityFrameworkCoreInstrumentation().AddProcessor(new SensitiveTelemetryRedactionProcessor())).WithMetrics(metrics => metrics.AddAspNetCoreInstrumentation());
 
 var app = builder.Build();
