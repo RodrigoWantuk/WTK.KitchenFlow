@@ -85,7 +85,7 @@ namespace KitchenFlow.Infrastructure.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_lots", x => x.Id);
-                    table.CheckConstraint("ck_lots_quantity_mode", "(measured_value IS NOT NULL AND measured_unit IS NOT NULL AND availability_state IS NULL) OR (measured_value IS NULL AND measured_unit IS NULL AND availability_state IS NOT NULL)");
+                    table.CheckConstraint("ck_lots_quantity_mode", "(\"MeasuredValue\" IS NOT NULL AND \"MeasuredUnit\" IS NOT NULL AND \"AvailabilityState\" IS NULL) OR (\"MeasuredValue\" IS NULL AND \"MeasuredUnit\" IS NULL AND \"AvailabilityState\" IS NOT NULL)");
                 });
 
             migrationBuilder.CreateTable(

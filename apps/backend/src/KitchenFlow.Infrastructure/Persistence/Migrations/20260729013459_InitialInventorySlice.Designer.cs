@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KitchenFlow.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260729013143_InitialInventorySlice")]
+    [Migration("20260729013459_InitialInventorySlice")]
     partial class InitialInventorySlice
     {
         /// <inheritdoc />
@@ -174,7 +174,7 @@ namespace KitchenFlow.Infrastructure.Persistence.Migrations
 
                     b.ToTable("lots", "inventory", t =>
                         {
-                            t.HasCheckConstraint("ck_lots_quantity_mode", "(measured_value IS NOT NULL AND measured_unit IS NOT NULL AND availability_state IS NULL) OR (measured_value IS NULL AND measured_unit IS NULL AND availability_state IS NOT NULL)");
+                            t.HasCheckConstraint("ck_lots_quantity_mode", "(\"MeasuredValue\" IS NOT NULL AND \"MeasuredUnit\" IS NOT NULL AND \"AvailabilityState\" IS NULL) OR (\"MeasuredValue\" IS NULL AND \"MeasuredUnit\" IS NULL AND \"AvailabilityState\" IS NOT NULL)");
                         });
                 });
 

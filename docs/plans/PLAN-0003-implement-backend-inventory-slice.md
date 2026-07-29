@@ -548,6 +548,15 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Next action:** Continue from the initial migration with compose startup and authenticated API behavior.
 - **Blockers or handoff notes:** PLAN-0003 remains incomplete; no completion, PR, or validation claims are made.
 
+### 2026-07-28T00:50:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Validated the initial migration against real PostgreSQL and Keycloak containers.
+- **Changes included in the commit:** Corrected the lot quantity-mode constraint to quote PostgreSQL's generated PascalCase column names; regenerated the initial migration.
+- **Validation performed:** `docker compose --env-file .env.example -f infrastructure/compose/compose.dev.yml up -d postgres keycloak`; `docker compose ... ps`; `dotnet tool run dotnet-ef migrations remove --force`; `dotnet tool run dotnet-ef migrations add InitialInventorySlice ...`; and `KITCHENFLOW_DB_CONNECTION=... dotnet tool run dotnet-ef database update ...`.
+- **Result:** PostgreSQL and Keycloak are healthy; the migration was applied successfully to the empty KitchenFlow database. The first migration application failed because its check constraint used unquoted lowercase column names; PostgreSQL rolled that migration back, and the corrected regenerated migration passed.
+- **Next action:** Implement OIDC session, CSRF, owner-scoped inventory use cases/endpoints, and contract generation.
+- **Blockers or handoff notes:** Do not source `.env.example` in a shell because the connection-string semicolons are Compose values; pass the connection string through an explicit environment variable or use a script that parses it safely.
+
 ### 2026-07-29T00:25:00Z — AI planning agent
 
 - **Checkpoint:** Implementation plan created.

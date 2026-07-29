@@ -40,7 +40,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
         modelBuilder.Entity<LotRecord>(entity =>
         {
             entity.ToTable("lots", "inventory", table =>
-                table.HasCheckConstraint("ck_lots_quantity_mode", "(measured_value IS NOT NULL AND measured_unit IS NOT NULL AND availability_state IS NULL) OR (measured_value IS NULL AND measured_unit IS NULL AND availability_state IS NOT NULL)"));
+                table.HasCheckConstraint("ck_lots_quantity_mode", "(\"MeasuredValue\" IS NOT NULL AND \"MeasuredUnit\" IS NOT NULL AND \"AvailabilityState\" IS NULL) OR (\"MeasuredValue\" IS NULL AND \"MeasuredUnit\" IS NULL AND \"AvailabilityState\" IS NOT NULL)"));
             entity.HasKey(x => x.Id);
             entity.Property(x => x.MeasuredValue).HasColumnType("numeric(18,3)");
             entity.Property(x => x.MeasuredUnit).HasMaxLength(20);
