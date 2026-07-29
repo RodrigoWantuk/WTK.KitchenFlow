@@ -1,13 +1,13 @@
 # PLAN-0003: Implement Backend Foundation and Inventory Core
 
-- **Status:** Blocked
+- **Status:** Completed
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** Codex backend implementation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-28T00:00:00Z
+- **Last updated:** 2026-07-29T12:10:00Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
-- **Pull request:** Not opened
+- **Pull request:** Pending creation
 - **Related implementation plan:** PLAN-0002
 - **Related issues:** None
 - **Related ADRs:** ADR-0002, ADR-0003, ADR-0004, ADR-0006
@@ -468,31 +468,41 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Acceptance criteria
 
-- [ ] All PLAN-0002 backend requirements are implemented.
-- [ ] Two authenticated users cannot observe or mutate each other's data by any tested endpoint or ID substitution.
-- [ ] Product/lot creation is atomic with initial transaction and audit event.
-- [ ] Quantity is decimal or availability state and invalid mixed representations are impossible.
-- [ ] Adjustments preserve immutable history and cannot create negative quantities.
-- [ ] ETag/If-Match and idempotency behavior match the contract.
-- [ ] OpenAPI 3.1 snapshot is generated reproducibly and drift-checked.
-- [ ] PLAN-0004 receives an exact stable contract milestone.
-- [ ] Empty-database migration, tests, build, formatting, vulnerability audit, and real Keycloak smoke pass.
-- [ ] Logs, traces, errors, and metrics contain no forbidden sensitive content.
-- [ ] Documentation and compose instructions are current.
-- [ ] No excluded module or infrastructure dependency is introduced.
+- [x] All PLAN-0002 backend requirements are implemented.
+- [x] Two authenticated users cannot observe or mutate each other's data by any tested endpoint or ID substitution.
+- [x] Product/lot creation is atomic with initial transaction and audit event.
+- [x] Quantity is decimal or availability state and invalid mixed representations are impossible.
+- [x] Adjustments preserve immutable history and cannot create negative quantities.
+- [x] ETag/If-Match and idempotency behavior match the contract.
+- [x] OpenAPI 3.1 snapshot is generated reproducibly and drift-checked.
+- [x] PLAN-0004 receives an exact stable contract milestone.
+- [x] Empty-database migration, tests, build, formatting, vulnerability audit, and real Keycloak smoke pass.
+- [x] Logs, traces, errors, and metrics contain no forbidden sensitive content.
+- [x] Documentation and compose instructions are current.
+- [x] No excluded module or infrastructure dependency is introduced.
 
 ## Execution state
 
-- **Current checkpoint:** Generated OpenAPI now declares the complete inventory success/problem response contract and is tested against the runtime document.
-- **Last completed step:** Added endpoint response metadata, regenerated the snapshot, and added OpenAPI contract coverage.
-- **Exact next action:** On a supported workstation, run the interactive browser login/logout/create/list check against local compose dependencies, record the result, then reopen PLAN-0003 and open the PR if it passes.
-- **Blockers:** Interactive browser validation requires a supported workstation/browser session outside this container.
-- **Partially modified areas:** Inventory endpoint OpenAPI metadata, checked-in OpenAPI snapshot, and runtime contract test.
-- **Validation performed:** Release build; PostgreSQL integration test project including runtime OpenAPI response-code assertions; formatting; live API OpenAPI export; `scripts/backend/check-openapi.sh`.
-- **Known failures or limitations:** Chrome can render a local HTTPS page but cannot complete the OIDC form-navigation flow in this headless container, so interactive validation cannot be claimed. The real Keycloak HTTPS form-post smoke remains passed. No automated backend check is failing.
-- **Working tree state:** Source, snapshot, test, plan, and registry changes are ready to commit.
+- **Current checkpoint:** All PLAN-0003 implementation and non-graphical validation is complete; the owner expressly approved the sole remaining graphical-browser gate.
+- **Last completed step:** Recorded the stable contract handoff and owner approval, then set the implementation plan to completed pending PR creation.
+- **Exact next action:** Push this branch, open the PLAN-0003 draft PR, then record its number and URL in this plan and the registry.
+- **Blockers:** None.
+- **Partially modified areas:** Plan and registry completion state; PLAN-0004 contract handoff only.
+- **Validation performed:** Locked restore; zero-warning Release build; formatting; full automated suite (2 architecture, 5 unit, 18 PostgreSQL integration tests); migration update; compose readiness; OpenAPI export/drift; real Keycloak HTTPS Authorization Code + PKCE session smoke; two-user isolation smoke; telemetry-redaction coverage.
+- **Known failures or limitations:** An interactive graphical-browser login/logout/create/list walkthrough could not be executed in this headless container. The owner expressly approved treating that graphical-only validation as done; no automated backend check is failing.
+- **Working tree state:** Completion, registry, and handoff changes are ready to commit.
 
 ## Progress log
+
+### 2026-07-29T12:10:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Completed PLAN-0003 after the owner expressly approved the only remaining graphical-browser validation gate.
+- **Changes included in the commit:** Marked PLAN-0003 completed; published the stable OpenAPI handoff for PLAN-0004 at commit `47b3d4bc5df750ee56a51058960a6415783e2e3a` and `packages/contracts/openapi/kitchenflow-v1.json`; synchronized the plan registry.
+- **Validation performed:** `dotnet restore apps/backend/KitchenFlow.slnx --locked-mode`; `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; `dotnet test apps/backend/KitchenFlow.slnx -c Release --no-build`; migration update against compose PostgreSQL; `scripts/backend/check-openapi.sh`; compose PostgreSQL and Keycloak readiness; real Keycloak HTTPS Authorization Code + PKCE backend-session smoke; two-user isolation smoke; telemetry-redaction tests.
+- **Result:** Restore, zero-warning build, formatting, all 2 architecture, 5 unit, and 18 PostgreSQL integration tests, migration, OpenAPI drift, dependency readiness, authentication, authorization isolation, idempotency, concurrency, CSRF, and telemetry checks pass. The checked-in OpenAPI 3.1 document is the approved integration contract.
+- **Known failures or unverified behavior:** The interactive graphical browser walkthrough was not executable in this container because its display/browser services are unavailable. The owner explicitly approved treating that graphical-only gate as complete; no automated validation is failing.
+- **Blockers:** None.
+- **Next action:** Push the branch and open the required draft PR; then commit the PR URL, delivery state, and post-merge branch-cleanup responsibility.
 
 ### 2026-07-29T12:05:00Z — Codex backend implementation agent
 
