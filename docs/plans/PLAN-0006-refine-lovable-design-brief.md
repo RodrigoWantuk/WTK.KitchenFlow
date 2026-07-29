@@ -1,6 +1,6 @@
 # PLAN-0006: Refine the Lovable Product Design Brief
 
-- **Status:** In Progress
+- **Status:** Validating
 - **Type:** Documentation
 - **Priority:** High
 - **Owner:** AI product and UX planning agent
@@ -67,12 +67,12 @@ The refinement must enable a highly navigable, heavily mocked, responsive single
 
 ### Phase 2: Refine PLAN-0004
 
-- [ ] Add general design direction without wireframes.
-- [ ] Add SPA and responsive experience principles.
-- [ ] Add contract-ready and broad mocked prototype layers.
-- [ ] Add required mocked modules, scenario fixtures, and prototype gallery.
-- [ ] Update Project Knowledge and Plan-mode prompt instructions.
-- [ ] Update phases, risks, acceptance criteria, execution state, and progress log.
+- [x] Add general design direction without wireframes.
+- [x] Add SPA and responsive experience principles.
+- [x] Add contract-ready and broad mocked prototype layers.
+- [x] Add required mocked modules, scenario fixtures, and prototype gallery.
+- [x] Update Project Knowledge and Plan-mode prompt instructions.
+- [x] Update phases, risks, acceptance criteria, execution state, and progress log.
 
 **Exit criteria:** PLAN-0004 can be handed to Lovable without further basic visual-direction questions and without constraining its page-design capability.
 
@@ -100,23 +100,23 @@ The refinement must enable a highly navigable, heavily mocked, responsive single
 
 ### Security and privacy
 
-No executable security behavior changes. The refined plan must keep browser-token, Keycloak, API, mock-data, and production-data boundaries explicit. Prototype fixtures must contain synthetic data only.
+No executable security behavior changes. The refined plan keeps browser-token, Keycloak, API, mock-data, and production-data boundaries explicit. Prototype fixtures use synthetic data only.
 
 ### Food safety
 
-Mocked expiration and food-state content must not make safety guarantees. Prototype scenarios may demonstrate attention states but must label uncertainty appropriately.
+Mocked expiration and food-state content do not make safety guarantees. Prototype scenarios may demonstrate attention states but label uncertainty appropriately.
 
 ### AI behavior and cost
 
-No AI provider call is added. Mocked AI experiences are local prototype simulations and must not imply live model execution or consume tokens.
+No AI provider call is added. Mocked AI experiences are local prototype simulations and do not imply live model execution or consume tokens.
 
 ### Localization and accessibility
 
-The visual direction must work in English, Portuguese (Brazil), and Spanish, support text expansion, keyboard operation, assistive technologies, reduced motion, and responsive widths.
+The visual direction supports English, Portuguese (Brazil), and Spanish, text expansion, keyboard operation, assistive technologies, reduced motion, and responsive widths.
 
 ### Operations and observability
 
-No runtime or infrastructure change. Prototype mode must later be controllable through build configuration and must not expose development controls in production by accident.
+No runtime or infrastructure change. Prototype mode is required to be controllable through build configuration and unavailable in production by default.
 
 ## Risks and mitigations
 
@@ -130,29 +130,29 @@ No runtime or infrastructure change. Prototype mode must later be controllable t
 
 ## Acceptance criteria
 
-- [ ] PLAN-0004 contains accepted general visual and experience direction.
-- [ ] No wireframe, ASCII screen sketch, or fixed responsive layout is prescribed.
-- [ ] Lovable retains responsibility for page composition and information architecture.
-- [ ] SPA-like navigation and full device adaptability are explicit.
-- [ ] Contract-ready and broad mocked prototype layers are explicit and separated.
-- [ ] The broad prototype includes the accepted first-release journeys and forms needed for navigation validation.
-- [ ] Mock actions are functional within the prototype and no dead controls are accepted.
-- [ ] Prototype scenario switching and a validation gallery are required.
-- [ ] Mock data and controls are isolated from production behavior.
-- [ ] Project Knowledge and Plan-mode prompt instructions are updated.
-- [ ] PLAN-0002 delivery is reconciled to `Merged`.
-- [ ] PLAN-0004 remains `Ready`, not falsely marked as implemented.
+- [x] PLAN-0004 contains accepted general visual and experience direction.
+- [x] No wireframe, ASCII screen sketch, or fixed responsive layout is prescribed.
+- [x] Lovable retains responsibility for page composition and information architecture.
+- [x] SPA-like navigation and full device adaptability are explicit.
+- [x] Contract-ready and broad mocked prototype layers are explicit and separated.
+- [x] The broad prototype includes the accepted first-release journeys and forms needed for navigation validation.
+- [x] Mock actions are functional within the prototype and no dead controls are accepted.
+- [x] Prototype scenario switching and a validation gallery are required.
+- [x] Mock data and controls are isolated from production behavior.
+- [x] Project Knowledge and Plan-mode prompt instructions are updated.
+- [x] PLAN-0002 delivery is reconciled to `Merged`.
+- [x] PLAN-0004 remains `Ready`, not falsely marked as implemented.
 - [ ] Full branch validation is complete and a PR is open.
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0006 is registered and PLAN-0002 delivery is reconciled after merge.
-- **Last completed step:** Phase 1 registration and reconciliation.
-- **Exact next action:** Amend PLAN-0004 with the general design brief, prototype layers, mock behavior, and updated Lovable prompt guidance.
+- **Current checkpoint:** PLAN-0004 has been fully refined with design principles, Lovable design authority, SPA behavior, two fidelity layers, broad mock workflows, scenarios, prototype gallery, and production-isolation requirements.
+- **Last completed step:** Phase 2 PLAN-0004 refinement.
+- **Exact next action:** Compare the branch against `main`, inspect all changed files, open the pull request, then finalize PLAN-0006 delivery state.
 - **Blockers:** None.
-- **Partially modified areas:** PLAN-0004 refinement remains.
-- **Validation performed:** Confirmed PR #6 merge and reviewed current PLAN-0004 and registry state.
-- **Known failures or limitations:** Final Lovable-generated runtime and visual decisions remain intentionally unresolved until project execution.
+- **Partially modified areas:** Final validation and PR delivery remain.
+- **Validation performed:** Reviewed the revised PLAN-0004 against stakeholder constraints, PLAN-0002, accepted architecture, security, localization, and accessibility boundaries.
+- **Known failures or limitations:** Final Lovable-generated runtime, exact tokens, layout, navigation composition, and brand assets remain intentionally unresolved until execution.
 - **Working tree state:** Clean after this commit.
 
 ## Progress log
@@ -166,11 +166,20 @@ No runtime or infrastructure change. Prototype mode must later be controllable t
 - **Next action:** Update PLAN-0004 with general design and prototype guidance.
 - **Blockers or handoff notes:** Do not introduce screen sketches or fixed layout instructions.
 
+### 2026-07-29 — AI product and UX planning agent
+
+- **Checkpoint:** PLAN-0004 design and prototype brief refined.
+- **Changes included in the commit:** Rewrote PLAN-0004 to add general product personality, color/type/icon/image/motion direction, SPA and responsive principles, two fidelity layers, broad mock workflows, synthetic scenarios, development-only gallery, no-dead-control rule, mock/live isolation, refined Project Knowledge and Plan-mode prompt, tests, phases, risks, and acceptance criteria.
+- **Validation performed:** Confirmed the document contains no screen sketch, ASCII wireframe, fixed navigation structure, or pixel-level layout. Confirmed only Layer A can connect to PLAN-0003 and Layer B remains synthetic.
+- **Result:** Lovable receives strong product direction while retaining page-design and information-architecture authority.
+- **Next action:** Perform final branch review and open the PR.
+- **Blockers or handoff notes:** None.
+
 ## Completion and handoff checklist
 
-- [ ] PLAN-0004 refinement is complete.
-- [ ] Validation confirms no rigid screen design was introduced.
-- [ ] Documentation and registry are synchronized.
+- [x] PLAN-0004 refinement is complete.
+- [x] Validation confirms no rigid screen design was introduced.
+- [ ] Documentation and registry are synchronized after final PR delivery.
 - [ ] Pull request reports scope and validation.
-- [ ] PLAN-0004 remains ready for a future frontend agent.
+- [x] PLAN-0004 remains ready for a future frontend agent.
 - [ ] Branch cleanup responsibility is recorded.
