@@ -337,16 +337,28 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** Commit A transport-token and HTTP-status extraction is partially delivered locally; full automated suite passed after the adapter/token boundary change.
+- **Current checkpoint:** Commit A transport-token and HTTP-status extraction is partially delivered; the PostgreSQL write adapter now clears failed tracked graphs before idempotency replay reads.
 - **Execution status:** In Progress, not Validating.
 - **Confirmed completed phase:** R1.
 - **Partially completed phases:** R2, R3, R4, R5, R6, R7, R8, and R9.
 - **Not started at a valid final candidate:** R10.
 - **Current blocker:** None external. Remaining work is implementation and acceptance evidence inside this branch.
 - **Contract disposition:** OpenAPI snapshot is provisional and must not be consumed as PLAN-0004's stable live-client contract.
-- **Exact next action:** Complete Commit A by decomposing the remaining Inventory application service into independently injected per-use-case handlers and adding direct no-HTTP/no-PostgreSQL unit tests for all seven use cases.
+- **Exact next action:** Complete Commit A by decomposing the remaining Inventory application service into independently injected per-use-case handlers and adding direct no-HTTP/no-PostgreSQL unit tests for all seven use cases; then add R3 race/rollback acceptance tests.
 
 ## Progress log
+
+### 2026-07-30T15:35:00Z — R3 failed-unit-of-work safety (partial)
+
+- **Run delivery target:** Ensure idempotency race classification cannot leave failed Entity Framework inserts tracked before replay lookup.
+- **Checkpoint:** The PostgreSQL write adapter now clears the `ChangeTracker` for exact idempotency uniqueness races, optimistic concurrency conflicts, and propagated persistence failures. Exact `23505` constraint classification remains unchanged.
+- **Material files changed:** PostgreSQL inventory write adapter; this plan; and `docs/plan-status.md`.
+- **Documentation delivered:** Added rationale comments explaining why failed tracked graphs must not be reused after PostgreSQL resolves the uniqueness race.
+- **Commands and validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; and `git diff --check`.
+- **Result:** Release build passed with zero warnings/errors; formatting and whitespace checks passed.
+- **Known failures or unverified behavior:** Direct PostgreSQL rollback/race assertions remain required, as do all remaining Commit A decomposition and R3-R10 work. No final completion claim is made.
+- **Blockers:** None external.
+- **Exact next action:** Add deterministic concurrent adjustment different-payload, exact replay body/ETag, and atomic rollback integration coverage, then complete the per-use-case application-handler extraction.
 
 ### 2026-07-30T13:20:00Z — Commit A transport boundary extraction (partial)
 

@@ -36,7 +36,15 @@ public sealed class PostgreSqlInventoryLotWriteStore(ApplicationDbContext databa
         }
         catch (DbUpdateException exception) when (IsIdempotencyKeyConflict(exception))
         {
+            // PostgreSQL has resolved the unique-key race. The failed tracked graph must not be
+            // reused by the application's replay read, otherwise EF may retry stale inserts.
+            database.ChangeTracker.Clear();
             return InventoryWriteOutcome.IdempotencyConflict;
+        }
+        catch
+        {
+            database.ChangeTracker.Clear();
+            throw;
         }
     }
 
@@ -79,10 +87,22 @@ public sealed class PostgreSqlInventoryLotWriteStore(ApplicationDbContext databa
             await database.SaveChangesAsync(cancellationToken);
             return InventoryWriteOutcome.Saved;
         }
-        catch (DbUpdateConcurrencyException) { return InventoryWriteOutcome.ConcurrencyConflict; }
+        catch (DbUpdateConcurrencyException)
+        {
+            database.ChangeTracker.Clear();
+            return InventoryWriteOutcome.ConcurrencyConflict;
+        }
         catch (DbUpdateException exception) when (write.Idempotency is not null && IsIdempotencyKeyConflict(exception))
         {
+            // The only classified persistence race is this exact PostgreSQL unique constraint.
+            // Clear tracked failed inserts before the caller loads the authoritative replay.
+            database.ChangeTracker.Clear();
             return InventoryWriteOutcome.IdempotencyConflict;
+        }
+        catch
+        {
+            database.ChangeTracker.Clear();
+            throw;
         }
     }
 
