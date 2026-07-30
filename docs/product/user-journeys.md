@@ -1,13 +1,42 @@
 # Primary User Journeys
 
 - **Status:** Accepted
-- **Last updated:** 2026-07-28
+- **Last updated:** 2026-07-30
 
 ## Journey design rule
 
-The journeys share a domain but do not force one entry path. A user may begin with a purchase, a few ingredients, a saved recipe, a menu item, an urgent product, or an intention to cook something unrelated to inventory.
+The journeys share a domain but do not force one entry path. A visitor may begin by understanding the product before authentication. An authenticated user may begin from the contextual home, a purchase, a few ingredients, a saved recipe, a menu item, an urgent product, or an intention to cook something unrelated to inventory.
 
-## 1. Plan before shopping
+## 1. Understand the product before login
+
+```text
+Open the public entry page
+→ understand the core problem and useful outcomes from concise text
+→ optionally watch or interact with an accessible demonstration
+→ review how inventory, planning, suggestions, guided cooking, and reconciliation connect
+→ inspect adult-only and policy information
+→ create an account or sign in through the backend-managed authentication flow
+```
+
+The public page remains understandable without video, animation, autoplay, personal data, or authenticated API access. Demonstration content is synthetic and never implies that an unavailable capability is already live.
+
+## 2. Return home and decide what to cook
+
+```text
+Open the authenticated home
+→ receive a safe personal or neutral greeting based on local daypart
+→ see the localized primary question “What shall we cook today?”
+→ inspect relevant accepted menu entries
+→ inspect inventory-based suggestions that prioritize products needing attention
+→ inspect suggestions based on the confirmed user profile
+→ optionally choose “Help me choose” and answer one or two material questions
+→ understand why each option is suggested
+→ start, inspect, adapt, schedule, save, favorite, replace, reschedule, or ignore an option
+```
+
+The home uses the user's saved or browser-reported IANA timezone, not the server timezone or precise location. Missing menu, inventory, profile, or AI context removes or degrades only the affected suggestion source. Urgency influences ordering and explanation but never forces a choice.
+
+## 3. Plan before shopping
 
 ```text
 Select period and meal context
@@ -22,7 +51,7 @@ Select period and meal context
 
 The user may mix fixed dates with unscheduled options. Simulation and draft modes do not mutate the active plan or inventory reservations.
 
-## 2. Register a purchase
+## 4. Register a purchase
 
 ```text
 Manual item, manual list, or receipt photograph
@@ -36,10 +65,10 @@ Manual item, manual list, or receipt photograph
 
 A source image is temporary and is deleted after parsing or immediately after a reported failure.
 
-## 3. Decide what to cook now
+## 5. Decide what to cook from a direct request
 
 ```text
-Start a recipe request
+Start a recipe request from any supported route
 → optionally select inventory, manually entered products, equipment, technique, time, effort, or shopping permission
 → lock products or quantities that must not be used
 → receive explainable suggestions
@@ -49,9 +78,9 @@ Start a recipe request
 → prepare now, schedule, save, favorite, or discard
 ```
 
-The user is never forced to select the most urgent product.
+The user is never forced to select the most urgent product. This direct journey remains available even when the user bypasses the contextual home.
 
-## 4. Use a scheduled menu item
+## 6. Use a scheduled menu item
 
 ```text
 Receive an in-product, push, or email reminder
@@ -65,7 +94,7 @@ or ignore the plan
 
 The rest of the accepted plan is preserved unless the user approves a broader recalculation.
 
-## 5. Guided cooking
+## 7. Guided cooking
 
 ```text
 Select recipe and portions
@@ -81,7 +110,7 @@ Select recipe and portions
 
 Viewing a recipe does not start an execution.
 
-## 6. Finalize and reconcile
+## 8. Finalize and reconcile
 
 ```text
 Review proposed usage
@@ -95,36 +124,38 @@ Review proposed usage
 
 If reconciliation is not completed, the execution remains explicitly pending rather than producing a false inventory state.
 
-## 7. Preserve food instead of cooking it
+## 9. Preserve food instead of cooking it
 
 ```text
-Open attention dashboard
+Open attention dashboard or an inventory-based home suggestion
 → inspect estimated urgency and information source
 → choose recipe, freeze, divide, prepare a component, correct data, discard, or remind later
 → apply an explicit lifecycle transition
 → recalculate shelf life and future availability
 ```
 
-## 8. Operate during AI degradation
+## 10. Operate during AI degradation
 
 ```text
 AI provider unavailable
 → show clear capability status
+→ keep the public entry and authenticated home available
+→ show accepted menu entries, deterministic readiness, saved recipes, favorites, and deterministic inventory attention when their services are available
 → continue browsing and editing inventory
-→ use saved recipes and instructions
 → continue or finalize active cooking
 → manage menu, shopping, favorites, photos, and privacy
+→ use deterministic quick-choice filtering when possible
 → retry AI-only work later
 ```
 
 Authoritative state remains consistent during provider failure.
 
-## 9. Exercise privacy rights
+## 11. Exercise privacy rights
 
 ```text
 Open privacy center
 → inspect categories and purposes
-→ correct data or preferences
+→ correct data, timezone, or preferences
 → export a readable copy
 → delete selected recipes, executions, photos, or inventory
 → revoke optional permissions
