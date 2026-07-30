@@ -1,8 +1,10 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Net.Http.Json;
 using System.Text.Json;
 using KitchenFlow.Api.Observability;
 using KitchenFlow.Api.Services;
+using KitchenFlow.Modules.Inventory.Application;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 
@@ -54,6 +56,38 @@ public sealed class TelemetryRedactionTests
         Assert.DoesNotContain(activity.TagObjects, tag => tag.Key.Contains("note", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(activity.TagObjects, tag => tag.Key.Contains("body", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(activity.TagObjects, tag => tag.Key == "http.response.status_code" && (int)tag.Value! == 200);
+    }
+
+    [Fact]
+    public void InventoryMetricsUseOnlyStableLowCardinalityTags()
+    {
+        var observed = new List<(string Instrument, IReadOnlyDictionary<string, object?> Tags)>();
+        using var listener = new MeterListener();
+        listener.InstrumentPublished = (instrument, meterListener) =>
+        {
+            if (instrument.Meter.Name == "KitchenFlow.Inventory")
+            {
+                meterListener.EnableMeasurementEvents(instrument);
+            }
+        };
+        listener.SetMeasurementEventCallback<long>((instrument, _, tags, _) =>
+        {
+            var capturedTags = new Dictionary<string, object?>(StringComparer.Ordinal);
+            foreach (var tag in tags)
+            {
+                capturedTags[tag.Key] = tag.Value;
+            }
+
+            observed.Add((instrument.Name, capturedTags));
+        });
+        listener.Start();
+
+        var metrics = new InventoryMetrics();
+        metrics.RecordMutation("adjust", InventoryApplicationResult<InventoryLotView>.Failure(422, "domain_rule_violated", "A private product and note must not become metric tags."));
+
+        Assert.Contains(observed, measurement => measurement.Instrument == "kitchenflow.inventory.mutations" && measurement.Tags["operation"]?.ToString() == "adjust");
+        Assert.Contains(observed, measurement => measurement.Instrument == "kitchenflow.inventory.rejections" && measurement.Tags["category"]?.ToString() == "domain_rule_violated");
+        Assert.DoesNotContain(observed.SelectMany(measurement => measurement.Tags), tag => tag.Key.Contains("product", StringComparison.OrdinalIgnoreCase) || tag.Key.Contains("note", StringComparison.OrdinalIgnoreCase) || tag.Value?.ToString()?.Contains("private", StringComparison.OrdinalIgnoreCase) == true);
     }
 
     [Fact]

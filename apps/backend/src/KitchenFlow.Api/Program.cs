@@ -40,6 +40,7 @@ builder.Services.AddScoped<ICurrentUserAccessor, CurrentUserResolver>();
 builder.Services.AddScoped<IInventoryLotReadStore, PostgreSqlInventoryLotReadStore>();
 builder.Services.AddScoped<IInventoryLotWriteStore, PostgreSqlInventoryLotWriteStore>();
 builder.Services.AddSingleton<IInventoryTransportTokenService, DataProtectionInventoryTransportTokenService>();
+builder.Services.AddSingleton<InventoryMetrics>();
 builder.Services.AddScoped<InventoryLotApplicationService>();
 builder.Services.AddScoped<InventoryApplicationService>();
 builder.Services.AddSingleton<InventoryLotLifecycleUseCase>();
@@ -71,7 +72,7 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("mutation", context => RateLimitPartition.GetFixedWindowLimiter(context.User.FindFirst("sub")?.Value ?? context.User.Identity?.Name ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = 60, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 });
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer(InventoryOpenApiTransformer.ApplyAsync));
-builder.Services.AddOpenTelemetry().WithTracing(tracing => tracing.AddAspNetCoreInstrumentation().AddEntityFrameworkCoreInstrumentation().AddProcessor(new SensitiveTelemetryRedactionProcessor())).WithMetrics(metrics => metrics.AddAspNetCoreInstrumentation());
+builder.Services.AddOpenTelemetry().WithTracing(tracing => tracing.AddAspNetCoreInstrumentation().AddEntityFrameworkCoreInstrumentation().AddProcessor(new SensitiveTelemetryRedactionProcessor())).WithMetrics(metrics => metrics.AddAspNetCoreInstrumentation().AddMeter("KitchenFlow.Inventory"));
 
 var app = builder.Build();
 if (!app.Environment.IsDevelopment())

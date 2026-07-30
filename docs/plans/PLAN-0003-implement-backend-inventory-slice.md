@@ -374,20 +374,31 @@ The evidence must identify the final candidate SHA and must not expose credentia
 
 ## Execution state
 
-- **Current checkpoint:** R3/R4 completed and R5/R6 materially advanced: PostgreSQL-backed idempotency races are deterministic, metadata corrections are an immutable safe history projection, and the generated contract/configuration are aligned with the changed runtime behavior.
-- **Run delivery target:** Finish the P0 persistence/history/contract/configuration remediation while preserving application-boundary ownership and producing real PostgreSQL evidence.
-- **Delivered outcome:** Exact PostgreSQL idempotency-key conflicts are classified without masking unrelated failures; concurrent create and adjustment calls replay the winning response; corrections emit safe changed-field audit projections; OpenAPI no longer falsely requires CSRF on anonymous login or falsely advertises ETags; development configuration has no source-level client-secret fallback and production-like readiness fails safely when invalid.
-- **Acceptance criteria resolved:** R1–R4 are implemented. R5/R6 core runtime and contract discrepancies addressed in this checkpoint are implemented and tested, but their full examples/nullability/framework-error matrix remains open. R7–R10 remain open.
-- **Files or areas materially changed:** Inventory history/application and PostgreSQL adapters; API contracts, OpenAPI transformer, configuration/readiness and redirect policy; integration tests; generated OpenAPI snapshot; this plan; and `docs/plan-status.md`.
-- **Documentation delivered:** XML documentation for safe owner-visible correction projections, local-return policy, and configuration-only readiness; generated OpenAPI now documents the changed history response and corrected CSRF/ETag surface.
-- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; architecture and unit suites (6/6 each); full PostgreSQL integration suite with TRX evidence (27/27); focused concurrent-adjustment test (1/1); focused contract/configuration/redirect tests (9/9); `KITCHENFLOW_OPENAPI_URL=http://127.0.0.1:7080/openapi/v1.json bash scripts/backend/export-openapi.sh`; and `bash scripts/backend/check-openapi.sh` against a freshly started local API.
-- **Known failures or limitations:** No independent OpenAPI 3.1 linter is configured yet; complete response examples and quantity-schema truthfulness remain to be expanded. Idempotency retention policy, full telemetry metrics/exporter proof, the broad test matrix, CI security gates, Compose/Keycloak final smoke, and final review remain pending.
-- **Blockers:** None. PR #9 remains draft and must not be marked ready until R5–R10 complete and fresh review passes.
-- **Partially modified areas:** The history contract intentionally changes from transaction-only entries to a discriminated transaction-or-metadata-correction stream before any live frontend handoff. Readiness validates configuration only and deliberately does not perform remote OIDC metadata fetches.
-- **Exact next action:** Implement R7 application-owned low-cardinality metrics and full-pipeline redaction evidence, then complete R8/R9 coverage, linting, migration/runbook, and CI gates.
-- **Working tree state:** R3/R4 and focused R5/R6 changes are ready for this checkpoint commit.
+- **Current checkpoint:** R7 application-owned inventory metrics implemented and tested; the plan now proceeds to the remaining R5/R8/R9 contract, coverage, runbook, and CI gates.
+- **Run delivery target:** Instrument mutation outcomes with privacy-safe low-cardinality metrics and prove the metric surface cannot carry inventory content.
+- **Delivered outcome:** The Inventory module owns counters for mutation outcomes, validation/domain rejections, optimistic-concurrency failures, and idempotency outcomes. The API registers the meter with OpenTelemetry without adding sensitive labels.
+- **Acceptance criteria resolved:** R1–R4 and R7 are implemented. R5/R6 core runtime and contract discrepancies addressed in the previous checkpoint are implemented and tested, but their full examples/nullability/framework-error matrix remains open. R8–R10 remain open.
+- **Files or areas materially changed:** Inventory metrics; API dependency registration/OpenTelemetry configuration and HTTP adapter recording; telemetry integration tests; this plan; and `docs/plan-status.md`.
+- **Documentation delivered:** XML documentation specifies metric names, units, stable label boundaries, and prohibited private content.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; focused telemetry/contract/configuration test suite, 10/10 passing; and `git diff --check`.
+- **Known failures or limitations:** Full-pipeline exporter proof beyond the module meter listener and existing trace redaction processor is still incomplete. No independent OpenAPI 3.1 linter, complete example/nullability matrix, idempotency retention policy, broad R8 coverage, R9 CI/security gates, final Compose/Keycloak smoke, or independent final review yet.
+- **Blockers:** None. PR #9 remains draft and must not be marked ready until R5/R8/R9/R10 pass.
+- **Partially modified areas:** The metric is registered for OpenTelemetry export but no production exporter is selected in this first slice; metrics remain useful through any configured collector/exporter.
+- **Exact next action:** Add the OpenAPI 3.1 lint gate and remaining contract examples, then complete the required test/migration/runbook/CI matrix.
+- **Working tree state:** R7 changes are ready for this checkpoint commit.
 
 ## Progress log
+
+### 2026-07-30T10:55:00Z — Codex backend remediation agent
+
+- **Run delivery target:** Implement R7 low-cardinality inventory metrics without creating an observability copy of user-owned inventory data.
+- **Checkpoint:** Added the `KitchenFlow.Inventory` meter and counters for mutation, rejection, concurrency, and idempotency outcomes; registered it with OpenTelemetry; recorded state-changing endpoint outcomes through the application-owned metric boundary.
+- **Material files changed:** `InventoryMetrics`; API inventory adapter and `Program.cs`; telemetry integration tests; this plan; and `docs/plan-status.md`.
+- **Commands and validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-build --filter "FullyQualifiedName~TelemetryRedactionTests" --logger "console;verbosity=minimal"`; and `git diff --check`.
+- **Result:** Build passed with zero warnings/errors; focused telemetry/contract/configuration tests passed 10/10. A `MeterListener` verified stable tags only and proved no product, note, or private sample text can enter metric labels.
+- **Known failures or unverified behavior:** No configured production exporter or end-to-end collector capture is selected for the first slice. R5/R8/R9/R10 remain incomplete.
+- **Blockers:** None.
+- **Exact next action:** Add OpenAPI 3.1 lint and expanded contract cases, then complete migration, security, CI, Compose, Keycloak, and final-evidence requirements.
 
 ### 2026-07-30T10:48:00Z — Codex backend remediation agent
 

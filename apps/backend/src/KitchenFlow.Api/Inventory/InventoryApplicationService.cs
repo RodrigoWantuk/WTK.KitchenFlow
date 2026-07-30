@@ -11,7 +11,7 @@ namespace KitchenFlow.Api.Inventory;
 /// request headers and JSON DTOs to typed commands and maps typed outcomes to HTTP results; it
 /// contains no domain rules, Entity Framework access, or persistence orchestration.
 /// </summary>
-public sealed class InventoryApplicationService(InventoryLotApplicationService applicationService)
+public sealed class InventoryApplicationService(InventoryLotApplicationService applicationService, InventoryMetrics metrics)
 {
     /// <summary>Maps the lot-list query to a transport result.</summary>
     public async Task<IResult> ListAsync(int? pageSize, string? status, string? storageLocation, string? search, string? cursor, HttpContext context, CancellationToken cancellationToken) =>
@@ -26,14 +26,14 @@ public sealed class InventoryApplicationService(InventoryLotApplicationService a
     {
         var key = Guid.TryParse(requestContext.Headers["Idempotency-Key"], out var parsed) ? parsed : (Guid?)null;
         var command = new CreateInventoryLotCommand(request.ProductName, request.Quantity?.MeasuredValue, request.Quantity?.Unit, request.Quantity?.AvailabilityState, request.StorageLocation, request.CustomLocation, request.PackageState, request.PrintedExpirationDate, request.Notes, key, requestContext.HttpContext.TraceIdentifier);
-        return ToResult(await applicationService.CreateAsync(command, cancellationToken), ToResponse, requestContext.HttpContext.TraceIdentifier);
+        return ToMutationResult("create", await applicationService.CreateAsync(command, cancellationToken), requestContext.HttpContext.TraceIdentifier);
     }
 
     /// <summary>Maps a metadata-correction DTO and ETag header to the module command.</summary>
     public async Task<IResult> UpdateAsync(Guid lotId, UpdateLotRequest request, HttpRequest requestContext, CancellationToken cancellationToken)
     {
         var command = new UpdateInventoryLotCommand(lotId, request.ProductName, request.StorageLocation, request.CustomLocation, request.PackageState, request.PrintedExpirationDate, request.Notes, ReadPrecondition(requestContext), requestContext.HttpContext.TraceIdentifier);
-        return ToResult(await applicationService.UpdateAsync(command, cancellationToken), ToResponse, requestContext.HttpContext.TraceIdentifier);
+        return ToMutationResult("metadata_update", await applicationService.UpdateAsync(command, cancellationToken), requestContext.HttpContext.TraceIdentifier);
     }
 
     /// <summary>Maps an adjustment DTO, idempotency header, and ETag header to the module command.</summary>
@@ -41,14 +41,14 @@ public sealed class InventoryApplicationService(InventoryLotApplicationService a
     {
         var key = Guid.TryParse(requestContext.Headers["Idempotency-Key"], out var parsed) ? parsed : (Guid?)null;
         var command = new AdjustInventoryLotCommand(lotId, request.Type, request.Value, request.AvailabilityState, request.ReasonCode, request.Note, key, ReadPrecondition(requestContext), requestContext.HttpContext.TraceIdentifier);
-        return ToResult(await applicationService.AdjustAsync(command, cancellationToken), ToResponse, requestContext.HttpContext.TraceIdentifier);
+        return ToMutationResult("adjust", await applicationService.AdjustAsync(command, cancellationToken), requestContext.HttpContext.TraceIdentifier);
     }
 
     /// <summary>Maps a delete request and ETag header to the module command.</summary>
     public async Task<IResult> DeleteAsync(Guid lotId, HttpRequest requestContext, CancellationToken cancellationToken)
     {
         var command = new DeleteInventoryLotCommand(lotId, ReadPrecondition(requestContext), requestContext.HttpContext.TraceIdentifier);
-        return ToResult(await applicationService.DeleteAsync(command, cancellationToken), ToResponse, requestContext.HttpContext.TraceIdentifier);
+        return ToMutationResult("delete", await applicationService.DeleteAsync(command, cancellationToken), requestContext.HttpContext.TraceIdentifier);
     }
 
     /// <summary>Maps immutable lot history to its API DTO.</summary>
@@ -70,6 +70,12 @@ public sealed class InventoryApplicationService(InventoryLotApplicationService a
 
         if (result.StatusCode == StatusCodes.Status204NoContent) { return Results.NoContent(); }
         return new EtagResult<TResponse>(map(result.Value!), result.ETag, result.StatusCode);
+    }
+
+    private IResult ToMutationResult(string operation, InventoryApplicationResult<InventoryLotView> result, string traceId)
+    {
+        metrics.RecordMutation(operation, result);
+        return ToResult(result, ToResponse, traceId);
     }
 
     private static InventoryVersionPrecondition ReadPrecondition(HttpRequest request)
