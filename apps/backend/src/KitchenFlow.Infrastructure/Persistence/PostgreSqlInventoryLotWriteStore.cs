@@ -38,7 +38,11 @@ public sealed class PostgreSqlInventoryLotWriteStore(ApplicationDbContext databa
     public async Task<InventoryLotMutationState?> LoadActiveAsync(Guid ownerUserId, Guid lotId, CancellationToken cancellationToken)
     {
         var lot = await database.Lots.AsNoTracking().SingleOrDefaultAsync(item => item.Id == lotId && item.OwnerUserId == ownerUserId && item.DeletedAt == null, cancellationToken);
-        if (lot is null) return null;
+        if (lot is null)
+        {
+            return null;
+        }
+
         var product = await database.Products.AsNoTracking().SingleOrDefaultAsync(item => item.Id == lot.ProductId && item.OwnerUserId == ownerUserId, cancellationToken);
         return product is null ? null : new InventoryLotMutationState(ToDomain(lot), ToDomain(product));
     }
@@ -53,7 +57,11 @@ public sealed class PostgreSqlInventoryLotWriteStore(ApplicationDbContext databa
         var product = ToRecord(write.Product);
         database.Products.Attach(product);
         database.Entry(product).State = EntityState.Modified;
-        if (write.Transaction is not null) database.Transactions.Add(ToRecord(write.Transaction));
+        if (write.Transaction is not null)
+        {
+            database.Transactions.Add(ToRecord(write.Transaction));
+        }
+
         database.AuditEvents.Add(new AuditEventRecord { Id = Guid.NewGuid(), ActorUserId = write.OwnerUserId, EventName = write.AuditEventName, TargetType = "inventory_lot", TargetId = write.Lot.Id, CorrelationId = write.CorrelationId, MetadataJson = "{}", OccurredAt = write.Lot.UpdatedAt });
         if (write.Idempotency is not null)
         {

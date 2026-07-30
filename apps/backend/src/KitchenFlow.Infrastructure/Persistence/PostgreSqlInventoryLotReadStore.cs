@@ -25,14 +25,24 @@ public sealed class PostgreSqlInventoryLotReadStore(ApplicationDbContext databas
             "depleted" => lots.Where(lot => lot.DeletedAt == null && ((lot.MeasuredValue != null && lot.MeasuredValue == 0m) || lot.AvailabilityState == "Unavailable")),
             _ => lots.Where(lot => lot.DeletedAt == null && ((lot.MeasuredValue != null && lot.MeasuredValue > 0m) || (lot.MeasuredValue == null && lot.AvailabilityState != "Unavailable")))
         };
-        if (query.StorageLocation is not null) lots = lots.Where(lot => lot.StorageLocation == query.StorageLocation);
+        if (query.StorageLocation is not null)
+        {
+            lots = lots.Where(lot => lot.StorageLocation == query.StorageLocation);
+        }
 
         var records = from lot in lots
                       join product in database.Products.AsNoTracking() on lot.ProductId equals product.Id
                       where product.OwnerUserId == query.OwnerUserId
                       select new { Lot = lot, ProductName = product.DisplayName, product.NormalizedSearchName };
-        if (!string.IsNullOrWhiteSpace(query.Search)) records = records.Where(item => item.NormalizedSearchName.Contains(query.Search.Trim().ToUpperInvariant()));
-        if (query.Cursor is not null) records = records.Where(item => item.Lot.UpdatedAt < query.Cursor.UpdatedAt || (item.Lot.UpdatedAt == query.Cursor.UpdatedAt && item.Lot.Id.CompareTo(query.Cursor.LotId) < 0));
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            records = records.Where(item => item.NormalizedSearchName.Contains(query.Search.Trim().ToUpperInvariant()));
+        }
+
+        if (query.Cursor is not null)
+        {
+            records = records.Where(item => item.Lot.UpdatedAt < query.Cursor.UpdatedAt || (item.Lot.UpdatedAt == query.Cursor.UpdatedAt && item.Lot.Id.CompareTo(query.Cursor.LotId) < 0));
+        }
 
         var page = await records.OrderByDescending(item => item.Lot.UpdatedAt).ThenByDescending(item => item.Lot.Id).Take(query.PageSize + 1).ToListAsync(cancellationToken);
         var items = page.Take(query.PageSize).Select(item => ToReadModel(item.Lot, item.ProductName)).ToList();
@@ -44,7 +54,11 @@ public sealed class PostgreSqlInventoryLotReadStore(ApplicationDbContext databas
     public async Task<IReadOnlyList<InventoryHistoryReadModel>?> GetHistoryAsync(Guid ownerUserId, Guid lotId, CancellationToken cancellationToken)
     {
         var exists = await database.Lots.AsNoTracking().AnyAsync(lot => lot.Id == lotId && lot.OwnerUserId == ownerUserId, cancellationToken);
-        if (!exists) return null;
+        if (!exists)
+        {
+            return null;
+        }
+
         return await database.Transactions.AsNoTracking().Where(item => item.OwnerUserId == ownerUserId && item.LotId == lotId).OrderByDescending(item => item.OccurredAt).Select(item => new InventoryHistoryReadModel(item.Id, item.Type, item.PreviousMeasuredValue, item.PreviousMeasuredUnit, item.PreviousAvailabilityState, item.ResultingMeasuredValue, item.ResultingMeasuredUnit, item.ResultingAvailabilityState, item.ReasonCode, item.OccurredAt)).ToListAsync(cancellationToken);
     }
 

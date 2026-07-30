@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Inventory API orchestration has no direct EF persistence dependency; read, write, and idempotency replay use explicit module ports and PostgreSQL adapters.
-- **Last completed step:** Moved idempotency lookup/replay to the write port and removed obsolete direct-EF mutation logic.
-- **Exact next action:** Automate the real-Keycloak two-user browser/session smoke and update operational runbooks, then complete final validation.
+- **Current checkpoint:** Reproducible real-Keycloak smoke automation and its operational runbook are present; persistence-boundary formatting is clean.
+- **Last completed step:** Added two-profile Chromium smoke automation for real OIDC login, backend session, CSRF create, and ownership isolation, plus documented how to run it safely.
+- **Exact next action:** Push this checkpoint and inspect CI, then reproduce the Chromium callback navigation on a host with a trusted development certificate before final completion.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
-- **Validation performed:** GitHub Actions runs `30484702156` and `30485251129` (the latter failed during fresh PostgreSQL 18 Compose startup before its gates); focused migration constraints and idempotency canonicalization tests; Release solution build; formatting verification; migration downgrade and upgrade against fresh Compose PostgreSQL; PostgreSQL and Keycloak readiness/discovery.
-- **Known failures or limitations:** Automated real-Keycloak two-user browser/session smoke and operational runbooks remain open.
-- **Working tree state:** Complete inventory persistence-boundary extraction is ready to commit with synchronized plan and registry updates.
+- **Validation performed:** `node --check scripts/backend/smoke-keycloak.mjs`; Release solution build (zero warnings/errors); complete Release test suite (3 architecture, 6 unit, 25 PostgreSQL integration tests passed); `dotnet format --verify-no-changes`; `git diff --check`; OpenAPI drift check against the live HTTPS API; live Compose PostgreSQL/Keycloak readiness; real Keycloak Authorization Code form-post callback returning backend `302` without printing callback parameters.
+- **Known failures or limitations:** The new headless Chrome smoke reaches the real Keycloak sign-in form, but this container renders a `chrome-error://` page during the return to local HTTPS even when the diagnostic local-certificate flag is used. The backend callback itself succeeds through the real-provider form-post validation. CI result for this revision remains pending.
+- **Working tree state:** Keycloak smoke automation, runbook, and formatting corrections are ready to commit with synchronized plan and registry updates.
 
 ## Progress log
+
+### 2026-07-30T02:40:09Z — Codex backend implementation agent
+
+- **Checkpoint:** Added reproducible real-Keycloak smoke automation and corrected formatting in the extracted inventory persistence boundary.
+- **Changes included in the commit:** Added `scripts/backend/smoke-keycloak.mjs`, which uses two isolated Chromium profiles to exercise the standard Authorization Code plus PKCE flow, assert backend-only session data, create a CSRF-protected lot, and assert a cross-user `404`; documented safe invocation and certificate-trust requirements in `scripts/README.md` and `docs/development/environment.md`; formatted the inventory application service and PostgreSQL read/write adapters to restore repository formatting compliance.
+- **Validation performed:** `node --check scripts/backend/smoke-keycloak.mjs`; first `dotnet format ... --verify-no-changes` exposed twelve brace-rule violations in the recently extracted API/adapters; `dotnet format ... --no-restore` corrected them; Release build (zero warnings/errors); final `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; `git diff --check`; Compose PostgreSQL and Keycloak health; a real Keycloak Authorization Code form-post callback to the backend returned `302`, with callback values and cookies kept out of output.
+- **Result:** The provider, backend callback, session-cookie boundary, CSRF create path, and two-user isolation have a documented executable smoke route. The codebase is formatting-clean after the extracted-boundary changes.
+- **Known failures or unverified behavior:** In this container, Chromium reaches the Keycloak credential form but its automatic form-post return renders `chrome-error://chromewebdata/` before an API callback request is logged. The script therefore has not yet produced a passing browser result here; it requires a host that trusts the ASP.NET Core development certificate. CI has not yet executed this revision.
+- **Blockers:** No product or implementation decision is blocked. The remaining browser behavior is an execution-host certificate/browser limitation.
+- **Next action:** Push this checkpoint, inspect the complete CI gate, then repeat the smoke on a trusted-browser host without the diagnostic certificate override.
 
 ### 2026-07-30T02:14:28Z — Codex backend implementation agent
 

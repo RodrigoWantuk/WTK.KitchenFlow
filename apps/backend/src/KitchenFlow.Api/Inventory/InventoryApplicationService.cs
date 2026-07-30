@@ -247,13 +247,28 @@ public sealed class InventoryApplicationService(
     private async Task<IResult> MutateThroughStoreAsync(Guid lotId, HttpRequest request, ICurrentUserAccessor currentUser, IInventoryLotWriteStore writeStore, TimeProvider clock, CancellationToken cancellationToken, Func<InventoryLot, Product, DateTimeOffset, InventoryTransaction?> operation, int successStatus = StatusCodes.Status200OK, Guid? idempotencyKey = null, string? idempotencyScope = null, string? idempotencyHash = null)
     {
         var precondition = ReadVersion(request, out var version);
-        if (precondition == VersionPrecondition.Missing) return Problem(428, "precondition_required", "If-Match is required.");
-        if (precondition == VersionPrecondition.Invalid) return Problem(412, "precondition_failed", "The inventory lot was modified.");
+        if (precondition == VersionPrecondition.Missing)
+        {
+            return Problem(428, "precondition_required", "If-Match is required.");
+        }
+
+        if (precondition == VersionPrecondition.Invalid)
+        {
+            return Problem(412, "precondition_failed", "The inventory lot was modified.");
+        }
 
         var user = await currentUser.GetCurrentAsync(cancellationToken);
         var state = await writeStore.LoadActiveAsync(user.Id, lotId, cancellationToken);
-        if (state is null) return Problem(404, "resource_not_found", "The inventory lot was not found.");
-        if (state.Lot.Version != version) return Problem(412, "precondition_failed", "The inventory lot was modified.");
+        if (state is null)
+        {
+            return Problem(404, "resource_not_found", "The inventory lot was not found.");
+        }
+
+        if (state.Lot.Version != version)
+        {
+            return Problem(412, "precondition_failed", "The inventory lot was modified.");
+        }
+
         try
         {
             var now = clock.GetUtcNow();
@@ -353,8 +368,16 @@ public sealed class InventoryApplicationService(
     private async Task<IResult> ReplayFromStoreAsync(IInventoryLotWriteStore writeStore, Guid ownerUserId, string scope, Guid key, string hash, int successStatus, CancellationToken cancellationToken)
     {
         var record = await writeStore.FindIdempotencyAsync(ownerUserId, scope, key, cancellationToken);
-        if (record is null || record.CompletedAt is null) return Problem(409, "idempotency_in_progress", "The request is still being processed.");
-        if (!string.Equals(record.RequestHash, hash, StringComparison.Ordinal)) return Problem(409, "idempotency_key_reused", "The Idempotency-Key was used for a different request.");
+        if (record is null || record.CompletedAt is null)
+        {
+            return Problem(409, "idempotency_in_progress", "The request is still being processed.");
+        }
+
+        if (!string.Equals(record.RequestHash, hash, StringComparison.Ordinal))
+        {
+            return Problem(409, "idempotency_key_reused", "The Idempotency-Key was used for a different request.");
+        }
+
         var response = JsonSerializer.Deserialize<LotResponse>(record.ResponseBody!);
         return response is null ? Problem(409, "idempotency_in_progress", "The request is still being processed.") : WithEtag(response, successStatus);
     }
