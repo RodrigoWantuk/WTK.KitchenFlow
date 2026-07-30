@@ -246,6 +246,28 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ConcurrentAdjustmentWithSameKeyAndDifferentPayloadReturnsReuseConflictWithoutDuplicateHistory()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var created = await CreateAsync(client, csrf, Guid.NewGuid().ToString());
+        var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+        var key = Guid.NewGuid().ToString();
+
+        var responses = await Task.WhenAll(
+            AdjustAsync(client, csrf, lotId, created.Headers.ETag!.Tag, key, 25m),
+            AdjustAsync(client, csrf, lotId, created.Headers.ETag!.Tag, key, 20m));
+        var history = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots/{lotId}/history");
+
+        Assert.Contains(responses, response => response.StatusCode == System.Net.HttpStatusCode.OK);
+        var conflict = Assert.Single(responses, response => response.StatusCode == System.Net.HttpStatusCode.Conflict);
+        Assert.Equal("idempotency_key_reused", (await conflict.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errorCode").GetString());
+        Assert.Equal(2, history.GetArrayLength());
+    }
+
+    [Fact]
     public async Task AdjustmentKeyReuseWithDifferentPayloadReturnsConflict()
     {
         await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);

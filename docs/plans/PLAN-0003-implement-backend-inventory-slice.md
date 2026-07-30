@@ -337,7 +337,7 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** Commit A has transport-neutral explicit contracts for all seven Inventory use cases; metadata-correction history now projects only actual changed field names, and the PostgreSQL write adapter clears failed tracked graphs before replay reads.
+- **Current checkpoint:** Commit A has transport-neutral explicit contracts for all seven Inventory use cases; R3 has PostgreSQL coverage for concurrent same-key different-payload adjustment conflict; metadata-correction history projects only actual changed field names.
 - **Execution status:** In Progress, not Validating.
 - **Confirmed completed phase:** R1.
 - **Partially completed phases:** R2, R3, R4, R5, R6, R7, R8, and R9.
@@ -347,6 +347,18 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 - **Exact next action:** Split the shared Inventory use-case implementation into individual handler classes and add direct no-HTTP/no-PostgreSQL tests for each contract; then add R3 race/rollback acceptance tests.
 
 ## Progress log
+
+### 2026-07-30T17:05:00Z — R3 concurrent different-payload adjustment evidence (partial)
+
+- **Run delivery target:** Prove that a simultaneous adjustment race with one idempotency key and different semantic payloads cannot create duplicate immutable history.
+- **Checkpoint:** Added PostgreSQL-backed concurrent adjustment coverage: exactly one request succeeds, the competing semantic payload receives `idempotency_key_reused`, and history contains only the initial transaction plus one adjustment.
+- **Material files changed:** API/PostgreSQL integration test; this plan; and `docs/plan-status.md`.
+- **Documentation delivered:** Test name and assertions document the deterministic conflict and immutable-history guarantee.
+- **Commands and validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-build --filter "FullyQualifiedName~ConcurrentAdjustmentWithSameKeyAndDifferentPayload"`.
+- **Result:** Release build passed with zero warnings/errors; targeted PostgreSQL integration test passed (1/1).
+- **Known failures or unverified behavior:** Exact replay body/ETag assertions, atomic rollback injection coverage, retention configuration, and remaining R2/R4-R10 work are still incomplete.
+- **Blockers:** None external.
+- **Exact next action:** Add exact successful replay body/ETag assertions and atomic rollback tests, then continue the shared-use-case handler split.
 
 ### 2026-07-30T16:40:00Z — R4 exact metadata-correction projection (partial)
 
