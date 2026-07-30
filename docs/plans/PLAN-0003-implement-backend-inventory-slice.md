@@ -374,20 +374,31 @@ The evidence must identify the final candidate SHA and must not expose credentia
 
 ## Execution state
 
-- **Current checkpoint:** R1 branch synchronization completed: the remediation branch was rebased onto `main` baseline `b798fed9e940d15f9c828ce34881f58d1cf516a9` and retains the current PLAN-0003 remediation requirements.
-- **Run delivery target:** Synchronize the branch truthfully, preserve current-main governance documents, and begin the ordered R2–R10 remediation without advancing the frontend contract claim.
-- **Delivered outcome:** The branch is linearly based on current `main`; the current-main registry and refined PLAN-0004 documents are preserved, while PLAN-0003 remains active and its revalidation requirements remain authoritative.
-- **Acceptance criteria resolved:** R1 synchronization is resolved. All executable architecture, correctness, contract, observability, test, CI, migration, and final-review criteria remain open.
-- **Files or areas materially changed:** Rebased repository history, this plan, and `docs/plan-status.md`.
-- **Documentation delivered:** Reconciled active-plan registry state and a precise continuation from the synchronized baseline.
-- **Validation performed:** `git status --short --branch`; `git log -1 --oneline`; `dotnet restore apps/backend/KitchenFlow.slnx --locked-mode`; and `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`. Restore and Release build passed with zero warnings and zero errors.
-- **Known failures or limitations:** The complete test, migration, Compose, Keycloak, OpenAPI, secret, and vulnerability gates have not yet been rerun on this rebased candidate. The remote tracking branch will be updated using `--force-with-lease` after this auditable checkpoint commit.
-- **Blockers:** None for R2. PR #9 remains draft and must not be marked ready until all R2–R10 acceptance criteria and fresh review pass.
-- **Partially modified areas:** No runtime behavior changed in this synchronization checkpoint.
-- **Exact next action:** Push the rebased checkpoint with `--force-with-lease`, then extract Inventory and Identity module-owned typed application use cases and add architecture tests that prohibit API endpoint access to EF Core.
-- **Working tree state:** This checkpoint records the rebased baseline before R2 implementation begins.
+- **Current checkpoint:** R2 application and identity boundary remediation implemented on the R1-synchronized baseline.
+- **Run delivery target:** Replace API-owned inventory and identity orchestration with typed module application services, preserve all externally observable slice behavior, and make the architecture testable.
+- **Delivered outcome:** Inventory now owns seven typed application use cases and API code is an HTTP adapter only; Identity provisioning is resolved through module contracts and a PostgreSQL adapter rather than an API service with direct Entity Framework access.
+- **Acceptance criteria resolved:** R1 and R2 are implemented. R3's exact PostgreSQL idempotency-key exception classification is implemented, but its full race/evidence matrix remains open. R4–R10 remain open.
+- **Files or areas materially changed:** Inventory application contracts and service; Identity application contracts and resolver; API adapters and registration; PostgreSQL identity and idempotency adapters; architecture tests; this plan; and `docs/plan-status.md`.
+- **Documentation delivered:** XML documentation defines application ownership, token-protection, identity provenance, idempotency boundaries, and HTTP adapter responsibility.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/KitchenFlow.ArchitectureTests/KitchenFlow.ArchitectureTests.csproj -c Release --no-build`; and `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-build`. Build passed with zero warnings/errors; architecture tests passed 6/6; the integration runner exited successfully after discovering the test assembly, but did not emit its per-test summary and is therefore retained as unverified evidence.
+- **Known failures or limitations:** Full integration evidence must be rerun with an explicit TRX logger; application result mapping and OpenAPI snapshot have not yet been reviewed against the refactor; mutation-history audit projection, idempotency retention/race behavior, observability, CI, and final gates remain incomplete.
+- **Blockers:** None. PR #9 remains draft and must not be marked ready until all R3–R10 criteria and fresh review pass.
+- **Partially modified areas:** The existing history response remains transaction-only until R4; idempotency uses completed-record semantic replay and precise constraint recognition, but its chosen in-progress policy is not yet fully evidenced.
+- **Exact next action:** Add the safe metadata-correction audit projection to lot history, make idempotency race outcomes deterministic and explicitly tested, then update the OpenAPI contract and tests.
+- **Working tree state:** R2/R3 implementation changes are ready for this checkpoint commit.
 
 ## Progress log
+
+### 2026-07-30T10:36:04Z — Codex backend remediation agent
+
+- **Run delivery target:** Deliver R2 module application boundaries and the R3 exact idempotency-constraint classification as one buildable remediation phase.
+- **Checkpoint:** Added module-owned typed Inventory list, get, create, update, adjust, delete, and history use cases; extracted issuer/subject resolution and internal-user provisioning into Identity contracts plus a PostgreSQL adapter; converted API services to HTTP/token adapters.
+- **Material files changed:** `apps/backend/src/KitchenFlow.Modules.Inventory/Application/InventoryLotApplicationService.cs`; `apps/backend/src/KitchenFlow.Modules.Identity/IdentityApplication.cs`; API inventory/identity adapters and DI registration; `PostgreSqlInternalUserStore`; `PostgreSqlInventoryLotWriteStore`; inventory project reference; architecture tests; this plan; and `docs/plan-status.md`.
+- **Commands and validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.ArchitectureTests/KitchenFlow.ArchitectureTests.csproj -c Release --no-build`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-build`.
+- **Result:** Release build passed with zero warnings and zero errors. Architecture tests passed 6/6, including no ASP.NET Core/EF references from the Inventory application assembly and all seven typed use cases. The integration invocation returned success but did not print a per-test summary, so it is not claimed as complete integration evidence.
+- **Known failures or unverified behavior:** R3 still needs explicit concurrent adjustment and non-idempotency constraint tests. R4 history projection, R5 contract, R6 configuration/readiness, R7 metrics, R8 matrix, R9 CI, and R10 final evidence are pending.
+- **Blockers:** None.
+- **Exact next action:** Implement the safe metadata-correction audit projection in the existing lot-history stream and add deterministic PostgreSQL-backed idempotency race tests.
 
 ### 2026-07-30T10:27:31Z — Codex backend remediation agent
 

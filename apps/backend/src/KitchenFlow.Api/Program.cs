@@ -34,9 +34,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<CurrentUserService>();
-builder.Services.AddScoped<ICurrentUserAccessor>(provider => provider.GetRequiredService<CurrentUserService>());
+builder.Services.AddScoped<IOidcSubjectAccessor>(provider => provider.GetRequiredService<CurrentUserService>());
+builder.Services.AddScoped<IInternalUserStore, PostgreSqlInternalUserStore>();
+builder.Services.AddScoped<ICurrentUserAccessor, CurrentUserResolver>();
 builder.Services.AddScoped<IInventoryLotReadStore, PostgreSqlInventoryLotReadStore>();
 builder.Services.AddScoped<IInventoryLotWriteStore, PostgreSqlInventoryLotWriteStore>();
+builder.Services.AddSingleton<IInventoryTransportTokenService, DataProtectionInventoryTransportTokenService>();
+builder.Services.AddScoped<InventoryLotApplicationService>();
 builder.Services.AddScoped<InventoryApplicationService>();
 builder.Services.AddSingleton<InventoryLotLifecycleUseCase>();
 builder.Services.AddAntiforgery(options => { options.HeaderName = "X-CSRF-TOKEN"; options.Cookie.Name = "__Host-kitchenflow-antiforgery"; options.Cookie.Path = "/"; options.Cookie.SecurePolicy = CookieSecurePolicy.Always; });
@@ -82,7 +86,7 @@ api.MapPost("/auth/logout", async (HttpContext context, IAntiforgery antiforgery
     catch (AntiforgeryValidationException) { return Results.Problem(statusCode: 400, extensions: new Dictionary<string, object?> { ["errorCode"] = "validation_failed" }); }
     return Results.SignOut(new AuthenticationProperties { RedirectUri = "/" }, [CookieAuthenticationDefaults.AuthenticationScheme, "oidc"]);
 }).RequireAuthorization().Produces(StatusCodes.Status302Found).ProducesProblem(400).ProducesProblem(401);
-api.MapGet("/session", async (HttpContext context, IAntiforgery antiforgery, CurrentUserService currentUser, CancellationToken cancellationToken) =>
+api.MapGet("/session", async (HttpContext context, IAntiforgery antiforgery, ICurrentUserAccessor currentUser, CancellationToken cancellationToken) =>
 {
     var user = await currentUser.GetCurrentAsync(cancellationToken);
     var tokens = antiforgery.GetAndStoreTokens(context);

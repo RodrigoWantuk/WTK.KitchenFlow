@@ -1,6 +1,7 @@
 using KitchenFlow.Modules.Inventory.Application;
 using KitchenFlow.Modules.Inventory.Domain;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace KitchenFlow.Infrastructure.Persistence;
 
@@ -31,7 +32,10 @@ public sealed class PostgreSqlInventoryLotWriteStore(ApplicationDbContext databa
             await database.SaveChangesAsync(cancellationToken);
             return InventoryWriteOutcome.Saved;
         }
-        catch (DbUpdateException) { return InventoryWriteOutcome.IdempotencyConflict; }
+        catch (DbUpdateException exception) when (IsIdempotencyKeyConflict(exception))
+        {
+            return InventoryWriteOutcome.IdempotencyConflict;
+        }
     }
 
     /// <inheritdoc />
@@ -74,7 +78,10 @@ public sealed class PostgreSqlInventoryLotWriteStore(ApplicationDbContext databa
             return InventoryWriteOutcome.Saved;
         }
         catch (DbUpdateConcurrencyException) { return InventoryWriteOutcome.ConcurrencyConflict; }
-        catch (DbUpdateException) when (write.Idempotency is not null) { return InventoryWriteOutcome.IdempotencyConflict; }
+        catch (DbUpdateException exception) when (write.Idempotency is not null && IsIdempotencyKeyConflict(exception))
+        {
+            return InventoryWriteOutcome.IdempotencyConflict;
+        }
     }
 
     private static Product ToDomain(ProductRecord item)
@@ -94,4 +101,11 @@ public sealed class PostgreSqlInventoryLotWriteStore(ApplicationDbContext databa
     private static ProductRecord ToRecord(Product item) => new() { Id = item.Id, OwnerUserId = item.OwnerUserId, DisplayName = item.DisplayName, NormalizedSearchName = item.NormalizedSearchName, CreatedAt = item.CreatedAt, UpdatedAt = item.UpdatedAt, IsDeleted = item.IsDeleted };
     private static LotRecord ToRecord(InventoryLot item) => new() { Id = item.Id, OwnerUserId = item.OwnerUserId, ProductId = item.ProductId, MeasuredValue = item.Quantity is LotQuantity.Measured measured ? measured.Value : null, MeasuredUnit = item.Quantity is LotQuantity.Measured unit ? unit.Unit.ToString() : null, AvailabilityState = item.Quantity is LotQuantity.Availability availability ? availability.State.ToString() : null, StorageLocation = item.Storage.Location.ToString(), CustomLocation = item.Storage.CustomLocation, PackageState = item.PackageState?.ToString(), PrintedExpirationDate = item.PrintedExpiration?.Date, ExpirationProvenance = item.PrintedExpiration?.Provenance.ToString(), Notes = item.Notes?.Value, Version = item.Version, CreatedAt = item.CreatedAt, UpdatedAt = item.UpdatedAt, DeletedAt = item.DeletedAt };
     private static TransactionRecord ToRecord(InventoryTransaction item) => new() { Id = item.Id, OwnerUserId = item.OwnerUserId, LotId = item.LotId, Type = item.Type.ToString(), PreviousMeasuredValue = item.PreviousQuantity is LotQuantity.Measured previous ? previous.Value : null, PreviousMeasuredUnit = item.PreviousQuantity is LotQuantity.Measured previousUnit ? previousUnit.Unit.ToString() : null, PreviousAvailabilityState = item.PreviousQuantity is LotQuantity.Availability previousAvailability ? previousAvailability.State.ToString() : null, ResultingMeasuredValue = item.ResultingQuantity is LotQuantity.Measured resulting ? resulting.Value : null, ResultingMeasuredUnit = item.ResultingQuantity is LotQuantity.Measured resultingUnit ? resultingUnit.Unit.ToString() : null, ResultingAvailabilityState = item.ResultingQuantity is LotQuantity.Availability resultingAvailability ? resultingAvailability.State.ToString() : null, ReasonCode = item.ReasonCode, Note = item.Note, IdempotencyKey = item.IdempotencyKey, OccurredAt = item.OccurredAt };
+
+    private static bool IsIdempotencyKeyConflict(DbUpdateException exception) =>
+        exception.InnerException is PostgresException
+        {
+            SqlState: PostgresErrorCodes.UniqueViolation,
+            ConstraintName: "IX_idempotency_records_OwnerUserId_Scope_Key"
+        };
 }
