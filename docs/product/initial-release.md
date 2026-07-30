@@ -1,7 +1,7 @@
 # Initial Release Definition
 
 - **Status:** Accepted
-- **Last updated:** 2026-07-28
+- **Last updated:** 2026-07-30
 
 ## Release intent
 
@@ -14,7 +14,8 @@ Development may require multiple implementation plans before public launch. The 
 - responsive web application;
 - React and TypeScript frontend generated and evolved through Lovable;
 - independent backend API and workers;
-- account required before use;
+- public product entry accessible without an account;
+- account required for personal inventory, planning, recommendation, cooking, and history use;
 - adults aged 18 or older;
 - Portuguese, English, and Spanish interfaces;
 - metric and imperial measurement configuration;
@@ -24,13 +25,38 @@ There is no native Android or iOS application in this release.
 
 ## Required capabilities
 
+### Public entry and authentication
+
+- concise public explanation of what the product is, what it can do, and why an account is useful;
+- clear authentication entry through the backend-managed redirect;
+- optional short video, animation, interactive demonstration, or illustrated walkthrough;
+- static, reduced-motion, reduced-data, caption, transcript, and media-failure fallbacks;
+- synthetic demonstration data only;
+- adult-only notice and policy-link placeholders without fabricated legal text;
+- no authenticated or personal data in public rendering;
+- truthful capability claims that distinguish live, unavailable, plan-limited, and prototype-only behavior.
+
 ### Account and profile
 
 - external identity-provider authentication;
 - short account creation;
 - progressive cooking and household profile;
 - editable restrictions, preferences, goals, equipment, skill, time, effort, and cleanup context;
+- editable timezone with browser-IANA-timezone fallback;
 - notification and privacy preferences.
+
+### Contextual authenticated home
+
+- safe personal greeting when a display name is available and neutral fallback otherwise;
+- localized daypart-aware wording based on the user's timezone rather than server time;
+- a persistent localized equivalent of “What shall we cook today?” as the primary home orientation;
+- relevant accepted menu entries as the first suggestion source;
+- current-inventory suggestions as the second source, prioritizing products needing attention without forcing a choice;
+- confirmed-profile suggestions as the third source;
+- a visible “Help me choose” path that asks one or two material questions as the fourth source;
+- explanation of why each preparation is suggested, including source, readiness, time, effort, missing products, preparation needs, and uncertainty when available;
+- independent degradation when menu, inventory, profile, recommendation, or AI sources are missing or failing;
+- no silent mutation of plans, reservations, inventory, profile, or cooking execution from home presentation.
 
 ### Inventory and lifecycle
 
@@ -122,23 +148,28 @@ Barcode and general package-image databases are deferred.
 - photo deletion;
 - account-deletion workflow;
 - permission and consent management;
+- timezone review and correction;
 - processor and transfer transparency;
 - retention rules by category.
 
 ## AI-unavailable behavior
 
-The following remain available:
+The following remain available when their non-AI backing services are available:
 
-- authentication and account access;
+- public product explanation and authentication entry;
+- authenticated home shell, greeting, local-time context, and navigation;
+- accepted menu entries and deterministic readiness information;
+- deterministic inventory attention;
 - profile and inventory management;
 - saved recipes and instructions;
 - favorites and history;
 - menu and shopping list;
+- deterministic quick-choice filtering over stored candidates where supported;
 - active cooking continuation;
 - execution completion and inventory reconciliation;
 - privacy, export, and deletion workflows.
 
-AI-only generation, parsing, adaptation, contextual recommendation, and troubleshooting may fail safely and transparently.
+AI-only generation, parsing, adaptation, contextual recommendation, and troubleshooting may fail safely and transparently. One unavailable AI source must not blank the entire authenticated home.
 
 ## Commercial direction
 
@@ -150,13 +181,15 @@ AI-only generation, parsing, adaptation, contextual recommendation, and troubles
 
 Exact prices, allowance, credits, ads, and billing provider require a later accepted plan and ADR where applicable.
 
+Sponsored, affiliate, or paid placement must never be disguised as a personalized preparation suggestion.
+
 ## Deferred beyond the first release
 
 - native mobile applications;
 - collaborative household member accounts;
 - searchable public community catalog;
 - public creator profiles;
-- ranking implementation;
+- ranking implementation beyond the accepted source-priority and explainability rules;
 - clinical diet and medical nutrition management;
 - nutritionist workspace;
 - broad retailer integration and autonomous purchasing;
@@ -171,6 +204,12 @@ Exact prices, allowance, credits, ads, and billing provider require a later acce
 
 The first public release requires:
 
+- verified public-entry and contextual-home journeys;
+- public content that remains understandable without rich media;
+- accessible captions, transcript, keyboard controls, static fallback, and reduced-motion behavior for demonstration media;
+- deterministic source-priority tests for accepted menu, inventory attention, profile fit, and quick chooser;
+- timezone, daypart, midnight, daylight-saving, invalid-timezone, and override tests;
+- one-question and two-question quick-chooser tests with no silent profile mutation;
 - verified critical journeys;
 - deterministic inventory and reconciliation tests;
 - AI workflow evaluations;
@@ -178,8 +217,9 @@ The first public release requires:
 - authorization and data-isolation tests;
 - privacy export and deletion validation;
 - accessible and localized critical interfaces;
+- telemetry-redaction validation for pantry, profile, recipe, questionnaire, session, and authentication data;
 - load and cost tests against the launch envelope;
 - backup and restore rehearsal;
 - queue recovery and idempotency tests;
 - observable AI cost and failure behavior;
-- legal review for terms, privacy, age policy, international transfers, advertising, and available countries.
+- legal review for terms, privacy, age policy, public claims, international transfers, advertising, and available countries.
