@@ -374,20 +374,31 @@ The evidence must identify the final candidate SHA and must not expose credentia
 
 ## Execution state
 
-- **Current checkpoint:** Reproducible locked restore and complete automated suite pass after synchronizing project-reference lock files; final operational validation remains.
+- **Current checkpoint:** Compose, migration, real-Keycloak browser session, CSRF create, and two-user isolation smoke passed; final external CI and independent-review evidence remains.
 - **Run delivery target:** Instrument mutation outcomes with privacy-safe low-cardinality metrics and prove the metric surface cannot carry inventory content.
 - **Delivered outcome:** The Inventory module owns counters for mutation outcomes, validation/domain rejections, optimistic-concurrency failures, and idempotency outcomes. The API registers the meter with OpenTelemetry without adding sensitive labels.
 - **Acceptance criteria resolved:** R1–R4 and R7 are implemented. R5 now has a valid 3.1 linted snapshot, truthful quantity modes, typed header schemas, operation identifiers, and corrected runtime declarations; its full response-example matrix remains open. R8–R10 remain open.
 - **Files or areas materially changed:** OpenAPI transformer and snapshot; OpenAPI lint script; backend CI workflow; this plan; and `docs/plan-status.md`.
 - **Documentation delivered:** XML documentation specifies metric names, units, stable label boundaries, and prohibited private content.
-- **Validation performed:** `dotnet restore apps/backend/KitchenFlow.slnx --force-evaluate`; `dotnet restore apps/backend/KitchenFlow.slnx --locked-mode`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; Release build; complete test suite with TRX results (architecture 6/6, unit 6/6, PostgreSQL integration 36/36); and `git diff --check`.
-- **Known failures or limitations:** Full-pipeline exporter proof beyond the module meter listener and existing trace redaction processor is still incomplete. The linter reports eight recommendations for license/tag metadata and redirect/health response conventions; complete response examples, idempotency retention policy, migration SQL/Compose/Keycloak final smoke, and independent final review remain pending.
+- **Validation performed:** Locked restore, formatting, Release build, and complete tests (48/48); `docker compose -f infrastructure/compose/compose.dev.yml up -d postgres keycloak`; Compose and OIDC discovery readiness; local migration application; real Keycloak browser/CSRF/two-user smoke; `dotnet list apps/backend/KitchenFlow.slnx package --vulnerable --include-transitive`; and attempted local Gitleaks scan.
+- **Known failures or limitations:** Full-pipeline exporter proof beyond the module meter listener and existing trace redaction processor is still incomplete. The linter reports eight recommendations for license/tag metadata and redirect/health response conventions; complete response examples, idempotency retention policy, CI run status, local secret scan (Gitleaks binary unavailable), and independent final review remain pending.
 - **Blockers:** None. PR #9 remains draft and must not be marked ready until R5/R8/R9/R10 pass.
 - **Partially modified areas:** The metric is registered for OpenTelemetry export but no production exporter is selected in this first slice; metrics remain useful through any configured collector/exporter.
-- **Exact next action:** Commit synchronized lock files, then execute migration SQL/upgrade, Compose readiness, Keycloak smoke, vulnerability/secret checks, and final reviewer handoff.
+- **Exact next action:** Observe the pushed CI run including the secret-scan job, then request a fresh independent PR review; do not mark PLAN-0003 completed before that review resolves the remaining acceptance criteria.
 - **Working tree state:** R7 changes are ready for this checkpoint commit.
 
 ## Progress log
+
+### 2026-07-30T11:25:00Z — Codex backend remediation agent
+
+- **Run delivery target:** Produce final local operational evidence for PostgreSQL, Keycloak, migrations, cookie-session security, CSRF, and two-user isolation.
+- **Checkpoint:** Started and verified pinned PostgreSQL 18.4 and Keycloak 26.7.0 Compose services; verified realm discovery; applied current migrations; ran the browser smoke with both deterministic Keycloak users.
+- **Material files changed:** This plan and `docs/plan-status.md` only; generated local build-artifact directories were removed and never staged.
+- **Commands and validation performed:** `docker compose -f infrastructure/compose/compose.dev.yml up -d postgres keycloak`; `docker compose ... ps`; OIDC discovery `curl`; `dotnet tool restore`; `dotnet tool run dotnet-ef database update`; browser smoke `node scripts/backend/smoke-keycloak.mjs`; `dotnet list apps/backend/KitchenFlow.slnx package --vulnerable --include-transitive`; attempted `gitleaks detect --source . --no-git --redact`.
+- **Result:** Compose services healthy; migrations already current; real Keycloak browser session, session token contract, CSRF create, and owner/other-user 200/404 isolation passed. The vulnerability check found no vulnerable packages. Local Gitleaks was unavailable; no scan result is claimed.
+- **Known failures or unverified behavior:** CI has not yet run on final candidate; secret scanning is pending that CI job; independent fresh reviewer approval remains mandatory. The browser smoke used the explicit local diagnostic certificate waiver already accepted by the owner; no production certificate claim is made.
+- **Blockers:** External CI completion and independent review only.
+- **Exact next action:** Push this evidence checkpoint, inspect CI including secret scan, and request independent PR review while retaining draft status.
 
 ### 2026-07-30T11:15:00Z — Codex backend remediation agent
 
