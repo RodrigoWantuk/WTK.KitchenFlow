@@ -21,17 +21,18 @@ namespace KitchenFlow.Api.Inventory;
 public sealed class InventoryApplicationService(
     ApplicationDbContext database,
     ICurrentUserAccessor currentUser,
+    IInventoryLotReadStore readStore,
     TimeProvider timeProvider,
     IDataProtectionProvider dataProtection,
     InventoryLotLifecycleUseCase lifecycleUseCase)
 {
     /// <summary>Lists lots visible to the current KitchenFlow user.</summary>
     public Task<IResult> ListAsync(int? pageSize, string? status, string? storageLocation, string? search, string? cursor, CancellationToken cancellationToken) =>
-        ListCoreAsync(pageSize, status, storageLocation, search, cursor, currentUser, database, dataProtection, cancellationToken);
+        ListCoreAsync(pageSize, status, storageLocation, search, cursor, currentUser, readStore, dataProtection, cancellationToken);
 
     /// <summary>Gets one active lot visible to the current KitchenFlow user.</summary>
     public Task<IResult> GetAsync(Guid lotId, CancellationToken cancellationToken) =>
-        GetCoreAsync(lotId, currentUser, database, cancellationToken);
+        GetCoreAsync(lotId, currentUser, readStore, cancellationToken);
 
     /// <summary>Creates a user-owned lot and its immutable initial history.</summary>
     public Task<IResult> CreateAsync(CreateLotRequest request, HttpRequest requestContext, CancellationToken cancellationToken) =>
@@ -51,9 +52,9 @@ public sealed class InventoryApplicationService(
 
     /// <summary>Lists immutable history for one owner-scoped lot.</summary>
     public Task<IResult> HistoryAsync(Guid lotId, CancellationToken cancellationToken) =>
-        HistoryCoreAsync(lotId, currentUser, database, cancellationToken);
+        HistoryCoreAsync(lotId, currentUser, readStore, cancellationToken);
 
-    private async Task<IResult> ListCoreAsync(int? pageSize, string? status, string? storageLocation, string? search, string? cursor, ICurrentUserAccessor currentUser, ApplicationDbContext database, IDataProtectionProvider dataProtection, CancellationToken cancellationToken)
+    private async Task<IResult> ListCoreAsync(int? pageSize, string? status, string? storageLocation, string? search, string? cursor, ICurrentUserAccessor currentUser, IInventoryLotReadStore readStore, IDataProtectionProvider dataProtection, CancellationToken cancellationToken)
     {
         if (pageSize is < 1 or > 100)
         {
@@ -76,56 +77,20 @@ public sealed class InventoryApplicationService(
             return Problem(400, "invalid_cursor", "The cursor is invalid.");
         }
 
-        var user = await currentUser.GetCurrentAsync(cancellationToken);
-        var lots = database.Lots.Where(lot => lot.OwnerUserId == user.Id);
-        lots = status switch
-        {
-            "deleted" => lots.Where(lot => lot.DeletedAt != null),
-            "depleted" => lots.Where(lot => lot.DeletedAt == null && ((lot.MeasuredValue != null && lot.MeasuredValue == 0m) || lot.AvailabilityState == "Unavailable")),
-            null or "active" => lots.Where(lot => lot.DeletedAt == null && ((lot.MeasuredValue != null && lot.MeasuredValue > 0m) || (lot.MeasuredValue == null && lot.AvailabilityState != "Unavailable"))),
-            _ => lots
-        };
-
-        if (storageLocation is not null)
-        {
-            lots = lots.Where(lot => lot.StorageLocation == storageLocation);
-        }
-
-        var records = from lot in lots
-                      join product in database.Products on lot.ProductId equals product.Id
-                      where product.OwnerUserId == user.Id
-                      select new { Lot = lot, Product = product };
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var normalized = search.Trim().ToUpperInvariant();
-            records = records.Where(item => item.Product.NormalizedSearchName.Contains(normalized));
-        }
-
-        if (position is not null)
-        {
-            records = records.Where(item => item.Lot.UpdatedAt < position.UpdatedAt || (item.Lot.UpdatedAt == position.UpdatedAt && item.Lot.Id.CompareTo(position.LotId) < 0));
-        }
-
         var limit = pageSize ?? 25;
-        var page = await records
-            .OrderByDescending(item => item.Lot.UpdatedAt).ThenByDescending(item => item.Lot.Id)
-            .Take(limit + 1)
-            .ToListAsync(cancellationToken);
-        var hasMore = page.Count > limit;
-        var items = page.Take(limit).ToList();
-        var nextCursor = hasMore
-            ? WriteCursor(new CursorPosition(items[^1].Lot.UpdatedAt, items[^1].Lot.Id), dataProtection)
-            : null;
-        return Results.Ok(new ListLotsResponse(items.Select(item => ToResponse(item.Lot, item.Product.DisplayName)).ToList(), nextCursor));
+        var user = await currentUser.GetCurrentAsync(cancellationToken);
+        var page = await readStore.ListAsync(new InventoryLotReadQuery(user.Id, limit, status, storageLocation, search, position is null ? null : new InventoryLotReadCursor(position.UpdatedAt, position.LotId)), cancellationToken);
+        var nextCursor = page.NextCursor is null ? null : WriteCursor(new CursorPosition(page.NextCursor.UpdatedAt, page.NextCursor.LotId), dataProtection);
+        return Results.Ok(new ListLotsResponse(page.Items.Select(ToResponse).ToList(), nextCursor));
     }
 
-    private async Task<IResult> GetCoreAsync(Guid lotId, ICurrentUserAccessor currentUser, ApplicationDbContext database, CancellationToken cancellationToken)
+    private async Task<IResult> GetCoreAsync(Guid lotId, ICurrentUserAccessor currentUser, IInventoryLotReadStore readStore, CancellationToken cancellationToken)
     {
         var user = await currentUser.GetCurrentAsync(cancellationToken);
-        var record = await FindLotAsync(lotId, user.Id, database, cancellationToken);
-        return record is null || record.Value.Lot.DeletedAt is not null
+        var record = await readStore.FindActiveAsync(user.Id, lotId, cancellationToken);
+        return record is null
             ? Problem(404, "resource_not_found", "The inventory lot was not found.")
-            : WithEtag(ToResponse(record.Value.Lot, record.Value.Product.DisplayName));
+            : WithEtag(ToResponse(record));
     }
 
     private async Task<IResult> CreateCoreAsync(CreateLotRequest request, HttpRequest httpRequest, ICurrentUserAccessor currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
@@ -284,16 +249,15 @@ public sealed class InventoryApplicationService(
             return ToRecord(transaction);
         }, StatusCodes.Status204NoContent);
 
-    private async Task<IResult> HistoryCoreAsync(Guid lotId, ICurrentUserAccessor currentUser, ApplicationDbContext database, CancellationToken cancellationToken)
+    private async Task<IResult> HistoryCoreAsync(Guid lotId, ICurrentUserAccessor currentUser, IInventoryLotReadStore readStore, CancellationToken cancellationToken)
     {
         var user = await currentUser.GetCurrentAsync(cancellationToken);
-        if (await FindLotAsync(lotId, user.Id, database, cancellationToken) is null)
+        var transactions = await readStore.GetHistoryAsync(user.Id, lotId, cancellationToken);
+        if (transactions is null)
         {
             return Problem(404, "resource_not_found", "The inventory lot was not found.");
         }
-
-        var transactions = await database.Transactions.Where(item => item.OwnerUserId == user.Id && item.LotId == lotId).OrderByDescending(item => item.OccurredAt).ToListAsync(cancellationToken);
-        return Results.Ok(transactions.Select(item => new LotHistoryResponse(item.Id, item.Type, ToQuantity(item.PreviousMeasuredValue, item.PreviousMeasuredUnit, item.PreviousAvailabilityState), ToQuantity(item.ResultingMeasuredValue, item.ResultingMeasuredUnit, item.ResultingAvailabilityState), item.ReasonCode, item.OccurredAt)));
+        return Results.Ok(transactions.Select(item => new LotHistoryResponse(item.TransactionId, item.Type, ToQuantity(item.PreviousMeasuredValue, item.PreviousMeasuredUnit, item.PreviousAvailabilityState), ToQuantity(item.ResultingMeasuredValue, item.ResultingMeasuredUnit, item.ResultingAvailabilityState), item.ReasonCode, item.OccurredAt)));
     }
 
     private async Task<IResult> MutateAsync(Guid lotId, HttpRequest request, ICurrentUserAccessor currentUser, ApplicationDbContext database, TimeProvider clock, CancellationToken cancellationToken, Func<LotRecord, ProductRecord, DateTimeOffset, TransactionRecord?> operation, int successStatus = StatusCodes.Status200OK, Guid? idempotencyKey = null, string? idempotencyScope = null, string? idempotencyHash = null)
@@ -440,6 +404,7 @@ public sealed class InventoryApplicationService(
     }
 
     private LotResponse ToResponse(LotRecord lot, string productName) => new(lot.Id, lot.ProductId, productName, ToQuantity(lot), lot.StorageLocation, lot.CustomLocation, lot.PackageState, lot.PrintedExpirationDate, lot.Notes, CreateVersionToken(lot.Version), lot.CreatedAt, lot.UpdatedAt);
+    private LotResponse ToResponse(InventoryLotReadModel lot) => new(lot.LotId, lot.ProductId, lot.ProductName, new QuantityResponse(lot.MeasuredValue, lot.MeasuredUnit, lot.AvailabilityState), lot.StorageLocation, lot.CustomLocation, lot.PackageState, lot.PrintedExpirationDate, lot.Notes, CreateVersionToken(lot.Version), lot.CreatedAt, lot.UpdatedAt);
     private static QuantityResponse ToQuantity(LotRecord lot) => new(lot.MeasuredValue, lot.MeasuredUnit, lot.AvailabilityState);
     private static QuantityResponse? ToQuantity(decimal? measuredValue, string? unit, string? availabilityState) => measuredValue is null && unit is null && availabilityState is null ? null : new QuantityResponse(measuredValue, unit, availabilityState);
     private static IResult WithEtag(LotResponse response, int status = 200) => new EtagResult<LotResponse>(response, ToEtag(response.Version), status);

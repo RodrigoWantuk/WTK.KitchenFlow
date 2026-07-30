@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** The generated OpenAPI snapshot includes the current documented contract; CI drift from XML-derived schema descriptions is corrected locally.
-- **Last completed step:** Reproduced the current GitHub Actions OpenAPI drift and regenerated the checked-in snapshot from the Release API against Compose PostgreSQL.
-- **Exact next action:** Move the application-service contract into `KitchenFlow.Modules.Inventory.Application` and provide an infrastructure persistence adapter, so the composition-root service becomes a thin adapter rather than the authoritative use-case implementation.
+- **Current checkpoint:** Owner-scoped inventory reads use a module port and PostgreSQL adapter; commands remain to be extracted from the API application service.
+- **Last completed step:** Moved inventory list, detail, and history persistence reads behind the explicit module boundary.
+- **Exact next action:** Extract the four mutation use cases to module commands and an Infrastructure write adapter, then automate the real-Keycloak two-user smoke.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
 - **Validation performed:** GitHub Actions runs `30484702156` and `30485251129` (the latter failed during fresh PostgreSQL 18 Compose startup before its gates); focused migration constraints and idempotency canonicalization tests; Release solution build; formatting verification; migration downgrade and upgrade against fresh Compose PostgreSQL; PostgreSQL and Keycloak readiness/discovery.
-- **Known failures or limitations:** The application service is still in the API composition root and directly uses persistence. Module persistence ports/adapters, automated real-Keycloak login/two-user smoke, operational runbooks, and a successful rerun of the expanded GitHub Actions workflow remain unfinished.
-- **Working tree state:** Regenerated OpenAPI contract snapshot is ready to commit with synchronized plan and registry updates.
+- **Known failures or limitations:** Create, update, adjustment, and delete commands still use direct EF persistence in the API application service. Automated real-Keycloak two-user browser/session smoke and operational runbooks remain open.
+- **Working tree state:** Inventory read-boundary extraction is ready to commit with synchronized plan and registry updates.
 
 ## Progress log
+
+### 2026-07-30T01:58:48Z — Codex backend implementation agent
+
+- **Checkpoint:** Extracted all owner-scoped inventory read paths behind an explicit module persistence port.
+- **Changes included in the commit:** Added `IInventoryLotReadStore` and persistence-independent read models in the Inventory module; implemented `PostgreSqlInventoryLotReadStore`; registered it in the composition root; changed list, detail, and history HTTP-facing application methods to consume the port rather than querying EF directly.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore` (zero warnings/errors); `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --filter FullyQualifiedName~ListUsesTamperEvidentCursorAndPreservesFilters --no-restore` (1 passed).
+- **Result:** Read authorization is structurally owner-scoped in the Infrastructure adapter and the API no longer contains EF query logic for the three read use cases.
+- **Known failures or unverified behavior:** Create, update, adjustment, and delete commands still use direct EF persistence in the API application service. Automated real-Keycloak two-user browser/session smoke and operational runbooks remain open.
+- **Blockers:** None.
+- **Next action:** Extract the four mutation use cases to module commands and an Infrastructure write adapter, then automate the real-Keycloak two-user smoke.
 
 ### 2026-07-29T20:25:26Z — Codex backend implementation agent
 
