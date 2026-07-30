@@ -5,6 +5,9 @@ namespace KitchenFlow.Modules.Inventory.Application;
 /// <summary>Explicit owner-scoped write boundary for inventory lots and their immutable side effects.</summary>
 public interface IInventoryLotWriteStore
 {
+    /// <summary>Finds an owner-scoped idempotency record for semantic replay without exposing persistence entities.</summary>
+    Task<InventoryIdempotencyRead?> FindIdempotencyAsync(Guid ownerUserId, string scope, Guid key, CancellationToken cancellationToken);
+
     /// <summary>Persists a new product, lot, initial immutable transaction, audit event, and idempotency response atomically.</summary>
     Task<InventoryWriteOutcome> SaveCreatedAsync(InventoryLotCreationWrite write, CancellationToken cancellationToken);
 
@@ -26,6 +29,9 @@ public sealed record InventoryLotMutationWrite(Guid OwnerUserId, InventoryLot Lo
 
 /// <summary>Completed idempotency response persisted with a mutation.</summary>
 public sealed record InventoryIdempotencyWrite(Guid Key, string Scope, string RequestHash, int StatusCode, string ResponseBody, string ETag, DateTimeOffset CreatedAt);
+
+/// <summary>Replayable idempotency state loaded from authoritative PostgreSQL storage.</summary>
+public sealed record InventoryIdempotencyRead(string RequestHash, int StatusCode, string? ResponseBody, string? ETag, DateTimeOffset? CompletedAt);
 
 /// <summary>Outcome of an optimistic inventory persistence operation.</summary>
 public enum InventoryWriteOutcome

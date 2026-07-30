@@ -3,14 +3,12 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using KitchenFlow.Api.Services;
-using KitchenFlow.Infrastructure.Persistence;
 using KitchenFlow.Modules.Inventory.Application;
 using KitchenFlow.Modules.Inventory.Domain;
 using KitchenFlow.Modules.Identity;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
 
 namespace KitchenFlow.Api.Inventory;
 
@@ -19,7 +17,6 @@ namespace KitchenFlow.Api.Inventory;
 /// intentionally the single HTTP-facing seam while the module application contracts are extracted.
 /// </summary>
 public sealed class InventoryApplicationService(
-    ApplicationDbContext database,
     ICurrentUserAccessor currentUser,
     IInventoryLotReadStore readStore,
     IInventoryLotWriteStore writeStore,
@@ -37,19 +34,19 @@ public sealed class InventoryApplicationService(
 
     /// <summary>Creates a user-owned lot and its immutable initial history.</summary>
     public Task<IResult> CreateAsync(CreateLotRequest request, HttpRequest requestContext, CancellationToken cancellationToken) =>
-        CreateCoreAsync(request, requestContext, currentUser, writeStore, database, timeProvider, cancellationToken);
+        CreateCoreAsync(request, requestContext, currentUser, writeStore, timeProvider, cancellationToken);
 
     /// <summary>Updates mutable metadata for one owner-scoped lot.</summary>
     public Task<IResult> UpdateAsync(Guid lotId, UpdateLotRequest request, HttpRequest requestContext, CancellationToken cancellationToken) =>
-        UpdateCoreAsync(lotId, request, requestContext, currentUser, database, timeProvider, cancellationToken);
+        UpdateCoreAsync(lotId, request, requestContext, currentUser, timeProvider, cancellationToken);
 
     /// <summary>Applies one idempotent inventory adjustment to an owner-scoped lot.</summary>
     public Task<IResult> AdjustAsync(Guid lotId, AdjustmentRequest request, HttpRequest requestContext, CancellationToken cancellationToken) =>
-        AdjustCoreAsync(lotId, request, requestContext, currentUser, database, timeProvider, cancellationToken);
+        AdjustCoreAsync(lotId, request, requestContext, currentUser, timeProvider, cancellationToken);
 
     /// <summary>Soft-deletes one owner-scoped lot and writes immutable lifecycle history.</summary>
     public Task<IResult> DeleteAsync(Guid lotId, HttpRequest requestContext, CancellationToken cancellationToken) =>
-        DeleteCoreAsync(lotId, requestContext, currentUser, database, timeProvider, cancellationToken);
+        DeleteCoreAsync(lotId, requestContext, currentUser, timeProvider, cancellationToken);
 
     /// <summary>Lists immutable history for one owner-scoped lot.</summary>
     public Task<IResult> HistoryAsync(Guid lotId, CancellationToken cancellationToken) =>
@@ -94,7 +91,7 @@ public sealed class InventoryApplicationService(
             : WithEtag(ToResponse(record));
     }
 
-    private async Task<IResult> CreateCoreAsync(CreateLotRequest request, HttpRequest httpRequest, ICurrentUserAccessor currentUser, IInventoryLotWriteStore writeStore, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
+    private async Task<IResult> CreateCoreAsync(CreateLotRequest request, HttpRequest httpRequest, ICurrentUserAccessor currentUser, IInventoryLotWriteStore writeStore, TimeProvider timeProvider, CancellationToken cancellationToken)
     {
         if (!TryIdempotencyKey(httpRequest, out var key))
         {
@@ -129,7 +126,7 @@ public sealed class InventoryApplicationService(
             request.PrintedExpirationDate,
             Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim()
         });
-        var prior = await database.IdempotencyRecords.SingleOrDefaultAsync(record => record.OwnerUserId == user.Id && record.Scope == "inventory.lots.create" && record.Key == key, cancellationToken);
+        var prior = await writeStore.FindIdempotencyAsync(user.Id, "inventory.lots.create", key, cancellationToken);
         if (prior is not null)
         {
             if (prior.RequestHash != hash)
@@ -156,12 +153,12 @@ public sealed class InventoryApplicationService(
         var outcome = await writeStore.SaveCreatedAsync(new InventoryLotCreationWrite(user.Id, domainProduct, domainLot, initial, httpRequest.HttpContext.TraceIdentifier, idempotency), cancellationToken);
         if (outcome != InventoryWriteOutcome.Saved)
         {
-            return await ReplayAfterIdempotencyRaceAsync(database, user.Id, "inventory.lots.create", key, hash, StatusCodes.Status201Created, cancellationToken);
+            return await ReplayFromStoreAsync(writeStore, user.Id, "inventory.lots.create", key, hash, StatusCodes.Status201Created, cancellationToken);
         }
         return WithEtag(response, StatusCodes.Status201Created);
     }
 
-    private async Task<IResult> UpdateCoreAsync(Guid lotId, UpdateLotRequest request, HttpRequest requestContext, ICurrentUserAccessor currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
+    private async Task<IResult> UpdateCoreAsync(Guid lotId, UpdateLotRequest request, HttpRequest requestContext, ICurrentUserAccessor currentUser, TimeProvider timeProvider, CancellationToken cancellationToken)
     {
         var validMetadata = ValidateMetadata(request.StorageLocation, request.CustomLocation, request.PackageState, request.Notes, out var metadataError);
         var validProductName = request.ProductName is null || ValidateProductName(request.ProductName, out _, out _);
@@ -182,7 +179,7 @@ public sealed class InventoryApplicationService(
         });
     }
 
-    private async Task<IResult> AdjustCoreAsync(Guid lotId, AdjustmentRequest request, HttpRequest requestContext, ICurrentUserAccessor currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken)
+    private async Task<IResult> AdjustCoreAsync(Guid lotId, AdjustmentRequest request, HttpRequest requestContext, ICurrentUserAccessor currentUser, TimeProvider timeProvider, CancellationToken cancellationToken)
     {
         if (!TryIdempotencyKey(requestContext, out var key))
         {
@@ -205,7 +202,7 @@ public sealed class InventoryApplicationService(
             adjustment.ReasonCode,
             adjustment.Note
         });
-        var prior = await database.IdempotencyRecords.SingleOrDefaultAsync(record => record.OwnerUserId == user.Id && record.Scope == "inventory.lots.adjust" && record.Key == key, cancellationToken);
+        var prior = await writeStore.FindIdempotencyAsync(user.Id, "inventory.lots.adjust", key, cancellationToken);
         if (prior is not null)
         {
             if (prior.RequestHash != hash)
@@ -229,7 +226,7 @@ public sealed class InventoryApplicationService(
         }, idempotencyKey: key, idempotencyScope: "inventory.lots.adjust", idempotencyHash: hash);
     }
 
-    private async Task<IResult> DeleteCoreAsync(Guid lotId, HttpRequest requestContext, ICurrentUserAccessor currentUser, ApplicationDbContext database, TimeProvider timeProvider, CancellationToken cancellationToken) =>
+    private async Task<IResult> DeleteCoreAsync(Guid lotId, HttpRequest requestContext, ICurrentUserAccessor currentUser, TimeProvider timeProvider, CancellationToken cancellationToken) =>
         await MutateThroughStoreAsync(lotId, requestContext, currentUser, writeStore, timeProvider, cancellationToken, (domainLot, _, now) =>
         {
             var transaction = lifecycleUseCase.Delete(domainLot, now);
@@ -264,6 +261,10 @@ public sealed class InventoryApplicationService(
             var response = ToResponse(state.Lot, state.Product);
             var idempotency = idempotencyKey is null ? null : new InventoryIdempotencyWrite(idempotencyKey.Value, idempotencyScope!, idempotencyHash!, StatusCodes.Status200OK, JsonSerializer.Serialize(response), ToEtag(response.Version), now);
             var result = await writeStore.SaveMutationAsync(new InventoryLotMutationWrite(user.Id, state.Lot, state.Product, version, transaction, "inventory.lot.updated", request.HttpContext.TraceIdentifier, idempotency), cancellationToken);
+            if (result == InventoryWriteOutcome.IdempotencyConflict)
+            {
+                return await ReplayFromStoreAsync(writeStore, user.Id, idempotencyScope!, idempotencyKey!.Value, idempotencyHash!, successStatus, cancellationToken);
+            }
             return result switch
             {
                 InventoryWriteOutcome.Saved when successStatus == StatusCodes.Status204NoContent => Results.NoContent(),
@@ -275,75 +276,6 @@ public sealed class InventoryApplicationService(
         catch (InvalidOperationException exception) { return Problem(422, "domain_rule_violated", exception.Message); }
     }
 
-    private async Task<IResult> MutateAsync(Guid lotId, HttpRequest request, ICurrentUserAccessor currentUser, ApplicationDbContext database, TimeProvider clock, CancellationToken cancellationToken, Func<LotRecord, ProductRecord, DateTimeOffset, TransactionRecord?> operation, int successStatus = StatusCodes.Status200OK, Guid? idempotencyKey = null, string? idempotencyScope = null, string? idempotencyHash = null)
-    {
-        var precondition = ReadVersion(request, out var version);
-        if (precondition == VersionPrecondition.Missing)
-        {
-            return Problem(428, "precondition_required", "If-Match is required.");
-        }
-
-        if (precondition == VersionPrecondition.Invalid)
-        {
-            // An opaque token that cannot be opened cannot represent the current version. Treat it
-            // as stale rather than as an omitted precondition, without revealing token internals.
-            return Problem(412, "precondition_failed", "The inventory lot was modified.");
-        }
-
-        var user = await currentUser.GetCurrentAsync(cancellationToken);
-        var item = await FindLotAsync(lotId, user.Id, database, cancellationToken);
-        if (item is null || item.Value.Lot.DeletedAt is not null)
-        {
-            return Problem(404, "resource_not_found", "The inventory lot was not found.");
-        }
-
-        if (item.Value.Lot.Version != version)
-        {
-            return Problem(412, "precondition_failed", "The inventory lot was modified.");
-        }
-
-        try
-        {
-            var now = clock.GetUtcNow();
-            var transaction = operation(item.Value.Lot, item.Value.Product, now);
-            if (transaction is not null)
-            {
-                database.Transactions.Add(transaction);
-            }
-
-            database.AuditEvents.Add(new AuditEventRecord { Id = Guid.NewGuid(), ActorUserId = user.Id, EventName = "inventory.lot.updated", TargetType = "inventory_lot", TargetId = lotId, CorrelationId = request.HttpContext.TraceIdentifier, MetadataJson = "{}", OccurredAt = now });
-            var response = ToResponse(item.Value.Lot, item.Value.Product.DisplayName);
-            if (idempotencyKey is not null)
-            {
-                database.IdempotencyRecords.Add(new IdempotencyRecord { Id = Guid.NewGuid(), OwnerUserId = user.Id, Scope = idempotencyScope!, Key = idempotencyKey.Value, RequestHash = idempotencyHash!, StatusCode = StatusCodes.Status200OK, ResponseBody = JsonSerializer.Serialize(response), ETag = ToEtag(response.Version), CreatedAt = now, CompletedAt = now });
-            }
-            await database.SaveChangesAsync(cancellationToken);
-            return successStatus == 204 ? Results.NoContent() : WithEtag(response);
-        }
-        catch (DbUpdateConcurrencyException) when (idempotencyKey is not null)
-        {
-            return await ReplayAfterIdempotencyRaceAsync(database, user.Id, idempotencyScope!, idempotencyKey.Value, idempotencyHash!, successStatus, cancellationToken);
-        }
-        catch (DbUpdateConcurrencyException) { return Problem(412, "precondition_failed", "The inventory lot was modified."); }
-        catch (DbUpdateException) when (idempotencyKey is not null)
-        {
-            return await ReplayAfterIdempotencyRaceAsync(database, user.Id, idempotencyScope!, idempotencyKey.Value, idempotencyHash!, successStatus, cancellationToken);
-        }
-        catch (InvalidOperationException exception) { return Problem(422, "domain_rule_violated", exception.Message); }
-    }
-
-    private static async Task<(LotRecord Lot, ProductRecord Product)?> FindLotAsync(Guid id, Guid ownerId, ApplicationDbContext db, CancellationToken ct)
-    {
-        var lot = await db.Lots.SingleOrDefaultAsync(candidate => candidate.Id == id && candidate.OwnerUserId == ownerId, ct);
-        if (lot is null)
-        {
-            return null;
-        }
-
-        var product = await db.Products.SingleOrDefaultAsync(candidate => candidate.Id == lot.ProductId && candidate.OwnerUserId == ownerId, ct);
-        return product is null ? null : (lot, product);
-    }
-
     private static InventoryLot CreateDomainLot(Guid ownerUserId, Guid productId, CreateLotRequest request, DateTimeOffset now)
     {
         var quantity = request.Quantity.MeasuredValue is { } measured
@@ -352,55 +284,6 @@ public sealed class InventoryApplicationService(
         return InventoryLot.Create(ownerUserId, productId, quantity, ToStorage(request.StorageLocation, request.CustomLocation), ToPackageState(request.PackageState), ToExpiration(request.PrintedExpirationDate), ToNotes(request.Notes), now);
     }
 
-    private static InventoryLot ToDomain(LotRecord lot)
-    {
-        var quantity = lot.MeasuredValue is { } measured
-            ? new LotQuantity.Measured(measured, Enum.Parse<CanonicalUnit>(lot.MeasuredUnit!))
-            : LotQuantity.FromAvailability(Enum.Parse<AvailabilityState>(lot.AvailabilityState!));
-        return InventoryLot.Restore(lot.Id, lot.OwnerUserId, lot.ProductId, quantity, ToStorage(lot.StorageLocation, lot.CustomLocation), ToPackageState(lot.PackageState), ToExpiration(lot.PrintedExpirationDate), ToNotes(lot.Notes), lot.Version, lot.CreatedAt, lot.UpdatedAt, lot.DeletedAt);
-    }
-
-    private static LotRecord ToRecord(InventoryLot lot)
-    {
-        var record = new LotRecord { Id = lot.Id, OwnerUserId = lot.OwnerUserId, ProductId = lot.ProductId, StorageLocation = lot.Storage.Location.ToString() };
-        CopyToRecord(lot, record);
-        return record;
-    }
-
-    private static void CopyToRecord(InventoryLot source, LotRecord target)
-    {
-        target.MeasuredValue = source.Quantity is LotQuantity.Measured measured ? measured.Value : null;
-        target.MeasuredUnit = source.Quantity is LotQuantity.Measured unit ? unit.Unit.ToString() : null;
-        target.AvailabilityState = source.Quantity is LotQuantity.Availability availability ? availability.State.ToString() : null;
-        target.StorageLocation = source.Storage.Location.ToString();
-        target.CustomLocation = source.Storage.CustomLocation;
-        target.PackageState = source.PackageState?.ToString();
-        target.PrintedExpirationDate = source.PrintedExpiration?.Date;
-        target.ExpirationProvenance = source.PrintedExpiration?.Provenance.ToString();
-        target.Notes = source.Notes?.Value;
-        target.Version = source.Version;
-        target.CreatedAt = source.CreatedAt;
-        target.UpdatedAt = source.UpdatedAt;
-        target.DeletedAt = source.DeletedAt;
-    }
-
-    private static TransactionRecord ToRecord(InventoryTransaction transaction) => new()
-    {
-        Id = transaction.Id,
-        OwnerUserId = transaction.OwnerUserId,
-        LotId = transaction.LotId,
-        Type = transaction.Type.ToString(),
-        PreviousMeasuredValue = transaction.PreviousQuantity is LotQuantity.Measured previous ? previous.Value : null,
-        PreviousMeasuredUnit = transaction.PreviousQuantity is LotQuantity.Measured previousUnit ? previousUnit.Unit.ToString() : null,
-        PreviousAvailabilityState = transaction.PreviousQuantity is LotQuantity.Availability previousAvailability ? previousAvailability.State.ToString() : null,
-        ResultingMeasuredValue = transaction.ResultingQuantity is LotQuantity.Measured result ? result.Value : null,
-        ResultingMeasuredUnit = transaction.ResultingQuantity is LotQuantity.Measured resultUnit ? resultUnit.Unit.ToString() : null,
-        ResultingAvailabilityState = transaction.ResultingQuantity is LotQuantity.Availability resultAvailability ? resultAvailability.State.ToString() : null,
-        ReasonCode = transaction.ReasonCode,
-        Note = transaction.Note,
-        IdempotencyKey = transaction.IdempotencyKey,
-        OccurredAt = transaction.OccurredAt
-    };
 
     private static LotStorage ToStorage(string location, string? customLocation)
     {
@@ -418,10 +301,8 @@ public sealed class InventoryApplicationService(
         return privateNotes;
     }
 
-    private LotResponse ToResponse(LotRecord lot, string productName) => new(lot.Id, lot.ProductId, productName, ToQuantity(lot), lot.StorageLocation, lot.CustomLocation, lot.PackageState, lot.PrintedExpirationDate, lot.Notes, CreateVersionToken(lot.Version), lot.CreatedAt, lot.UpdatedAt);
     private LotResponse ToResponse(InventoryLot lot, Product product) => new(lot.Id, lot.ProductId, product.DisplayName, new QuantityResponse(lot.Quantity is LotQuantity.Measured measured ? measured.Value : null, lot.Quantity is LotQuantity.Measured unit ? unit.Unit.ToString() : null, lot.Quantity is LotQuantity.Availability availability ? availability.State.ToString() : null), lot.Storage.Location.ToString(), lot.Storage.CustomLocation, lot.PackageState?.ToString(), lot.PrintedExpiration?.Date, lot.Notes?.Value, CreateVersionToken(lot.Version), lot.CreatedAt, lot.UpdatedAt);
     private LotResponse ToResponse(InventoryLotReadModel lot) => new(lot.LotId, lot.ProductId, lot.ProductName, new QuantityResponse(lot.MeasuredValue, lot.MeasuredUnit, lot.AvailabilityState), lot.StorageLocation, lot.CustomLocation, lot.PackageState, lot.PrintedExpirationDate, lot.Notes, CreateVersionToken(lot.Version), lot.CreatedAt, lot.UpdatedAt);
-    private static QuantityResponse ToQuantity(LotRecord lot) => new(lot.MeasuredValue, lot.MeasuredUnit, lot.AvailabilityState);
     private static QuantityResponse? ToQuantity(decimal? measuredValue, string? unit, string? availabilityState) => measuredValue is null && unit is null && availabilityState is null ? null : new QuantityResponse(measuredValue, unit, availabilityState);
     private static IResult WithEtag(LotResponse response, int status = 200) => new EtagResult<LotResponse>(response, ToEtag(response.Version), status);
     private static string ToEtag(string version) => $"\"{version}\"";
@@ -469,26 +350,13 @@ public sealed class InventoryApplicationService(
     }
     private static string Hash<T>(T value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value))));
 
-    private async Task<IResult> ReplayAfterIdempotencyRaceAsync(ApplicationDbContext database, Guid ownerUserId, string scope, Guid key, string hash, int successStatus, CancellationToken cancellationToken)
+    private async Task<IResult> ReplayFromStoreAsync(IInventoryLotWriteStore writeStore, Guid ownerUserId, string scope, Guid key, string hash, int successStatus, CancellationToken cancellationToken)
     {
-        // A unique PostgreSQL index elects one concurrent request as the owner. Clearing tracked
-        // failed inserts is essential before loading that owner's committed semantic response.
-        database.ChangeTracker.Clear();
-        var record = await database.IdempotencyRecords.SingleOrDefaultAsync(candidate => candidate.OwnerUserId == ownerUserId && candidate.Scope == scope && candidate.Key == key, cancellationToken);
-        if (record is null || record.CompletedAt is null)
-        {
-            return Problem(409, "idempotency_in_progress", "The request is still being processed.");
-        }
-
-        if (!string.Equals(record.RequestHash, hash, StringComparison.Ordinal))
-        {
-            return Problem(409, "idempotency_key_reused", "The Idempotency-Key was used for a different request.");
-        }
-
+        var record = await writeStore.FindIdempotencyAsync(ownerUserId, scope, key, cancellationToken);
+        if (record is null || record.CompletedAt is null) return Problem(409, "idempotency_in_progress", "The request is still being processed.");
+        if (!string.Equals(record.RequestHash, hash, StringComparison.Ordinal)) return Problem(409, "idempotency_key_reused", "The Idempotency-Key was used for a different request.");
         var response = JsonSerializer.Deserialize<LotResponse>(record.ResponseBody!);
-        return response is null
-            ? Problem(409, "idempotency_in_progress", "The request is still being processed.")
-            : WithEtag(response, successStatus);
+        return response is null ? Problem(409, "idempotency_in_progress", "The request is still being processed.") : WithEtag(response, successStatus);
     }
     private static string WriteCursor(CursorPosition position, IDataProtectionProvider provider) => provider.CreateProtector("KitchenFlow.Inventory.LotCursor.v1").Protect(JsonSerializer.Serialize(position));
     private static bool TryReadCursor(string cursor, IDataProtectionProvider provider, out CursorPosition? position)

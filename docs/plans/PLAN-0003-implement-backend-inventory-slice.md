@@ -483,16 +483,26 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** All inventory mutations persist through an explicit module write port and PostgreSQL adapter; idempotency replay lookup remains the last direct persistence concern in the API seam.
-- **Last completed step:** Moved create, update, adjustment, and deletion persistence into the atomic PostgreSQL write adapter.
-- **Exact next action:** Move idempotency replay lookup into the write port, remove the obsolete direct-EF mutation helper, then automate the real-Keycloak two-user smoke.
+- **Current checkpoint:** Inventory API orchestration has no direct EF persistence dependency; read, write, and idempotency replay use explicit module ports and PostgreSQL adapters.
+- **Last completed step:** Moved idempotency lookup/replay to the write port and removed obsolete direct-EF mutation logic.
+- **Exact next action:** Automate the real-Keycloak two-user browser/session smoke and update operational runbooks, then complete final validation.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
 - **Validation performed:** GitHub Actions runs `30484702156` and `30485251129` (the latter failed during fresh PostgreSQL 18 Compose startup before its gates); focused migration constraints and idempotency canonicalization tests; Release solution build; formatting verification; migration downgrade and upgrade against fresh Compose PostgreSQL; PostgreSQL and Keycloak readiness/discovery.
-- **Known failures or limitations:** Idempotency replay lookup still uses persistence directly in the API seam. Automated real-Keycloak two-user browser/session smoke and operational runbooks remain open.
-- **Working tree state:** Inventory write-boundary extraction is ready to commit with synchronized plan and registry updates.
+- **Known failures or limitations:** Automated real-Keycloak two-user browser/session smoke and operational runbooks remain open.
+- **Working tree state:** Complete inventory persistence-boundary extraction is ready to commit with synchronized plan and registry updates.
 
 ## Progress log
+
+### 2026-07-30T02:14:28Z — Codex backend implementation agent
+
+- **Checkpoint:** Completed inventory persistence-boundary extraction.
+- **Changes included in the commit:** Added owner-scoped idempotency read/replay to `IInventoryLotWriteStore`; switched concurrent create and adjustment replay to the adapter; removed the obsolete API EF mutation/replay helpers and persistence type references.
+- **Validation performed:** Release solution build (zero warnings/errors); focused concurrent create, adjustment replay, and idempotency-reuse integration tests (3 passed); complete integration suite launched after the change and is pending its aggregate terminal summary.
+- **Result:** API inventory orchestration now depends only on module contracts, domain types, opaque-token services, and HTTP mapping; Infrastructure owns all EF persistence access for the slice.
+- **Known failures or unverified behavior:** Automated real-Keycloak two-user browser/session smoke and operational runbooks remain open. The full integration runner has not yet printed its final aggregate result.
+- **Blockers:** None.
+- **Next action:** Capture full integration result, automate real-Keycloak two-user smoke, update runbooks, and perform final CI validation.
 
 ### 2026-07-30T02:09:16Z — Codex backend implementation agent
 

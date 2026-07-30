@@ -8,6 +8,15 @@ namespace KitchenFlow.Infrastructure.Persistence;
 public sealed class PostgreSqlInventoryLotWriteStore(ApplicationDbContext database) : IInventoryLotWriteStore
 {
     /// <inheritdoc />
+    public async Task<InventoryIdempotencyRead?> FindIdempotencyAsync(Guid ownerUserId, string scope, Guid key, CancellationToken cancellationToken)
+    {
+        return await database.IdempotencyRecords.AsNoTracking()
+            .Where(item => item.OwnerUserId == ownerUserId && item.Scope == scope && item.Key == key)
+            .Select(item => new InventoryIdempotencyRead(item.RequestHash, item.StatusCode, item.ResponseBody, item.ETag, item.CompletedAt))
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<InventoryWriteOutcome> SaveCreatedAsync(InventoryLotCreationWrite write, CancellationToken cancellationToken)
     {
         var idempotency = write.Idempotency;
