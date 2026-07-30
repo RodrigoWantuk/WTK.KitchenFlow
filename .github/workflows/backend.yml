@@ -71,6 +71,10 @@ jobs:
           bash scripts/backend/lint-openapi.sh
   secret-scan:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:

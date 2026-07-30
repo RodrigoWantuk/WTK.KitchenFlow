@@ -374,20 +374,31 @@ The evidence must identify the final candidate SHA and must not expose credentia
 
 ## Execution state
 
-- **Current checkpoint:** Compose, migration, real-Keycloak browser session, CSRF create, and two-user isolation smoke passed; final external CI and independent-review evidence remains.
+- **Current checkpoint:** Compose, migration, real-Keycloak browser session, CSRF create, and two-user isolation smoke passed; CI secret-scan token wiring corrected after an observed action configuration failure.
 - **Run delivery target:** Instrument mutation outcomes with privacy-safe low-cardinality metrics and prove the metric surface cannot carry inventory content.
 - **Delivered outcome:** The Inventory module owns counters for mutation outcomes, validation/domain rejections, optimistic-concurrency failures, and idempotency outcomes. The API registers the meter with OpenTelemetry without adding sensitive labels.
 - **Acceptance criteria resolved:** R1–R4 and R7 are implemented. R5 now has a valid 3.1 linted snapshot, truthful quantity modes, typed header schemas, operation identifiers, and corrected runtime declarations; its full response-example matrix remains open. R8–R10 remain open.
 - **Files or areas materially changed:** OpenAPI transformer and snapshot; OpenAPI lint script; backend CI workflow; this plan; and `docs/plan-status.md`.
 - **Documentation delivered:** XML documentation specifies metric names, units, stable label boundaries, and prohibited private content.
 - **Validation performed:** Locked restore, formatting, Release build, and complete tests (48/48); `docker compose -f infrastructure/compose/compose.dev.yml up -d postgres keycloak`; Compose and OIDC discovery readiness; local migration application; real Keycloak browser/CSRF/two-user smoke; `dotnet list apps/backend/KitchenFlow.slnx package --vulnerable --include-transitive`; and attempted local Gitleaks scan.
-- **Known failures or limitations:** Full-pipeline exporter proof beyond the module meter listener and existing trace redaction processor is still incomplete. The linter reports eight recommendations for license/tag metadata and redirect/health response conventions; complete response examples, idempotency retention policy, CI run status, local secret scan (Gitleaks binary unavailable), and independent final review remain pending.
+- **Known failures or limitations:** Full-pipeline exporter proof beyond the module meter listener and existing trace redaction processor is still incomplete. The linter reports eight recommendations for license/tag metadata and redirect/health response conventions; complete response examples, idempotency retention policy, rerun CI status, local secret scan (Gitleaks binary unavailable), and independent final review remain pending.
 - **Blockers:** None. PR #9 remains draft and must not be marked ready until R5/R8/R9/R10 pass.
 - **Partially modified areas:** The metric is registered for OpenTelemetry export but no production exporter is selected in this first slice; metrics remain useful through any configured collector/exporter.
-- **Exact next action:** Observe the pushed CI run including the secret-scan job, then request a fresh independent PR review; do not mark PLAN-0003 completed before that review resolves the remaining acceptance criteria.
+- **Exact next action:** Push the Gitleaks token wiring, observe the rerun CI including secret scan and build/test, then request a fresh independent PR review; do not mark PLAN-0003 completed before that review resolves the remaining acceptance criteria.
 - **Working tree state:** R7 changes are ready for this checkpoint commit.
 
 ## Progress log
+
+### 2026-07-30T11:35:00Z — Codex backend remediation agent
+
+- **Run delivery target:** Diagnose and correct the first final-candidate CI failure without weakening the secret-scan gate.
+- **Checkpoint:** Inspected GitHub Actions job `secret-scan` through the job-log endpoint after the run remained in progress. The log showed Gitleaks 8.24.3 failed before scanning because pull-request scans now require `GITHUB_TOKEN`.
+- **Material files changed:** `.github/workflows/backend.yml`; this plan; and `docs/plan-status.md`.
+- **Commands and validation performed:** `gh auth status`; PR/check status inspection; GitHub Actions job-log download; workflow patch review; and `git diff --check`.
+- **Result:** Added the standard job-scoped `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}` and read-only contents permission. This preserves rather than bypasses pull-request secret scanning.
+- **Known failures or unverified behavior:** The rerun CI result is not yet available; no local Gitleaks binary is installed. Build-and-test from the same CI run was still in progress when the action failure was diagnosed.
+- **Blockers:** External CI completion and independent review only.
+- **Exact next action:** Commit and push the token wiring, then inspect the new CI run before requesting fresh review.
 
 ### 2026-07-30T11:25:00Z — Codex backend remediation agent
 
