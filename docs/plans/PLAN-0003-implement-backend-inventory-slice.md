@@ -483,14 +483,14 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Reproducible real-Keycloak smoke automation and its operational runbook are present; persistence-boundary formatting is clean.
-- **Last completed step:** Added two-profile Chromium smoke automation for real OIDC login, backend session, CSRF create, and ownership isolation, plus documented how to run it safely.
-- **Exact next action:** Push this checkpoint and inspect CI, then reproduce the Chromium callback navigation on a host with a trusted development certificate before final completion.
+- **Current checkpoint:** Reproducible real-Keycloak two-user smoke passes locally; persistence-boundary formatting is clean.
+- **Last completed step:** Corrected the browser smoke callback probe and passed real OIDC login, backend session, CSRF create, and ownership isolation using the two deterministic users.
+- **Exact next action:** Push this checkpoint and inspect CI, then repeat the smoke on a host that trusts the development certificate without its diagnostic browser flag before final completion.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
-- **Validation performed:** `node --check scripts/backend/smoke-keycloak.mjs`; Release solution build (zero warnings/errors); complete Release test suite (3 architecture, 6 unit, 25 PostgreSQL integration tests passed); `dotnet format --verify-no-changes`; `git diff --check`; OpenAPI drift check against the live HTTPS API; live Compose PostgreSQL/Keycloak readiness; real Keycloak Authorization Code form-post callback returning backend `302` without printing callback parameters.
-- **Known failures or limitations:** The new headless Chrome smoke reaches the real Keycloak sign-in form, but this container renders a `chrome-error://` page during the return to local HTTPS even when the diagnostic local-certificate flag is used. The backend callback itself succeeds through the real-provider form-post validation. CI result for this revision remains pending.
-- **Working tree state:** Keycloak smoke automation, runbook, and formatting corrections are ready to commit with synchronized plan and registry updates.
+- **Validation performed:** `node --check scripts/backend/smoke-keycloak.mjs`; Release solution build (zero warnings/errors); complete Release test suite (3 architecture, 6 unit, 25 PostgreSQL integration tests passed); `dotnet format --verify-no-changes`; `git diff --check`; OpenAPI drift check against the live HTTPS API; live Compose PostgreSQL/Keycloak readiness; real Keycloak Authorization Code form-post callback returning backend `302` without printing callback parameters; passing two-profile headless Chrome smoke using the explicit local-certificate diagnostic flag.
+- **Known failures or limitations:** The container does not trust the ASP.NET Core development certificate. The passing browser smoke therefore uses the documented diagnostic-only browser flag; a passing trusted-certificate browser run remains required before final completion. CI result for this revision remains pending.
+- **Working tree state:** Corrected Keycloak smoke callback probe and synchronized plan/registry updates are ready to commit.
 
 ## Progress log
 
@@ -503,6 +503,16 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Known failures or unverified behavior:** In this container, Chromium reaches the Keycloak credential form but its automatic form-post return renders `chrome-error://chromewebdata/` before an API callback request is logged. The script therefore has not yet produced a passing browser result here; it requires a host that trusts the ASP.NET Core development certificate. CI has not yet executed this revision.
 - **Blockers:** No product or implementation decision is blocked. The remaining browser behavior is an execution-host certificate/browser limitation.
 - **Next action:** Push this checkpoint, inspect the complete CI gate, then repeat the smoke on a trusted-browser host without the diagnostic certificate override.
+
+### 2026-07-30T02:53:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Passed the reproducible real-Keycloak two-user browser smoke under the container's explicit local-certificate diagnostic setting.
+- **Changes included in the commit:** Changed the smoke login return target to the anonymous health endpoint and made the post-login session probe navigate there explicitly before requesting `/api/v1/session`; retained network-failure diagnostics without URL query strings, cookies, credentials, or provider values.
+- **Validation performed:** `node --check scripts/backend/smoke-keycloak.mjs`; live Compose PostgreSQL/Keycloak and HTTPS API; `KITCHENFLOW_SMOKE_ALLOW_UNTRUSTED_LOCAL_CERTIFICATE=1 node scripts/backend/smoke-keycloak.mjs` with the two fixture passwords supplied only through process environment; result: real Keycloak OIDC session, CSRF create, owner read, and cross-user `404` passed. Database inspection confirmed one smoke lot and two derived internal users after the run.
+- **Result:** The smoke now proves the intended backend behavior in two isolated real browser profiles. It uses the standard Keycloak client and backend callback; the test never reads or prints browser cookies, provider tokens, callback values, request bodies, or passwords.
+- **Known failures or unverified behavior:** The local browser process needs the documented diagnostic certificate override because this container does not trust the ASP.NET Core development certificate. That override is not accepted final browser evidence; a trusted-host execution remains open. CI has not executed this revision yet.
+- **Blockers:** No product or implementation decision is blocked. The remaining trusted-certificate run is environment-specific.
+- **Next action:** Commit and push the passing smoke correction, inspect the CI gate, then repeat it on a trusted-certificate host without the diagnostic override.
 
 ### 2026-07-30T02:14:28Z — Codex backend implementation agent
 

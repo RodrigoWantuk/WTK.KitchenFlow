@@ -43,8 +43,13 @@ class DevToolsConnection {
     this.socket = new WebSocket(url);
     this.nextId = 0;
     this.pending = new Map();
+    this.networkFailures = [];
     this.socket.addEventListener("message", (event) => {
       const message = JSON.parse(event.data);
+      if (message.method === "Network.loadingFailed") {
+        this.networkFailures.push({ errorText: message.params.errorText, type: message.params.type });
+        this.networkFailures = this.networkFailures.slice(-5);
+      }
       const pending = this.pending.get(message.id);
       if (!pending) {
         return;
@@ -103,6 +108,7 @@ async function startBrowser(port) {
     const connection = new DevToolsConnection(target.webSocketDebuggerUrl);
     await connection.open();
     await connection.send("Page.enable");
+    await connection.send("Network.enable");
     if (allowUntrustedLocalCertificate) {
       await connection.send("Security.enable");
       await connection.send("Security.setIgnoreCertificateErrors", { ignore: true });
@@ -146,14 +152,14 @@ async function currentLocationDescription(browser) {
 }
 
 async function login(browser, user) {
-  await browser.connection.evaluate(`document.body.innerHTML = '<form id="kitchenflow-login" method="post" action="/api/v1/auth/login"><input name="returnUrl" value="/"></form>'; document.getElementById("kitchenflow-login").submit();`, false);
+  await browser.connection.evaluate(`document.body.innerHTML = '<form id="kitchenflow-login" method="post" action="/api/v1/auth/login"><input name="returnUrl" value="/health/live"></form>'; document.getElementById("kitchenflow-login").submit();`, false);
   try {
     await waitFor(async () => {
       const url = await currentUrl(browser);
       return url.includes("/protocol/openid-connect/auth") || url.includes("/login-actions/authenticate");
     }, "Keycloak authorization page");
   } catch (error) {
-    throw new Error(`${error.message} Current browser location: ${await currentLocationDescription(browser)}.`);
+    throw new Error(`${error.message} Current browser location: ${await currentLocationDescription(browser)}. Recent network failures: ${JSON.stringify(browser.connection.networkFailures)}.`);
   }
 
   const username = JSON.stringify(user.username);
@@ -161,10 +167,16 @@ async function login(browser, user) {
   await waitFor(async () => browser.connection.evaluate("document.getElementById('username') !== null && document.getElementById('password') !== null && document.getElementById('kc-form-login') !== null"), "Keycloak credential form");
   await browser.connection.evaluate(`document.getElementById("username").value = ${username}; document.getElementById("password").value = ${password}; document.getElementById("kc-form-login").submit();`, false);
   try {
-    await waitFor(async () => (await currentUrl(browser)).startsWith(apiUrl), "OIDC callback and KitchenFlow session", 45000);
+    await waitFor(async () => {
+      const url = await currentUrl(browser);
+      return url.startsWith(apiUrl) || url.startsWith("chrome-error://");
+    }, "OIDC callback completion", 15000);
   } catch (error) {
-    throw new Error(`${error.message} Current browser location: ${await currentLocationDescription(browser)}.`);
+    throw new Error(`${error.message} Current browser location: ${await currentLocationDescription(browser)}. Recent network failures: ${JSON.stringify(browser.connection.networkFailures)}.`);
   }
+
+  await browser.connection.send("Page.navigate", { url: `${apiUrl}/health/live` });
+  await waitFor(async () => (await currentUrl(browser)).startsWith(apiUrl), "KitchenFlow session probe");
 
   const session = await browser.connection.evaluate("fetch('/api/v1/session', { credentials: 'include' }).then(async response => ({ status: response.status, body: await response.json() }))");
   if (session.status !== 200 || !session.body?.userId || !session.body?.csrfToken || Object.hasOwn(session.body, "accessToken") || Object.hasOwn(session.body, "refreshToken")) {
