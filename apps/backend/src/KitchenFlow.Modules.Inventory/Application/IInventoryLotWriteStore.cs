@@ -31,11 +31,14 @@ public sealed record InventoryLotCreationWrite(Guid OwnerUserId, Product Product
 /// </summary>
 public sealed record InventoryLotMutationWrite(Guid OwnerUserId, InventoryLot Lot, Product Product, long ExpectedVersion, InventoryTransaction? Transaction, string AuditEventName, string AuditMetadataJson, string CorrelationId, InventoryIdempotencyWrite? Idempotency);
 
-/// <summary>Completed idempotency response persisted with a mutation.</summary>
-public sealed record InventoryIdempotencyWrite(Guid Key, string Scope, string RequestHash, int StatusCode, string ResponseBody, string ETag, DateTimeOffset CreatedAt);
+/// <summary>
+/// Completed idempotency response persisted with a mutation. The persisted version is an internal
+/// numeric value; HTTP ETag formatting and protection remain an API-adapter responsibility.
+/// </summary>
+public sealed record InventoryIdempotencyWrite(Guid Key, string Scope, string RequestHash, int StatusCode, string ResponseBody, long Version, DateTimeOffset CreatedAt);
 
 /// <summary>Replayable idempotency state loaded from authoritative PostgreSQL storage.</summary>
-public sealed record InventoryIdempotencyRead(string RequestHash, int StatusCode, string? ResponseBody, string? ETag, DateTimeOffset? CompletedAt);
+public sealed record InventoryIdempotencyRead(string RequestHash, int StatusCode, string? ResponseBody, long? Version, DateTimeOffset? CompletedAt);
 
 /// <summary>Outcome of an optimistic inventory persistence operation.</summary>
 public enum InventoryWriteOutcome

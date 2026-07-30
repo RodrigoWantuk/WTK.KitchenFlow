@@ -11,10 +11,12 @@ public sealed class PostgreSqlInventoryLotWriteStore(ApplicationDbContext databa
     /// <inheritdoc />
     public async Task<InventoryIdempotencyRead?> FindIdempotencyAsync(Guid ownerUserId, string scope, Guid key, CancellationToken cancellationToken)
     {
-        return await database.IdempotencyRecords.AsNoTracking()
+        var record = await database.IdempotencyRecords.AsNoTracking()
             .Where(item => item.OwnerUserId == ownerUserId && item.Scope == scope && item.Key == key)
-            .Select(item => new InventoryIdempotencyRead(item.RequestHash, item.StatusCode, item.ResponseBody, item.ETag, item.CompletedAt))
             .SingleOrDefaultAsync(cancellationToken);
+        return record is null
+            ? null
+            : new InventoryIdempotencyRead(record.RequestHash, record.StatusCode, record.ResponseBody, long.TryParse(record.ETag, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var version) ? version : null, record.CompletedAt);
     }
 
     /// <inheritdoc />
@@ -26,7 +28,7 @@ public sealed class PostgreSqlInventoryLotWriteStore(ApplicationDbContext databa
             ToRecord(write.Lot),
             ToRecord(write.InitialTransaction),
             new AuditEventRecord { Id = Guid.NewGuid(), ActorUserId = write.OwnerUserId, EventName = "inventory.lot.created", TargetType = "inventory_lot", TargetId = write.Lot.Id, CorrelationId = write.CorrelationId, MetadataJson = "{}", OccurredAt = write.Lot.CreatedAt },
-            new IdempotencyRecord { Id = Guid.NewGuid(), OwnerUserId = write.OwnerUserId, Scope = idempotency.Scope, Key = idempotency.Key, RequestHash = idempotency.RequestHash, StatusCode = idempotency.StatusCode, ResponseBody = idempotency.ResponseBody, ETag = idempotency.ETag, CreatedAt = idempotency.CreatedAt, CompletedAt = idempotency.CreatedAt });
+            new IdempotencyRecord { Id = Guid.NewGuid(), OwnerUserId = write.OwnerUserId, Scope = idempotency.Scope, Key = idempotency.Key, RequestHash = idempotency.RequestHash, StatusCode = idempotency.StatusCode, ResponseBody = idempotency.ResponseBody, ETag = idempotency.Version.ToString(System.Globalization.CultureInfo.InvariantCulture), CreatedAt = idempotency.CreatedAt, CompletedAt = idempotency.CreatedAt });
         try
         {
             await database.SaveChangesAsync(cancellationToken);
@@ -70,7 +72,7 @@ public sealed class PostgreSqlInventoryLotWriteStore(ApplicationDbContext databa
         if (write.Idempotency is not null)
         {
             var item = write.Idempotency;
-            database.IdempotencyRecords.Add(new IdempotencyRecord { Id = Guid.NewGuid(), OwnerUserId = write.OwnerUserId, Scope = item.Scope, Key = item.Key, RequestHash = item.RequestHash, StatusCode = item.StatusCode, ResponseBody = item.ResponseBody, ETag = item.ETag, CreatedAt = item.CreatedAt, CompletedAt = item.CreatedAt });
+            database.IdempotencyRecords.Add(new IdempotencyRecord { Id = Guid.NewGuid(), OwnerUserId = write.OwnerUserId, Scope = item.Scope, Key = item.Key, RequestHash = item.RequestHash, StatusCode = item.StatusCode, ResponseBody = item.ResponseBody, ETag = item.Version.ToString(System.Globalization.CultureInfo.InvariantCulture), CreatedAt = item.CreatedAt, CompletedAt = item.CreatedAt });
         }
         try
         {

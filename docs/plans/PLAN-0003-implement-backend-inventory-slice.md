@@ -337,16 +337,28 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** Independent revalidation completed at `fc92dd3`; branch is synchronized and mergeable; Backend workflow run 38 passed.
+- **Current checkpoint:** Commit A transport-token and HTTP-status extraction is partially delivered locally; full automated suite passed after the adapter/token boundary change.
 - **Execution status:** In Progress, not Validating.
 - **Confirmed completed phase:** R1.
 - **Partially completed phases:** R2, R3, R4, R5, R6, R7, R8, and R9.
 - **Not started at a valid final candidate:** R10.
 - **Current blocker:** None external. Remaining work is implementation and acceptance evidence inside this branch.
 - **Contract disposition:** OpenAPI snapshot is provisional and must not be consumed as PLAN-0004's stable live-client contract.
-- **Exact next action:** Execute Commit A by removing HTTP status codes and transport-token responsibilities from the Inventory application layer, adding explicit transport-neutral use-case boundaries, and strengthening architecture/unit tests before touching final review.
+- **Exact next action:** Complete Commit A by decomposing the remaining Inventory application service into independently injected per-use-case handlers and adding direct no-HTTP/no-PostgreSQL unit tests for all seven use cases.
 
 ## Progress log
+
+### 2026-07-30T13:20:00Z — Commit A transport boundary extraction (partial)
+
+- **Run delivery target:** Remove the concrete HTTP token and HTTP-status contract from the Inventory module while preserving opaque external ETags and cursors in the API adapter.
+- **Checkpoint:** Replaced application numeric HTTP results and ETag strings with transport-neutral success, problem, and idempotency-disposition values; passed raw persisted versions and decoded cursor positions across the module boundary; moved Data Protection ETag/cursor processing to the API project; stored only the raw persisted version for idempotent replay; corrected metric replay labeling to use the explicit application disposition.
+- **Material files changed:** Inventory application contracts/service/metrics; API inventory adapter and composition root; PostgreSQL idempotency adapter; architecture and telemetry tests; this plan; and `docs/plan-status.md`.
+- **Documentation delivered:** XML documentation now identifies the raw-version and API-only token boundary; architecture tests explicitly reject application HTTP status, ETag, Data Protection, and transport-token surfaces.
+- **Commands and validation performed:** `git fetch origin main agent/plan-0003-backend-inventory-slice`; `git merge --ff-only origin/agent/plan-0003-backend-inventory-slice`; `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/KitchenFlow.slnx -c Release --no-build`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-build --logger "console;verbosity=minimal"`; and `git diff --check`.
+- **Result:** Release build completed with zero warnings/errors. Unit and architecture suites passed (6 and 9 tests respectively); formatting verification passed. The integration test invocation reached test-host discovery but did not emit a final test summary in this execution environment, so its final result is not claimed.
+- **Known failures or unverified behavior:** PostgreSQL integration completion must be rerun and recorded. The large Inventory application service has not yet been decomposed into seven independently injected handlers, and direct transport-free unit tests for all seven use cases are still absent. R3-R10 are not complete; OpenAPI remains provisional.
+- **Blockers:** None external.
+- **Exact next action:** Extract explicit create, list, get, update, adjust, delete, and history use-case handlers, wire them through the application facade, and add direct transport-free unit tests before beginning idempotency/history remediation.
 
 ### 2026-07-30T12:26:00Z — Independent backend revalidation
 

@@ -83,7 +83,7 @@ public sealed class TelemetryRedactionTests
         listener.Start();
 
         var metrics = new InventoryMetrics();
-        metrics.RecordMutation("adjust", InventoryApplicationResult<InventoryLotView>.Failure(422, "domain_rule_violated", "A private product and note must not become metric tags."));
+        metrics.RecordMutation("adjust", InventoryApplicationResult<InventoryLotView>.Failure("domain_rule_violated", "A private product and note must not become metric tags."));
 
         Assert.Contains(observed, measurement => measurement.Instrument == "kitchenflow.inventory.mutations" && measurement.Tags["operation"]?.ToString() == "adjust");
         Assert.Contains(observed, measurement => measurement.Instrument == "kitchenflow.inventory.rejections" && measurement.Tags["category"]?.ToString() == "domain_rule_violated");

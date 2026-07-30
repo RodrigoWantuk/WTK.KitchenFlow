@@ -54,6 +54,37 @@ public sealed class DependencyBoundaryTests
     }
 
     [Fact]
+    public void InventoryApplicationResultsDoNotExposeHttpStatusOrEtagTokens()
+    {
+        var properties = typeof(InventoryApplicationResult<>).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+
+        Assert.DoesNotContain(properties, property => property.Name.Contains("Status", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(properties, property => property.Name.Contains("Etag", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(properties, property => property.PropertyType == typeof(string));
+    }
+
+    [Fact]
+    public void InventoryApplicationCommandsUseDecodedConcurrencyAndCursorValues()
+    {
+        var listCursor = typeof(ListInventoryLotsQuery).GetProperty(nameof(ListInventoryLotsQuery.Cursor));
+        var updatePrecondition = typeof(UpdateInventoryLotCommand).GetProperty(nameof(UpdateInventoryLotCommand.Precondition));
+        var adjustmentPrecondition = typeof(AdjustInventoryLotCommand).GetProperty(nameof(AdjustInventoryLotCommand.Precondition));
+
+        Assert.Equal(typeof(InventoryLotReadCursor), Nullable.GetUnderlyingType(listCursor!.PropertyType) ?? listCursor.PropertyType);
+        Assert.Equal(typeof(InventoryVersionPrecondition), updatePrecondition!.PropertyType);
+        Assert.Equal(typeof(InventoryVersionPrecondition), adjustmentPrecondition!.PropertyType);
+    }
+
+    [Fact]
+    public void InventoryModuleDoesNotDeclareATransportTokenAbstraction()
+    {
+        var types = typeof(InventoryLotApplicationService).Assembly.GetTypes();
+
+        Assert.DoesNotContain(types, type => type.Name.Contains("TransportToken", StringComparison.Ordinal));
+        Assert.DoesNotContain(types, type => type.Name.Contains("DataProtection", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void InventoryApplicationServiceExposesAllTypedSliceUseCases()
     {
         var methods = typeof(InventoryLotApplicationService).GetMethods(BindingFlags.Instance | BindingFlags.Public).Select(method => method.Name).ToHashSet(StringComparer.Ordinal);

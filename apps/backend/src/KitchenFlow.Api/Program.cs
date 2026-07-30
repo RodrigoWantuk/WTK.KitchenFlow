@@ -39,7 +39,7 @@ builder.Services.AddScoped<IInternalUserStore, PostgreSqlInternalUserStore>();
 builder.Services.AddScoped<ICurrentUserAccessor, CurrentUserResolver>();
 builder.Services.AddScoped<IInventoryLotReadStore, PostgreSqlInventoryLotReadStore>();
 builder.Services.AddScoped<IInventoryLotWriteStore, PostgreSqlInventoryLotWriteStore>();
-builder.Services.AddSingleton<IInventoryTransportTokenService, DataProtectionInventoryTransportTokenService>();
+builder.Services.AddSingleton<IInventoryHttpTokenService, DataProtectionInventoryHttpTokenService>();
 builder.Services.AddSingleton<InventoryMetrics>();
 builder.Services.AddScoped<InventoryLotApplicationService>();
 builder.Services.AddScoped<InventoryApplicationService>();

@@ -33,13 +33,13 @@ public sealed class InventoryMetrics
             ConcurrencyFailures.Add(1, new KeyValuePair<string, object?>("operation", operation));
         }
 
-        if (errorCode is "idempotency_key_reused" or "idempotency_in_progress" || result.ETag is not null && operation is "create" or "adjust")
+        if (errorCode is "idempotency_key_reused" or "idempotency_in_progress" || result.Idempotency is not InventoryIdempotencyDisposition.NotApplicable)
         {
             var idempotencyOutcome = errorCode switch
             {
                 "idempotency_key_reused" => "reused",
                 "idempotency_in_progress" => "in_progress",
-                _ => "completed"
+                _ => result.Idempotency == InventoryIdempotencyDisposition.Replayed ? "replayed" : "completed"
             };
             IdempotencyOutcomes.Add(1, new KeyValuePair<string, object?>("operation", operation), new KeyValuePair<string, object?>("outcome", idempotencyOutcome));
         }
