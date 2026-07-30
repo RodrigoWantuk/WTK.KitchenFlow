@@ -1,7 +1,7 @@
 # Planning and Shopping
 
 - **Status:** Accepted
-- **Last updated:** 2026-07-28
+- **Last updated:** 2026-07-30
 
 ## Optional module rule
 
@@ -50,6 +50,45 @@ The AI may generate many normalized recipe possibilities. The user can:
 - discard.
 
 A localized change must not silently regenerate the entire accepted plan.
+
+## Contextual home suggestion priority
+
+The authenticated home uses the user's current local date and daypart to organize preparation possibilities. It derives local context from an explicit saved IANA timezone when available, then the browser-reported IANA timezone for the current session, and otherwise uses neutral presentation. It must not treat the server timezone as the user's meal context or require precise geolocation.
+
+Suggestion sources appear in this order when they contain relevant and valid candidates:
+
+1. accepted menu entries relevant to the current local date, daypart, or flexible meal window;
+2. suggestions based on usable inventory, prioritizing products or lots needing attention soon;
+3. suggestions based on the user's confirmed profile;
+4. a visible quick chooser that asks one or two material questions before producing or narrowing suggestions.
+
+A higher source tier appears before a lower source tier, but source priority does not make any suggestion mandatory. The user remains free to ignore a planned meal, choose a non-urgent product, search manually, select a saved recipe, or cook something unrelated to current inventory.
+
+Within a source tier, ordering may consider:
+
+- readiness and required advance action;
+- shelf-life attention and confidence;
+- accepted reservations and locked quantities;
+- current meal context;
+- preference and restriction fit;
+- available time, effort, skill, equipment, and cleanup tolerance;
+- additional purchase requirements;
+- waste reduction and preservation alternatives;
+- variety and recent history.
+
+The interface must explain the material reasons for a suggestion. An urgency-based suggestion identifies the products or lots that influenced it and preserves correction, preservation, and alternative-selection paths. Urgency remains advisory and cannot silently override reservations, accepted plans, user restrictions, or explicit choices.
+
+The quick chooser asks only questions that can materially reduce current uncertainty and does not repeat sufficiently known context. One question is preferred; two are allowed when necessary. Answers apply to the current request and do not silently update the durable profile. Saving an answer as a preference requires explicit confirmation.
+
+Missing or failed sources degrade independently:
+
+- no accepted menu skips the first source without error;
+- empty or unavailable inventory skips or explains the second source and may offer inventory entry;
+- incomplete profile uses confirmed context only and may offer progressive completion;
+- unavailable AI preserves accepted menu entries, deterministic readiness, deterministic inventory attention, saved recipes, favorites, and deterministic filtering where supported;
+- one source failure must not blank successful source tiers.
+
+Displaying, filtering, or ranking a suggestion does not mutate the accepted menu, reservations, inventory, profile, shopping list, or cooking execution. Such changes require their normal explicit commands and validation.
 
 ## Menu entry
 
