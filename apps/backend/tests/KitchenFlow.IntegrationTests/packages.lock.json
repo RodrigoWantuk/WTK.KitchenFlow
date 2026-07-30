@@ -638,6 +638,7 @@
       "kitchenflow.modules.inventory": {
         "type": "Project",
         "dependencies": {
+          "KitchenFlow.Modules.Identity": "[1.0.0, )",
           "KitchenFlow.SharedKernel": "[1.0.0, )"
         }
       },

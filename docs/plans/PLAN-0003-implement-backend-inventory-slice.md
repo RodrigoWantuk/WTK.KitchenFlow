@@ -374,20 +374,31 @@ The evidence must identify the final candidate SHA and must not expose credentia
 
 ## Execution state
 
-- **Current checkpoint:** R5 contract truthfulness and R9 CI lint/security gates materially advanced; OpenAPI 3.1 lint now passes with documented non-blocking recommendations.
+- **Current checkpoint:** Reproducible locked restore and complete automated suite pass after synchronizing project-reference lock files; final operational validation remains.
 - **Run delivery target:** Instrument mutation outcomes with privacy-safe low-cardinality metrics and prove the metric surface cannot carry inventory content.
 - **Delivered outcome:** The Inventory module owns counters for mutation outcomes, validation/domain rejections, optimistic-concurrency failures, and idempotency outcomes. The API registers the meter with OpenTelemetry without adding sensitive labels.
 - **Acceptance criteria resolved:** R1–R4 and R7 are implemented. R5 now has a valid 3.1 linted snapshot, truthful quantity modes, typed header schemas, operation identifiers, and corrected runtime declarations; its full response-example matrix remains open. R8–R10 remain open.
 - **Files or areas materially changed:** OpenAPI transformer and snapshot; OpenAPI lint script; backend CI workflow; this plan; and `docs/plan-status.md`.
 - **Documentation delivered:** XML documentation specifies metric names, units, stable label boundaries, and prohibited private content.
-- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; local OpenAPI export and drift check; `bash scripts/backend/lint-openapi.sh` (valid, 8 non-blocking recommendations); and `git diff --check`.
-- **Known failures or limitations:** Full-pipeline exporter proof beyond the module meter listener and existing trace redaction processor is still incomplete. The linter reports eight recommendations for license/tag metadata and redirect/health response conventions; complete response examples, idempotency retention policy, broad R8 coverage, final Compose/Keycloak smoke, and independent final review remain pending.
+- **Validation performed:** `dotnet restore apps/backend/KitchenFlow.slnx --force-evaluate`; `dotnet restore apps/backend/KitchenFlow.slnx --locked-mode`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; Release build; complete test suite with TRX results (architecture 6/6, unit 6/6, PostgreSQL integration 36/36); and `git diff --check`.
+- **Known failures or limitations:** Full-pipeline exporter proof beyond the module meter listener and existing trace redaction processor is still incomplete. The linter reports eight recommendations for license/tag metadata and redirect/health response conventions; complete response examples, idempotency retention policy, migration SQL/Compose/Keycloak final smoke, and independent final review remain pending.
 - **Blockers:** None. PR #9 remains draft and must not be marked ready until R5/R8/R9/R10 pass.
 - **Partially modified areas:** The metric is registered for OpenTelemetry export but no production exporter is selected in this first slice; metrics remain useful through any configured collector/exporter.
-- **Exact next action:** Run and close the remaining R8 test/migration/security matrix and R9 Compose/Keycloak/runbook evidence, then request fresh review.
+- **Exact next action:** Commit synchronized lock files, then execute migration SQL/upgrade, Compose readiness, Keycloak smoke, vulnerability/secret checks, and final reviewer handoff.
 - **Working tree state:** R7 changes are ready for this checkpoint commit.
 
 ## Progress log
+
+### 2026-07-30T11:15:00Z — Codex backend remediation agent
+
+- **Run delivery target:** Run the complete reproducible build/test gate on the current branch and resolve any locked-restore defect it detects.
+- **Checkpoint:** Locked restore detected new Inventory-to-Identity project-reference lock drift; regenerated only repository lock files with `--force-evaluate`, then reran locked restore and the full suite.
+- **Material files changed:** Backend project `packages.lock.json` files; this plan; and `docs/plan-status.md`.
+- **Commands and validation performed:** `dotnet restore apps/backend/KitchenFlow.slnx --force-evaluate`; `dotnet restore apps/backend/KitchenFlow.slnx --locked-mode`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`; `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/KitchenFlow.slnx -c Release --no-build --logger "trx;LogFileName=plan-0003-final-suite.trx"`; and TRX outcome inspection.
+- **Result:** Locked restore, formatting, and Release build passed. Complete automated tests passed: 6 architecture, 6 unit, and 36 real-PostgreSQL integration tests, all with zero failures.
+- **Known failures or unverified behavior:** Migration SQL/upgrade, Compose PostgreSQL/Keycloak readiness, browser/Keycloak smoke, vulnerability/secret scans, and independent review are still not final-head evidence.
+- **Blockers:** None.
+- **Exact next action:** Commit lock synchronization, then run the remaining infrastructure and security validation matrix.
 
 ### 2026-07-30T11:05:00Z — Codex backend remediation agent
 
