@@ -236,8 +236,7 @@ public sealed class InventoryLotApplicationService(
             return Task.FromResult(Failure<InventoryLotView>("domain_rule_violated", metadataError ?? "The product name is invalid.", FieldErrors(!validMetadata ? MetadataField(metadataError) : "productName", metadataError ?? "The product name is invalid.")));
         }
 
-        var changedFields = MetadataChangedFields(command);
-        return MutateAsync(command.LotId, command.Precondition, command.CorrelationId, null, null, null, "inventory.lot.metadata_corrected", JsonSerializer.Serialize(new { changedFields }), cancellationToken, (lot, product, now) =>
+        return MutateAsync(command.LotId, command.Precondition, command.CorrelationId, null, null, null, "inventory.lot.metadata_corrected", (lot, product) => JsonSerializer.Serialize(new { changedFields = MetadataChangedFields(lot, product, command) }), cancellationToken, (lot, product, now) =>
         {
             lot.UpdateMetadata(ToStorage(command.StorageLocation!, command.CustomLocation), ToPackageState(command.PackageState), ToExpiration(command.PrintedExpirationDate), ToNotes(command.Notes), now);
             if (command.ProductName is not null)
@@ -270,12 +269,12 @@ public sealed class InventoryLotApplicationService(
             return Replay(prior, hash, 200);
         }
 
-        return await MutateAsync(command.LotId, command.Precondition, command.CorrelationId, command.IdempotencyKey, "inventory.lots.adjust", hash, "inventory.lot.adjusted", "{}", cancellationToken, (lot, _, now) => lifecycleUseCase.ApplyAdjustment(lot, adjustment, command.IdempotencyKey.Value, now));
+        return await MutateAsync(command.LotId, command.Precondition, command.CorrelationId, command.IdempotencyKey, "inventory.lots.adjust", hash, "inventory.lot.adjusted", static (_, _) => "{}", cancellationToken, (lot, _, now) => lifecycleUseCase.ApplyAdjustment(lot, adjustment, command.IdempotencyKey.Value, now));
     }
 
     /// <summary>Soft-deletes one active owner-scoped lot and records its immutable deletion transition.</summary>
     public Task<InventoryApplicationResult<InventoryLotView>> DeleteAsync(DeleteInventoryLotCommand command, CancellationToken cancellationToken) =>
-        MutateAsync(command.LotId, command.Precondition, command.CorrelationId, null, null, null, "inventory.lot.deleted", "{}", cancellationToken, (lot, _, now) => lifecycleUseCase.Delete(lot, now), 204);
+        MutateAsync(command.LotId, command.Precondition, command.CorrelationId, null, null, null, "inventory.lot.deleted", static (_, _) => "{}", cancellationToken, (lot, _, now) => lifecycleUseCase.Delete(lot, now), 204);
 
     /// <summary>Lists immutable transaction history for one owner-scoped lot.</summary>
     public async Task<InventoryApplicationResult<IReadOnlyList<InventoryHistoryEntry>>> HistoryAsync(Guid lotId, CancellationToken cancellationToken)
@@ -287,7 +286,7 @@ public sealed class InventoryLotApplicationService(
             : InventoryApplicationResult<IReadOnlyList<InventoryHistoryEntry>>.Succeeded(transactions.Select(item => new InventoryHistoryEntry(item.EntryId, item.Kind, item.TransactionType, ToQuantity(item.PreviousMeasuredValue, item.PreviousMeasuredUnit, item.PreviousAvailabilityState), ToQuantity(item.ResultingMeasuredValue, item.ResultingMeasuredUnit, item.ResultingAvailabilityState), item.ReasonCode, item.ChangedFields, item.OccurredAt)).ToList());
     }
 
-    private async Task<InventoryApplicationResult<InventoryLotView>> MutateAsync(Guid lotId, InventoryVersionPrecondition precondition, string correlationId, Guid? idempotencyKey, string? idempotencyScope, string? idempotencyHash, string auditEventName, string auditMetadataJson, CancellationToken cancellationToken, Func<InventoryLot, Product, DateTimeOffset, InventoryTransaction?> operation, int successStatus = 200)
+    private async Task<InventoryApplicationResult<InventoryLotView>> MutateAsync(Guid lotId, InventoryVersionPrecondition precondition, string correlationId, Guid? idempotencyKey, string? idempotencyScope, string? idempotencyHash, string auditEventName, Func<InventoryLot, Product, string> auditMetadata, CancellationToken cancellationToken, Func<InventoryLot, Product, DateTimeOffset, InventoryTransaction?> operation, int successStatus = 200)
     {
         if (!precondition.IsPresent) { return Failure<InventoryLotView>("precondition_required", "If-Match is required."); }
         if (!precondition.IsValid) { return Failure<InventoryLotView>("precondition_failed", "The inventory lot was modified."); }
@@ -299,6 +298,7 @@ public sealed class InventoryLotApplicationService(
 
         try
         {
+            var auditMetadataJson = auditMetadata(state.Lot, state.Product);
             var now = timeProvider.GetUtcNow();
             var transaction = operation(state.Lot, state.Product, now);
             var response = ToView(state.Lot, state.Product);
@@ -370,10 +370,16 @@ public sealed class InventoryLotApplicationService(
     }
 
     private static string Hash<T>(T value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value))));
-    private static IReadOnlyList<string> MetadataChangedFields(UpdateInventoryLotCommand command)
+    private static IReadOnlyList<string> MetadataChangedFields(InventoryLot lot, Product product, UpdateInventoryLotCommand command)
     {
-        var fields = new List<string> { "storageLocation", "customLocation", "packageState", "printedExpirationDate", "notes" };
-        if (command.ProductName is not null) { fields.Add("productName"); }
+        var fields = new List<string>();
+        var storage = ToStorage(command.StorageLocation!, command.CustomLocation);
+        if (lot.Storage.Location != storage.Location) { fields.Add("storageLocation"); }
+        if (!string.Equals(lot.Storage.CustomLocation, storage.CustomLocation, StringComparison.Ordinal)) { fields.Add("customLocation"); }
+        if (lot.PackageState != ToPackageState(command.PackageState)) { fields.Add("packageState"); }
+        if (lot.PrintedExpiration?.Date != command.PrintedExpirationDate) { fields.Add("printedExpirationDate"); }
+        if (!string.Equals(lot.Notes?.Value, ToNotes(command.Notes)?.Value, StringComparison.Ordinal)) { fields.Add("notes"); }
+        if (command.ProductName is not null && !string.Equals(product.DisplayName, command.ProductName.Trim(), StringComparison.Ordinal)) { fields.Add("productName"); }
         return fields;
     }
     private static IReadOnlyDictionary<string, string[]> FieldErrors(string field, string error) => new Dictionary<string, string[]>(StringComparer.Ordinal) { [field] = [error] };

@@ -370,7 +370,8 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
 
         Assert.Equal(System.Net.HttpStatusCode.OK, updated.StatusCode);
         Assert.Equal(JsonValueKind.Null, projection.GetProperty("type").ValueKind);
-        Assert.Contains("storageLocation", projection.GetProperty("changedFields").EnumerateArray().Select(item => item.GetString()));
+        var changedFields = projection.GetProperty("changedFields").EnumerateArray().Select(item => item.GetString()!).ToArray();
+        Assert.Equal(["notes", "packageState", "storageLocation"], changedFields.OrderBy(item => item, StringComparer.Ordinal).ToArray());
         Assert.DoesNotContain("private correction note", projection.GetRawText(), StringComparison.Ordinal);
     }
 

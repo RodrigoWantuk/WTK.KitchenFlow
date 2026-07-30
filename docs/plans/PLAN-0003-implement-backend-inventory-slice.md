@@ -337,7 +337,7 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** Commit A has transport-neutral explicit contracts for all seven Inventory use cases; the API injects those contracts and the PostgreSQL write adapter clears failed tracked graphs before replay reads.
+- **Current checkpoint:** Commit A has transport-neutral explicit contracts for all seven Inventory use cases; metadata-correction history now projects only actual changed field names, and the PostgreSQL write adapter clears failed tracked graphs before replay reads.
 - **Execution status:** In Progress, not Validating.
 - **Confirmed completed phase:** R1.
 - **Partially completed phases:** R2, R3, R4, R5, R6, R7, R8, and R9.
@@ -347,6 +347,18 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 - **Exact next action:** Split the shared Inventory use-case implementation into individual handler classes and add direct no-HTTP/no-PostgreSQL tests for each contract; then add R3 race/rollback acceptance tests.
 
 ## Progress log
+
+### 2026-07-30T16:40:00Z — R4 exact metadata-correction projection (partial)
+
+- **Run delivery target:** Make owner-visible metadata-correction history precise while retaining its privacy-minimizing field-name-only contract.
+- **Checkpoint:** Metadata audit fields are now computed from the persisted domain state before mutation; unchanged storage, custom location, package state, expiration, notes, and product name are omitted from history. No metadata values are written to audit JSON.
+- **Material files changed:** Inventory application mutation orchestration and metadata-history integration test; this plan; and `docs/plan-status.md`.
+- **Documentation delivered:** The mutation code documents that the audit projection is calculated before applying the transition to preserve the before/after comparison without persisting private values.
+- **Commands and validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-build --filter "FullyQualifiedName~MetadataCorrectionAppearsAsSafeHistoryAuditProjection"`.
+- **Result:** Release build passed with zero warnings/errors; the targeted PostgreSQL metadata-history integration test passed (1/1).
+- **Known failures or unverified behavior:** No-op correction semantics, soft-deletion correction visibility, audit immutability, full R3 race/rollback matrix, and R5-R10 remain incomplete.
+- **Blockers:** None external.
+- **Exact next action:** Add no-op and ordering/history integration coverage, then implement idempotency replay/rollback acceptance cases and split the shared use-case implementation.
 
 ### 2026-07-30T16:05:00Z — Commit A explicit use-case contracts (partial)
 
