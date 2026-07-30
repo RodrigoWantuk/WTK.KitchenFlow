@@ -374,20 +374,31 @@ The evidence must identify the final candidate SHA and must not expose credentia
 
 ## Execution state
 
-- **Current checkpoint:** Independent revalidation completed against PR #9 head `2ddeb0fed9aeaa53af6e0c37ec1f2fa227a16d49`.
-- **Run delivery target:** Replace the incorrect completion state with a detailed, executable remediation plan and synchronized registry state.
-- **Delivered outcome:** Revalidation findings and ordered remediation requirements are now the canonical PLAN-0003 continuation.
-- **Acceptance criteria resolved:** Revalidation and remediation planning only; implementation criteria remain open.
-- **Files or areas materially changed:** This plan and `docs/plan-status.md`.
-- **Documentation delivered:** Detailed architecture, persistence, contract, security, history, observability, testing, CI, migration, and runbook remediation instructions.
-- **Validation performed:** Inspected current PR metadata, branch divergence, current-head statuses, original plan requirements, implementation files, generated OpenAPI, tests, migrations, CI, and documentation.
-- **Known failures or limitations:** No executable tests were run by this independent documentation review. Current head has no associated workflow run/status; older CI evidence is not final-head evidence.
-- **Blockers:** Branch is 2 commits behind `main`; PR is currently non-mergeable; P0 remediation remains.
-- **Partially modified areas:** Runtime implementation was inspected but not changed during this revalidation checkpoint.
-- **Exact next action:** Synchronize the branch with current `main`, preserve all newer plan/documentation changes, and execute R2 application/identity boundary remediation before changing contract claims.
-- **Working tree state:** The remote branch contains a documentation-only revalidation update; implementation remains at the inspected baseline until the next remediation commit.
+- **Current checkpoint:** R1 branch synchronization completed: the remediation branch was rebased onto `main` baseline `b798fed9e940d15f9c828ce34881f58d1cf516a9` and retains the current PLAN-0003 remediation requirements.
+- **Run delivery target:** Synchronize the branch truthfully, preserve current-main governance documents, and begin the ordered R2–R10 remediation without advancing the frontend contract claim.
+- **Delivered outcome:** The branch is linearly based on current `main`; the current-main registry and refined PLAN-0004 documents are preserved, while PLAN-0003 remains active and its revalidation requirements remain authoritative.
+- **Acceptance criteria resolved:** R1 synchronization is resolved. All executable architecture, correctness, contract, observability, test, CI, migration, and final-review criteria remain open.
+- **Files or areas materially changed:** Rebased repository history, this plan, and `docs/plan-status.md`.
+- **Documentation delivered:** Reconciled active-plan registry state and a precise continuation from the synchronized baseline.
+- **Validation performed:** `git status --short --branch`; `git log -1 --oneline`; `dotnet restore apps/backend/KitchenFlow.slnx --locked-mode`; and `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`. Restore and Release build passed with zero warnings and zero errors.
+- **Known failures or limitations:** The complete test, migration, Compose, Keycloak, OpenAPI, secret, and vulnerability gates have not yet been rerun on this rebased candidate. The remote tracking branch will be updated using `--force-with-lease` after this auditable checkpoint commit.
+- **Blockers:** None for R2. PR #9 remains draft and must not be marked ready until all R2–R10 acceptance criteria and fresh review pass.
+- **Partially modified areas:** No runtime behavior changed in this synchronization checkpoint.
+- **Exact next action:** Push the rebased checkpoint with `--force-with-lease`, then extract Inventory and Identity module-owned typed application use cases and add architecture tests that prohibit API endpoint access to EF Core.
+- **Working tree state:** This checkpoint records the rebased baseline before R2 implementation begins.
 
 ## Progress log
+
+### 2026-07-30T10:27:31Z — Codex backend remediation agent
+
+- **Run delivery target:** Complete R1 synchronization against the current `main` and leave an auditable, buildable baseline for the ordered PLAN-0003 remediation.
+- **Checkpoint:** Rebasing completed onto `main` `b798fed9e940d15f9c828ce34881f58d1cf516a9`; current candidate parent is `66da63f Reopen backend inventory plan after revalidation`.
+- **Material files changed:** Rebased repository history; `docs/plans/PLAN-0003-implement-backend-inventory-slice.md`; `docs/plan-status.md`.
+- **Commands and validation performed:** `git fetch origin`; fast-forwarded the remote remediation updates; `git rebase origin/main`; `git status --short --branch`; `git log -1 --oneline`; `dotnet restore apps/backend/KitchenFlow.slnx --locked-mode`; `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`.
+- **Result:** Rebase completed without dropping current-main plans, registry entries, or the refined PLAN-0004. Restore and Release build passed with zero warnings and zero errors.
+- **Known failures or unverified behavior:** Full tests, database migrations, Compose/Keycloak smoke, OpenAPI, secret, and vulnerability validations have not yet been rerun after the rebase.
+- **Blockers:** None. The GitHub branch must receive an expected non-fast-forward update with `git push --force-with-lease` after this commit.
+- **Exact next action:** Push this R1 state, then implement R2 by moving Inventory and Identity orchestration into typed module application services and enforcing the boundary with architecture tests.
 
 ### 2026-07-30T03:10:00Z — Independent backend revalidation agent
 
