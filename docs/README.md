@@ -10,7 +10,7 @@ Documentation is part of the product. Code, tests, contracts, plans, and operati
 plan-status.md       Canonical registry of active and completed plans
 plans/               Implementation, testing, research, documentation, and operations plans
 discovery/           Structured stakeholder discovery and reference evidence
-product/             Vision, audience, profile, journeys, and release scope
+product/             Vision, audience, entry/home experience, journeys, and release scope
 domain/              Inventory, planning, shopping, recipes, cooking, and invariants
 architecture/        System architecture, principles, and ADRs
 development/         Supported Windows/Linux environment and execution conventions
@@ -43,6 +43,7 @@ This is the minimum. Work-specific reading follows.
 Read:
 
 - [`product/audience-and-profile.md`](product/audience-and-profile.md)
+- [`product/entry-and-contextual-home.md`](product/entry-and-contextual-home.md)
 - [`product/user-journeys.md`](product/user-journeys.md)
 - [`product/initial-release.md`](product/initial-release.md)
 - [`domain/README.md`](domain/README.md)
@@ -66,6 +67,8 @@ Read:
 - [`operations/platform-and-reliability.md`](operations/platform-and-reliability.md)
 - [`testing/strategy.md`](testing/strategy.md)
 - [`testing/product-foundation-gates.md`](testing/product-foundation-gates.md)
+
+Backend or integration work that supplies the authenticated home must also read [`product/entry-and-contextual-home.md`](product/entry-and-contextual-home.md).
 
 ## Testing work
 
@@ -119,6 +122,8 @@ Do not silently resolve a conflict by choosing the easiest implementation.
 - Planning, inventory, equipment, and history are optional context sources and degrade gracefully.
 - Menu plans are flexible intentions, not obligations.
 - Recommendations never silently rewrite accepted plans or authoritative inventory.
+- The authenticated home prioritizes relevant accepted menu entries, then inventory attention, then profile fit, then a one- or two-question quick chooser.
+- Local-time meal context uses the user's timezone and never the server timezone or precise geolocation by default.
 - Execution completion and inventory reconciliation are atomic or explicitly pending.
 - Recipes are user-owned, revisioned, derivable, and shared by immutable snapshot and copy.
 - AI never mutates authoritative state directly.
