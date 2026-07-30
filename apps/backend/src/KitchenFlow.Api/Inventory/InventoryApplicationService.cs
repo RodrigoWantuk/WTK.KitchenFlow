@@ -10,7 +10,16 @@ namespace KitchenFlow.Api.Inventory;
 /// HTTP-only adapter for Inventory use cases. It owns all opaque HTTP token parsing and formatting;
 /// the Inventory module accepts only decoded versions and cursor positions.
 /// </summary>
-public sealed class InventoryApplicationService(InventoryLotApplicationService applicationService, IInventoryHttpTokenService tokens, InventoryMetrics metrics)
+public sealed class InventoryApplicationService(
+    ICreateInventoryLotUseCase createLot,
+    IListInventoryLotsUseCase listLots,
+    IGetInventoryLotUseCase getLot,
+    IUpdateInventoryLotUseCase updateLot,
+    IAdjustInventoryLotUseCase adjustLot,
+    IDeleteInventoryLotUseCase deleteLot,
+    IGetInventoryLotHistoryUseCase getHistory,
+    IInventoryHttpTokenService tokens,
+    InventoryMetrics metrics)
 {
     /// <summary>Maps the lot-list query and its optional opaque cursor to a transport result.</summary>
     public async Task<IResult> ListAsync(int? pageSize, string? status, string? storageLocation, string? search, string? cursor, HttpContext context, CancellationToken cancellationToken)
@@ -20,26 +29,26 @@ public sealed class InventoryApplicationService(InventoryLotApplicationService a
             return Problem("invalid_cursor", "The cursor is invalid.", StatusCodes.Status400BadRequest, context.TraceIdentifier);
         }
 
-        return ToResult(await applicationService.ListAsync(new ListInventoryLotsQuery(pageSize, status, storageLocation, search, position), cancellationToken), page => new ListLotsResponse(page.Items.Select(ToResponse).ToList(), page.NextCursor is null ? null : tokens.WriteCursor(page.NextCursor)), context.TraceIdentifier);
+        return ToResult(await listLots.ListAsync(new ListInventoryLotsQuery(pageSize, status, storageLocation, search, position), cancellationToken), page => new ListLotsResponse(page.Items.Select(ToResponse).ToList(), page.NextCursor is null ? null : tokens.WriteCursor(page.NextCursor)), context.TraceIdentifier);
     }
 
     /// <summary>Maps the lot-read query to a transport result.</summary>
     public async Task<IResult> GetAsync(Guid lotId, HttpContext context, CancellationToken cancellationToken) =>
-        ToLotResult("get", await applicationService.GetAsync(lotId, cancellationToken), context.TraceIdentifier);
+        ToLotResult("get", await getLot.GetAsync(lotId, cancellationToken), context.TraceIdentifier);
 
     /// <summary>Maps a create-lot HTTP DTO and idempotency header to the application command.</summary>
     public async Task<IResult> CreateAsync(CreateLotRequest request, HttpRequest requestContext, CancellationToken cancellationToken)
     {
         var key = Guid.TryParse(requestContext.Headers["Idempotency-Key"], out var parsed) ? parsed : (Guid?)null;
         var command = new CreateInventoryLotCommand(request.ProductName, request.Quantity?.MeasuredValue, request.Quantity?.Unit, request.Quantity?.AvailabilityState, request.StorageLocation, request.CustomLocation, request.PackageState, request.PrintedExpirationDate, request.Notes, key, requestContext.HttpContext.TraceIdentifier);
-        return ToLotResult("create", await applicationService.CreateAsync(command, cancellationToken), requestContext.HttpContext.TraceIdentifier);
+        return ToLotResult("create", await createLot.CreateAsync(command, cancellationToken), requestContext.HttpContext.TraceIdentifier);
     }
 
     /// <summary>Maps a metadata-correction DTO and decoded ETag precondition to the application command.</summary>
     public async Task<IResult> UpdateAsync(Guid lotId, UpdateLotRequest request, HttpRequest requestContext, CancellationToken cancellationToken)
     {
         var command = new UpdateInventoryLotCommand(lotId, request.ProductName, request.StorageLocation, request.CustomLocation, request.PackageState, request.PrintedExpirationDate, request.Notes, ReadPrecondition(requestContext), requestContext.HttpContext.TraceIdentifier);
-        return ToLotResult("metadata_update", await applicationService.UpdateAsync(command, cancellationToken), requestContext.HttpContext.TraceIdentifier);
+        return ToLotResult("metadata_update", await updateLot.UpdateAsync(command, cancellationToken), requestContext.HttpContext.TraceIdentifier);
     }
 
     /// <summary>Maps an adjustment DTO, idempotency header, and decoded ETag precondition to the application command.</summary>
@@ -47,19 +56,19 @@ public sealed class InventoryApplicationService(InventoryLotApplicationService a
     {
         var key = Guid.TryParse(requestContext.Headers["Idempotency-Key"], out var parsed) ? parsed : (Guid?)null;
         var command = new AdjustInventoryLotCommand(lotId, request.Type, request.Value, request.AvailabilityState, request.ReasonCode, request.Note, key, ReadPrecondition(requestContext), requestContext.HttpContext.TraceIdentifier);
-        return ToLotResult("adjust", await applicationService.AdjustAsync(command, cancellationToken), requestContext.HttpContext.TraceIdentifier);
+        return ToLotResult("adjust", await adjustLot.AdjustAsync(command, cancellationToken), requestContext.HttpContext.TraceIdentifier);
     }
 
     /// <summary>Maps a delete request and decoded ETag precondition to the application command.</summary>
     public async Task<IResult> DeleteAsync(Guid lotId, HttpRequest requestContext, CancellationToken cancellationToken)
     {
         var command = new DeleteInventoryLotCommand(lotId, ReadPrecondition(requestContext), requestContext.HttpContext.TraceIdentifier);
-        return ToLotResult("delete", await applicationService.DeleteAsync(command, cancellationToken), requestContext.HttpContext.TraceIdentifier);
+        return ToLotResult("delete", await deleteLot.DeleteAsync(command, cancellationToken), requestContext.HttpContext.TraceIdentifier);
     }
 
     /// <summary>Maps immutable lot history to its API DTO.</summary>
     public async Task<IResult> HistoryAsync(Guid lotId, HttpContext context, CancellationToken cancellationToken) =>
-        ToResult(await applicationService.HistoryAsync(lotId, cancellationToken), items => (IReadOnlyList<LotHistoryResponse>)items.Select(item => new LotHistoryResponse(item.EntryId, item.Kind, item.TransactionType, ToQuantity(item.PreviousQuantity), ToQuantity(item.ResultingQuantity), item.ReasonCode, item.ChangedFields, item.OccurredAt)).ToList(), context.TraceIdentifier);
+        ToResult(await getHistory.HistoryAsync(lotId, cancellationToken), items => (IReadOnlyList<LotHistoryResponse>)items.Select(item => new LotHistoryResponse(item.EntryId, item.Kind, item.TransactionType, ToQuantity(item.PreviousQuantity), ToQuantity(item.ResultingQuantity), item.ReasonCode, item.ChangedFields, item.OccurredAt)).ToList(), context.TraceIdentifier);
 
     private LotResponse ToResponse(InventoryLotView item) => ToResponse(item, tokens.WriteVersion(item.Version));
     private static LotResponse ToResponse(InventoryLotView item, string version) => new(item.LotId, item.ProductId, item.ProductName, ToQuantity(item.Quantity)!, item.StorageLocation, item.CustomLocation, item.PackageState, item.PrintedExpirationDate, item.Notes, version, item.CreatedAt, item.UpdatedAt);

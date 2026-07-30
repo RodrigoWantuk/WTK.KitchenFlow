@@ -84,6 +84,55 @@ public sealed record InventoryVersionPrecondition(bool IsPresent, bool IsValid, 
     public static InventoryVersionPrecondition Valid(long version) => new(true, true, version);
 }
 
+/// <summary>Executes the owner-scoped create-lot use case.</summary>
+public interface ICreateInventoryLotUseCase
+{
+    /// <summary>Creates one lot and its immutable initial history atomically.</summary>
+    Task<InventoryApplicationResult<InventoryLotView>> CreateAsync(CreateInventoryLotCommand command, CancellationToken cancellationToken);
+}
+
+/// <summary>Executes the owner-scoped lot-list use case.</summary>
+public interface IListInventoryLotsUseCase
+{
+    /// <summary>Returns one owner-scoped cursor page.</summary>
+    Task<InventoryApplicationResult<InventoryLotList>> ListAsync(ListInventoryLotsQuery query, CancellationToken cancellationToken);
+}
+
+/// <summary>Executes the owner-scoped lot-read use case.</summary>
+public interface IGetInventoryLotUseCase
+{
+    /// <summary>Returns an active owned lot without cross-user disclosure.</summary>
+    Task<InventoryApplicationResult<InventoryLotView>> GetAsync(Guid lotId, CancellationToken cancellationToken);
+}
+
+/// <summary>Executes the owner-scoped metadata-correction use case.</summary>
+public interface IUpdateInventoryLotUseCase
+{
+    /// <summary>Corrects mutable lot metadata under optimistic concurrency.</summary>
+    Task<InventoryApplicationResult<InventoryLotView>> UpdateAsync(UpdateInventoryLotCommand command, CancellationToken cancellationToken);
+}
+
+/// <summary>Executes the owner-scoped immutable adjustment use case.</summary>
+public interface IAdjustInventoryLotUseCase
+{
+    /// <summary>Applies one idempotent inventory adjustment.</summary>
+    Task<InventoryApplicationResult<InventoryLotView>> AdjustAsync(AdjustInventoryLotCommand command, CancellationToken cancellationToken);
+}
+
+/// <summary>Executes the owner-scoped soft-delete use case.</summary>
+public interface IDeleteInventoryLotUseCase
+{
+    /// <summary>Soft-deletes an active lot under optimistic concurrency.</summary>
+    Task<InventoryApplicationResult<InventoryLotView>> DeleteAsync(DeleteInventoryLotCommand command, CancellationToken cancellationToken);
+}
+
+/// <summary>Executes the owner-scoped immutable-history query use case.</summary>
+public interface IGetInventoryLotHistoryUseCase
+{
+    /// <summary>Returns owner-visible immutable history for a lot.</summary>
+    Task<InventoryApplicationResult<IReadOnlyList<InventoryHistoryEntry>>> HistoryAsync(Guid lotId, CancellationToken cancellationToken);
+}
+
 /// <summary>
 /// Module-owned application service for the complete authenticated inventory-lot slice. It owns
 /// validation, owner-scoped orchestration, domain transitions, idempotency semantics, and typed
@@ -94,7 +143,14 @@ public sealed class InventoryLotApplicationService(
     IInventoryLotReadStore readStore,
     IInventoryLotWriteStore writeStore,
     TimeProvider timeProvider,
-    InventoryLotLifecycleUseCase lifecycleUseCase)
+    InventoryLotLifecycleUseCase lifecycleUseCase) :
+    ICreateInventoryLotUseCase,
+    IListInventoryLotsUseCase,
+    IGetInventoryLotUseCase,
+    IUpdateInventoryLotUseCase,
+    IAdjustInventoryLotUseCase,
+    IDeleteInventoryLotUseCase,
+    IGetInventoryLotHistoryUseCase
 {
     /// <summary>Lists active, depleted, or deleted lots owned by the current internal user.</summary>
     public async Task<InventoryApplicationResult<InventoryLotList>> ListAsync(ListInventoryLotsQuery query, CancellationToken cancellationToken)

@@ -42,6 +42,13 @@ builder.Services.AddScoped<IInventoryLotWriteStore, PostgreSqlInventoryLotWriteS
 builder.Services.AddSingleton<IInventoryHttpTokenService, DataProtectionInventoryHttpTokenService>();
 builder.Services.AddSingleton<InventoryMetrics>();
 builder.Services.AddScoped<InventoryLotApplicationService>();
+builder.Services.AddScoped<ICreateInventoryLotUseCase>(provider => provider.GetRequiredService<InventoryLotApplicationService>());
+builder.Services.AddScoped<IListInventoryLotsUseCase>(provider => provider.GetRequiredService<InventoryLotApplicationService>());
+builder.Services.AddScoped<IGetInventoryLotUseCase>(provider => provider.GetRequiredService<InventoryLotApplicationService>());
+builder.Services.AddScoped<IUpdateInventoryLotUseCase>(provider => provider.GetRequiredService<InventoryLotApplicationService>());
+builder.Services.AddScoped<IAdjustInventoryLotUseCase>(provider => provider.GetRequiredService<InventoryLotApplicationService>());
+builder.Services.AddScoped<IDeleteInventoryLotUseCase>(provider => provider.GetRequiredService<InventoryLotApplicationService>());
+builder.Services.AddScoped<IGetInventoryLotHistoryUseCase>(provider => provider.GetRequiredService<InventoryLotApplicationService>());
 builder.Services.AddScoped<InventoryApplicationService>();
 builder.Services.AddSingleton<InventoryLotLifecycleUseCase>();
 builder.Services.AddAntiforgery(options => { options.HeaderName = "X-CSRF-TOKEN"; options.Cookie.Name = "__Host-kitchenflow-antiforgery"; options.Cookie.Path = "/"; options.Cookie.SecurePolicy = CookieSecurePolicy.Always; });

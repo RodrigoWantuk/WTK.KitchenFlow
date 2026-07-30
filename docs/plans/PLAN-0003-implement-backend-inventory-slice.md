@@ -337,16 +337,28 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** Commit A transport-token and HTTP-status extraction is partially delivered; the PostgreSQL write adapter now clears failed tracked graphs before idempotency replay reads.
+- **Current checkpoint:** Commit A has transport-neutral explicit contracts for all seven Inventory use cases; the API injects those contracts and the PostgreSQL write adapter clears failed tracked graphs before replay reads.
 - **Execution status:** In Progress, not Validating.
 - **Confirmed completed phase:** R1.
 - **Partially completed phases:** R2, R3, R4, R5, R6, R7, R8, and R9.
 - **Not started at a valid final candidate:** R10.
 - **Current blocker:** None external. Remaining work is implementation and acceptance evidence inside this branch.
 - **Contract disposition:** OpenAPI snapshot is provisional and must not be consumed as PLAN-0004's stable live-client contract.
-- **Exact next action:** Complete Commit A by decomposing the remaining Inventory application service into independently injected per-use-case handlers and adding direct no-HTTP/no-PostgreSQL unit tests for all seven use cases; then add R3 race/rollback acceptance tests.
+- **Exact next action:** Split the shared Inventory use-case implementation into individual handler classes and add direct no-HTTP/no-PostgreSQL tests for each contract; then add R3 race/rollback acceptance tests.
 
 ## Progress log
+
+### 2026-07-30T16:05:00Z — Commit A explicit use-case contracts (partial)
+
+- **Run delivery target:** Make all seven Inventory application operations independently injectable from the API adapter without exposing persistence or HTTP concerns.
+- **Checkpoint:** Added explicit create, list, get, update, adjust, delete, and history application contracts. The API adapter now depends only on those contracts; composition maps each contract to the existing transport-neutral implementation.
+- **Material files changed:** Inventory application contracts/implementation; API inventory adapter and composition root; this plan; and `docs/plan-status.md`.
+- **Documentation delivered:** XML documentation now specifies each use-case authorization and behavior boundary.
+- **Commands and validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.ArchitectureTests/KitchenFlow.ArchitectureTests.csproj -c Release --no-build`.
+- **Result:** Release build passed with zero warnings/errors; all 9 architecture tests passed.
+- **Known failures or unverified behavior:** The shared implementation is still a large class and must be physically decomposed before R2 can be checked complete. Direct no-transport unit tests and R3 race/rollback proof remain pending; R4-R10 are not complete.
+- **Blockers:** None external.
+- **Exact next action:** Extract handler implementations behind these seven contracts, add direct unit tests using fake ports, then add concurrent different-payload adjustment and atomic rollback integration tests.
 
 ### 2026-07-30T15:35:00Z — R3 failed-unit-of-work safety (partial)
 
