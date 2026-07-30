@@ -36,6 +36,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<CurrentUserService>();
 builder.Services.AddScoped<ICurrentUserAccessor>(provider => provider.GetRequiredService<CurrentUserService>());
 builder.Services.AddScoped<IInventoryLotReadStore, PostgreSqlInventoryLotReadStore>();
+builder.Services.AddScoped<IInventoryLotWriteStore, PostgreSqlInventoryLotWriteStore>();
 builder.Services.AddScoped<InventoryApplicationService>();
 builder.Services.AddSingleton<InventoryLotLifecycleUseCase>();
 builder.Services.AddAntiforgery(options => { options.HeaderName = "X-CSRF-TOKEN"; options.Cookie.Name = "__Host-kitchenflow-antiforgery"; options.Cookie.Path = "/"; options.Cookie.SecurePolicy = CookieSecurePolicy.Always; });
