@@ -483,14 +483,14 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ## Execution state
 
-- **Current checkpoint:** Reproducible real-Keycloak two-user smoke passes locally; persistence-boundary formatting is clean.
-- **Last completed step:** Corrected the browser smoke callback probe and passed real OIDC login, backend session, CSRF create, and ownership isolation using the two deterministic users.
-- **Exact next action:** Push this checkpoint and inspect CI, then repeat the smoke on a host that trusts the development certificate without its diagnostic browser flag before final completion.
+- **Current checkpoint:** Reproducible real-Keycloak two-user smoke passes locally; persistence-boundary formatting is clean; the Backend workflow can now be dispatched for a draft-PR SHA.
+- **Last completed step:** Added a versioned manual CI trigger so the exact backend gate can execute against the current draft branch without changing review state.
+- **Exact next action:** Dispatch the Backend workflow against this branch, inspect its complete result, then repeat the smoke on a host that trusts the development certificate without its diagnostic browser flag before final completion.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
 - **Validation performed:** `node --check scripts/backend/smoke-keycloak.mjs`; Release solution build (zero warnings/errors); complete Release test suite (3 architecture, 6 unit, 25 PostgreSQL integration tests passed); `dotnet format --verify-no-changes`; `git diff --check`; OpenAPI drift check against the live HTTPS API; live Compose PostgreSQL/Keycloak readiness; real Keycloak Authorization Code form-post callback returning backend `302` without printing callback parameters; passing two-profile headless Chrome smoke using the explicit local-certificate diagnostic flag.
-- **Known failures or limitations:** The container does not trust the ASP.NET Core development certificate. The passing browser smoke therefore uses the documented diagnostic-only browser flag; a passing trusted-certificate browser run remains required before final completion. CI result for this revision remains pending.
-- **Working tree state:** Corrected Keycloak smoke callback probe and synchronized plan/registry updates are ready to commit.
+- **Known failures or limitations:** The container does not trust the ASP.NET Core development certificate. The passing browser smoke therefore uses the documented diagnostic-only browser flag; a passing trusted-certificate browser run remains required before final completion. CI result for the current revision is pending manual dispatch because the PR remains draft.
+- **Working tree state:** Versioned manual Backend workflow trigger and synchronized plan/registry updates are ready to commit.
 
 ## Progress log
 
@@ -513,6 +513,16 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 - **Known failures or unverified behavior:** The local browser process needs the documented diagnostic certificate override because this container does not trust the ASP.NET Core development certificate. That override is not accepted final browser evidence; a trusted-host execution remains open. CI has not executed this revision yet.
 - **Blockers:** No product or implementation decision is blocked. The remaining trusted-certificate run is environment-specific.
 - **Next action:** Commit and push the passing smoke correction, inspect the CI gate, then repeat it on a trusted-certificate host without the diagnostic override.
+
+### 2026-07-30T02:56:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Enabled manual execution of the complete Backend GitHub Actions gate for the active draft branch.
+- **Changes included in the commit:** Added the standard `workflow_dispatch` trigger to `.github/workflows/backend.yml`; retained the existing pull-request and `main` push path filters unchanged.
+- **Validation performed:** Inspected the three preceding GitHub Actions failures. Each stopped at `dotnet format` for the brace violations already fixed and verified locally in commit `d13fe88`; no unrelated current-SHA CI failure is known. `git diff --check` will validate the committed YAML text; no standalone YAML parser is installed in this environment, so the dispatched GitHub workflow is the authoritative workflow parse/execution verification.
+- **Result:** The repository can now dispatch the exact full backend gate for the active SHA without marking PR #9 ready for review or bypassing CI.
+- **Known failures or unverified behavior:** The new dispatched workflow result, including GitHub's YAML parse, is pending. Trusted-certificate browser evidence remains open; the local diagnostic smoke passes.
+- **Blockers:** None.
+- **Next action:** Push this commit, dispatch `Backend` for `agent/plan-0003-backend-inventory-slice`, inspect all job results, then record the outcome.
 
 ### 2026-07-30T02:14:28Z — Codex backend implementation agent
 
