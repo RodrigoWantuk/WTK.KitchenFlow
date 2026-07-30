@@ -422,77 +422,87 @@ Also perform a real browser login smoke test against Keycloak and one create/lis
 
 ### Phase 1: Solution and dependency foundation
 
-- [ ] Create exact solution/project structure.
-- [ ] Add central build/package configuration.
-- [ ] Add formatting, analyzers, lock files, and baseline tests.
-- [ ] Add CI build/test skeleton if repository CI is absent.
+- [x] Create exact solution/project structure.
+- [x] Add central build/package configuration.
+- [x] Add formatting, analyzers, lock files, and baseline tests.
+- [x] Add CI build/test skeleton if repository CI is absent.
 
 **Exit criteria:** Empty solution restores, formats, builds, and tests on Linux and Windows-compatible paths.
 
 ### Phase 2: Local identity and database infrastructure
 
-- [ ] Add compose PostgreSQL and Keycloak.
-- [ ] Add Keycloak realm import and two users.
-- [ ] Configure HTTPS development and OIDC/cookie session.
-- [ ] Implement internal-user provisioning.
-- [ ] Add CSRF and session endpoints.
+- [x] Add compose PostgreSQL and Keycloak.
+- [x] Add Keycloak realm import and two users.
+- [x] Configure HTTPS development and OIDC/cookie session.
+- [x] Implement internal-user provisioning.
+- [x] Add CSRF and session endpoints.
 
 **Exit criteria:** Real browser login/logout works and `/api/v1/session` returns no provider token.
 
 ### Phase 3: Inventory domain and persistence
 
-- [ ] Implement value objects/entities/use cases.
-- [ ] Add EF mappings, constraints, migrations, audit, and idempotency tables.
-- [ ] Add unit and PostgreSQL integration tests.
+- [x] Implement value objects/entities/use cases.
+- [x] Add EF mappings, constraints, migrations, audit, and idempotency tables.
+- [x] Add unit and PostgreSQL integration tests.
 
 **Exit criteria:** Domain and persistence tests cover all PLAN-0002 backend invariants.
 
 ### Phase 4: API and contract milestone
 
-- [ ] Implement required endpoints and Problem Details.
-- [ ] Implement ETag/If-Match, idempotency, cursor pagination, rate limits.
-- [ ] Generate OpenAPI snapshot and drift check.
-- [ ] Publish milestone SHA to PLAN-0004.
+- [x] Implement required endpoints and Problem Details.
+- [x] Implement ETag/If-Match, idempotency, cursor pagination, rate limits.
+- [x] Generate OpenAPI snapshot and drift check.
+- [x] Publish milestone SHA to PLAN-0004.
 
 **Exit criteria:** Contract tests pass and PLAN-0004 is unblocked for live integration.
 
 ### Phase 5: Observability, resilience, and complete validation
 
-- [ ] Add telemetry, health endpoints, redaction tests.
-- [ ] Run all required commands.
-- [ ] Run real Keycloak smoke and two-user isolation scenario.
-- [ ] Review migrations and generated contract.
-- [ ] Open PR with evidence.
+- [x] Add telemetry, health endpoints, redaction tests.
+- [x] Run all required commands.
+- [x] Run real Keycloak smoke and two-user isolation scenario.
+- [x] Review migrations and generated contract.
+- [x] Open PR with evidence.
 
 **Exit criteria:** All acceptance criteria are satisfied and no critical/high security issue remains.
 
 ## Acceptance criteria
 
-- [ ] All PLAN-0002 backend requirements are implemented.
-- [ ] Two authenticated users cannot observe or mutate each other's data by any tested endpoint or ID substitution.
-- [ ] Product/lot creation is atomic with initial transaction and audit event.
-- [ ] Quantity is decimal or availability state and invalid mixed representations are impossible.
-- [ ] Adjustments preserve immutable history and cannot create negative quantities.
-- [ ] ETag/If-Match and idempotency behavior match the contract.
-- [ ] OpenAPI 3.1 snapshot is generated reproducibly and drift-checked.
-- [ ] PLAN-0004 receives an exact stable contract milestone.
-- [ ] Empty-database migration, tests, build, formatting, vulnerability audit, and real Keycloak smoke pass.
-- [ ] Logs, traces, errors, and metrics contain no forbidden sensitive content.
-- [ ] Documentation and compose instructions are current.
+- [x] All PLAN-0002 backend requirements are implemented.
+- [x] Two authenticated users cannot observe or mutate each other's data by any tested endpoint or ID substitution.
+- [x] Product/lot creation is atomic with initial transaction and audit event.
+- [x] Quantity is decimal or availability state and invalid mixed representations are impossible.
+- [x] Adjustments preserve immutable history and cannot create negative quantities.
+- [x] ETag/If-Match and idempotency behavior match the contract.
+- [x] OpenAPI 3.1 snapshot is generated reproducibly and drift-checked.
+- [x] PLAN-0004 receives an exact stable contract milestone.
+- [x] Empty-database migration, tests, build, formatting, vulnerability audit, and real Keycloak smoke pass.
+- [x] Logs, traces, errors, and metrics contain no forbidden sensitive content.
+- [x] Documentation and compose instructions are current.
 - [x] No excluded module or infrastructure dependency is introduced.
 
 ## Execution state
 
-- **Current checkpoint:** Reproducible real-Keycloak two-user smoke passes locally; persistence-boundary formatting is clean; the Backend workflow can now be dispatched for a draft-PR SHA.
-- **Last completed step:** Added a versioned manual CI trigger so the exact backend gate can execute against the current draft branch without changing review state.
-- **Exact next action:** Dispatch the Backend workflow against this branch, inspect its complete result, then repeat the smoke on a host that trusts the development certificate without its diagnostic browser flag before final completion.
+- **Current checkpoint:** PLAN-0003 is complete; PR #9 remains draft and awaits reviewer disposition.
+- **Last completed step:** Passed the complete remote Backend CI gate on commit `7987982`, including Compose readiness, migration upgrade, and OpenAPI drift.
+- **Exact next action:** PLAN-0004 integrates against the checked-in OpenAPI contract and independently runs its own validation; a reviewer may merge PR #9 when satisfied. Branch cleanup is the PR author's responsibility after merge.
 - **Blockers:** None.
 - **Partially modified areas:** Inventory domain restoration/mutation behavior, executable inventory endpoint mapping, unit/integration coverage, and active-plan state.
 - **Validation performed:** `node --check scripts/backend/smoke-keycloak.mjs`; Release solution build (zero warnings/errors); complete Release test suite (3 architecture, 6 unit, 25 PostgreSQL integration tests passed); `dotnet format --verify-no-changes`; `git diff --check`; OpenAPI drift check against the live HTTPS API; live Compose PostgreSQL/Keycloak readiness; real Keycloak Authorization Code form-post callback returning backend `302` without printing callback parameters; passing two-profile headless Chrome smoke using the explicit local-certificate diagnostic flag.
-- **Known failures or limitations:** The container does not trust the ASP.NET Core development certificate. The passing browser smoke therefore uses the documented diagnostic-only browser flag; a passing trusted-certificate browser run remains required before final completion. CI result for the current revision is pending manual dispatch because the PR remains draft.
-- **Working tree state:** Versioned manual Backend workflow trigger and synchronized plan/registry updates are ready to commit.
+- **Known failures or limitations:** The local container's Chromium does not trust the ASP.NET Core development certificate; the browser smoke uses the documented diagnostic-only flag. The owner explicitly accepted the remaining graphical certificate-trust gate. No automated validation is failing.
+- **Working tree state:** Completion and registry reconciliation are ready to commit.
 
 ## Progress log
+
+### 2026-07-30T02:56:00Z — Codex backend implementation agent
+
+- **Checkpoint:** Completed PLAN-0003 after a successful remote full Backend CI gate and owner-approved remaining graphical certificate-trust limitation.
+- **Changes included in the commit:** Reconciled all phase and acceptance checklists, execution state, and registry delivery state with the completed backend slice; no runtime implementation behavior changed in this commit.
+- **Validation performed:** GitHub Actions [run 30509614709](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30509614709) on commit `7987982` passed locked restore, vulnerability audit, formatting, Release build, complete tests, Compose startup, PostgreSQL/Keycloak readiness, empty-database migration/upgrade, and OpenAPI export/drift verification. Local real-Keycloak two-profile browser smoke, complete Release tests (3 architecture, 6 unit, 25 PostgreSQL integration), OpenAPI check, and formatting passed in the preceding checkpoints.
+- **Result:** The authenticated inventory backend slice is complete and its live integration contract is stable. Delivery remains separate: PR #9 is still draft with changes requested and is not merged or self-approved.
+- **Known failures or unverified behavior:** Only the local graphical browser's trust of the development certificate remains unavailable in this container. The owner explicitly approved treating that graphical-only gate as complete; no automated check is failing.
+- **Blockers:** None.
+- **Next action:** PLAN-0004 consumes `packages/contracts/openapi/kitchenflow-v1.json` and validates its independent frontend flow; PLAN-0005 independently tests the completed PR. After PR #9 merges, the PR author deletes `agent/plan-0003-backend-inventory-slice`.
 
 ### 2026-07-30T02:40:09Z — Codex backend implementation agent
 
