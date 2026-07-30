@@ -18,8 +18,12 @@ public sealed record LotResponse(Guid LotId, Guid ProductId, string ProductName,
 /// <summary>Returns a measured or qualitative quantity without mixing the two modes.</summary>
 public sealed record QuantityResponse(decimal? MeasuredValue, string? Unit, string? AvailabilityState);
 
-/// <summary>Returns an immutable lifecycle transaction and its optional quantity snapshots.</summary>
-public sealed record LotHistoryResponse(Guid TransactionId, string Type, QuantityResponse? PreviousQuantity, QuantityResponse? ResultingQuantity, string? ReasonCode, DateTimeOffset OccurredAt);
+/// <summary>
+/// Returns one immutable lifecycle transaction or a safe metadata-correction audit projection.
+/// Metadata projections expose only changed field names and never values, notes, tokens, or other
+/// private request content.
+/// </summary>
+public sealed record LotHistoryResponse(Guid EntryId, string Kind, string? Type, QuantityResponse? PreviousQuantity, QuantityResponse? ResultingQuantity, string? ReasonCode, IReadOnlyList<string>? ChangedFields, DateTimeOffset OccurredAt);
 
 /// <summary>Returns a cursor-paginated owner-scoped inventory list.</summary>
 public sealed record ListLotsResponse(IReadOnlyList<LotResponse> Items, string? NextCursor);

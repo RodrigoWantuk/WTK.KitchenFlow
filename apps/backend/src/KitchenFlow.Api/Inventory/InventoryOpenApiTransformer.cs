@@ -68,7 +68,8 @@ internal static class InventoryOpenApiTransformer
                     operation.Security = [new OpenApiSecurityRequirement { [new OpenApiSecuritySchemeReference("kitchenflowSession", document)] = [] }];
                 }
 
-                var stateChanging = method == HttpMethod.Post || method == HttpMethod.Patch || method == HttpMethod.Delete;
+                var isLoginChallenge = path.Equals("/api/v1/auth/login", StringComparison.Ordinal) && method == HttpMethod.Post;
+                var stateChanging = !isLoginChallenge && (method == HttpMethod.Post || method == HttpMethod.Patch || method == HttpMethod.Delete);
                 if (stateChanging)
                 {
                     operation.Parameters ??= [];
@@ -89,7 +90,10 @@ internal static class InventoryOpenApiTransformer
 
                 AddExamples(path, method, operation);
 
-                foreach (var response in (operation.Responses ?? []).Where(response => response.Key is "200" or "201"))
+                var emitsLotEtag = path.EndsWith("/lots", StringComparison.Ordinal) && method == HttpMethod.Post ||
+                    path.EndsWith("/lots/{lotId}", StringComparison.Ordinal) && (method == HttpMethod.Get || method == HttpMethod.Patch) ||
+                    path.EndsWith("/adjustments", StringComparison.Ordinal) && method == HttpMethod.Post;
+                foreach (var response in emitsLotEtag ? (operation.Responses ?? []).Where(response => response.Key is "200" or "201") : [])
                 {
                     if (response.Value is OpenApiResponse typedResponse)
                     {

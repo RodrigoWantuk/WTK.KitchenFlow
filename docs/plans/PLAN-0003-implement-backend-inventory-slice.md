@@ -374,20 +374,31 @@ The evidence must identify the final candidate SHA and must not expose credentia
 
 ## Execution state
 
-- **Current checkpoint:** R2 application and identity boundary remediation implemented on the R1-synchronized baseline.
-- **Run delivery target:** Replace API-owned inventory and identity orchestration with typed module application services, preserve all externally observable slice behavior, and make the architecture testable.
-- **Delivered outcome:** Inventory now owns seven typed application use cases and API code is an HTTP adapter only; Identity provisioning is resolved through module contracts and a PostgreSQL adapter rather than an API service with direct Entity Framework access.
-- **Acceptance criteria resolved:** R1 and R2 are implemented. R3's exact PostgreSQL idempotency-key exception classification is implemented, but its full race/evidence matrix remains open. R4–R10 remain open.
-- **Files or areas materially changed:** Inventory application contracts and service; Identity application contracts and resolver; API adapters and registration; PostgreSQL identity and idempotency adapters; architecture tests; this plan; and `docs/plan-status.md`.
-- **Documentation delivered:** XML documentation defines application ownership, token-protection, identity provenance, idempotency boundaries, and HTTP adapter responsibility.
-- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/KitchenFlow.ArchitectureTests/KitchenFlow.ArchitectureTests.csproj -c Release --no-build`; and `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-build`. Build passed with zero warnings/errors; architecture tests passed 6/6; the integration runner exited successfully after discovering the test assembly, but did not emit its per-test summary and is therefore retained as unverified evidence.
-- **Known failures or limitations:** Full integration evidence must be rerun with an explicit TRX logger; application result mapping and OpenAPI snapshot have not yet been reviewed against the refactor; mutation-history audit projection, idempotency retention/race behavior, observability, CI, and final gates remain incomplete.
-- **Blockers:** None. PR #9 remains draft and must not be marked ready until all R3–R10 criteria and fresh review pass.
-- **Partially modified areas:** The existing history response remains transaction-only until R4; idempotency uses completed-record semantic replay and precise constraint recognition, but its chosen in-progress policy is not yet fully evidenced.
-- **Exact next action:** Add the safe metadata-correction audit projection to lot history, make idempotency race outcomes deterministic and explicitly tested, then update the OpenAPI contract and tests.
-- **Working tree state:** R2/R3 implementation changes are ready for this checkpoint commit.
+- **Current checkpoint:** R3/R4 completed and R5/R6 materially advanced: PostgreSQL-backed idempotency races are deterministic, metadata corrections are an immutable safe history projection, and the generated contract/configuration are aligned with the changed runtime behavior.
+- **Run delivery target:** Finish the P0 persistence/history/contract/configuration remediation while preserving application-boundary ownership and producing real PostgreSQL evidence.
+- **Delivered outcome:** Exact PostgreSQL idempotency-key conflicts are classified without masking unrelated failures; concurrent create and adjustment calls replay the winning response; corrections emit safe changed-field audit projections; OpenAPI no longer falsely requires CSRF on anonymous login or falsely advertises ETags; development configuration has no source-level client-secret fallback and production-like readiness fails safely when invalid.
+- **Acceptance criteria resolved:** R1–R4 are implemented. R5/R6 core runtime and contract discrepancies addressed in this checkpoint are implemented and tested, but their full examples/nullability/framework-error matrix remains open. R7–R10 remain open.
+- **Files or areas materially changed:** Inventory history/application and PostgreSQL adapters; API contracts, OpenAPI transformer, configuration/readiness and redirect policy; integration tests; generated OpenAPI snapshot; this plan; and `docs/plan-status.md`.
+- **Documentation delivered:** XML documentation for safe owner-visible correction projections, local-return policy, and configuration-only readiness; generated OpenAPI now documents the changed history response and corrected CSRF/ETag surface.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; architecture and unit suites (6/6 each); full PostgreSQL integration suite with TRX evidence (27/27); focused concurrent-adjustment test (1/1); focused contract/configuration/redirect tests (9/9); `KITCHENFLOW_OPENAPI_URL=http://127.0.0.1:7080/openapi/v1.json bash scripts/backend/export-openapi.sh`; and `bash scripts/backend/check-openapi.sh` against a freshly started local API.
+- **Known failures or limitations:** No independent OpenAPI 3.1 linter is configured yet; complete response examples and quantity-schema truthfulness remain to be expanded. Idempotency retention policy, full telemetry metrics/exporter proof, the broad test matrix, CI security gates, Compose/Keycloak final smoke, and final review remain pending.
+- **Blockers:** None. PR #9 remains draft and must not be marked ready until R5–R10 complete and fresh review passes.
+- **Partially modified areas:** The history contract intentionally changes from transaction-only entries to a discriminated transaction-or-metadata-correction stream before any live frontend handoff. Readiness validates configuration only and deliberately does not perform remote OIDC metadata fetches.
+- **Exact next action:** Implement R7 application-owned low-cardinality metrics and full-pipeline redaction evidence, then complete R8/R9 coverage, linting, migration/runbook, and CI gates.
+- **Working tree state:** R3/R4 and focused R5/R6 changes are ready for this checkpoint commit.
 
 ## Progress log
+
+### 2026-07-30T10:48:00Z — Codex backend remediation agent
+
+- **Run delivery target:** Complete deterministic PostgreSQL idempotency behavior and safe correction history, then correct the directly affected OpenAPI and configuration/readiness contract surface.
+- **Checkpoint:** Added exact `23505`/idempotency-index recognition, semantic replay after concurrent adjustment concurrency conflicts, same-key/different-payload conflict coverage, immutable metadata-correction audit projection, corrected OpenAPI CSRF/ETag declarations, production-like configuration validation, configuration-only readiness, and hardened local return-url policy.
+- **Material files changed:** Inventory read/write/application contracts and PostgreSQL adapters; API history DTO, HTTP adapter, OpenAPI transformer, runtime configuration/readiness, development configuration, and return-url policy; integration tests; `packages/contracts/openapi/kitchenflow-v1.json`; this plan; and `docs/plan-status.md`.
+- **Commands and validation performed:** Release build; architecture tests 6/6; unit tests 6/6; complete PostgreSQL integration tests with `--logger "trx;LogFileName=integration-r2-r4.trx"` and 27/27 passing results; focused concurrent adjustment test 1/1; focused telemetry/OpenAPI/configuration/redirect tests 9/9; local API startup; OpenAPI export; OpenAPI drift check; and `git diff --check`.
+- **Result:** All executed checks passed. The generated snapshot reflects the runtime history shape and no longer declares CSRF for anonymous login or ETags for session/list/history responses. No credentials, tokens, cookies, notes, or request bodies were recorded in the plan evidence.
+- **Known failures or unverified behavior:** No independent OpenAPI 3.1 lint tool, full response-example matrix, idempotency retention policy, application metrics/exporter proof, complete CI gates, Compose/Keycloak final smoke, or independent final review yet.
+- **Blockers:** None.
+- **Exact next action:** Add application-owned low-cardinality inventory metrics and full-pipeline redaction tests, then continue the remaining R8/R9 validation, runbook, and CI work.
 
 ### 2026-07-30T10:36:04Z — Codex backend remediation agent
 

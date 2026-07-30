@@ -1,5 +1,6 @@
 using KitchenFlow.Modules.Inventory.Application;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace KitchenFlow.Infrastructure.Persistence;
 
@@ -59,8 +60,32 @@ public sealed class PostgreSqlInventoryLotReadStore(ApplicationDbContext databas
             return null;
         }
 
-        return await database.Transactions.AsNoTracking().Where(item => item.OwnerUserId == ownerUserId && item.LotId == lotId).OrderByDescending(item => item.OccurredAt).Select(item => new InventoryHistoryReadModel(item.Id, item.Type, item.PreviousMeasuredValue, item.PreviousMeasuredUnit, item.PreviousAvailabilityState, item.ResultingMeasuredValue, item.ResultingMeasuredUnit, item.ResultingAvailabilityState, item.ReasonCode, item.OccurredAt)).ToListAsync(cancellationToken);
+        var transactions = await database.Transactions.AsNoTracking()
+            .Where(item => item.OwnerUserId == ownerUserId && item.LotId == lotId)
+            .Select(item => new InventoryHistoryReadModel(item.Id, "Transaction", item.Type, item.PreviousMeasuredValue, item.PreviousMeasuredUnit, item.PreviousAvailabilityState, item.ResultingMeasuredValue, item.ResultingMeasuredUnit, item.ResultingAvailabilityState, item.ReasonCode, null, item.OccurredAt))
+            .ToListAsync(cancellationToken);
+        var corrections = await database.AuditEvents.AsNoTracking()
+            .Where(item => item.ActorUserId == ownerUserId && item.TargetType == "inventory_lot" && item.TargetId == lotId && item.EventName == "inventory.lot.metadata_corrected")
+            .Select(item => new { item.Id, item.MetadataJson, item.OccurredAt })
+            .ToListAsync(cancellationToken);
+        var projectedCorrections = corrections.Select(item => new InventoryHistoryReadModel(item.Id, "MetadataCorrection", null, null, null, null, null, null, null, null, ReadChangedFields(item.MetadataJson), item.OccurredAt));
+        return transactions.Concat(projectedCorrections).OrderByDescending(item => item.OccurredAt).ThenByDescending(item => item.EntryId).ToList();
     }
 
     private static InventoryLotReadModel ToReadModel(LotRecord lot, string productName) => new(lot.Id, lot.ProductId, productName, lot.MeasuredValue, lot.MeasuredUnit, lot.AvailabilityState, lot.StorageLocation, lot.CustomLocation, lot.PackageState, lot.PrintedExpirationDate, lot.Notes, lot.Version, lot.CreatedAt, lot.UpdatedAt, lot.DeletedAt);
+
+    private static IReadOnlyList<string> ReadChangedFields(string metadataJson)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(metadataJson);
+            return document.RootElement.TryGetProperty("changedFields", out var fields) && fields.ValueKind == JsonValueKind.Array
+                ? fields.EnumerateArray().Where(field => field.ValueKind == JsonValueKind.String).Select(field => field.GetString()).Where(field => !string.IsNullOrWhiteSpace(field)).Cast<string>().Distinct(StringComparer.Ordinal).ToList()
+                : [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
 }

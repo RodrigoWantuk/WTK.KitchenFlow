@@ -126,8 +126,24 @@
         "type": "object"
       },
       "LotHistoryResponse": {
-        "description": "Returns an immutable lifecycle transaction and its optional quantity snapshots.",
+        "description": "Returns one immutable lifecycle transaction or a safe metadata-correction audit projection.\nMetadata projections expose only changed field names and never values, notes, tokens, or other\nprivate request content.",
         "properties": {
+          "changedFields": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "entryId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
           "occurredAt": {
             "format": "date-time",
             "type": "string"
@@ -158,20 +174,21 @@
               }
             ]
           },
-          "transactionId": {
-            "format": "uuid",
-            "type": "string"
-          },
           "type": {
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "required": [
-          "transactionId",
+          "entryId",
+          "kind",
           "type",
           "previousQuantity",
           "resultingQuantity",
           "reasonCode",
+          "changedFields",
           "occurredAt"
         ],
         "type": "object"
@@ -471,12 +488,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "description": "Required CSRF token issued by GET /api/v1/session.",
-            "in": "header",
-            "name": "X-CSRF-TOKEN",
-            "required": true
           }
         ],
         "responses": {
@@ -587,12 +598,7 @@
                 }
               }
             },
-            "description": "OK",
-            "headers": {
-              "ETag": {
-                "description": "Opaque current version required by If-Match on subsequent mutations."
-              }
-            }
+            "description": "OK"
           },
           "400": {
             "content": {
@@ -1124,12 +1130,7 @@
                 }
               }
             },
-            "description": "OK",
-            "headers": {
-              "ETag": {
-                "description": "Opaque current version required by If-Match on subsequent mutations."
-              }
-            }
+            "description": "OK"
           },
           "404": {
             "content": {
@@ -1163,12 +1164,7 @@
                 }
               }
             },
-            "description": "OK",
-            "headers": {
-              "ETag": {
-                "description": "Opaque current version required by If-Match on subsequent mutations."
-              }
-            }
+            "description": "OK"
           },
           "401": {
             "content": {

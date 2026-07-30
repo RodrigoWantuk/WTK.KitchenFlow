@@ -24,8 +24,12 @@ public sealed record InventoryLotMutationState(InventoryLot Lot, Product Product
 /// <summary>Atomic persistence request for a newly created product and inventory lot.</summary>
 public sealed record InventoryLotCreationWrite(Guid OwnerUserId, Product Product, InventoryLot Lot, InventoryTransaction InitialTransaction, string CorrelationId, InventoryIdempotencyWrite Idempotency);
 
-/// <summary>Atomic persistence request for an already-authorized inventory mutation.</summary>
-public sealed record InventoryLotMutationWrite(Guid OwnerUserId, InventoryLot Lot, Product Product, long ExpectedVersion, InventoryTransaction? Transaction, string AuditEventName, string CorrelationId, InventoryIdempotencyWrite? Idempotency);
+/// <summary>
+/// Atomic persistence request for an already-authorized inventory mutation. Audit metadata is a
+/// privacy-safe, pre-serialized projection containing no request body, private note, credential,
+/// or token value.
+/// </summary>
+public sealed record InventoryLotMutationWrite(Guid OwnerUserId, InventoryLot Lot, Product Product, long ExpectedVersion, InventoryTransaction? Transaction, string AuditEventName, string AuditMetadataJson, string CorrelationId, InventoryIdempotencyWrite? Idempotency);
 
 /// <summary>Completed idempotency response persisted with a mutation.</summary>
 public sealed record InventoryIdempotencyWrite(Guid Key, string Scope, string RequestHash, int StatusCode, string ResponseBody, string ETag, DateTimeOffset CreatedAt);

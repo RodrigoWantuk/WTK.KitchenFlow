@@ -53,7 +53,7 @@ public sealed class InventoryApplicationService(InventoryLotApplicationService a
 
     /// <summary>Maps immutable lot history to its API DTO.</summary>
     public async Task<IResult> HistoryAsync(Guid lotId, HttpContext context, CancellationToken cancellationToken) =>
-        ToResult(await applicationService.HistoryAsync(lotId, cancellationToken), items => (IReadOnlyList<LotHistoryResponse>)items.Select(item => new LotHistoryResponse(item.TransactionId, item.Type, ToQuantity(item.PreviousQuantity), ToQuantity(item.ResultingQuantity), item.ReasonCode, item.OccurredAt)).ToList(), context.TraceIdentifier);
+        ToResult(await applicationService.HistoryAsync(lotId, cancellationToken), items => (IReadOnlyList<LotHistoryResponse>)items.Select(item => new LotHistoryResponse(item.EntryId, item.Kind, item.TransactionType, ToQuantity(item.PreviousQuantity), ToQuantity(item.ResultingQuantity), item.ReasonCode, item.ChangedFields, item.OccurredAt)).ToList(), context.TraceIdentifier);
 
     private static LotResponse ToResponse(InventoryLotView item) => new(item.LotId, item.ProductId, item.ProductName, ToQuantity(item.Quantity)!, item.StorageLocation, item.CustomLocation, item.PackageState, item.PrintedExpirationDate, item.Notes, item.Version, item.CreatedAt, item.UpdatedAt);
     private static ListLotsResponse ToResponse(InventoryLotList page) => new(page.Items.Select(ToResponse).ToList(), page.NextCursor);

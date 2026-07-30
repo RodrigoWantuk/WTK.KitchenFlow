@@ -174,6 +174,21 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ConcurrentCreateWithSameKeyAndDifferentPayloadReturnsKeyReuseConflict()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var key = Guid.NewGuid().ToString();
+
+        var responses = await Task.WhenAll(CreateAsync(client, csrf, key, "Concurrent tomato A"), CreateAsync(client, csrf, key, "Concurrent tomato B"));
+
+        Assert.Contains(responses, response => response.StatusCode == System.Net.HttpStatusCode.Created);
+        Assert.Contains(responses, response => response.StatusCode == System.Net.HttpStatusCode.Conflict);
+    }
+
+    [Fact]
     public async Task UpdateRequiresCurrentEtagAndRejectsStaleVersion()
     {
         await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
@@ -209,6 +224,24 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
 
         Assert.Equal(System.Net.HttpStatusCode.OK, first.StatusCode);
         Assert.Equal(System.Net.HttpStatusCode.OK, second.StatusCode);
+        Assert.Equal(2, history.GetArrayLength());
+    }
+
+    [Fact]
+    public async Task ConcurrentAdjustmentWithSameKeyReplaysTheWinningResponse()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var created = await CreateAsync(client, csrf, Guid.NewGuid().ToString());
+        var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+        var key = Guid.NewGuid().ToString();
+
+        var responses = await Task.WhenAll(AdjustAsync(client, csrf, lotId, created.Headers.ETag!.Tag, key, 25m), AdjustAsync(client, csrf, lotId, created.Headers.ETag!.Tag, key, 25m));
+        var history = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots/{lotId}/history");
+
+        Assert.All(responses, response => Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode));
         Assert.Equal(2, history.GetArrayLength());
     }
 
@@ -316,6 +349,29 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         Assert.Equal("Other", body.GetProperty("storageLocation").GetString());
         Assert.Equal("Cellar shelf", body.GetProperty("customLocation").GetString());
         Assert.Equal("trimmed note", body.GetProperty("notes").GetString());
+    }
+
+    [Fact]
+    public async Task MetadataCorrectionAppearsAsSafeHistoryAuditProjection()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var created = await CreateAsync(client, csrf, Guid.NewGuid().ToString());
+        var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+        using var correction = new HttpRequestMessage(HttpMethod.Patch, $"/api/v1/inventory/lots/{lotId}") { Content = JsonContent.Create(new { storageLocation = "Refrigerator", customLocation = (string?)null, packageState = "Opened", printedExpirationDate = (DateOnly?)null, notes = "private correction note" }) };
+        correction.Headers.Add("X-CSRF-TOKEN", csrf);
+        correction.Headers.TryAddWithoutValidation("If-Match", created.Headers.ETag!.Tag);
+
+        var updated = await client.SendAsync(correction);
+        var history = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots/{lotId}/history");
+        var projection = history.EnumerateArray().Single(item => item.GetProperty("kind").GetString() == "MetadataCorrection");
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, updated.StatusCode);
+        Assert.Equal(JsonValueKind.Null, projection.GetProperty("type").ValueKind);
+        Assert.Contains("storageLocation", projection.GetProperty("changedFields").EnumerateArray().Select(item => item.GetString()));
+        Assert.DoesNotContain("private correction note", projection.GetRawText(), StringComparison.Ordinal);
     }
 
     [Fact]

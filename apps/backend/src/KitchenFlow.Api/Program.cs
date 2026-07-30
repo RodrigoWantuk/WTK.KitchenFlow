@@ -51,9 +51,16 @@ if (!string.IsNullOrWhiteSpace(keyRingPath))
     dataProtection.PersistKeysToFileSystem(new DirectoryInfo(keyRingPath));
 }
 
-var oidcAuthority = Environment.GetEnvironmentVariable("KITCHENFLOW_OIDC_AUTHORITY") ?? builder.Configuration["Oidc:Authority"] ?? "http://127.0.0.1:8080/realms/kitchenflow";
-var oidcClientId = Environment.GetEnvironmentVariable("KITCHENFLOW_OIDC_CLIENT_ID") ?? builder.Configuration["Oidc:ClientId"] ?? "kitchenflow-backend";
-var oidcClientSecret = Environment.GetEnvironmentVariable("KITCHENFLOW_OIDC_CLIENT_SECRET") ?? builder.Configuration["Oidc:ClientSecret"] ?? "development-only-change-me";
+var oidcAuthority = Environment.GetEnvironmentVariable("KITCHENFLOW_OIDC_AUTHORITY") ?? builder.Configuration["Oidc:Authority"];
+var oidcClientId = Environment.GetEnvironmentVariable("KITCHENFLOW_OIDC_CLIENT_ID") ?? builder.Configuration["Oidc:ClientId"];
+var oidcClientSecret = Environment.GetEnvironmentVariable("KITCHENFLOW_OIDC_CLIENT_SECRET") ?? builder.Configuration["Oidc:ClientSecret"];
+var configurationReadiness = new RuntimeConfigurationReadiness(builder.Environment.IsDevelopment(), connectionString, oidcAuthority, oidcClientId, oidcClientSecret, keyRingPath);
+configurationReadiness.ThrowIfInvalidForNonDevelopment();
+builder.Services.AddSingleton(configurationReadiness);
+if (string.IsNullOrWhiteSpace(oidcAuthority) || string.IsNullOrWhiteSpace(oidcClientId))
+{
+    throw new InvalidOperationException("KitchenFlow OIDC authority and client identifier configuration are required.");
+}
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options => { options.Cookie.Name = "__Host-kitchenflow-session"; options.Cookie.Path = "/"; options.Cookie.SecurePolicy = CookieSecurePolicy.Always; options.Cookie.HttpOnly = true; options.Cookie.SameSite = SameSiteMode.Lax; options.Events.OnRedirectToLogin = context => Results.Problem(statusCode: StatusCodes.Status401Unauthorized, extensions: new Dictionary<string, object?> { ["errorCode"] = "authentication_required", ["traceId"] = context.HttpContext.TraceIdentifier }).ExecuteAsync(context.HttpContext); }).AddOpenIdConnect("oidc", options => { options.Authority = oidcAuthority; options.ClientId = oidcClientId; options.ClientSecret = oidcClientSecret; options.ResponseType = "code"; options.UsePkce = true; options.SaveTokens = false; options.RequireHttpsMetadata = !builder.Environment.IsDevelopment(); });
 builder.Services.AddAuthorization();
 builder.Services.AddRateLimiter(options =>
@@ -77,9 +84,9 @@ app.UseRateLimiter();
 app.UseAntiforgery();
 app.MapOpenApi("/openapi/{documentName}.json").AllowAnonymous();
 app.MapGet("/health/live", () => Results.Ok()).AllowAnonymous();
-app.MapGet("/health/ready", async (ApplicationDbContext db, CancellationToken ct) => await db.Database.CanConnectAsync(ct) ? Results.Ok() : Results.StatusCode(503)).AllowAnonymous();
+app.MapGet("/health/ready", async (ApplicationDbContext db, RuntimeConfigurationReadiness readiness, CancellationToken ct) => !readiness.IsReady || !await db.Database.CanConnectAsync(ct) ? Results.StatusCode(503) : Results.Ok()).AllowAnonymous();
 var api = app.MapGroup("/api/v1");
-api.MapPost("/auth/login", (string? returnUrl) => Results.Challenge(new AuthenticationProperties { RedirectUri = returnUrl is not null && returnUrl.StartsWith('/') && !returnUrl.StartsWith("//", StringComparison.Ordinal) ? returnUrl : "/" }, ["oidc"])).AllowAnonymous().RequireRateLimiting("authentication").Produces(StatusCodes.Status302Found);
+api.MapPost("/auth/login", (string? returnUrl) => Results.Challenge(new AuthenticationProperties { RedirectUri = ReturnUrlPolicy.Normalize(returnUrl) }, ["oidc"])).AllowAnonymous().RequireRateLimiting("authentication").Produces(StatusCodes.Status302Found);
 api.MapPost("/auth/logout", async (HttpContext context, IAntiforgery antiforgery) =>
 {
     try { await antiforgery.ValidateRequestAsync(context); }

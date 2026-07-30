@@ -25,5 +25,9 @@ public sealed record InventoryLotReadPage(IReadOnlyList<InventoryLotReadModel> I
 /// <summary>Persistence-independent representation of one inventory lot for application reads.</summary>
 public sealed record InventoryLotReadModel(Guid LotId, Guid ProductId, string ProductName, decimal? MeasuredValue, string? MeasuredUnit, string? AvailabilityState, string StorageLocation, string? CustomLocation, string? PackageState, DateOnly? PrintedExpirationDate, string? Notes, long Version, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, DateTimeOffset? DeletedAt);
 
-/// <summary>Persistence-independent immutable inventory transaction representation.</summary>
-public sealed record InventoryHistoryReadModel(Guid TransactionId, string Type, decimal? PreviousMeasuredValue, string? PreviousMeasuredUnit, string? PreviousAvailabilityState, decimal? ResultingMeasuredValue, string? ResultingMeasuredUnit, string? ResultingAvailabilityState, string? ReasonCode, DateTimeOffset OccurredAt);
+/// <summary>
+/// Persistence-independent history item. A transaction item has an immutable lifecycle type and
+/// quantity snapshots; a metadata-correction item is a safe audit projection with field names
+/// only, never private values or notes.
+/// </summary>
+public sealed record InventoryHistoryReadModel(Guid EntryId, string Kind, string? TransactionType, decimal? PreviousMeasuredValue, string? PreviousMeasuredUnit, string? PreviousAvailabilityState, decimal? ResultingMeasuredValue, string? ResultingMeasuredUnit, string? ResultingAvailabilityState, string? ReasonCode, IReadOnlyList<string>? ChangedFields, DateTimeOffset OccurredAt);

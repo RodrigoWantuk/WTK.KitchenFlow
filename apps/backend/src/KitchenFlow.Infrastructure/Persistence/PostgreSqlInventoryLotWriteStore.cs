@@ -66,7 +66,7 @@ public sealed class PostgreSqlInventoryLotWriteStore(ApplicationDbContext databa
             database.Transactions.Add(ToRecord(write.Transaction));
         }
 
-        database.AuditEvents.Add(new AuditEventRecord { Id = Guid.NewGuid(), ActorUserId = write.OwnerUserId, EventName = write.AuditEventName, TargetType = "inventory_lot", TargetId = write.Lot.Id, CorrelationId = write.CorrelationId, MetadataJson = "{}", OccurredAt = write.Lot.UpdatedAt });
+        database.AuditEvents.Add(new AuditEventRecord { Id = Guid.NewGuid(), ActorUserId = write.OwnerUserId, EventName = write.AuditEventName, TargetType = "inventory_lot", TargetId = write.Lot.Id, CorrelationId = write.CorrelationId, MetadataJson = write.AuditMetadataJson, OccurredAt = write.Lot.UpdatedAt });
         if (write.Idempotency is not null)
         {
             var item = write.Idempotency;

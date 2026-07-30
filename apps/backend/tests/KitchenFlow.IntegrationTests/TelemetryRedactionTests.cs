@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text.Json;
 using KitchenFlow.Api.Observability;
+using KitchenFlow.Api.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 
@@ -9,6 +10,30 @@ namespace KitchenFlow.IntegrationTests;
 
 public sealed class TelemetryRedactionTests
 {
+    [Theory]
+    [InlineData(null, "/")]
+    [InlineData("/inventory/lots", "/inventory/lots")]
+    [InlineData("https://attacker.example", "/")]
+    [InlineData("//attacker.example", "/")]
+    [InlineData("/\\attacker.example", "/")]
+    [InlineData("/%2f%2fattacker.example", "/%2f%2fattacker.example")]
+    public void ReturnUrlPolicyAllowsOnlyLocalPaths(string? candidate, string expected)
+    {
+        Assert.Equal(expected, ReturnUrlPolicy.Normalize(candidate));
+    }
+
+    [Fact]
+    public void RuntimeConfigurationReadinessRejectsProductionPlaceholderAndAcceptsValidConfiguration()
+    {
+        var rejected = new RuntimeConfigurationReadiness(false, "Host=database", "https://identity.example/realms/kitchenflow", "kitchenflow", "development-only-change-me", "/var/lib/kitchenflow/keys");
+        var accepted = new RuntimeConfigurationReadiness(false, "Host=database", "https://identity.example/realms/kitchenflow", "kitchenflow", "non-placeholder-test-secret", "/var/lib/kitchenflow/keys");
+        var development = new RuntimeConfigurationReadiness(true, "Host=database", "http://127.0.0.1:8080/realms/kitchenflow", "kitchenflow", null, null);
+
+        Assert.Throws<InvalidOperationException>(rejected.ThrowIfInvalidForNonDevelopment);
+        accepted.ThrowIfInvalidForNonDevelopment();
+        Assert.True(development.IsReady);
+    }
+
     [Fact]
     public void SensitiveTelemetryTagsAreRemovedBeforeExport()
     {
@@ -49,11 +74,20 @@ public sealed class TelemetryRedactionTests
         var securityScheme = document.GetProperty("components").GetProperty("securitySchemes").GetProperty("kitchenflowSession");
         var createParameters = document.GetProperty("paths").GetProperty("/api/v1/inventory/lots").GetProperty("post").GetProperty("parameters");
         var sessionResponses = document.GetProperty("paths").GetProperty("/api/v1/session").GetProperty("get").GetProperty("responses");
+        var loginParameters = document.GetProperty("paths").GetProperty("/api/v1/auth/login").GetProperty("post").TryGetProperty("parameters", out var loginParameterValue) ? loginParameterValue : default;
+        var createResponseHeaders = createResponses.GetProperty("201").GetProperty("headers");
+        var sessionResponse = sessionResponses.GetProperty("200");
+        var historySchema = document.GetProperty("components").GetProperty("schemas").GetProperty("LotHistoryResponse").GetProperty("properties");
 
         Assert.Equal("cookie", securityScheme.GetProperty("in").GetString());
         Assert.Contains(createParameters.EnumerateArray(), parameter => parameter.GetProperty("name").GetString() == "X-CSRF-TOKEN");
         Assert.Contains(createParameters.EnumerateArray(), parameter => parameter.GetProperty("name").GetString() == "Idempotency-Key");
         Assert.True(sessionResponses.GetProperty("200").GetProperty("content").GetProperty("application/json").TryGetProperty("schema", out _));
+        Assert.Contains(createResponseHeaders.EnumerateObject(), header => header.Name == "ETag");
+        Assert.False(sessionResponse.TryGetProperty("headers", out var sessionHeaders) && sessionHeaders.TryGetProperty("ETag", out _));
+        Assert.False(loginParameters.ValueKind == JsonValueKind.Array && loginParameters.EnumerateArray().Any(parameter => parameter.GetProperty("name").GetString() == "X-CSRF-TOKEN"));
+        Assert.True(historySchema.TryGetProperty("kind", out _));
+        Assert.True(historySchema.TryGetProperty("changedFields", out _));
 
         var schemas = document.GetProperty("components").GetProperty("schemas");
         var measuredValue = schemas.GetProperty("QuantityRequest").GetProperty("properties").GetProperty("measuredValue");
