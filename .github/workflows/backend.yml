@@ -30,8 +30,16 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.302
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
       - run: dotnet restore KitchenFlow.slnx --locked-mode
-      - run: dotnet list KitchenFlow.slnx package --vulnerable --include-transitive
+      - name: Fail on vulnerable .NET dependencies
+        run: |
+          dotnet list KitchenFlow.slnx package --vulnerable --include-transitive | tee /tmp/kitchenflow-vulnerabilities.txt
+          if grep -qi "has the following vulnerable packages" /tmp/kitchenflow-vulnerabilities.txt; then
+            exit 1
+          fi
       - run: dotnet format KitchenFlow.slnx --verify-no-changes --no-restore
       - run: dotnet build KitchenFlow.slnx -c Release --no-restore
       - run: dotnet test KitchenFlow.slnx -c Release --no-build
@@ -60,3 +68,11 @@ jobs:
           bash scripts/backend/export-openapi.sh
           git diff --exit-code -- packages/contracts/openapi/kitchenflow-v1.json
           bash scripts/backend/check-openapi.sh
+          bash scripts/backend/lint-openapi.sh
+  secret-scan:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2

@@ -67,7 +67,10 @@
               "Opened",
               "Unknown"
             ],
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "printedExpirationDate": {
             "format": "date",
@@ -321,6 +324,19 @@
       },
       "QuantityRequest": {
         "description": "Represents exactly one inventory quantity mode supplied by an API client.",
+        "oneOf": [
+          {
+            "required": [
+              "measuredValue",
+              "unit"
+            ]
+          },
+          {
+            "required": [
+              "availabilityState"
+            ]
+          }
+        ],
         "properties": {
           "availabilityState": {
             "enum": [
@@ -328,7 +344,10 @@
               "Low",
               "Unavailable"
             ],
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "measuredValue": {
             "format": "decimal",
@@ -341,18 +360,29 @@
               "Milliliter",
               "Unit"
             ],
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
-        "required": [
-          "measuredValue",
-          "unit",
-          "availabilityState"
-        ],
         "type": "object"
       },
       "QuantityResponse": {
         "description": "Returns a measured or qualitative quantity without mixing the two modes.",
+        "oneOf": [
+          {
+            "required": [
+              "measuredValue",
+              "unit"
+            ]
+          },
+          {
+            "required": [
+              "availabilityState"
+            ]
+          }
+        ],
         "properties": {
           "availabilityState": {
             "enum": [
@@ -360,7 +390,10 @@
               "Low",
               "Unavailable"
             ],
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "measuredValue": {
             "format": "decimal",
@@ -373,14 +406,12 @@
               "Milliliter",
               "Unit"
             ],
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
-        "required": [
-          "measuredValue",
-          "unit",
-          "availabilityState"
-        ],
         "type": "object"
       },
       "SessionResponse": {
@@ -428,7 +459,10 @@
               "Opened",
               "Unknown"
             ],
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "printedExpirationDate": {
             "format": "date",
@@ -481,6 +515,7 @@
   "paths": {
     "/api/v1/auth/login": {
       "post": {
+        "operationId": "postApiV1AuthLogin",
         "parameters": [
           {
             "in": "query",
@@ -495,6 +530,8 @@
             "description": "Found"
           }
         },
+        "security": [],
+        "summary": "POST /api/v1/auth/login",
         "tags": [
           "KitchenFlow.Api"
         ]
@@ -502,12 +539,16 @@
     },
     "/api/v1/auth/logout": {
       "post": {
+        "operationId": "postApiV1AuthLogout",
         "parameters": [
           {
             "description": "Required CSRF token issued by GET /api/v1/session.",
             "in": "header",
             "name": "X-CSRF-TOKEN",
-            "required": true
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -540,6 +581,7 @@
             "kitchenflowSession": []
           }
         ],
+        "summary": "POST /api/v1/auth/logout",
         "tags": [
           "KitchenFlow.Api"
         ]
@@ -547,6 +589,7 @@
     },
     "/api/v1/inventory/lots": {
       "get": {
+        "operationId": "getApiV1InventoryLots",
         "parameters": [
           {
             "in": "query",
@@ -616,23 +659,32 @@
             "kitchenflowSession": []
           }
         ],
+        "summary": "GET /api/v1/inventory/lots",
         "tags": [
           "KitchenFlow.Api"
         ]
       },
       "post": {
+        "operationId": "postApiV1InventoryLots",
         "parameters": [
           {
             "description": "Required CSRF token issued by GET /api/v1/session.",
             "in": "header",
             "name": "X-CSRF-TOKEN",
-            "required": true
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Required UUID key for semantic create or adjustment replay.",
             "in": "header",
             "name": "Idempotency-Key",
-            "required": true
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -648,7 +700,6 @@
                     "printedExpirationDate": "2026-12-31",
                     "productName": "Red lentils",
                     "quantity": {
-                      "availabilityState": null,
                       "measuredValue": 500,
                       "unit": "Gram"
                     },
@@ -675,7 +726,10 @@
             "description": "Created",
             "headers": {
               "ETag": {
-                "description": "Opaque current version required by If-Match on subsequent mutations."
+                "description": "Opaque current version required by If-Match on subsequent mutations.",
+                "schema": {
+                  "type": "string"
+                }
               }
             }
           },
@@ -724,6 +778,7 @@
             "kitchenflowSession": []
           }
         ],
+        "summary": "POST /api/v1/inventory/lots",
         "tags": [
           "KitchenFlow.Api"
         ]
@@ -731,6 +786,7 @@
     },
     "/api/v1/inventory/lots/{lotId}": {
       "delete": {
+        "operationId": "deleteApiV1InventoryLotsLotId",
         "parameters": [
           {
             "in": "path",
@@ -745,13 +801,19 @@
             "description": "Required CSRF token issued by GET /api/v1/session.",
             "in": "header",
             "name": "X-CSRF-TOKEN",
-            "required": true
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Required opaque concurrency ETag from the current lot representation.",
             "in": "header",
             "name": "If-Match",
-            "required": true
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -794,11 +856,13 @@
             "kitchenflowSession": []
           }
         ],
+        "summary": "DELETE /api/v1/inventory/lots/{lotId}",
         "tags": [
           "KitchenFlow.Api"
         ]
       },
       "get": {
+        "operationId": "getApiV1InventoryLotsLotId",
         "parameters": [
           {
             "in": "path",
@@ -822,7 +886,10 @@
             "description": "OK",
             "headers": {
               "ETag": {
-                "description": "Opaque current version required by If-Match on subsequent mutations."
+                "description": "Opaque current version required by If-Match on subsequent mutations.",
+                "schema": {
+                  "type": "string"
+                }
               }
             }
           },
@@ -842,11 +909,13 @@
             "kitchenflowSession": []
           }
         ],
+        "summary": "GET /api/v1/inventory/lots/{lotId}",
         "tags": [
           "KitchenFlow.Api"
         ]
       },
       "patch": {
+        "operationId": "patchApiV1InventoryLotsLotId",
         "parameters": [
           {
             "in": "path",
@@ -861,13 +930,19 @@
             "description": "Required CSRF token issued by GET /api/v1/session.",
             "in": "header",
             "name": "X-CSRF-TOKEN",
-            "required": true
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Required opaque concurrency ETag from the current lot representation.",
             "in": "header",
             "name": "If-Match",
-            "required": true
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -892,7 +967,10 @@
             "description": "OK",
             "headers": {
               "ETag": {
-                "description": "Opaque current version required by If-Match on subsequent mutations."
+                "description": "Opaque current version required by If-Match on subsequent mutations.",
+                "schema": {
+                  "type": "string"
+                }
               }
             }
           },
@@ -942,6 +1020,7 @@
             "kitchenflowSession": []
           }
         ],
+        "summary": "PATCH /api/v1/inventory/lots/{lotId}",
         "tags": [
           "KitchenFlow.Api"
         ]
@@ -949,6 +1028,7 @@
     },
     "/api/v1/inventory/lots/{lotId}/adjustments": {
       "post": {
+        "operationId": "postApiV1InventoryLotsLotIdAdjustments",
         "parameters": [
           {
             "in": "path",
@@ -963,19 +1043,29 @@
             "description": "Required CSRF token issued by GET /api/v1/session.",
             "in": "header",
             "name": "X-CSRF-TOKEN",
-            "required": true
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Required opaque concurrency ETag from the current lot representation.",
             "in": "header",
             "name": "If-Match",
-            "required": true
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "description": "Required UUID key for semantic create or adjustment replay.",
             "in": "header",
             "name": "Idempotency-Key",
-            "required": true
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -1012,7 +1102,10 @@
             "description": "OK",
             "headers": {
               "ETag": {
-                "description": "Opaque current version required by If-Match on subsequent mutations."
+                "description": "Opaque current version required by If-Match on subsequent mutations.",
+                "schema": {
+                  "type": "string"
+                }
               }
             }
           },
@@ -1100,6 +1193,7 @@
             "kitchenflowSession": []
           }
         ],
+        "summary": "POST /api/v1/inventory/lots/{lotId}/adjustments",
         "tags": [
           "KitchenFlow.Api"
         ]
@@ -1107,6 +1201,7 @@
     },
     "/api/v1/inventory/lots/{lotId}/history": {
       "get": {
+        "operationId": "getApiV1InventoryLotsLotIdHistory",
         "parameters": [
           {
             "in": "path",
@@ -1148,6 +1243,7 @@
             "kitchenflowSession": []
           }
         ],
+        "summary": "GET /api/v1/inventory/lots/{lotId}/history",
         "tags": [
           "KitchenFlow.Api"
         ]
@@ -1155,6 +1251,7 @@
     },
     "/api/v1/session": {
       "get": {
+        "operationId": "getApiV1Session",
         "responses": {
           "200": {
             "content": {
@@ -1182,6 +1279,7 @@
             "kitchenflowSession": []
           }
         ],
+        "summary": "GET /api/v1/session",
         "tags": [
           "KitchenFlow.Api"
         ]
@@ -1189,11 +1287,14 @@
     },
     "/health/live": {
       "get": {
+        "operationId": "healthhealthlive",
         "responses": {
           "200": {
             "description": "OK"
           }
         },
+        "security": [],
+        "summary": "KitchenFlow health operation.",
         "tags": [
           "KitchenFlow.Api"
         ]
@@ -1201,11 +1302,14 @@
     },
     "/health/ready": {
       "get": {
+        "operationId": "healthhealthready",
         "responses": {
           "200": {
             "description": "OK"
           }
         },
+        "security": [],
+        "summary": "KitchenFlow health operation.",
         "tags": [
           "KitchenFlow.Api"
         ]
@@ -1215,7 +1319,7 @@
   "servers": [
     {
       "description": "KitchenFlow local HTTPS development endpoint.",
-      "url": "https://localhost:7443/"
+      "url": "https://localhost:7443"
     }
   ],
   "tags": [

@@ -374,20 +374,31 @@ The evidence must identify the final candidate SHA and must not expose credentia
 
 ## Execution state
 
-- **Current checkpoint:** R7 application-owned inventory metrics implemented and tested; the plan now proceeds to the remaining R5/R8/R9 contract, coverage, runbook, and CI gates.
+- **Current checkpoint:** R5 contract truthfulness and R9 CI lint/security gates materially advanced; OpenAPI 3.1 lint now passes with documented non-blocking recommendations.
 - **Run delivery target:** Instrument mutation outcomes with privacy-safe low-cardinality metrics and prove the metric surface cannot carry inventory content.
 - **Delivered outcome:** The Inventory module owns counters for mutation outcomes, validation/domain rejections, optimistic-concurrency failures, and idempotency outcomes. The API registers the meter with OpenTelemetry without adding sensitive labels.
-- **Acceptance criteria resolved:** R1–R4 and R7 are implemented. R5/R6 core runtime and contract discrepancies addressed in the previous checkpoint are implemented and tested, but their full examples/nullability/framework-error matrix remains open. R8–R10 remain open.
-- **Files or areas materially changed:** Inventory metrics; API dependency registration/OpenTelemetry configuration and HTTP adapter recording; telemetry integration tests; this plan; and `docs/plan-status.md`.
+- **Acceptance criteria resolved:** R1–R4 and R7 are implemented. R5 now has a valid 3.1 linted snapshot, truthful quantity modes, typed header schemas, operation identifiers, and corrected runtime declarations; its full response-example matrix remains open. R8–R10 remain open.
+- **Files or areas materially changed:** OpenAPI transformer and snapshot; OpenAPI lint script; backend CI workflow; this plan; and `docs/plan-status.md`.
 - **Documentation delivered:** XML documentation specifies metric names, units, stable label boundaries, and prohibited private content.
-- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; focused telemetry/contract/configuration test suite, 10/10 passing; and `git diff --check`.
-- **Known failures or limitations:** Full-pipeline exporter proof beyond the module meter listener and existing trace redaction processor is still incomplete. No independent OpenAPI 3.1 linter, complete example/nullability matrix, idempotency retention policy, broad R8 coverage, R9 CI/security gates, final Compose/Keycloak smoke, or independent final review yet.
+- **Validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; local OpenAPI export and drift check; `bash scripts/backend/lint-openapi.sh` (valid, 8 non-blocking recommendations); and `git diff --check`.
+- **Known failures or limitations:** Full-pipeline exporter proof beyond the module meter listener and existing trace redaction processor is still incomplete. The linter reports eight recommendations for license/tag metadata and redirect/health response conventions; complete response examples, idempotency retention policy, broad R8 coverage, final Compose/Keycloak smoke, and independent final review remain pending.
 - **Blockers:** None. PR #9 remains draft and must not be marked ready until R5/R8/R9/R10 pass.
 - **Partially modified areas:** The metric is registered for OpenTelemetry export but no production exporter is selected in this first slice; metrics remain useful through any configured collector/exporter.
-- **Exact next action:** Add the OpenAPI 3.1 lint gate and remaining contract examples, then complete the required test/migration/runbook/CI matrix.
+- **Exact next action:** Run and close the remaining R8 test/migration/security matrix and R9 Compose/Keycloak/runbook evidence, then request fresh review.
 - **Working tree state:** R7 changes are ready for this checkpoint commit.
 
 ## Progress log
+
+### 2026-07-30T11:05:00Z — Codex backend remediation agent
+
+- **Run delivery target:** Make OpenAPI linting and security/dependency gates reproducible in CI while correcting contract structural defects discovered by the linter.
+- **Checkpoint:** Added a pinned Redocly OpenAPI 3.1 lint script, Node setup and lint execution in backend CI, fail-on-vulnerability detection, and a dedicated Gitleaks job. Corrected generated headers, operation IDs/summaries/security declarations, ETag schemas, local server URL, and mutually exclusive quantity schemas.
+- **Material files changed:** `.github/workflows/backend.yml`; `scripts/backend/lint-openapi.sh`; `InventoryOpenApiTransformer`; `packages/contracts/openapi/kitchenflow-v1.json`; this plan; and `docs/plan-status.md`.
+- **Commands and validation performed:** `npm view @redocly/cli version`; `bash scripts/backend/lint-openapi.sh`; Release build; local API OpenAPI export; snapshot regeneration; lint rerun; and `git diff --check`.
+- **Result:** The pinned OpenAPI 3.1 lint command passes. It reports eight non-blocking recommended-style warnings, none about invalid OpenAPI structure, headers, operation identifiers, security declarations, or quantity examples.
+- **Known failures or unverified behavior:** CI has not yet executed on this new SHA. R8 and final R9/R10 operational evidence remain open.
+- **Blockers:** None.
+- **Exact next action:** Commit and push this contract/CI checkpoint, then execute the remaining full validation and operational smoke matrix.
 
 ### 2026-07-30T10:55:00Z — Codex backend remediation agent
 
