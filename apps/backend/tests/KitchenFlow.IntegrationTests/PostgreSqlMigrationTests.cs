@@ -67,7 +67,8 @@ public sealed class PostgreSqlMigrationTests : IAsyncLifetime
             "20260729123210_EnforceInventoryReferentialIntegrity",
             "20260729193936_EnforceInventoryHistoryIntegrity",
             "20260731021725_EnforceAppendOnlyHistory",
-            "20260731024742_TightenExpirationProvenance"
+            "20260731024742_TightenExpirationProvenance",
+            "20260731120209_AddInventoryLotConcurrencyToken"
         ];
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseNpgsql(_postgres.GetConnectionString())

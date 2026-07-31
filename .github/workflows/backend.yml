@@ -66,7 +66,9 @@ jobs:
           docker compose -f infrastructure/compose/compose.dev.yml exec -T postgres psql -U kitchenflow_dev -d postgres -c 'CREATE DATABASE kitchenflow_idempotent'
           docker compose -f infrastructure/compose/compose.dev.yml exec -T postgres psql -v ON_ERROR_STOP=1 -U kitchenflow_dev -d kitchenflow_idempotent < artifacts/kitchenflow-migrations.sql
           docker compose -f infrastructure/compose/compose.dev.yml exec -T postgres psql -v ON_ERROR_STOP=1 -U kitchenflow_dev -d kitchenflow_idempotent < artifacts/kitchenflow-migrations.sql
-          test "$(docker compose -f infrastructure/compose/compose.dev.yml exec -T postgres psql -tAc 'SELECT count(*) FROM "__EFMigrationsHistory"' -U kitchenflow_dev -d kitchenflow_idempotent | tr -d '[:space:]')" -eq 6
+          expected_migrations="$(find apps/backend/src/KitchenFlow.Infrastructure/Persistence/Migrations -maxdepth 1 -type f -name '*.cs' ! -name '*Designer.cs' ! -name 'ApplicationDbContextModelSnapshot.cs' | wc -l | tr -d '[:space:]')"
+          actual_migrations="$(docker compose -f infrastructure/compose/compose.dev.yml exec -T postgres psql -tAc 'SELECT count(*) FROM "__EFMigrationsHistory"' -U kitchenflow_dev -d kitchenflow_idempotent | tr -d '[:space:]')"
+          test "$actual_migrations" -eq "$expected_migrations"
       - name: Export and verify OpenAPI drift
         working-directory: .
         env:

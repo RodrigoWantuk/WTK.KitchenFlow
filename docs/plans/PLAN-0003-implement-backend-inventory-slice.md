@@ -8,9 +8,9 @@
 - **Last updated:** 2026-07-31T03:29:19Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, changes required)
-- **Current review head:** `0e9d58540e5919dcf6e808c9fe0b1be73cc4033d`
+- **Current review head:** pending remediation push after concurrency-token migration completion
 - **Current synchronized base:** `b798fed9e940d15f9c828ce34881f58d1cf516a9`
-- **Latest workflow evidence:** Backend run `30601535339` passed for `0e9d58540e5919dcf6e808c9fe0b1be73cc4033d`
+- **Latest workflow evidence:** Backend run `30601535339` passed for superseded candidate `0e9d58540e5919dcf6e808c9fe0b1be73cc4033d`; head `09653161` failed integration tests pending remediation
 - **Related specification:** PLAN-0002
 - **Related validation plan:** PLAN-0005
 - **Related ADRs:** ADR-0002, ADR-0003, ADR-0004, ADR-0006
@@ -337,15 +337,27 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** R2-R9 are complete. Final candidate `0e9d58540e5919dcf6e808c9fe0b1be73cc4033d` is zero behind `main`; complete local R10 and Backend run `30601535339` pass, with SHA-bound retained evidence. PLAN-0005 pins this backend/OpenAPI candidate.
+- **Current checkpoint:** R2-R9 remain complete. Remediation commit adds migration `20260731120209_AddInventoryLotConcurrencyToken`, completes the stateless persistent concurrency-token design started at `09653161`, and restores green local validation before a new R10 candidate is pinned.
 - **Execution status:** In Progress, not Validating.
 - **Confirmed completed phases:** R1, R2, R3, R4, R5, R6, R7, R8, and R9.
 - **Partially completed phase:** R10.
-- **Current blocker:** Fresh independent review of the final candidate is external and remains required.
+- **Current blocker:** Fresh independent review of the new post-remediation candidate is external and remains required.
 - **Contract disposition:** OpenAPI snapshot is provisional and must not be consumed as PLAN-0004's stable live-client contract.
-- **Exact next action:** Commit/push the candidate pin and final evidence, request a fresh independent review against the resulting documentation-only head and runtime candidate `0e9d585`, and keep the PR draft until no critical/high defect remains.
+- **Exact next action:** Push the remediation commit, rerun the complete local and CI matrix, pin the resulting SHA in PLAN-0005, and request fresh independent review while keeping PR #9 draft.
 
 ## Progress log
+
+### 2026-07-31T12:15:00Z — Concurrency-token remediation and migration completion
+
+- **Checkpoint:** Completed the abandoned `09653161` remediation by adding EF migration `20260731120209_AddInventoryLotConcurrencyToken`, aligning the model snapshot, extending upgrade coverage, and replacing the workflow's fragile migration-count constant with a filesystem-derived expected count.
+- **Root cause of received failure:** `ApplicationDbContext` and domain code introduced `ConcurrencyToken` without a matching migration or snapshot update, producing `PendingModelChangesWarning` and 45/80 integration-test failures at head `09653161`.
+- **Change classification for `09653161` versus `0e9d585`:** persistent `Guid ConcurrencyToken`, stateless Base64Url lot-bound ETags, removal of the unbounded in-memory ETag cache, and typed idempotency replay via serialized `InventoryLotView` are correct and retained; missing migration/snapshot/workflow proof was incomplete; no regressions were reverted.
+- **Material files changed:** concurrency-token migration and designer; model snapshot; PostgreSQL migration tests; backend workflow migration-history assertion.
+- **Commands and validation performed:** `dotnet ef migrations add AddInventoryLotConcurrencyToken`; `dotnet format`; Release build; full solution tests 111/111 (unit 20, architecture 11, integration 80); idempotent SQL generation and double application with migration-history count `6`; OpenAPI export/check/lint/drift.
+- **Result:** Build passed with zero warnings/errors; all tests passed with zero skipped; idempotent migration SQL applied twice with six migration-history rows; OpenAPI remained unchanged and warning-free.
+- **Known failures or unverified behavior:** GitHub CI and retained artifact upload for the new candidate SHA remain pending on push. Fresh independent review is still required.
+- **Blocker:** Fresh independent review after the new candidate SHA is green in CI.
+- **Exact next action:** Commit/push remediation, monitor Backend workflow, then pin the green SHA and request independent review.
 
 ### 2026-07-31T03:29:19Z — R10 final candidate and CI evidence established
 
