@@ -3,8 +3,9 @@ import globals from "globals";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import jsxA11y from "eslint-plugin-jsx-a11y";
+import tseslint from "typescript-eslint";
 
-export default [
+export default tseslint.config(
   {
     ignores: [
       "build/**",
@@ -18,6 +19,7 @@ export default [
     ],
   },
   js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
     files: ["src/**/*.{js,jsx,ts,tsx}"],
     languageOptions: {
@@ -47,7 +49,8 @@ export default [
       "react/prop-types": "off",
       "react/no-unescaped-entities": "off",
       "react/no-unknown-property": ["error", { ignore: ["cmdk-input-wrapper"] }],
-      "no-unused-vars": [
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": [
         "warn",
         {
           argsIgnorePattern: "^_",
@@ -55,6 +58,7 @@ export default [
           ignoreRestSiblings: true,
         },
       ],
+      "no-unused-vars": "off",
     },
   },
-];
+);

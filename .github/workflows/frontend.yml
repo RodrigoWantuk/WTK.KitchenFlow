@@ -34,6 +34,8 @@ jobs:
         run: yarn test
       - name: Build
         run: yarn build
+      - name: TypeScript-only source guard
+        run: yarn guard:ts-only
       - name: Production isolation guard
         run: |
           if grep -R "@emergentbase" package.json craco.config.js src --include='*.js' --include='*.jsx' --include='*.ts' --include='*.tsx' --include='*.json'; then

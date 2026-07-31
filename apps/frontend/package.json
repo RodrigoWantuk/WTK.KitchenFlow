@@ -64,9 +64,10 @@
     "start": "craco start",
     "build": "craco build",
     "test": "craco test --watchAll=false",
-    "lint": "eslint \"src/**/*.{js,jsx}\"",
+    "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\"",
     "typecheck": "tsc --noEmit",
-    "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,css,md}\" || true"
+    "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,css,md}\" || true",
+    "guard:ts-only": "node scripts/guard-ts-only.js"
   },
   "browserslist": {
     "production": [
@@ -84,7 +85,13 @@
     "@babel/plugin-proposal-private-property-in-object": "7.21.11",
     "@craco/craco": "7.1.0",
     "@eslint/js": "9.23.0",
+    "@testing-library/jest-dom": "6.6.3",
+    "@testing-library/react": "16.2.0",
+    "@testing-library/user-event": "14.6.1",
+    "@types/jest": "29.5.14",
     "@types/lodash": "4.17.24",
+    "@types/react": "19.0.10",
+    "@types/react-dom": "19.0.4",
     "autoprefixer": "10.4.20",
     "dotenv": "16.4.5",
     "eslint": "9.23.0",
@@ -96,12 +103,7 @@
     "postcss": "8.5.10",
     "tailwindcss": "3.4.17",
     "typescript": "5.8.3",
-    "@types/react": "19.0.10",
-    "@types/react-dom": "19.0.4",
-    "@types/jest": "29.5.14",
-    "@testing-library/react": "16.2.0",
-    "@testing-library/jest-dom": "6.6.3",
-    "@testing-library/user-event": "14.6.1"
+    "typescript-eslint": "8.26.1"
   },
   "resolutions": {
     "react-router": "7.15.1",

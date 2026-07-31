@@ -52,3 +52,15 @@ Presentation components consume projections. They must **not** perform authorita
 ## CI
 
 GitHub Actions workflow: `.github/workflows/frontend.yml` (install, typecheck, lint, test, build, Emergent isolation guard).
+
+## TypeScript migration (PLAN-0014 Phase 8)
+
+Application sources under `src/` must be TypeScript (`.ts`/`.tsx`).
+
+Rules:
+
+1. Prefer rename + annotate over behavior rewrites.
+2. Do not change routes, `data-testid`s, mock scenarios, or UX copy unless typing requires it.
+3. Presentation components must not gain authoritative inventory/reservation arithmetic.
+4. After migration: `allowJs: false`, `yarn guard:ts-only`, `yarn typecheck`, `yarn lint`, `yarn test`, `yarn build`.
+

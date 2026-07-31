@@ -1,11 +1,11 @@
 # PLAN-0014: Integrate Emergent Frontend and Establish Production Frontend Baseline
 
-- **Status:** In Progress
+- **Status:** Validating
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** Cursor agent (PLAN-0014)
 - **Created:** 2026-07-31
-- **Last updated:** 2026-07-31T22:05:41Z
+- **Last updated:** 2026-07-31T22:15:19Z
 - **Branch:** `agent/plan-0014-integrate-emergent-frontend`
 - **Pull request:** [Draft PR #14](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/14)
 - **Related implementation plans:** PLAN-0004 (superseded), PLAN-0005, PLAN-0011
@@ -166,46 +166,46 @@ Stakeholder decision (2026-07-31): complete ADR-0007’s React/TypeScript platfo
 
 #### Phase 8a — Tooling and gates
 
-- [ ] Add TypeScript ESLint parsing (`typescript-eslint`) so `yarn lint` covers `.ts`/`.tsx`.
-- [ ] Keep `strict: true`; temporarily keep `allowJs: true` until 8f.
-- [ ] Add CI/local guard script (or test) that fails if any `src/**/*.{js,jsx}` remain after 8f.
-- [ ] Document migration rules in `apps/frontend/README.md` (rename + types, no behavior change, TSDoc for new exports).
+- [x] Add TypeScript ESLint parsing (`typescript-eslint`) so `yarn lint` covers `.ts`/`.tsx`.
+- [x] Keep `strict: true`; temporarily keep `allowJs: true` until 8f.
+- [x] Add CI/local guard script (or test) that fails if any `src/**/*.{js,jsx}` remain after 8f.
+- [x] Document migration rules in `apps/frontend/README.md` (rename + types, no behavior change, TSDoc for new exports).
 
 #### Phase 8b — Shared libraries and domain fixtures
 
 Convert and type, in dependency order:
 
-- [ ] `lib/utils.js` → `.ts`
-- [ ] `lib/i18n.js` → `.ts` (typed message keys as `string` paths initially; avoid breaking tr() call sites)
-- [ ] `lib/mockData.js` → `.ts` with exported interfaces for pantry items, recipes, plan entries, shopping items, scenarios
-- [ ] `lib/store.js` → `.ts` / `.tsx` as needed; typed context value; remove ambient `react-app-env.d.ts` store shim when obsolete
-- [ ] `hooks/use-toast.js` → `.ts`
-- [ ] `constants/testIds/**` → `.ts`
+- [x] `lib/utils.js` → `.ts`
+- [x] `lib/i18n.js` → `.ts` (typed message keys as `string` paths initially; avoid breaking tr() call sites)
+- [x] `lib/mockData.js` → `.ts` with exported interfaces for pantry items, recipes, plan entries, shopping items, scenarios
+- [x] `lib/store.js` → `.ts` / `.tsx` as needed; typed context value; remove ambient `react-app-env.d.ts` store shim when obsolete
+- [x] `hooks/use-toast.js` → `.ts`
+- [x] `constants/testIds/**` → `.ts`
 
 #### Phase 8c — UI primitives (`components/ui/*`)
 
-- [ ] Convert all shadcn/Radix wrappers (~46 files) `.jsx` → `.tsx` with explicit prop types (or `ComponentPropsWithoutRef` from underlying primitives).
-- [ ] Replace temporary `react-app-env.d.ts` module shims for `@/components/ui/*` as real components become typed.
-- [ ] After each batch: `yarn typecheck` green.
+- [x] Convert all shadcn/Radix wrappers (~46 files) `.jsx` → `.tsx` with explicit prop types (or `ComponentPropsWithoutRef` from underlying primitives).
+- [x] Replace temporary `react-app-env.d.ts` module shims for `@/components/ui/*` as real components become typed.
+- [x] After each batch: `yarn typecheck` green.
 
 #### Phase 8d — App shell and feature components
 
-- [ ] `components/AppShell.jsx`, `ScenarioBar.jsx` → `.tsx`
-- [ ] `components/plan/PlanDialogs.jsx`, `PlanExtras.jsx` → `.tsx` (re-exports already used by TS features)
+- [x] `components/AppShell.jsx`, `ScenarioBar.jsx` → `.tsx`
+- [x] `components/plan/PlanDialogs.jsx`, `PlanExtras.jsx` → `.tsx` (re-exports already used by TS features)
 
 #### Phase 8e — Pages and entrypoints
 
-- [ ] All `pages/*.jsx` → `.tsx` (Landing, Access, Onboarding, Today, Pantry, ItemForm, ItemDetail, Recipes, RecipeDetail, CookFlow, Plan, Shopping, Settings)
-- [ ] `App.js` → `App.tsx`, `index.js` → `index.tsx`
-- [ ] Fix imports/extensions and CRA entry resolution as required
+- [x] All `pages/*.jsx` → `.tsx` (Landing, Access, Onboarding, Today, Pantry, ItemForm, ItemDetail, Recipes, RecipeDetail, CookFlow, Plan, Shopping, Settings)
+- [x] `App.js` → `App.tsx`, `index.js` → `index.tsx`
+- [x] Fix imports/extensions and CRA entry resolution as required
 
 #### Phase 8f — Enforce TypeScript-only application sources
 
-- [ ] Delete remaining application `.js`/`.jsx` under `src/` (none left except if CRA requires a non-src config file outside `src/`).
-- [ ] Set `allowJs: false` in `tsconfig.json`.
-- [ ] Ensure `yarn lint` includes TS/TSX; `yarn typecheck`, `yarn test`, `yarn build` green.
-- [ ] CI isolation/guard confirms zero `src/**/*.{js,jsx}`.
-- [ ] Update frontend README + PLAN-0014 acceptance; keep draft PR #14 (no merge by agent).
+- [x] Delete remaining application `.js`/`.jsx` under `src/` (none left except if CRA requires a non-src config file outside `src/`).
+- [x] Set `allowJs: false` in `tsconfig.json`.
+- [x] Ensure `yarn lint` includes TS/TSX; `yarn typecheck`, `yarn test`, `yarn build` green.
+- [x] CI isolation/guard confirms zero `src/**/*.{js,jsx}`.
+- [x] Update frontend README + PLAN-0014 acceptance; keep draft PR #14 (no merge by agent).
 
 **Migration rules (mandatory):**
 
@@ -240,24 +240,33 @@ Convert and type, in dependency order:
 - [x] Build, lint, typecheck, and tests green (pre–Phase 8 baseline).
 - [x] Assets audited; CI active; docs complete.
 - [x] Draft PR open against `main`; no unrelated changes; no merge.
-- [ ] All application sources under `apps/frontend/src` are TypeScript (`.ts`/`.tsx`); no remaining `.js`/`.jsx` there.
-- [ ] `tsconfig` uses `strict: true` and `allowJs: false` after migration.
-- [ ] ESLint typechecks/lints `.ts`/`.tsx`; CI enforces the no-JS-under-src guard.
-- [ ] Post-migration `yarn typecheck`, `yarn lint`, `yarn test`, and `yarn build` are green without behavior regressions to mock flows.
+- [x] All application sources under `apps/frontend/src` are TypeScript (`.ts`/`.tsx`); no remaining `.js`/`.jsx` there.
+- [x] `tsconfig` uses `strict: true` and `allowJs: false` after migration.
+- [x] ESLint typechecks/lints `.ts`/`.tsx`; CI enforces the no-JS-under-src guard.
+- [x] Post-migration `yarn typecheck`, `yarn lint`, `yarn test`, and `yarn build` are green without behavior regressions to mock flows.
 
 ## Execution state
 
-- **Current checkpoint:** Phases 0–7 done; draft PR #14 open. Phase 8 (full JS→TS migration) added to PLAN-0014 by stakeholder request and is **not started**.
-- **Last completed step:** Plan expansion documenting Phase 8a–8f inventory, rules, and acceptance criteria.
-- **Exact next action:** Execute Phase 8a (TypeScript ESLint + README migration rules + CI guard scaffolding), then 8b (`lib/*`, store, hooks, constants).
+- **Current checkpoint:** Phase 8 complete — `apps/frontend/src` is TypeScript-only (`allowJs: false`); draft PR #14 updated, not merged.
+- **Last completed step:** Phase 8a–8f migration validated locally (guard, typecheck, lint 0 errors, 10 tests, build).
+- **Exact next action:** Owner review of draft PR #14 after CI green; merge only with owner approval.
 - **Blockers:** None.
-- **Partially modified areas:** None for Phase 8 yet; ~73 JS/JSX files remain under `src/`.
-- **Validation performed:** Inventory of remaining JS/JSX listed in Phase 8; prior baseline still green on branch.
-- **Known failures or limitations:** Until 8f, hybrid JS+TS with `allowJs: true` remains; ESLint currently scopes primarily to JS/JSX.
-- **Working tree state:** Plan/registry updates for Phase 8 pending commit.
-- **Substantial run target:** Complete Phase 8 through green TS-only `src/` and updated draft PR #14 (no merge).
+- **Partially modified areas:** Some mock/page props still use narrow `any` for heterogeneous fixtures; refine in later cleanup if desired.
+- **Validation performed:** `yarn guard:ts-only`; `yarn typecheck`; `yarn lint` (0 errors); `yarn test` (10); `yarn build`; 0 `.js`/`.jsx` under `src/` (~90 `.ts`/`.tsx`).
+- **Known failures or limitations:** Live OpenAPI adapters still placeholders; mock Unsplash imagery still prototype-only per asset audit.
+- **Working tree state:** Phase 8 code + plan/registry updates ready to commit/push to PR #14.
+- **Substantial run target:** Achieved for Phase 8; PLAN-0014 awaiting owner merge.
 
 ## Progress log
+
+### 2026-07-31T22:15:19Z — Cursor agent
+
+- **Checkpoint:** Phase 8 full JS→TS migration complete under PLAN-0014.
+- **Changes included in the commit:** All `src` application JS/JSX → TS/TSX; typescript-eslint; `allowJs: false`; `scripts/guard-ts-only.js`; CI guard step; README; plan/registry.
+- **Validation performed:** `yarn guard:ts-only`; `yarn typecheck`; `yarn lint` (0 errors / warnings only); `yarn test` (10); `yarn build`.
+- **Result:** ADR-0007 TypeScript platform decision satisfied for application sources; draft PR #14 remains unmerged.
+- **Next action:** Owner CI review and merge decision for PR #14.
+- **Blockers or handoff notes:** Do not merge without owner approval.
 
 ### 2026-07-31T22:05:41Z — Cursor agent
 
@@ -315,7 +324,7 @@ Convert and type, in dependency order:
 
 ## Completion and handoff checklist
 
-- [ ] All acceptance criteria truthful (including Phase 8).
+- [x] All acceptance criteria truthful (including Phase 8).
 - [x] Provenance documented with exact commit.
 - [x] Draft PR linked from plan and registry.
 - [x] `docs/plan-status.md` matches this plan.
