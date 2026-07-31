@@ -63,7 +63,10 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
-    "test": "craco test"
+    "test": "craco test --watchAll=false",
+    "lint": "eslint \"src/**/*.{js,jsx}\"",
+    "typecheck": "tsc --noEmit",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,css,md}\" || true"
   },
   "browserslist": {
     "production": [
@@ -80,7 +83,6 @@
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "7.21.11",
     "@craco/craco": "7.1.0",
-    "@emergentbase/visual-edits": "https://assets.emergent.sh/npm/emergentbase-visual-edits-1.0.13.tgz",
     "@eslint/js": "9.23.0",
     "@types/lodash": "4.17.24",
     "autoprefixer": "10.4.20",
@@ -92,7 +94,14 @@
     "eslint-plugin-react-hooks": "5.2.0",
     "globals": "15.15.0",
     "postcss": "8.5.10",
-    "tailwindcss": "3.4.17"
+    "tailwindcss": "3.4.17",
+    "typescript": "5.8.3",
+    "@types/react": "19.0.10",
+    "@types/react-dom": "19.0.4",
+    "@types/jest": "29.5.14",
+    "@testing-library/react": "16.2.0",
+    "@testing-library/jest-dom": "6.6.3",
+    "@testing-library/user-event": "14.6.1"
   },
   "resolutions": {
     "react-router": "7.15.1",

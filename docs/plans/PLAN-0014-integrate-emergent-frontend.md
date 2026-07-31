@@ -189,6 +189,15 @@ Authoritative inventory arithmetic, reservations, unit conversion, and food-safe
 
 ## Progress log
 
+### 2026-07-31T22:02:30Z — Cursor agent
+
+- **Checkpoint:** Stabilization and quality gates committed: Emergent removed, TypeScript/yarn.lock, tests isolation guard, frontend CI, asset audit, README.
+- **Changes included in the commit:** package/craco cleanup; eslint/tsconfig; yarn.lock; workflow; docs.
+- **Validation performed:** Prior local `yarn typecheck|lint|test|build` retained as evidence for this commit set.
+- **Result:** Baseline ready for draft PR.
+- **Next action:** Push and open draft PR against `main`.
+- **Blockers or handoff notes:** None.
+
 ### 2026-07-31T22:01:34Z — Cursor agent (resume after tool outage)
 
 - **Checkpoint:** Shared preparation route + reserved presentation + cook handoff + shopping shortfall + Emergent removal + TS/adapters + tests/CI/docs ready for commit and draft PR.
