@@ -236,9 +236,9 @@ Authoritative inventory arithmetic, reservations, unit conversion, and food-safe
 
 ## Completion and handoff checklist
 
-- [ ] All acceptance criteria truthful.
-- [ ] Provenance documented with exact commit.
-- [ ] Draft PR linked from plan and registry.
-- [ ] `docs/plan-status.md` matches this plan.
-- [ ] No merge performed by this plan.
-- [ ] Exact continuation recorded for any unfinished work.
+- [x] All acceptance criteria truthful.
+- [x] Provenance documented with exact commit.
+- [x] Draft PR linked from plan and registry.
+- [x] `docs/plan-status.md` matches this plan.
+- [x] No merge performed by this plan.
+- [x] Exact continuation recorded for any unfinished work.
