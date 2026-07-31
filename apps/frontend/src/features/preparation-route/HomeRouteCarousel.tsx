@@ -1,16 +1,12 @@
 import type { KeyboardEvent, ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  AlertTriangle,
-  Check,
-  ChefHat,
-  Clock,
-  Play,
-  X,
-} from "lucide-react";
+import { AlertTriangle, Check, ChefHat, Clock, Play, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePreparationRoute } from "./PreparationRouteProvider";
-import type { PreparationRouteTaskView, PreparationTaskState } from "@/contracts/preparation";
+import type {
+  PreparationRouteTaskView,
+  PreparationTaskState,
+} from "@/contracts/preparation";
 
 const ROUTE_STATE: Record<
   PreparationTaskState,
@@ -19,7 +15,10 @@ const ROUTE_STATE: Record<
   next: { icon: Clock, cls: "border-border bg-card" },
   canStart: { icon: Play, cls: "border-primary/40 bg-primary/5" },
   inProgress: { icon: Play, cls: "border-accent/50 bg-accent/10" },
-  overdue: { icon: AlertTriangle, cls: "border-destructive/50 bg-destructive/10" },
+  overdue: {
+    icon: AlertTriangle,
+    cls: "border-destructive/50 bg-destructive/10",
+  },
   done: { icon: Check, cls: "border-primary bg-primary/15" },
   blocked: { icon: X, cls: "border-warning/40 bg-warning/10" },
 };
@@ -138,9 +137,7 @@ export function HomeRouteCarousel({
               onDone={() => markDone(task.id)}
               onStart={() => startNow(task.id)}
               cookTarget={
-                showInlineCook &&
-                cookTarget &&
-                task.id === lastRequiredId
+                showInlineCook && cookTarget && task.id === lastRequiredId
                   ? cookTarget
                   : null
               }
@@ -170,7 +167,8 @@ function HomeRouteCard({
   cookTarget: { targetRecipeId: string; forTitle: string } | null;
   onCook?: () => void;
 }) {
-  const isFocus = task.isHighlighted && task.state !== "blocked" && task.state !== "done";
+  const isFocus =
+    task.isHighlighted && task.state !== "blocked" && task.state !== "done";
   const meta = ROUTE_STATE[task.state] || ROUTE_STATE.next;
   const Icon = meta.icon;
   const cardCls =
@@ -212,7 +210,9 @@ function HomeRouteCard({
       </div>
       <p
         className={`mt-2 line-clamp-2 text-sm ${
-          task.state === "done" ? "line-through text-muted-foreground" : "font-medium"
+          task.state === "done"
+            ? "line-through text-muted-foreground"
+            : "font-medium"
         }`}
       >
         {task.task}
@@ -222,7 +222,11 @@ function HomeRouteCard({
       </p>
       {isFocus ? (
         <div className="mt-2.5 flex flex-wrap gap-1.5">
-          <Button size="sm" data-testid={`home-route-start-${task.id}`} onClick={onStart}>
+          <Button
+            size="sm"
+            data-testid={`home-route-start-${task.id}`}
+            onClick={onStart}
+          >
             {tr("plan.route.startNow")}
           </Button>
           <Button

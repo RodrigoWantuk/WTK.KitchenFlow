@@ -52,7 +52,9 @@ function resolveTaskState(
   return task.baselineState === "next" ? "next" : "canStart";
 }
 
-function pickHighlightedTaskId(tasks: PreparationRouteTaskView[]): string | null {
+function pickHighlightedTaskId(
+  tasks: PreparationRouteTaskView[],
+): string | null {
   const overdue = tasks.find((t) => t.state === "overdue");
   if (overdue) return overdue.id;
   const actionable = tasks.find(

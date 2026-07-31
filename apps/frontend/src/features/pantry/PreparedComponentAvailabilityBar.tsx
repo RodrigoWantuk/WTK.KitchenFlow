@@ -52,7 +52,9 @@ export function PreparedComponentAvailabilityBar({
           {availability.reservations.length > 1 ? (
             <span
               title={availability.reservations
-                .map((r) => `${r.title} (${formatQuantity(r.reservedQuantity)})`)
+                .map(
+                  (r) => `${r.title} (${formatQuantity(r.reservedQuantity)})`,
+                )
                 .join(" + ")}
             >
               {" "}
@@ -60,15 +62,15 @@ export function PreparedComponentAvailabilityBar({
             </span>
           ) : null}
         </span>
-        {availability.status === "shortfall" && availability.shortfallQuantity ? (
+        {availability.status === "shortfall" &&
+        availability.shortfallQuantity ? (
           <button
             type="button"
             data-testid={`pantry-reserved-debt-${availability.inventoryItemId}`}
             className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-1.5 py-0.5 text-[10px] font-medium text-destructive"
             onClick={onReviewShortfall}
           >
-            <ShoppingBag className="h-3 w-3" />{" "}
-            {tr("pantry.reserved.debt")}{" "}
+            <ShoppingBag className="h-3 w-3" /> {tr("pantry.reserved.debt")}{" "}
             {formatQuantity(availability.shortfallQuantity)}
           </button>
         ) : availability.status === "fullyReserved" ? (

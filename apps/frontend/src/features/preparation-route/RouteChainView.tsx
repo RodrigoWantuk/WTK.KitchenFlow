@@ -27,7 +27,10 @@ const CHAIN_STATE: Record<
   next: { icon: Timer, cls: "border-border bg-card" },
   canStart: { icon: ArrowRight, cls: "border-primary/50 bg-primary/5" },
   inProgress: { icon: ArrowRight, cls: "border-accent/50 bg-accent/10" },
-  overdue: { icon: AlertTriangle, cls: "border-destructive/50 bg-destructive/10" },
+  overdue: {
+    icon: AlertTriangle,
+    cls: "border-destructive/50 bg-destructive/10",
+  },
   done: { icon: Check, cls: "border-primary bg-primary/15" },
   blocked: { icon: AlertTriangle, cls: "border-warning/40 bg-warning/10" },
 };

@@ -1,11 +1,21 @@
 // craco.config.js
 const path = require("path");
+const webpack = require("webpack");
 require("dotenv").config();
 
 // Environment variable overrides
 const config = {
   enableHealthCheck: process.env.ENABLE_HEALTH_CHECK === "true",
 };
+
+const frontendMode = (process.env.REACT_APP_FRONTEND_MODE || "prototype")
+  .trim()
+  .toLowerCase();
+if (!["prototype", "production", "test"].includes(frontendMode)) {
+  throw new Error(
+    `Invalid REACT_APP_FRONTEND_MODE="${process.env.REACT_APP_FRONTEND_MODE}". Expected prototype|production|test.`,
+  );
+}
 
 function makeDevServerV5Compatible(devServerConfig) {
   const {
@@ -75,6 +85,20 @@ let webpackConfig = {
       },
     },
   },
+  jest: {
+    configure: (jestConfig) => {
+      jestConfig.moduleNameMapper = {
+        ...jestConfig.moduleNameMapper,
+        "^@/(.*)$": "<rootDir>/src/$1",
+        "^react-router-dom$": "<rootDir>/node_modules/react-router-dom/dist/index.js",
+        "^react-router$": "<rootDir>/node_modules/react-router/dist/development/index.js",
+      };
+      jestConfig.transformIgnorePatterns = [
+        "[/\\\\]node_modules[/\\\\](?!(react-router|react-router-dom|@remix-run)[/\\\\]).+",
+      ];
+      return jestConfig;
+    },
+  },
   webpack: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
@@ -93,6 +117,22 @@ let webpackConfig = {
             '**/public/**',
         ],
       };
+
+      if (frontendMode === "production") {
+        webpackConfig.plugins.push(
+          new webpack.NormalModuleReplacementPlugin(
+            /[\\/]components[\\/]ScenarioBar([\\/]index)?$/,
+            path.resolve(__dirname, "src/components/runtime/ScenarioBar.production.tsx"),
+          ),
+          new webpack.NormalModuleReplacementPlugin(
+            /[\\/]app[\\/]runtime[\\/]createPrototypeRuntime$/,
+            path.resolve(
+              __dirname,
+              "src/app/runtime/createPrototypeRuntime.production.ts",
+            ),
+          ),
+        );
+      }
 
       // Add health check plugin to webpack if enabled
       if (config.enableHealthCheck && healthPluginInstance) {

@@ -4,16 +4,17 @@ import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatQuantity } from "@/contracts/quantity";
 import type { ShoppingRequirementProjection } from "@/contracts/preparation";
-import {
-  MOCK_SHOPPING_REQUIREMENTS,
-  selectShoppingShortfalls,
-} from "@/adapters/mock/shoppingRequirementFixtures";
+import { selectShoppingShortfalls } from "@/adapters/mock/shoppingRequirementFixtures";
+import { FeatureUnavailable } from "@/components/runtime/FeatureUnavailable";
 
 export interface ShoppingRequirementReviewProps {
   tr: (key: string) => string;
-  projections?: ShoppingRequirementProjection[];
+  /** Required projections from the composition root — no silent mock default. */
+  projections: ShoppingRequirementProjection[];
   /** Called with shortfall-only rows the user selected to send. */
   onSendShortfalls?: (items: ShoppingRequirementProjection[]) => void;
+  /** When true and projections are empty, show controlled unavailable UI. */
+  showUnavailableWhenEmpty?: boolean;
 }
 
 /**
@@ -22,8 +23,9 @@ export interface ShoppingRequirementReviewProps {
  */
 export function ShoppingRequirementReview({
   tr,
-  projections = MOCK_SHOPPING_REQUIREMENTS,
+  projections,
   onSendShortfalls,
+  showUnavailableWhenEmpty = false,
 }: ShoppingRequirementReviewProps): ReactElement {
   const shortfalls = useMemo(
     () => selectShoppingShortfalls(projections),
@@ -32,6 +34,16 @@ export function ShoppingRequirementReview({
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(shortfalls.map((s) => s.requirementId)),
   );
+
+  if (showUnavailableWhenEmpty && projections.length === 0) {
+    return (
+      <FeatureUnavailable
+        feature="shopping-requirements"
+        title="Feature unavailable"
+        detail="Live shopping shortfall projections are not wired in this build."
+      />
+    );
+  }
 
   const toggle = (id: string, enabled: boolean) => {
     setSelected((prev) => {
