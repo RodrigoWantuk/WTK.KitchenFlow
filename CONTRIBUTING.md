@@ -119,6 +119,16 @@ A pull request includes:
 - automated and manual validation;
 - failures, skipped checks, limitations, and exact handoff.
 
+### Agent authority limits (mandatory)
+
+- Agents **may** create branches, commits, and **draft** pull requests.
+- Agents **must not** approve pull requests (including their own).
+- Agents **must not** enable auto-merge.
+- Agents **must not** merge pull requests.
+- **Only the repository owner** (or an explicitly designated human maintainer) may authorize and perform merge.
+- Green CI is **not** merge authorization.
+- An agent must **never** record owner approval without contemporaneous, explicit owner evidence for that specific merge.
+
 ## Quality requirements
 
 Before review:

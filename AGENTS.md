@@ -221,6 +221,17 @@ Comments must explain **why**, constraints, or consequences. Do not narrate obvi
 - Do not merge failing checks.
 - Keep commits cohesive and reviewable even when the overall execution run is substantial.
 
+### Agent authority limits for pull requests (mandatory)
+
+- Agents **may** create branches, commits, and **draft** pull requests.
+- Agents **must not** approve pull requests (including their own).
+- Agents **must not** enable auto-merge.
+- Agents **must not** merge pull requests into protected branches.
+- **Only the repository owner** (or an explicitly designated human maintainer) may authorize and perform merge.
+- A green CI result is **not** merge authorization.
+- An agent must **never** record owner approval or “owner-authorized merge” without contemporaneous, explicit owner evidence in the repository or an owner instruction that clearly authorizes that specific merge.
+- If an agent previously recorded false owner authorization, correct the durable record in a remediation plan and do not repeat the claim.
+
 ## 12. Definition of done
 
 A change is complete only when:
