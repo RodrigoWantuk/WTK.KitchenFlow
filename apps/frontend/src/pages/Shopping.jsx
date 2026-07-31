@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useStore } from "@/lib/store";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,11 +9,15 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
+import { ShoppingRequirementReview } from "@/features/shopping/ShoppingRequirementReview";
 
 const AISLES = ["produce","fridge","meat","bakery","grocery","cleaning","other"];
 
 export default function Shopping() {
   const { tr, shopping, toggleShopping, removeShopping, addShopping, finishShopping } = useStore();
+  const [searchParams] = useSearchParams();
+  const showRequirementReview =
+    searchParams.get("review") === "shortfall" || searchParams.get("review") === "1";
   const [addOpen, setAddOpen] = useState(false);
   const [newItem, setNewItem] = useState({ name: "", qty: "", unit: "un", aisle: "grocery" });
   const [finishOpen, setFinish] = useState(false);
@@ -48,6 +53,24 @@ export default function Shopping() {
         </div>
       </div>
       <Progress value={pct} className="h-2" />
+
+      {showRequirementReview && (
+        <ShoppingRequirementReview
+          tr={tr}
+          onSendShortfalls={(items) => {
+            items.forEach((item) => {
+              addShopping({
+                name: item.displayName,
+                qty: item.shortfallQuantity.value,
+                unit: item.shortfallQuantity.unit,
+                aisle: "grocery",
+                origin: "plan",
+              });
+            });
+            toast.success(`${items.length} ${tr("shoppingReconcile.moved")}`);
+          }}
+        />
+      )}
 
       {shopping.length === 0 ? (
         <Card className="p-10 text-center text-muted-foreground">{tr("shopping.empty")}</Card>

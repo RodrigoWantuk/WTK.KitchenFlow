@@ -3,10 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { AlertTriangle, Check, ArrowRight, Snowflake, ShoppingBag, ChefHat, Sparkles, Package, Timer, Info } from "lucide-react";
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { MOCK_REALITY_OPTIONS, MOCK_REALITY_IMPACT, MOCK_SCHEDULE_PROPOSAL, MOCK_SIMULATION, MOCK_TROUBLE, MOCK_TROUBLE_SAVE, MOCK_COMPONENT_RECIPE_DEP, MOCK_RECONCILIATION, MOCK_ROUTE_CHAIN, MOCK_ROUTE_GROUPS } from "@/lib/mockData";
+import { AlertTriangle, Check, ArrowRight, Snowflake, ShoppingBag, ChefHat, Sparkles, Package, Info } from "lucide-react";
+import { useState } from "react";
+import { MOCK_REALITY_OPTIONS, MOCK_REALITY_IMPACT, MOCK_SCHEDULE_PROPOSAL, MOCK_SIMULATION, MOCK_TROUBLE, MOCK_TROUBLE_SAVE, MOCK_COMPONENT_RECIPE_DEP, MOCK_RECONCILIATION } from "@/lib/mockData";
+
+/** Shared preparation-route chain — single repository with Home. */
+export { RouteChainView } from "@/features/preparation-route/RouteChainView";
 
 /* ---------- Reality Changed Dialog ---------- */
 export function RealityChangedDialog({ open, onOpenChange, onApply }) {
@@ -285,148 +287,3 @@ export function TroubleContent({ onFinishOffer }) {
   );
 }
 
-/* ---------- Route with Dependencies (visual chain) ---------- */
-const CHAIN_STATE = {
-  next:     { icon: Timer,          cls: "border-border bg-card" },
-  canStart: { icon: ArrowRight,     cls: "border-primary/50 bg-primary/5" },
-  overdue:  { icon: AlertTriangle,  cls: "border-destructive/50 bg-destructive/10" },
-  done:     { icon: Check,          cls: "border-primary bg-primary/15" },
-  blocked:  { icon: AlertTriangle,  cls: "border-warning/40 bg-warning/10" },
-};
-
-export function RouteChainView({ chain = MOCK_ROUTE_CHAIN, groups = MOCK_ROUTE_GROUPS, onCookRecipe }) {
-  const navigate = useNavigate();
-  // Local `done` set — seeded from chain items whose baseline state is "done".
-  const [done, setDone] = useState(() => new Set(chain.filter(c => c.state === "done").map(c => c.id)));
-  // Track which "targetRecipeId" completions the user has already dismissed so the CTA is not permanent.
-  const [dismissed, setDismissed] = useState(new Set());
-
-  const isDone = (id) => done.has(id);
-  const isUnlocked = (item) => !item.dependsOn || done.has(item.dependsOn);
-  const effectiveState = (item) => {
-    if (isDone(item.id)) return "done";
-    if (item.state === "overdue") return "overdue";
-    if (!isUnlocked(item)) return "blocked";
-    if (item.state === "canStart" || (isUnlocked(item) && item.state !== "next")) return "canStart";
-    return item.state || "next";
-  };
-
-  const toggleDone = (item) => {
-    if (!isUnlocked(item)) return;
-    setDone(s => {
-      const n = new Set(s);
-      if (n.has(item.id)) n.delete(item.id);
-      else n.add(item.id);
-      return n;
-    });
-  };
-
-  // Chains ready to cook: every step for a targetRecipeId is done.
-  const readyTargets = useMemo(() => {
-    const bucket = new Map();
-    chain.forEach(c => {
-      if (!c.targetRecipeId) return;
-      const list = bucket.get(c.targetRecipeId) || [];
-      list.push(c);
-      bucket.set(c.targetRecipeId, list);
-    });
-    const out = [];
-    bucket.forEach((list, targetId) => {
-      const allDone = list.every(c => done.has(c.id));
-      if (allDone && !dismissed.has(targetId)) {
-        out.push({ targetRecipeId: targetId, forTitle: list[0].forTitle });
-      }
-    });
-    return out;
-  }, [chain, done, dismissed]);
-
-  const startCook = (target) => {
-    if (onCookRecipe) onCookRecipe(target);
-    else navigate(`/app/cozinhar/${target.targetRecipeId}`);
-  };
-
-  const byGroup = groups.map(g => ({ ...g, items: chain.filter(c => c.groupKey === g.key) }));
-
-  return (
-    <div data-testid="route-chain" className="space-y-4">
-      {readyTargets.length > 0 && (
-        <div data-testid="route-chain-ready" className="space-y-2">
-          {readyTargets.map(t => (
-            <Card
-              key={t.targetRecipeId}
-              data-testid={`chain-cook-ready-${t.targetRecipeId}`}
-              className="flex flex-wrap items-center justify-between gap-3 border-primary/50 bg-primary/10 p-3"
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/25 text-primary">
-                  <ChefHat className="h-5 w-5" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-wider text-primary">Trilha concluída</p>
-                  <p className="truncate font-display text-base">{t.forTitle} — pronto para cozinhar</p>
-                  <p className="text-[11px] text-muted-foreground">Todas as etapas de preparação estão prontas.</p>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  data-testid={`chain-cook-dismiss-${t.targetRecipeId}`}
-                  onClick={() => setDismissed(s => new Set(s).add(t.targetRecipeId))}
-                  className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
-                >
-                  Depois
-                </button>
-                <Button size="sm" data-testid={`chain-cook-start-${t.targetRecipeId}`} onClick={() => startCook(t)}>
-                  <ChefHat className="mr-1 h-4 w-4" /> Cozinhar agora
-                </Button>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {byGroup.map(g => (
-        g.items.length > 0 && (
-          <div key={g.key} data-testid={`chain-group-${g.key}`}>
-            <p className="mb-2 font-display text-sm">{g.label}</p>
-            <ol className="ml-3 border-l-2 border-dashed border-border pl-5 space-y-2">
-              {g.items.map((it) => {
-                const state = effectiveState(it);
-                const meta = CHAIN_STATE[state] || CHAIN_STATE.next;
-                const Icon = meta.icon;
-                const canToggle = isUnlocked(it);
-                const marked = isDone(it.id);
-                return (
-                  <li key={it.id} data-testid={`chain-item-${it.id}`} data-state={state} className="relative">
-                    <span className={`absolute -left-[26px] top-3 grid h-5 w-5 place-items-center rounded-full ${meta.cls} border`}>
-                      <Icon className="h-3 w-3" />
-                    </span>
-                    <div className={`rounded-2xl border p-3 ${meta.cls}`}>
-                      <div className="flex flex-wrap items-baseline justify-between gap-2">
-                        <div className="flex items-baseline gap-2">
-                          <span className="font-display text-sm tabular-nums">{it.time}</span>
-                          <span className="pill bg-background/60 text-[10px]">{state === "canStart" ? "Pode começar" : state === "overdue" ? "Atrasada" : state === "done" ? "Concluída" : state === "blocked" ? "Bloqueada" : "Próxima"}</span>
-                        </div>
-                        <button
-                          data-testid={`chain-toggle-${it.id}`}
-                          disabled={!canToggle && !marked}
-                          onClick={() => toggleDone(it)}
-                          className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] transition-colors ${marked ? "border-primary bg-primary text-primary-foreground" : canToggle ? "border-primary/40 text-primary hover:bg-primary/10" : "border-border text-muted-foreground opacity-60"}`}
-                        >
-                          <Check className="h-3 w-3" /> {marked ? "Concluída" : "Marcar pronta"}
-                        </button>
-                      </div>
-                      <p className={`mt-1 text-sm ${marked ? "line-through text-muted-foreground" : "font-medium"}`}>{it.task}</p>
-                      <p className="text-[11px] text-muted-foreground">Para: {it.forTitle}</p>
-                      {it.produces && <p className="mt-1 text-[11px] text-primary"><Package className="mr-1 inline h-3 w-3" />Produz: {it.produces}</p>}
-                      <p className="mt-1 text-[11px] text-muted-foreground">Ativo: {it.activeMin}m{it.passiveMin ? ` · Passivo: ${it.passiveMin}m` : ""}</p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
-          </div>
-        )
-      ))}
-    </div>
-  );
-}

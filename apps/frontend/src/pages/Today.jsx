@@ -3,10 +3,11 @@ import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Clock, Sparkles, ChefHat, Info, Play, Pause, ShoppingBag, ArrowRight, HelpCircle, Check, X, AlertTriangle, Flame, Timer } from "lucide-react";
-import { PREP_AHEAD_BY_RECIPE, MOCK_PANTRY_UNCERTAINTY_QUESTION, MOCK_ROUTE_CHAIN } from "@/lib/mockData";
+import { Clock, Sparkles, ChefHat, Info, Play, Pause, ShoppingBag, ArrowRight, HelpCircle, Check, X, AlertTriangle } from "lucide-react";
+import { PREP_AHEAD_BY_RECIPE, MOCK_PANTRY_UNCERTAINTY_QUESTION } from "@/lib/mockData";
 import { toast } from "sonner";
 import { RealityChangedDialog } from "@/components/plan/PlanExtras";
+import { HomeRouteCarousel } from "@/features/preparation-route/HomeRouteCarousel";
 
 function whyLabel(r) {
   if (r.missing.length === 0) return "Você já tem todos os ingredientes";
@@ -36,122 +37,6 @@ function SuggestionCard({ r, tr }) {
         </div>
       </div>
     </Card>
-  );
-}
-
-const ROUTE_STATE = {
-  next:     { icon: Clock,          cls: "border-border bg-card" },
-  canStart: { icon: Play,           cls: "border-primary/40 bg-primary/5" },
-  overdue:  { icon: AlertTriangle,  cls: "border-destructive/50 bg-destructive/10" },
-  done:     { icon: Check,          cls: "border-primary bg-primary/15" },
-  blocked:  { icon: X,              cls: "border-warning/40 bg-warning/10" },
-};
-
-function todayTaskState(scenario, index, done) {
-  if (done) return "done";
-  if (scenario === "routeOverdue" && index === 0) return "overdue";
-  if (scenario === "routePartial") {
-    if (index === 0) return "done";
-    if (index === 1) return "canStart";
-    if (index === 2) return "blocked";
-    return "next";
-  }
-  return index === 0 ? "canStart" : "next";
-}
-
-/* Compact horizontal carousel for the prep route on Home. */
-function HomeRouteBlock({ todayTasks, chainItems, scenario, tr }) {
-  const [done, setDone] = useState(new Set());
-  const nav = useNavigate();
-
-  // Prefer the dependency chain when the scenario exposes one; otherwise fall back to today's prep tasks.
-  const useChain = chainItems && chainItems.length > 0;
-  const rawItems = useChain ? chainItems : todayTasks.slice(0, 5);
-  if (!rawItems.length) return null;
-
-  // Normalise into a common shape and derive states.
-  const items = rawItems.map((it, i) => {
-    if (useChain) {
-      const k = it.id;
-      const isDone = done.has(k) || it.state === "done";
-      return { k, time: it.time, task: it.task, forLabel: it.forTitle, isDone, baseState: it.state, meal: null };
-    }
-    const k = `${it.planId}_${i}`;
-    const isDone = done.has(k);
-    const baseState = todayTaskState(scenario, i, isDone);
-    return { k, time: it.time, task: it.task, forLabel: `${it.recipeTitle} · ${tr(`plan.${it.meal}`)}`, isDone, baseState, meal: it.meal };
-  });
-
-  // Focus the first actionable card (canStart or overdue, or first non-done).
-  const focusIdx = (() => {
-    const idx = items.findIndex(i => !i.isDone && (i.baseState === "canStart" || i.baseState === "overdue"));
-    if (idx >= 0) return idx;
-    const first = items.findIndex(i => !i.isDone);
-    return first >= 0 ? first : 0;
-  })();
-
-  return (
-    <section data-testid="home-route-block">
-      <div className="mb-3 flex items-baseline justify-between">
-        <h2 className="font-display text-2xl">{tr("plan.route.homeTitle")}</h2>
-        <button data-testid="home-route-open" onClick={() => nav("/app/planejamento")} className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">
-          {tr("plan.route.openFull")}
-        </button>
-      </div>
-      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0" data-testid="home-route-carousel">
-        <ol className="flex snap-x snap-mandatory gap-3 pb-1">
-          {items.map((it, i) => {
-            const isFocus = i === focusIdx && !it.isDone;
-            const state = it.baseState || "next";
-            const meta = ROUTE_STATE[state] || ROUTE_STATE.next;
-            const Icon = meta.icon;
-            const cardCls = it.isDone
-              ? "border-primary/40 bg-primary/5 opacity-80"
-              : isFocus
-                ? "border-primary bg-primary/8 shadow-sm ring-1 ring-primary/25"
-                : `${meta.cls} opacity-95`;
-            return (
-              <li
-                key={it.k}
-                data-testid={`home-route-card-${it.k}`}
-                data-focus={isFocus ? "true" : "false"}
-                data-state={state}
-                className={`min-w-[220px] max-w-[260px] shrink-0 snap-start rounded-2xl border p-3 transition-shadow ${cardCls}`}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="grid h-7 w-7 place-items-center rounded-xl bg-background/70"><Icon className="h-3.5 w-3.5" /></span>
-                  {it.time && <span className="font-display text-sm tabular-nums">{it.time}</span>}
-                  {isFocus && <span className="pill bg-primary/25 text-[10px] font-medium">{tr("plan.route.nextTag")}</span>}
-                  {!isFocus && !it.isDone && <span className="pill bg-background/70 text-[10px]">{tr(`plan.route.states.${state}`)}</span>}
-                  {it.isDone && <span className="pill bg-primary/20 text-[10px]">{tr("plan.route.states.done")}</span>}
-                </div>
-                <p className={`mt-2 line-clamp-2 text-sm ${it.isDone ? "line-through text-muted-foreground" : "font-medium"}`}>{it.task}</p>
-                <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">{tr("plan.route.for")}: {it.forLabel}</p>
-                {isFocus && (
-                  <div className="mt-2.5 flex gap-1.5">
-                    <Button
-                      size="sm"
-                      data-testid={`home-route-start-${it.k}`}
-                      onClick={() => toast("Preparo iniciado")}
-                    >
-                      {tr("plan.route.startNow")}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      data-testid={`home-route-done-${it.k}`}
-                      onClick={() => setDone(s => new Set(s).add(it.k))}
-                    >
-                      <Check className="mr-1 h-3.5 w-3.5" /> {tr("plan.route.markDone")}
-                    </Button>
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ol>
-      </div>
-    </section>
   );
 }
 
@@ -282,7 +167,10 @@ export default function Today() {
         </section>
       )}
 
-      <HomeRouteBlock todayTasks={todayTasks} chainItems={scenario === "routeWithDeps" ? MOCK_ROUTE_CHAIN : null} scenario={scenario} tr={tr} />
+      <HomeRouteCarousel
+        tr={tr}
+        enabled={scenario === "routeWithDeps" || scenario === "routePartial" || scenario === "routeOverdue" || !!todayTasks.length}
+      />
 
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm" data-testid="today-open-reality" onClick={() => setRealityOpen(true)}>A realidade mudou</Button>

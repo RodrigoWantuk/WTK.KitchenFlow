@@ -16,6 +16,8 @@ export default function CookFlow() {
   const nav = useNavigate();
   const [searchParams] = useSearchParams();
   const initialPhase = searchParams.get("phase") === "finish" ? "finish" : "prep";
+  const sourcePreparationRouteId = searchParams.get("sourcePreparationRouteId");
+  const relatedPlanEntryId = searchParams.get("relatedPlanEntryId");
   const { tr, recipes, cooking, startCooking, updateCookStep, pauseCooking, resumeCooking, finishCooking, scenario } = useStore();
   const r = recipes.find(x => x.id === id);
 
@@ -53,10 +55,20 @@ export default function CookFlow() {
   // PREP
   if (phase === "prep") {
     return (
-      <div className="mx-auto max-w-2xl space-y-6">
+      <div
+        className="mx-auto max-w-2xl space-y-6"
+        data-testid="cook-flow"
+        data-source-preparation-route-id={sourcePreparationRouteId || undefined}
+        data-related-plan-entry-id={relatedPlanEntryId || undefined}
+      >
         <button onClick={() => nav(-1)} className="text-sm text-muted-foreground hover:text-foreground">{tr("common.back")}</button>
         <h1 className="font-display text-4xl">{tr("cook.prep")}</h1>
         <p className="text-sm text-muted-foreground">{r.title}</p>
+        {sourcePreparationRouteId && (
+          <p className="text-xs text-muted-foreground" data-testid="cook-handoff-source">
+            {tr("plan.route.homeTitle")} · {sourcePreparationRouteId}
+          </p>
+        )}
         <Card className="p-5">
           <ul className="space-y-3">
             {["Separar ingredientes","Conferir equipamentos","Medir quantidades","Pré-aquecer se necessário","Descongelar (se aplicável)"].map((s, i) => (

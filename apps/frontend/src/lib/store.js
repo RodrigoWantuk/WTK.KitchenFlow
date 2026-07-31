@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
-import { SEED_PANTRY, SEED_PLAN, SEED_SHOPPING, RECIPES, generateFullWeekPlan, PREP_AHEAD_BY_RECIPE } from "./mockData";
+import { SEED_PANTRY, SEED_PLAN, SEED_SHOPPING, RECIPES, generateFullWeekPlan } from "./mockData";
 import { t } from "./i18n";
 
 const StoreCtx = createContext(null);
@@ -15,7 +15,11 @@ function loadState() {
 }
 
 function persist(state) {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch {}
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+  } catch {
+    // Ignore quota / private-mode persistence failures in the mock client.
+  }
 }
 
 const defaultProfile = {

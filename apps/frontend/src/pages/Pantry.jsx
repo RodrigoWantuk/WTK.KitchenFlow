@@ -1,11 +1,14 @@
 import { Link } from "react-router-dom";
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Search, Plus, AlertCircle, Snowflake, Refrigerator, Package as PackageIcon, ShoppingBag } from "lucide-react";
+import { Search, Plus, AlertCircle, Snowflake, Refrigerator, Package as PackageIcon } from "lucide-react";
+import { PreparedComponentAvailabilityBar } from "@/features/pantry/PreparedComponentAvailabilityBar";
+import { projectPreparedComponentFromPantryItem } from "@/adapters/mock/preparedComponentFixtures";
 
 const locIcon = { pantry: PackageIcon, fridge: Refrigerator, freezer: Snowflake, other: PackageIcon };
 
@@ -22,42 +25,16 @@ function ApproxBlob({ v }) {
   );
 }
 
-/* Discrete reserved-vs-free bar for prepared/component pantry items. */
 function ReservedBar({ item, tr }) {
-  if (!item.reservedFor || item.reservedFor.length === 0 || item.mode !== "measured") return null;
-  const total = Number(item.qty) || 0;
-  const reserved = item.reservedFor.reduce((sum, r) => sum + (Number(r.qtyNum) || 0), 0);
-  const usedForBar = Math.min(reserved, total);
-  const free = Math.max(0, total - reserved);
-  const debt = Math.max(0, reserved - total);
-  const usedPct = total > 0 ? (usedForBar / total) * 100 : 0;
-  const status = debt > 0 ? "debt" : reserved === total ? "exact" : "balanced";
+  const nav = useNavigate();
+  const availability = projectPreparedComponentFromPantryItem(item);
+  if (!availability || item.mode !== "measured") return null;
   return (
-    <div data-testid={`pantry-reserved-${item.id}`} data-status={status} className="mt-2 space-y-1">
-      <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-secondary/70">
-        <div
-          className={status === "debt" ? "h-full bg-destructive/80" : "h-full bg-accent/70"}
-          style={{ width: `${usedPct}%` }}
-        />
-      </div>
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px]">
-        <span className="text-muted-foreground">
-          {reserved} {item.unit} {tr("pantry.reserved.label")}
-          {item.reservedFor.length > 1 && (
-            <> · <span title={item.reservedFor.map(r => `${r.title} (${r.qtyNum} ${r.unit})`).join(" + ")}>{item.reservedFor.length} receitas</span></>
-          )}
-        </span>
-        {status === "debt" ? (
-          <span data-testid={`pantry-reserved-debt-${item.id}`} className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-1.5 py-0.5 text-[10px] font-medium text-destructive">
-            <ShoppingBag className="h-3 w-3" /> {tr("pantry.reserved.debt")} {debt} {item.unit}
-          </span>
-        ) : status === "exact" ? (
-          <span className="text-muted-foreground">· {tr("pantry.reserved.exact")}</span>
-        ) : (
-          <span className="text-primary">· {free} {item.unit} {tr("pantry.reserved.free")}</span>
-        )}
-      </div>
-    </div>
+    <PreparedComponentAvailabilityBar
+      availability={availability}
+      tr={tr}
+      onReviewShortfall={() => nav("/app/compras?review=shortfall")}
+    />
   );
 }
 
