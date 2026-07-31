@@ -398,6 +398,23 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task IdenticalMetadataCorrectionDoesNotAdvanceVersionOrCreateHistory()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var created = await CreateAsync(client, csrf, Guid.NewGuid().ToString());
+        var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+        var update = await UpdateAsync(client, csrf, lotId, created.Headers.ETag!.Tag);
+        var history = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots/{lotId}/history");
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, update.StatusCode);
+        Assert.NotNull(update.Headers.ETag);
+        Assert.Single(history.EnumerateArray());
+    }
+
+    [Fact]
     public async Task AuthenticatedUserCannotMutateAnotherUsersLot()
     {
         await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);

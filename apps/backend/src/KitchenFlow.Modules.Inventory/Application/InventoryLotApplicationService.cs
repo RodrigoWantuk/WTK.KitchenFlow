@@ -299,6 +299,13 @@ public sealed class InventoryLotApplicationService(
         try
         {
             var auditMetadataJson = auditMetadata(state.Lot, state.Product);
+            if (auditEventName == "inventory.lot.metadata_corrected" && auditMetadataJson == "{\"changedFields\":[]}")
+            {
+                // A validated identical correction is intentionally a read-like no-op: preserve
+                // the current version and immutable history instead of manufacturing an event.
+                return InventoryApplicationResult<InventoryLotView>.Succeeded(ToView(state.Lot, state.Product));
+            }
+
             var now = timeProvider.GetUtcNow();
             var transaction = operation(state.Lot, state.Product, now);
             var response = ToView(state.Lot, state.Product);

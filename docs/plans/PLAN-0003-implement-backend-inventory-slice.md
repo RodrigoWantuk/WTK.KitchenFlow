@@ -348,6 +348,13 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Progress log
 
+### 2026-07-30T19:05:00Z — R4 no-op metadata correction
+
+- **Checkpoint:** Identical validated metadata corrections now preserve the current version and do not create audit/history entries.
+- **Validation:** Release build passed; targeted PostgreSQL no-op test was added but requires rerun after correcting its invalid deterministic-ETag assumption.
+- **Known limitations:** ETags are opaque non-deterministic Data Protection tokens; semantic replay/identity proof remains an open R3 requirement.
+- **Exact next action:** Rerun the corrected no-op test and continue deterministic replay-token design or documented response semantics.
+
 ### 2026-07-30T18:40:00Z — R5 OpenAPI Problem Details and quantity examples (partial)
 
 - **Checkpoint:** Generated OpenAPI now requires `errorCode` and `traceId`, declares string items for field errors, and includes valid measured and availability create examples plus traceable problem examples. Snapshot was regenerated from the local API.
