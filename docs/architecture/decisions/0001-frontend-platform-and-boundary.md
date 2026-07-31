@@ -1,7 +1,9 @@
 # ADR-0001 — Frontend Platform and Boundary
 
-- **Status:** Accepted
+- **Status:** Superseded
 - **Date:** 2026-07-28
+- **Superseded by:** [ADR-0007](0007-frontend-platform-monorepo-and-generation-tooling.md)
+- **Supersession date:** 2026-07-31
 
 ## Context
 
@@ -30,3 +32,7 @@ The project owner requires a React frontend generated and evolved through Lovabl
 - Generated code requires review, cleanup, tests, accessibility, localization, and contract integration.
 - The exact package set is not chosen until the generated project is inspected.
 - Backend APIs must be sufficiently complete for all authoritative operations.
+
+## Supersession note
+
+ADR-0007 retains React/TypeScript and the backend boundary, establishes `apps/frontend` as the sole official frontend source after the Emergent snapshot import, and reclassifies Lovable and Emergent as optional generation tools rather than mandatory platform owners.
