@@ -5,13 +5,12 @@
 - **Priority:** Critical
 - **Owner:** Codex backend remediation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-31T13:02:00Z
+- **Last updated:** 2026-07-31T15:35:00Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
-- **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (ready for owner review)
-- **Current review head:** `06857b69774a4fe52c40c2ae909ceec573435fb9`
-- **Latest workflow evidence:** Backend run `30632658887` passed for `06857b69774a4fe52c40c2ae909ceec573435fb9`
+- **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (ready for owner merge)
+- **Current review head:** pending merge-prep commit
+- **Latest workflow evidence:** Backend run `30632658887` passed for `06857b69774a4fe52c40c2ae909ceec573435fb9`; superseded by merge-prep validation in progress
 - **Current synchronized base:** `b798fed9e940d15f9c828ce34881f58d1cf516a9`
-- **Latest workflow evidence:** Backend run `30632658887` passed for `06857b69774a4fe52c40c2ae909ceec573435fb9`
 - **Related specification:** PLAN-0002
 - **Related validation plan:** PLAN-0005
 - **Related ADRs:** ADR-0002, ADR-0003, ADR-0004, ADR-0006

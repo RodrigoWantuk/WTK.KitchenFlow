@@ -103,6 +103,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     options.ResponseType = "code";
     options.UsePkce = true;
     options.SaveTokens = false;
+    options.PushedAuthorizationBehavior = PushedAuthorizationBehavior.Disable;
     options.RequireHttpsMetadata = !isDevelopment;
 });
 builder.Services.AddAuthorization();

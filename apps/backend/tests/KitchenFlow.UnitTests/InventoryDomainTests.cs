@@ -72,8 +72,12 @@ public sealed class InventoryDomainTests
         var resulting = Assert.IsType<LotQuantity.Measured>(transaction.ResultingQuantity);
         Assert.Equal(75m, resulting.Value);
         Assert.Equal(2, lot.Version);
-        Assert.Throws<InvalidOperationException>(() =>
+        var discardException = Assert.Throws<InvalidOperationException>(() =>
             lot.AdjustMeasured(InventoryTransactionType.Discard, 76m, "waste", null, Guid.NewGuid(), now.AddMinutes(2)));
+        Assert.Equal("The adjustment cannot exceed the current measured quantity.", discardException.Message);
+        var consumeException = Assert.Throws<InvalidOperationException>(() =>
+            lot.AdjustMeasured(InventoryTransactionType.Consume, 76m, "meal", null, Guid.NewGuid(), now.AddMinutes(3)));
+        Assert.Equal("The adjustment cannot exceed the current measured quantity.", consumeException.Message);
     }
 
     [Fact]

@@ -212,6 +212,8 @@ public sealed class InventoryLot
         {
             InventoryTransactionType.Consume or InventoryTransactionType.Discard when value <= previous.Value =>
                 previous.Value - value,
+            InventoryTransactionType.Consume or InventoryTransactionType.Discard =>
+                throw new InvalidOperationException("The adjustment cannot exceed the current measured quantity."),
             InventoryTransactionType.Correct => value,
             _ => throw new InvalidOperationException("The adjustment type is not valid for a measured quantity.")
         };

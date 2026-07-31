@@ -745,9 +745,12 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
 
         var rejected = await AdjustAsync(client, csrf, lotId, created.Headers.ETag!.Tag, Guid.NewGuid().ToString(), 101m);
+        var problem = await rejected.Content.ReadFromJsonAsync<JsonElement>();
         var history = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots/{lotId}/history");
 
         Assert.Equal((System.Net.HttpStatusCode)422, rejected.StatusCode);
+        Assert.Equal("domain_rule_violated", problem.GetProperty("errorCode").GetString());
+        Assert.Equal("The adjustment cannot exceed the current measured quantity.", problem.GetProperty("detail").GetString());
         Assert.Equal(1, history.GetArrayLength());
     }
 
