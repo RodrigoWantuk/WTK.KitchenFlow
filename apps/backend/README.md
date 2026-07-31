@@ -17,6 +17,56 @@ This directory contains the independently deployable KitchenFlow backend API and
 
 See [`ADR-0002`](../../docs/architecture/decisions/0002-backend-platform-and-modular-monolith.md) and the remaining accepted ADRs.
 
+## Local authenticated-slice development
+
+Start PostgreSQL and Keycloak with `docker compose -f infrastructure/compose/compose.dev.yml up -d`. The API launch profile uses `https://localhost:7443`, which is the Keycloak redirect origin and must use a trusted ASP.NET Core development certificate. Cookie-authenticated development must use HTTPS because the session and antiforgery cookies deliberately use the `Secure` and `__Host-` constraints. Verify the certificate with `dotnet dev-certs https --check --trust` where the host supports trust installation.
+
+Configure `KITCHENFLOW_DB_CONNECTION`, `KITCHENFLOW_OIDC_AUTHORITY`, `KITCHENFLOW_OIDC_CLIENT_ID`, `KITCHENFLOW_OIDC_CLIENT_SECRET`, and `KITCHENFLOW_SESSION_KEYRING_PATH` through an ignored local environment file or secret store. The session key-ring path is development-local only; production deployments must provide a shared protected key ring. Do not place OIDC tokens or client secrets in browser configuration.
+
+The API binds and validates database, OIDC, Data Protection, secure-session, and idempotency options
+at startup. Production-like environments require a non-placeholder database connection, HTTPS OIDC
+authority, confidential client identifier and secret, and an absolute persistent key-ring path.
+`Session:CookieName` must retain the `__Host-` prefix, `Session:IdleTimeout` must be between five
+minutes and one day, and `Idempotency:Retention` must be between one and ninety days. Safe session
+and retention defaults live in `appsettings.json`; Keycloak fixture authority/client values live only
+in `appsettings.Development.json`. No production credential has a repository default.
+
+`/health/live` proves that the process pipeline is running. `/health/ready` validates the complete
+local configuration set and PostgreSQL connectivity. It deliberately does not call OIDC discovery:
+an identity-provider outage must be monitored independently and must not create an unbounded
+readiness dependency. A 503 response is normalized as `application/problem+json` with
+`service_unavailable`.
+
+Framework authentication, authorization, CSRF, rate-limit, malformed JSON, unsupported media type,
+route/query binding, dependency, and unexpected failures use the same privacy-safe Problem Details
+shape. Responses contain a stable `errorCode` and safe trace identifier; they do not copy exception
+messages, request bodies, credentials, cookies, tokens, private notes, or user identifiers.
+
+The complete executable workflow for prerequisites, secrets, Compose, restore/build/test, dependency
+audit, migrations and forward repair, HTTPS, session keys, health, OpenAPI, the real-Keycloak smoke,
+and troubleshooting is in the
+[`backend inventory runbook`](../../docs/operations/backend-inventory-runbook.md).
+
+## Inventory and security telemetry
+
+Set the optional standard `OTEL_EXPORTER_OTLP_ENDPOINT` server-side to export traces and metrics over
+OTLP. Without it, instrumentation remains local and no external collector is a required dependency
+for this slice. The redaction processor runs before configured trace export.
+
+The project-owned metric surface is intentionally bounded:
+
+| Metric | Unit | Labels | Interpretation |
+|---|---|---|---|
+| `kitchenflow.inventory.mutations` | `operations` | `operation`, `outcome` | Final create, metadata-update, adjustment, or delete outcome |
+| `kitchenflow.inventory.rejections` | `operations` | `category` | Stable validation or domain-rule rejection |
+| `kitchenflow.inventory.concurrency_failures` | `operations` | `operation` | Stale optimistic-concurrency mutation |
+| `kitchenflow.inventory.idempotency` | `operations` | `operation`, `outcome` | First completion, replay, reused key, or defensive in-progress response |
+| `kitchenflow.security.access_failures` | `failures` | `category` | Authentication, authorization, CSRF, or rate-limit rejection |
+
+Allowed labels never include internal user IDs, issuer/subject, addresses, product names, notes,
+headers, request bodies, cookies, authorization values, or tokens. ASP.NET Core instrumentation owns
+standard route, status, duration, and dependency measurements.
+
 ## Responsibilities
 
 - backend-for-frontend and API endpoints;

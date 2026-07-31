@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Unassigned independent testing agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T00:25:00Z
+- **Last updated:** 2026-07-31T18:35:00Z
 - **Branch:** `agent/plan-0005-test-inventory-slice`
 - **Pull request:** Not opened
 - **System under test:** Stable PLAN-0003 and PLAN-0004 pull-request commits in an integrated test environment
@@ -74,16 +74,16 @@ Excluded features must not appear as falsely functional UI or hidden backend dep
 Before execution, fill all fields and commit them:
 
 - **Repository:** `RodrigoWantuk/WTK.KitchenFlow`
-- **Backend PR and commit:** Required
+- **Backend PR and commit:** [PR #9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) candidate `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`; ready for independent PLAN-0005 execution after owner merge
 - **Frontend PR and commit:** Required
 - **Integrated branch/commit or environment image digest:** Required
-- **OpenAPI snapshot SHA:** Required
+- **OpenAPI snapshot SHA:** Git blob `39348047801fa96422f9d88460d58917ffc26db8` from backend candidate `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`
 - **Lovable source repository commit:** Required
 - **Operating system:** Windows or Linux, exact version
 - **Docker/Compose versions:** Required
 - **.NET SDK and Node versions:** Required
 - **Container image versions/digests:** Required
-- **Database migration revision:** Required
+- **Database migration revision:** `20260731120209_AddInventoryLotConcurrencyToken` from backend candidate `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`
 - **Browser versions:** Chromium, Firefox, and WebKit through Playwright where supported
 - **Locales:** `en`, `pt-BR`, `es`
 - **Test users:** synthetic user A and user B only
@@ -368,17 +368,37 @@ Do not fix implementation in the independent test branch unless explicitly reass
 
 ## Execution state
 
-- **Current checkpoint:** Independent test plan is specified and ready; entry criteria are not yet met.
-- **Last completed step:** Planning only.
-- **Exact next action:** After PLAN-0003 and PLAN-0004 publish stable PR commits, assign an independent testing agent, pin all baselines, and update status to `In Progress`.
-- **Blockers:** Stable backend/frontend implementation baselines do not exist yet.
+- **Current checkpoint:** PLAN-0005 is ready to execute against the single immutable backend baseline `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`. PLAN-0003 implementation is complete and awaiting owner merge of PR #9.
+- **Last completed step:** Pinned backend candidate, OpenAPI blob, and migration revision from the completed PLAN-0003 delivery.
+- **Exact next action:** After PR #9 merge, assign an independent testing agent, pin PLAN-0004 frontend and integrated environment/browser baselines, and move status to `In Progress`.
+- **Blockers:** Stable PLAN-0004 frontend baseline and integrated environment image digest remain unfilled.
 - **Tests executed:** None.
 - **Defects found:** None.
-- **Evidence produced:** Planning traceability only.
-- **Known coverage gaps:** Runtime behavior cannot be assessed before implementation.
-- **Working tree state:** Not applicable until claimed.
+- **Evidence produced:** Immutable backend baseline pin only.
+- **Known coverage gaps:** Frontend, integrated, browser-version, and locale baselines are still required before independent execution.
+- **Working tree state:** Not applicable until an independent agent claims execution.
 
 ## Progress log
+
+### 2026-07-31T15:30:00Z — Backend baseline reconciled to final PLAN-0003 candidate
+
+- **Checkpoint:** Replaced stale execution-state references to superseded candidate `0e9d585` with the current immutable backend baseline `06857b69774a4fe52c40c2ae909ceec573435fb9`.
+- **Pinned baseline:** Backend PR #9 candidate `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`; OpenAPI blob `39348047801fa96422f9d88460d58917ffc26db8`; migration `20260731120209_AddInventoryLotConcurrencyToken`.
+- **Tests executed by PLAN-0005:** None. This remains a baseline reconciliation, not independent execution evidence.
+- **Coverage gaps:** PLAN-0004 frontend, integrated branch/image digest, browser versions, and full independent test execution remain outstanding.
+- **Result:** PLAN-0005 now has one consistent backend SHA across baseline, execution state, and progress log.
+- **Next action:** Pin frontend/integrated baselines after PLAN-0004 and owner merge of PR #9, then assign an independent testing agent.
+- **Blockers or handoff notes:** The PLAN-0003 implementation author must not serve as PLAN-0005's independent testing agent. Integrated end-to-end validation still depends on a stable frontend baseline in addition to this backend pin.
+
+### 2026-07-31T03:29:19Z — PLAN-0003 backend candidate pinned (superseded)
+
+- **Checkpoint:** Pinned PR #9 runtime candidate `0e9d58540e5919dcf6e808c9fe0b1be73cc4033d`, OpenAPI blob `39348047801fa96422f9d88460d58917ffc26db8`, and latest migration `20260731024742_TightenExpirationProvenance`.
+- **Evidence:** PLAN-0003 local R10 matrix and Backend run `30601535339` pass; SHA-bound migration, vulnerability, TRX, and Gitleaks artifacts exist.
+- **Tests executed by PLAN-0005:** None. This is a baseline pin, not independent execution evidence.
+- **Coverage gaps:** Fresh independent backend review, PLAN-0004 frontend, integrated environment, browser versions, and full independent test execution remain.
+- **Result:** Backend candidate is immutable for independent review/testing; PLAN-0005 remains `Ready` and dependency-gated.
+- **Next action:** Pin the reviewed stable backend disposition and the PLAN-0004/integrated baselines before claiming this testing plan.
+- **Blockers or handoff notes:** The PLAN-0003 implementation author must not serve as PLAN-0005's independent testing agent.
 
 ### 2026-07-29T00:25:00Z — AI planning agent
 

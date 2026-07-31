@@ -13,6 +13,29 @@ This directory contains versioned contracts shared across KitchenFlow boundaries
 
 The exact generator and generated-file commit policy require an implementation plan after the initial solution exists.
 
+## Inventory v1 snapshot
+
+`openapi/kitchenflow-v1.json` is generated from the running ASP.NET Core API. Run
+`scripts/backend/export-openapi.sh`, `scripts/backend/check-openapi.sh`, and
+`scripts/backend/lint-openapi.sh` from the repository root. The linter configuration intentionally
+disables generic 2xx/4xx-presence style rules because OIDC login/logout are redirect-only and health
+operations do not manufacture client errors; executable contract tests verify API route errors.
+
+Inventory quantity schemas use two exclusive branches. A measured quantity requires a decimal value
+and `Gram`, `Milliliter`, or `Unit`, with availability absent or null. A qualitative quantity
+requires `Available`, `Low`, or `Unavailable`, with measured value and unit absent or null.
+State-changing cookie-authenticated requests require the declared CSRF header. Create and adjustment
+commands additionally require a UUID idempotency key, and mutations of existing lots require the
+opaque resource-bound ETag through `If-Match`.
+
+History returns immutable lifecycle transactions plus a `MetadataCorrection` projection. That
+projection contains only the stable names of fields that changed; it never contains product names,
+note contents, complete request bodies, credentials, or tokens.
+
+PLAN-0004 must pin the final PLAN-0003 candidate SHA before generating a production integration
+client. Until PLAN-0003 R10 passes, this checked-in snapshot remains technically validated but not
+the published stable frontend baseline.
+
 ## Rules
 
 - Contracts are products with owners, versions, tests, and compatibility policies.

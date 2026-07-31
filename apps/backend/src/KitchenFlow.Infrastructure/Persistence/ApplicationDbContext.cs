@@ -1,0 +1,271 @@
+using KitchenFlow.Modules.Identity;
+using Microsoft.EntityFrameworkCore;
+
+namespace KitchenFlow.Infrastructure.Persistence;
+
+/// <summary>
+/// Entity Framework Core persistence boundary for KitchenFlow identity, inventory, audit, and
+/// idempotency records. Composite owner keys prevent cross-user links at the database boundary.
+/// </summary>
+/// <param name="options">Configured PostgreSQL context options.</param>
+public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
+{
+    /// <summary>Gets the authoritative internal OIDC identity mappings.</summary>
+    public DbSet<InternalUser> Users => Set<InternalUser>();
+
+    /// <summary>Gets the user-owned product persistence records.</summary>
+    public DbSet<ProductRecord> Products => Set<ProductRecord>();
+
+    /// <summary>Gets the user-owned inventory lot persistence records.</summary>
+    public DbSet<LotRecord> Lots => Set<LotRecord>();
+
+    /// <summary>Gets immutable inventory lifecycle transaction records.</summary>
+    public DbSet<TransactionRecord> Transactions => Set<TransactionRecord>();
+
+    /// <summary>Gets immutable audit event records.</summary>
+    public DbSet<AuditEventRecord> AuditEvents => Set<AuditEventRecord>();
+
+    /// <summary>Gets PostgreSQL-backed idempotency records.</summary>
+    public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
+
+    /// <inheritdoc />
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<InternalUser>(entity =>
+        {
+            entity.ToTable("users", "identity");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Issuer).HasMaxLength(500).IsRequired();
+            entity.Property(x => x.Subject).HasMaxLength(500).IsRequired();
+            entity.HasIndex(x => new { x.Issuer, x.Subject }).IsUnique();
+        });
+
+        modelBuilder.Entity<ProductRecord>(entity =>
+        {
+            entity.ToTable("products", "inventory", table =>
+            {
+                table.HasCheckConstraint("ck_products_display_name", "length(btrim(\"DisplayName\")) > 0");
+                table.HasCheckConstraint("ck_products_normalized_search_name", "length(btrim(\"NormalizedSearchName\")) > 0");
+            });
+            entity.HasKey(x => x.Id);
+            entity.HasAlternateKey(x => new { x.Id, x.OwnerUserId });
+            entity.Property(x => x.DisplayName).HasMaxLength(160).IsRequired();
+            entity.Property(x => x.NormalizedSearchName).HasMaxLength(160).IsRequired();
+            entity.HasOne<InternalUser>().WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => x.OwnerUserId);
+        });
+
+        modelBuilder.Entity<LotRecord>(entity =>
+        {
+            entity.ToTable("lots", "inventory", table =>
+            {
+                table.HasCheckConstraint("ck_lots_quantity_mode", "(\"MeasuredValue\" IS NOT NULL AND \"MeasuredUnit\" IS NOT NULL AND \"AvailabilityState\" IS NULL) OR (\"MeasuredValue\" IS NULL AND \"MeasuredUnit\" IS NULL AND \"AvailabilityState\" IS NOT NULL)");
+                table.HasCheckConstraint("ck_lots_measured_value", "\"MeasuredValue\" IS NULL OR \"MeasuredValue\" >= 0");
+                table.HasCheckConstraint("ck_lots_measured_unit", "\"MeasuredUnit\" IS NULL OR \"MeasuredUnit\" IN ('Gram', 'Milliliter', 'Unit')");
+                table.HasCheckConstraint("ck_lots_availability_state", "\"AvailabilityState\" IS NULL OR \"AvailabilityState\" IN ('Available', 'Low', 'Unavailable')");
+                table.HasCheckConstraint("ck_lots_storage", "(\"StorageLocation\" IN ('Pantry', 'Refrigerator', 'Freezer') AND \"CustomLocation\" IS NULL) OR (\"StorageLocation\" = 'Other' AND \"CustomLocation\" IS NOT NULL AND length(btrim(\"CustomLocation\")) > 0)");
+                table.HasCheckConstraint("ck_lots_package_state", "\"PackageState\" IS NULL OR \"PackageState\" IN ('Sealed', 'Opened', 'Unknown')");
+                table.HasCheckConstraint("ck_lots_expiration_provenance", "(\"PrintedExpirationDate\" IS NULL AND \"ExpirationProvenance\" IS NULL) OR (\"PrintedExpirationDate\" IS NOT NULL AND \"ExpirationProvenance\" IS NOT NULL AND \"ExpirationProvenance\" = 'UserEntered')");
+            });
+            entity.HasKey(x => x.Id);
+            entity.HasAlternateKey(x => new { x.Id, x.OwnerUserId });
+            entity.Property(x => x.MeasuredValue).HasColumnType("numeric(18,3)");
+            entity.Property(x => x.MeasuredUnit).HasMaxLength(20);
+            entity.Property(x => x.AvailabilityState).HasMaxLength(20);
+            entity.Property(x => x.StorageLocation).HasMaxLength(30).IsRequired();
+            entity.Property(x => x.CustomLocation).HasMaxLength(80);
+            entity.Property(x => x.PackageState).HasMaxLength(20);
+            entity.Property(x => x.ExpirationProvenance).HasMaxLength(30);
+            entity.Property(x => x.Notes).HasMaxLength(1000);
+            entity.Property(x => x.Version).IsConcurrencyToken();
+            entity.Property(x => x.ConcurrencyToken).HasDefaultValueSql("gen_random_uuid()");
+            entity.HasIndex(x => x.ConcurrencyToken).IsUnique();
+            entity.HasOne<InternalUser>().WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<ProductRecord>().WithMany().HasForeignKey(x => new { x.ProductId, x.OwnerUserId }).HasPrincipalKey(x => new { x.Id, x.OwnerUserId }).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => new { x.OwnerUserId, x.UpdatedAt, x.Id });
+        });
+
+        modelBuilder.Entity<TransactionRecord>(entity =>
+        {
+            entity.ToTable("transactions", "inventory", table =>
+            {
+                table.HasCheckConstraint("ck_transactions_type", "\"Type\" IN ('Initial', 'Consume', 'Discard', 'Correct', 'AvailabilityChanged', 'Deleted')");
+                table.HasCheckConstraint("ck_transactions_previous_quantity", "(\"PreviousMeasuredValue\" IS NULL AND \"PreviousMeasuredUnit\" IS NULL AND \"PreviousAvailabilityState\" IS NULL) OR (\"PreviousMeasuredValue\" IS NOT NULL AND \"PreviousMeasuredValue\" >= 0 AND \"PreviousMeasuredUnit\" IN ('Gram', 'Milliliter', 'Unit') AND \"PreviousAvailabilityState\" IS NULL) OR (\"PreviousMeasuredValue\" IS NULL AND \"PreviousMeasuredUnit\" IS NULL AND \"PreviousAvailabilityState\" IN ('Available', 'Low', 'Unavailable'))");
+                table.HasCheckConstraint("ck_transactions_resulting_quantity", "(\"ResultingMeasuredValue\" IS NOT NULL AND \"ResultingMeasuredValue\" >= 0 AND \"ResultingMeasuredUnit\" IN ('Gram', 'Milliliter', 'Unit') AND \"ResultingAvailabilityState\" IS NULL) OR (\"ResultingMeasuredValue\" IS NULL AND \"ResultingMeasuredUnit\" IS NULL AND \"ResultingAvailabilityState\" IN ('Available', 'Low', 'Unavailable'))");
+                table.HasCheckConstraint("ck_transactions_reason_code", "\"ReasonCode\" IS NULL OR length(btrim(\"ReasonCode\")) > 0");
+            });
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Type).HasMaxLength(30).IsRequired();
+            entity.Property(x => x.PreviousMeasuredValue).HasColumnType("numeric(18,3)");
+            entity.Property(x => x.ResultingMeasuredValue).HasColumnType("numeric(18,3)");
+            entity.Property(x => x.ReasonCode).HasMaxLength(100);
+            entity.Property(x => x.Note).HasMaxLength(1000);
+            entity.HasOne<InternalUser>().WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<LotRecord>().WithMany().HasForeignKey(x => new { x.LotId, x.OwnerUserId }).HasPrincipalKey(x => new { x.Id, x.OwnerUserId }).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => new { x.OwnerUserId, x.LotId, x.OccurredAt });
+        });
+
+        modelBuilder.Entity<AuditEventRecord>(entity =>
+        {
+            entity.ToTable("audit_events", "platform");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventName).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.TargetType).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.CorrelationId).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.MetadataJson).HasColumnType("jsonb").IsRequired();
+            entity.HasOne<InternalUser>().WithMany().HasForeignKey(x => x.ActorUserId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<IdempotencyRecord>(entity =>
+        {
+            entity.ToTable("idempotency_records", "platform", table =>
+            {
+                table.HasCheckConstraint("ck_idempotency_status_code", "\"StatusCode\" BETWEEN 200 AND 299");
+                table.HasCheckConstraint("ck_idempotency_completion", "(\"CompletedAt\" IS NULL AND \"ResponseBody\" IS NULL AND \"ETag\" IS NULL) OR (\"CompletedAt\" IS NOT NULL AND \"ResponseBody\" IS NOT NULL)");
+            });
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Scope).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.RequestHash).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ResponseBody).HasColumnType("jsonb");
+            entity.HasOne<InternalUser>().WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => new { x.OwnerUserId, x.Scope, x.Key }).IsUnique();
+        });
+    }
+}
+
+/// <summary>Persistence representation of a product owned by one internal user.</summary>
+public sealed class ProductRecord
+{
+    /// <summary>Gets or sets the product identifier.</summary>
+    public Guid Id { get; set; }
+    /// <summary>Gets or sets the authoritative owner identifier.</summary>
+    public Guid OwnerUserId { get; set; }
+    /// <summary>Gets or sets the human-readable product name.</summary>
+    public required string DisplayName { get; set; }
+    /// <summary>Gets or sets the normalized product search name.</summary>
+    public required string NormalizedSearchName { get; set; }
+    /// <summary>Gets or sets the UTC creation instant.</summary>
+    public DateTimeOffset CreatedAt { get; set; }
+    /// <summary>Gets or sets the UTC instant of the latest product metadata change.</summary>
+    public DateTimeOffset UpdatedAt { get; set; }
+    /// <summary>Gets or sets whether the product is soft-deleted.</summary>
+    public bool IsDeleted { get; set; }
+}
+
+/// <summary>Persistence representation of one user-owned physical inventory lot.</summary>
+public sealed class LotRecord
+{
+    /// <summary>Gets or sets the lot identifier.</summary>
+    public Guid Id { get; set; }
+    /// <summary>Gets or sets the authoritative owner identifier.</summary>
+    public Guid OwnerUserId { get; set; }
+    /// <summary>Gets or sets the associated user-owned product identifier.</summary>
+    public Guid ProductId { get; set; }
+    /// <summary>Gets or sets the measured amount using PostgreSQL <c>numeric(18,3)</c>, if measured.</summary>
+    public decimal? MeasuredValue { get; set; }
+    /// <summary>Gets or sets the canonical unit when <see cref="MeasuredValue"/> is present.</summary>
+    public string? MeasuredUnit { get; set; }
+    /// <summary>Gets or sets the qualitative availability state when the lot is not measured.</summary>
+    public string? AvailabilityState { get; set; }
+    /// <summary>Gets or sets the required storage location.</summary>
+    public required string StorageLocation { get; set; }
+    /// <summary>Gets or sets the required custom location for the <c>Other</c> location.</summary>
+    public string? CustomLocation { get; set; }
+    /// <summary>Gets or sets the optional package state.</summary>
+    public string? PackageState { get; set; }
+    /// <summary>Gets or sets the optional user-entered printed expiration calendar date.</summary>
+    public DateOnly? PrintedExpirationDate { get; set; }
+    /// <summary>Gets or sets the provenance of the printed expiration date.</summary>
+    public string? ExpirationProvenance { get; set; }
+    /// <summary>Gets or sets optional private notes, which must never be emitted in telemetry.</summary>
+    public string? Notes { get; set; }
+    /// <summary>Gets or sets the internal optimistic-concurrency version; it is never exposed directly.</summary>
+    public long Version { get; set; }
+    /// <summary>Gets or sets the opaque externally observable concurrency token.</summary>
+    public Guid ConcurrencyToken { get; set; }
+    /// <summary>Gets or sets the UTC creation instant.</summary>
+    public DateTimeOffset CreatedAt { get; set; }
+    /// <summary>Gets or sets the UTC instant of the last mutation.</summary>
+    public DateTimeOffset UpdatedAt { get; set; }
+    /// <summary>Gets or sets the UTC soft-deletion instant, if deleted.</summary>
+    public DateTimeOffset? DeletedAt { get; set; }
+}
+
+/// <summary>Immutable persistence representation of an inventory lifecycle transition.</summary>
+public sealed class TransactionRecord
+{
+    /// <summary>Gets or sets the transaction identifier.</summary>
+    public Guid Id { get; set; }
+    /// <summary>Gets or sets the authoritative owner identifier.</summary>
+    public Guid OwnerUserId { get; set; }
+    /// <summary>Gets or sets the associated lot identifier.</summary>
+    public Guid LotId { get; set; }
+    /// <summary>Gets or sets the stable lifecycle transaction type.</summary>
+    public required string Type { get; set; }
+    /// <summary>Gets or sets the prior measured amount, if the prior state was measured.</summary>
+    public decimal? PreviousMeasuredValue { get; set; }
+    /// <summary>Gets or sets the prior canonical measured unit, if applicable.</summary>
+    public string? PreviousMeasuredUnit { get; set; }
+    /// <summary>Gets or sets the prior qualitative availability state, if applicable.</summary>
+    public string? PreviousAvailabilityState { get; set; }
+    /// <summary>Gets or sets the resulting measured amount, if the resulting state is measured.</summary>
+    public decimal? ResultingMeasuredValue { get; set; }
+    /// <summary>Gets or sets the resulting canonical measured unit, if applicable.</summary>
+    public string? ResultingMeasuredUnit { get; set; }
+    /// <summary>Gets or sets the resulting qualitative availability state, if applicable.</summary>
+    public string? ResultingAvailabilityState { get; set; }
+    /// <summary>Gets or sets the normalized reason code supplied for the transition.</summary>
+    public string? ReasonCode { get; set; }
+    /// <summary>Gets or sets the optional private transition note.</summary>
+    public string? Note { get; set; }
+    /// <summary>Gets or sets the client idempotency key when a command supplied one.</summary>
+    public Guid? IdempotencyKey { get; set; }
+    /// <summary>Gets or sets the UTC instant at which the transition occurred.</summary>
+    public DateTimeOffset OccurredAt { get; set; }
+}
+
+/// <summary>Immutable audit trail record for an authorized action.</summary>
+public sealed class AuditEventRecord
+{
+    /// <summary>Gets or sets the audit event identifier.</summary>
+    public Guid Id { get; set; }
+    /// <summary>Gets or sets the internal actor identifier.</summary>
+    public Guid ActorUserId { get; set; }
+    /// <summary>Gets or sets the stable event name.</summary>
+    public required string EventName { get; set; }
+    /// <summary>Gets or sets the audited resource type.</summary>
+    public required string TargetType { get; set; }
+    /// <summary>Gets or sets the audited resource identifier.</summary>
+    public Guid TargetId { get; set; }
+    /// <summary>Gets or sets the request correlation identifier without credentials or request bodies.</summary>
+    public required string CorrelationId { get; set; }
+    /// <summary>Gets or sets non-sensitive JSON audit metadata.</summary>
+    public required string MetadataJson { get; set; }
+    /// <summary>Gets or sets the UTC event instant.</summary>
+    public DateTimeOffset OccurredAt { get; set; }
+}
+
+/// <summary>Persistence record used to replay an already completed idempotent command.</summary>
+public sealed class IdempotencyRecord
+{
+    /// <summary>Gets or sets the record identifier.</summary>
+    public Guid Id { get; set; }
+    /// <summary>Gets or sets the authoritative command owner identifier.</summary>
+    public Guid OwnerUserId { get; set; }
+    /// <summary>Gets or sets the command scope, which partitions idempotency keys.</summary>
+    public required string Scope { get; set; }
+    /// <summary>Gets or sets the client-provided UUID idempotency key.</summary>
+    public Guid Key { get; set; }
+    /// <summary>Gets or sets the canonical request hash used to detect key reuse conflicts.</summary>
+    public required string RequestHash { get; set; }
+    /// <summary>Gets or sets the replayable HTTP status code.</summary>
+    public int StatusCode { get; set; }
+    /// <summary>Gets or sets the replayable response body, if the command completed.</summary>
+    public string? ResponseBody { get; set; }
+    /// <summary>Gets or sets the replayable opaque ETag, if the command completed.</summary>
+    public string? ETag { get; set; }
+    /// <summary>Gets or sets the UTC reservation instant.</summary>
+    public DateTimeOffset CreatedAt { get; set; }
+    /// <summary>Gets or sets the UTC completion instant, or <see langword="null"/> while processing.</summary>
+    public DateTimeOffset? CompletedAt { get; set; }
+}

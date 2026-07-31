@@ -1,0 +1,105 @@
+name: Backend
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'apps/backend/**'
+      - 'packages/contracts/openapi/**'
+      - 'infrastructure/**'
+      - 'scripts/backend/**'
+      - '.github/workflows/backend.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/backend/**'
+      - 'packages/contracts/openapi/**'
+      - 'infrastructure/**'
+      - 'scripts/backend/**'
+      - '.github/workflows/backend.yml'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: apps/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.302
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+      - name: Create evidence directories
+        working-directory: .
+        run: mkdir -p artifacts/test-results
+      - run: dotnet restore KitchenFlow.slnx --locked-mode
+      - name: Fail on vulnerable .NET dependencies
+        working-directory: .
+        run: bash scripts/backend/check-dotnet-vulnerabilities.sh artifacts/dotnet-vulnerabilities.json
+      - run: dotnet format KitchenFlow.slnx --verify-no-changes --no-restore
+      - run: dotnet build KitchenFlow.slnx -c Release --no-restore
+      - name: Start required local dependencies
+        working-directory: .
+        run: docker compose -f infrastructure/compose/compose.dev.yml up -d postgres keycloak
+      - name: Wait for PostgreSQL and Keycloak readiness
+        working-directory: .
+        run: |
+          timeout 120 bash -c 'until docker compose -f infrastructure/compose/compose.dev.yml ps --status running postgres | grep -q postgres; do sleep 2; done'
+          timeout 120 bash -c 'until curl --fail --silent http://127.0.0.1:8080/realms/kitchenflow/.well-known/openid-configuration >/dev/null; do sleep 2; done'
+      - name: Run complete backend tests with retained results
+        run: dotnet test KitchenFlow.slnx -c Release --no-build --logger "trx;LogFilePrefix=kitchenflow-" --results-directory "${{ github.workspace }}/artifacts/test-results"
+      - name: Apply empty-database migration and upgrade
+        working-directory: .
+        run: |
+          dotnet tool restore
+          dotnet ef database update 20260729013459_InitialInventorySlice --project apps/backend/src/KitchenFlow.Infrastructure/KitchenFlow.Infrastructure.csproj --startup-project apps/backend/src/KitchenFlow.Api/KitchenFlow.Api.csproj --configuration Release --no-build
+          dotnet ef database update --project apps/backend/src/KitchenFlow.Infrastructure/KitchenFlow.Infrastructure.csproj --startup-project apps/backend/src/KitchenFlow.Api/KitchenFlow.Api.csproj --configuration Release --no-build
+      - name: Generate and apply idempotent migration artifact twice
+        working-directory: .
+        run: |
+          bash scripts/backend/generate-migration-script.sh artifacts/kitchenflow-migrations.sql
+          docker compose -f infrastructure/compose/compose.dev.yml exec -T postgres psql -U kitchenflow_dev -d postgres -c 'DROP DATABASE IF EXISTS kitchenflow_idempotent WITH (FORCE)'
+          docker compose -f infrastructure/compose/compose.dev.yml exec -T postgres psql -U kitchenflow_dev -d postgres -c 'CREATE DATABASE kitchenflow_idempotent'
+          docker compose -f infrastructure/compose/compose.dev.yml exec -T postgres psql -v ON_ERROR_STOP=1 -U kitchenflow_dev -d kitchenflow_idempotent < artifacts/kitchenflow-migrations.sql
+          docker compose -f infrastructure/compose/compose.dev.yml exec -T postgres psql -v ON_ERROR_STOP=1 -U kitchenflow_dev -d kitchenflow_idempotent < artifacts/kitchenflow-migrations.sql
+          expected_migrations="$(find apps/backend/src/KitchenFlow.Infrastructure/Persistence/Migrations -maxdepth 1 -type f -name '*.cs' ! -name '*Designer.cs' ! -name 'ApplicationDbContextModelSnapshot.cs' | wc -l | tr -d '[:space:]')"
+          actual_migrations="$(docker compose -f infrastructure/compose/compose.dev.yml exec -T postgres psql -tAc 'SELECT count(*) FROM "__EFMigrationsHistory"' -U kitchenflow_dev -d kitchenflow_idempotent | tr -d '[:space:]')"
+          test "$actual_migrations" -eq "$expected_migrations"
+      - name: Export and verify OpenAPI drift
+        working-directory: .
+        env:
+          KITCHENFLOW_DB_CONNECTION: Host=127.0.0.1;Port=5432;Database=kitchenflow;Username=kitchenflow_dev;Password=development-only-change-me
+          KITCHENFLOW_OPENAPI_URL: http://127.0.0.1:7080/openapi/v1.json
+        run: |
+          dotnet run --project apps/backend/src/KitchenFlow.Api/KitchenFlow.Api.csproj --configuration Release --no-build --urls http://127.0.0.1:7080 >/tmp/kitchenflow-api.log 2>&1 &
+          timeout 120 bash -c 'until curl --fail --silent http://127.0.0.1:7080/health/ready >/dev/null; do sleep 2; done'
+          bash scripts/backend/export-openapi.sh
+          git diff --exit-code -- packages/contracts/openapi/kitchenflow-v1.json
+          bash scripts/backend/check-openapi.sh
+          bash scripts/backend/lint-openapi.sh
+      - name: Upload backend candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-evidence-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            artifacts/dotnet-vulnerabilities.json
+            artifacts/kitchenflow-migrations.sql
+            artifacts/test-results/*.trx
+          if-no-files-found: error
+          retention-days: 30
+  secret-scan:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2

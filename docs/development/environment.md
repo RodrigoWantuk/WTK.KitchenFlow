@@ -451,6 +451,20 @@ A future Windows CI lane may be added when implementation volume justifies it. L
 - Verify hostnames, ports, HTTPS trust, Keycloak realm import, client redirect URI, cookie attributes, and browser time.
 - Do not disable OIDC state/correlation, CSRF, Secure cookies, or TLS validation to make the flow pass.
 
+### Reproducible real-Keycloak smoke
+
+After starting the default Compose topology, applying the backend migrations, and starting the API at `https://localhost:7443`, run the headless two-user browser smoke from the repository root:
+
+```text
+KITCHENFLOW_SMOKE_PASSWORD_A=<development-fixture-password> \
+KITCHENFLOW_SMOKE_PASSWORD_B=<development-fixture-password> \
+node scripts/backend/smoke-keycloak.mjs
+```
+
+The passwords are deliberately not reproduced in this document or shell history. Obtain the nonproduction fixture values from the versioned local realm import only when performing this local test; they are never production credentials. The script opens isolated Chromium profiles and proves the standard OIDC Authorization Code plus PKCE redirect, backend-managed Secure/HttpOnly session, CSRF-protected create request, and `404` ownership isolation. It emits no cookies, tokens, headers, request bodies, credentials, or private lot values.
+
+The local ASP.NET Core development certificate must be trusted by the browser. The diagnostic-only `KITCHENFLOW_SMOKE_ALLOW_UNTRUSTED_LOCAL_CERTIFICATE=1` option is not accepted validation evidence, must not be used in CI, and must not be added to application configuration. Fix certificate trust before recording a passing smoke result.
+
 ### Cross-platform dependency corruption
 
 Delete and restore generated outputs only after confirming they are not source files:
