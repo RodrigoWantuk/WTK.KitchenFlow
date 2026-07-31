@@ -12,15 +12,15 @@ public sealed class InventoryApplicationUseCaseTests
     [Fact]
     public async Task SevenUseCasesReturnStableTransportNeutralFailures()
     {
-        var useCases = CreateUseCases();
+        var workflow = CreateWorkflow();
 
-        var list = await ((IListInventoryLotsUseCase)useCases).ListAsync(new ListInventoryLotsQuery(101, null, null, null, null), CancellationToken.None);
-        var get = await ((IGetInventoryLotUseCase)useCases).GetAsync(Guid.NewGuid(), CancellationToken.None);
-        var create = await ((ICreateInventoryLotUseCase)useCases).CreateAsync(new CreateInventoryLotCommand("Tomato", 1m, "Gram", null, "Pantry", null, null, null, null, null, "test"), CancellationToken.None);
-        var update = await ((IUpdateInventoryLotUseCase)useCases).UpdateAsync(new UpdateInventoryLotCommand(Guid.NewGuid(), null, "Other", null, null, null, null, InventoryVersionPrecondition.Valid(1), "test"), CancellationToken.None);
-        var adjust = await ((IAdjustInventoryLotUseCase)useCases).AdjustAsync(new AdjustInventoryLotCommand(Guid.NewGuid(), "Consume", 1m, null, "meal", null, null, InventoryVersionPrecondition.Valid(1), "test"), CancellationToken.None);
-        var delete = await ((IDeleteInventoryLotUseCase)useCases).DeleteAsync(new DeleteInventoryLotCommand(Guid.NewGuid(), InventoryVersionPrecondition.Missing, "test"), CancellationToken.None);
-        var history = await ((IGetInventoryLotHistoryUseCase)useCases).HistoryAsync(Guid.NewGuid(), CancellationToken.None);
+        var list = await new ListInventoryLotsHandler(workflow).ListAsync(new ListInventoryLotsQuery(101, null, null, null, null), CancellationToken.None);
+        var get = await new GetInventoryLotHandler(workflow).GetAsync(Guid.NewGuid(), CancellationToken.None);
+        var create = await new CreateInventoryLotHandler(workflow).CreateAsync(new CreateInventoryLotCommand("Tomato", 1m, "Gram", null, "Pantry", null, null, null, null, null, "test"), CancellationToken.None);
+        var update = await new UpdateInventoryLotHandler(workflow).UpdateAsync(new UpdateInventoryLotCommand(Guid.NewGuid(), null, "Other", null, null, null, null, InventoryVersionPrecondition.Valid(1), "test"), CancellationToken.None);
+        var adjust = await new AdjustInventoryLotHandler(workflow).AdjustAsync(new AdjustInventoryLotCommand(Guid.NewGuid(), "Consume", 1m, null, "meal", null, null, InventoryVersionPrecondition.Valid(1), "test"), CancellationToken.None);
+        var delete = await new DeleteInventoryLotHandler(workflow).DeleteAsync(new DeleteInventoryLotCommand(Guid.NewGuid(), InventoryVersionPrecondition.Missing, "test"), CancellationToken.None);
+        var history = await new GetInventoryLotHistoryHandler(workflow).HistoryAsync(Guid.NewGuid(), CancellationToken.None);
 
         Assert.Equal("validation_failed", list.Problem!.ErrorCode);
         Assert.Equal("resource_not_found", get.Problem!.ErrorCode);
@@ -31,7 +31,7 @@ public sealed class InventoryApplicationUseCaseTests
         Assert.Equal("resource_not_found", history.Problem!.ErrorCode);
     }
 
-    private static InventoryLotApplicationService CreateUseCases() => new(new TestCurrentUser(), new TestReadStore(), new TestWriteStore(), TimeProvider.System, new InventoryLotLifecycleUseCase());
+    private static InventoryLotApplicationWorkflow CreateWorkflow() => new(new TestCurrentUser(), new TestReadStore(), new TestWriteStore(), TimeProvider.System, new InventoryLotLifecycleUseCase());
 
     private sealed class TestCurrentUser : ICurrentUserAccessor
     {

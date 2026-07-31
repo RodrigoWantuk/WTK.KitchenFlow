@@ -293,9 +293,9 @@ Every commit must update this plan's `Execution state` and `Progress log` and th
 
 - [x] Branch is synchronized with the reviewed `main` baseline and preserves accepted documentation.
 - [x] Identity provisioning is module-owned with an Infrastructure persistence adapter.
-- [ ] Seven Inventory use cases are module-owned and transport-neutral.
-- [ ] API alone maps outcomes to HTTP, protects cursor/version tokens, and formats ETags.
-- [ ] Architecture tests enforce the intended semantic boundaries.
+- [x] Seven Inventory use cases are module-owned and transport-neutral.
+- [x] API alone maps outcomes to HTTP, protects cursor/version tokens, and formats ETags.
+- [x] Architecture tests enforce the intended semantic boundaries.
 - [ ] Idempotency distinguishes exact-key contention from unrelated persistence failures.
 - [ ] Concurrent create and adjustment behavior is deterministic and fully tested for identical and different payloads.
 - [ ] Non-idempotency failures roll back every atomic side effect.
@@ -337,16 +337,24 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** Commit A has transport-neutral explicit contracts for all seven Inventory use cases and direct port-fake coverage of every contract; R3 has concurrent conflict coverage and bounded retention validation; rate-limit and logout CSRF errors include safe trace IDs.
+- **Current checkpoint:** R2 is complete: seven concrete transport-neutral handlers are independently registered/tested and the API depends only on their contracts; R3-R9 remain partially complete.
 - **Execution status:** In Progress, not Validating.
 - **Confirmed completed phase:** R1.
-- **Partially completed phases:** R2, R3, R4, R5, R6, R7, R8, and R9.
+- **Confirmed completed phases:** R1 and R2.
+- **Partially completed phases:** R3, R4, R5, R6, R7, R8, and R9.
 - **Not started at a valid final candidate:** R10.
 - **Current blocker:** None external. Remaining work is implementation and acceptance evidence inside this branch.
 - **Contract disposition:** OpenAPI snapshot is provisional and must not be consumed as PLAN-0004's stable live-client contract.
-- **Exact next action:** Split the shared Inventory use-case implementation into individual handler classes and add direct no-HTTP/no-PostgreSQL tests for each contract; then add R3 race/rollback acceptance tests.
+- **Exact next action:** Complete R3/R4 replay, rollback, and immutable-history evidence before finalizing the OpenAPI contract.
 
 ## Progress log
+
+### 2026-07-31T02:20:00Z — R2 concrete application handlers completed
+
+- **Checkpoint:** Replaced the multi-interface application service registration with seven concrete handlers. The shared workflow no longer implements public use-case contracts; API composition injects only the individual create, list, get, update, adjust, delete, and history interfaces.
+- **Validation:** Release build passed with zero warnings/errors; architecture tests passed 10/10 and unit tests passed 7/7.
+- **Known limitations:** The workflow still centralizes shared validation/mutation helpers by design, but it is no longer an API-facing multi-use-case boundary. R3-R10 remain.
+- **Exact next action:** Complete R3/R4 atomicity, replay, and history evidence.
 
 ### 2026-07-30T19:05:00Z — R4 no-op metadata correction
 

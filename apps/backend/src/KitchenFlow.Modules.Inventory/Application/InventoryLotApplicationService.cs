@@ -138,19 +138,12 @@ public interface IGetInventoryLotHistoryUseCase
 /// validation, owner-scoped orchestration, domain transitions, idempotency semantics, and typed
 /// results while HTTP adapters retain only request/response and token parsing concerns.
 /// </summary>
-public sealed class InventoryLotApplicationService(
+public sealed class InventoryLotApplicationWorkflow(
     ICurrentUserAccessor currentUser,
     IInventoryLotReadStore readStore,
     IInventoryLotWriteStore writeStore,
     TimeProvider timeProvider,
-    InventoryLotLifecycleUseCase lifecycleUseCase) :
-    ICreateInventoryLotUseCase,
-    IListInventoryLotsUseCase,
-    IGetInventoryLotUseCase,
-    IUpdateInventoryLotUseCase,
-    IAdjustInventoryLotUseCase,
-    IDeleteInventoryLotUseCase,
-    IGetInventoryLotHistoryUseCase
+    InventoryLotLifecycleUseCase lifecycleUseCase)
 {
     /// <summary>Lists active, depleted, or deleted lots owned by the current internal user.</summary>
     public async Task<InventoryApplicationResult<InventoryLotList>> ListAsync(ListInventoryLotsQuery query, CancellationToken cancellationToken)
@@ -391,4 +384,53 @@ public sealed class InventoryLotApplicationService(
     }
     private static IReadOnlyDictionary<string, string[]> FieldErrors(string field, string error) => new Dictionary<string, string[]>(StringComparer.Ordinal) { [field] = [error] };
     private static string MetadataField(string? error) => error?.StartsWith("Notes", StringComparison.Ordinal) == true ? "notes" : error?.StartsWith("The package", StringComparison.Ordinal) == true ? "packageState" : "storageLocation";
+}
+
+/// <summary>Concrete create-lot application handler.</summary>
+public sealed class CreateInventoryLotHandler(InventoryLotApplicationWorkflow workflow) : ICreateInventoryLotUseCase
+{
+    /// <inheritdoc />
+    public Task<InventoryApplicationResult<InventoryLotView>> CreateAsync(CreateInventoryLotCommand command, CancellationToken cancellationToken) => workflow.CreateAsync(command, cancellationToken);
+}
+
+/// <summary>Concrete owner-scoped lot-list application handler.</summary>
+public sealed class ListInventoryLotsHandler(InventoryLotApplicationWorkflow workflow) : IListInventoryLotsUseCase
+{
+    /// <inheritdoc />
+    public Task<InventoryApplicationResult<InventoryLotList>> ListAsync(ListInventoryLotsQuery query, CancellationToken cancellationToken) => workflow.ListAsync(query, cancellationToken);
+}
+
+/// <summary>Concrete owner-scoped lot-read application handler.</summary>
+public sealed class GetInventoryLotHandler(InventoryLotApplicationWorkflow workflow) : IGetInventoryLotUseCase
+{
+    /// <inheritdoc />
+    public Task<InventoryApplicationResult<InventoryLotView>> GetAsync(Guid lotId, CancellationToken cancellationToken) => workflow.GetAsync(lotId, cancellationToken);
+}
+
+/// <summary>Concrete metadata-correction application handler.</summary>
+public sealed class UpdateInventoryLotHandler(InventoryLotApplicationWorkflow workflow) : IUpdateInventoryLotUseCase
+{
+    /// <inheritdoc />
+    public Task<InventoryApplicationResult<InventoryLotView>> UpdateAsync(UpdateInventoryLotCommand command, CancellationToken cancellationToken) => workflow.UpdateAsync(command, cancellationToken);
+}
+
+/// <summary>Concrete immutable adjustment application handler.</summary>
+public sealed class AdjustInventoryLotHandler(InventoryLotApplicationWorkflow workflow) : IAdjustInventoryLotUseCase
+{
+    /// <inheritdoc />
+    public Task<InventoryApplicationResult<InventoryLotView>> AdjustAsync(AdjustInventoryLotCommand command, CancellationToken cancellationToken) => workflow.AdjustAsync(command, cancellationToken);
+}
+
+/// <summary>Concrete soft-delete application handler.</summary>
+public sealed class DeleteInventoryLotHandler(InventoryLotApplicationWorkflow workflow) : IDeleteInventoryLotUseCase
+{
+    /// <inheritdoc />
+    public Task<InventoryApplicationResult<InventoryLotView>> DeleteAsync(DeleteInventoryLotCommand command, CancellationToken cancellationToken) => workflow.DeleteAsync(command, cancellationToken);
+}
+
+/// <summary>Concrete immutable-history application handler.</summary>
+public sealed class GetInventoryLotHistoryHandler(InventoryLotApplicationWorkflow workflow) : IGetInventoryLotHistoryUseCase
+{
+    /// <inheritdoc />
+    public Task<InventoryApplicationResult<IReadOnlyList<InventoryHistoryEntry>>> HistoryAsync(Guid lotId, CancellationToken cancellationToken) => workflow.HistoryAsync(lotId, cancellationToken);
 }

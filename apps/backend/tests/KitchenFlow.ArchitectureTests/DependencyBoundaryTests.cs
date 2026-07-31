@@ -45,7 +45,7 @@ public sealed class DependencyBoundaryTests
     [Fact]
     public void InventoryApplicationModuleDoesNotReferenceAspNetCoreOrEntityFramework()
     {
-        var references = typeof(InventoryLotApplicationService).Assembly.GetReferencedAssemblies().Select(reference => reference.Name).ToHashSet(StringComparer.Ordinal);
+        var references = typeof(InventoryLotApplicationWorkflow).Assembly.GetReferencedAssemblies().Select(reference => reference.Name).ToHashSet(StringComparer.Ordinal);
 
         Assert.DoesNotContain("Microsoft.AspNetCore.Http", references);
         Assert.DoesNotContain("Microsoft.EntityFrameworkCore", references);
@@ -78,7 +78,7 @@ public sealed class DependencyBoundaryTests
     [Fact]
     public void InventoryModuleDoesNotDeclareATransportTokenAbstraction()
     {
-        var types = typeof(InventoryLotApplicationService).Assembly.GetTypes();
+        var types = typeof(InventoryLotApplicationWorkflow).Assembly.GetTypes();
 
         Assert.DoesNotContain(types, type => type.Name.Contains("TransportToken", StringComparison.Ordinal));
         Assert.DoesNotContain(types, type => type.Name.Contains("DataProtection", StringComparison.Ordinal));
@@ -87,7 +87,7 @@ public sealed class DependencyBoundaryTests
     [Fact]
     public void InventoryApplicationServiceExposesAllTypedSliceUseCases()
     {
-        var methods = typeof(InventoryLotApplicationService).GetMethods(BindingFlags.Instance | BindingFlags.Public).Select(method => method.Name).ToHashSet(StringComparer.Ordinal);
+        var methods = typeof(InventoryLotApplicationWorkflow).GetMethods(BindingFlags.Instance | BindingFlags.Public).Select(method => method.Name).ToHashSet(StringComparer.Ordinal);
 
         Assert.Contains("ListAsync", methods);
         Assert.Contains("GetAsync", methods);
@@ -96,6 +96,15 @@ public sealed class DependencyBoundaryTests
         Assert.Contains("AdjustAsync", methods);
         Assert.Contains("DeleteAsync", methods);
         Assert.Contains("HistoryAsync", methods);
+    }
+
+    [Fact]
+    public void InventoryUseCaseContractsHaveDistinctConcreteHandlers()
+    {
+        Type[] handlers = [typeof(CreateInventoryLotHandler), typeof(ListInventoryLotsHandler), typeof(GetInventoryLotHandler), typeof(UpdateInventoryLotHandler), typeof(AdjustInventoryLotHandler), typeof(DeleteInventoryLotHandler), typeof(GetInventoryLotHistoryHandler)];
+
+        Assert.Equal(7, handlers.Distinct().Count());
+        Assert.All(handlers, handler => Assert.Single(handler.GetInterfaces(), contract => contract.Name.EndsWith("UseCase", StringComparison.Ordinal)));
     }
 
     [Fact]
