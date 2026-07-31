@@ -1,13 +1,13 @@
 # PLAN-0014: Integrate Emergent Frontend and Establish Production Frontend Baseline
 
-- **Status:** Validating
+- **Status:** Completed
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** Cursor agent (PLAN-0014)
 - **Created:** 2026-07-31
-- **Last updated:** 2026-07-31T22:15:19Z
+- **Last updated:** 2026-07-31T22:21:00Z
 - **Branch:** `agent/plan-0014-integrate-emergent-frontend`
-- **Pull request:** [Draft PR #14](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/14)
+- **Pull request:** [Merged PR #14](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/14)
 - **Related implementation plans:** PLAN-0004 (superseded), PLAN-0005, PLAN-0011
 - **Related documentation plan:** PLAN-0013
 - **Related issues:** None
@@ -247,17 +247,26 @@ Convert and type, in dependency order:
 
 ## Execution state
 
-- **Current checkpoint:** Phase 8 complete — `apps/frontend/src` is TypeScript-only (`allowJs: false`); draft PR #14 updated, not merged.
-- **Last completed step:** Phase 8a–8f migration validated locally (guard, typecheck, lint 0 errors, 10 tests, build).
-- **Exact next action:** Owner review of draft PR #14 after CI green; merge only with owner approval.
+- **Current checkpoint:** PLAN-0014 merged to `main` via squash PR #14 (`4166973`).
+- **Last completed step:** Owner-authorized admin squash-merge after green Frontend CI; working branch deleted.
+- **Exact next action:** None for PLAN-0014. Dependent work: PLAN-0011 (Ready) and PLAN-0005 tester assignment.
 - **Blockers:** None.
-- **Partially modified areas:** Some mock/page props still use narrow `any` for heterogeneous fixtures; refine in later cleanup if desired.
-- **Validation performed:** `yarn guard:ts-only`; `yarn typecheck`; `yarn lint` (0 errors); `yarn test` (10); `yarn build`; 0 `.js`/`.jsx` under `src/` (~90 `.ts`/`.tsx`).
+- **Partially modified areas:** Narrow `any` remains in some mock page props; optional cleanup outside this plan.
+- **Validation performed:** Frontend CI `quality` green; local typecheck/lint/test/build; isolation guard fixed; merge commit on main.
 - **Known failures or limitations:** Live OpenAPI adapters still placeholders; mock Unsplash imagery still prototype-only per asset audit.
-- **Working tree state:** Phase 8 code + plan/registry updates ready to commit/push to PR #14.
-- **Substantial run target:** Achieved for Phase 8; PLAN-0014 awaiting owner merge.
+- **Working tree state:** Clean on `main` after merge; completion docs commit pending.
+- **Substantial run target:** Achieved — baseline delivered and merged.
 
 ## Progress log
+
+### 2026-07-31T22:21:00Z — Cursor agent
+
+- **Checkpoint:** PLAN-0014 completed and merged to `main` via PR #14.
+- **Changes included in the commit:** Plan/registry completion and dependent-plan unblock notes.
+- **Validation performed:** CI green; squash-merge `4166973`.
+- **Result:** Official frontend baseline live on main.
+- **Next action:** None for this plan.
+- **Blockers or handoff notes:** Branch `agent/plan-0014-integrate-emergent-frontend` deleted on remote.
 
 ### 2026-07-31T22:18:30Z — Cursor agent
 
