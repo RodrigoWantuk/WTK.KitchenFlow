@@ -1,0 +1,48 @@
+name: Frontend
+
+on:
+  push:
+    paths:
+      - "apps/frontend/**"
+      - ".github/workflows/frontend.yml"
+  pull_request:
+    paths:
+      - "apps/frontend/**"
+      - ".github/workflows/frontend.yml"
+
+defaults:
+  run:
+    working-directory: apps/frontend
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: yarn
+          cache-dependency-path: apps/frontend/yarn.lock
+      - name: Install
+        run: yarn install --frozen-lockfile
+      - name: Typecheck
+        run: yarn typecheck
+      - name: Lint
+        run: yarn lint
+      - name: Test
+        run: yarn test
+      - name: Build
+        run: yarn build
+      - name: TypeScript-only source guard
+        run: yarn guard:ts-only
+      - name: Production isolation guard
+        run: |
+          if grep -R "@emergentbase" package.json craco.config.js src \
+            --include='*.js' --include='*.jsx' --include='*.ts' --include='*.tsx' --include='*.json' \
+            --exclude='*.test.ts' --exclude='*.test.tsx'; then
+            echo "Emergent coupling must not remain in production frontend sources" >&2
+            exit 1
+          fi
+      - name: Dependency audit (non-blocking summary)
+        run: yarn audit --level high || true

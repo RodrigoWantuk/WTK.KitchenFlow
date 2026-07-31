@@ -1,61 +1,66 @@
 # KitchenFlow Frontend
 
-This directory contains the independently deployable KitchenFlow responsive web frontend.
+Official KitchenFlow frontend package living at `apps/frontend`.
 
-## Accepted platform
+## Authority
 
-- React;
-- TypeScript;
-- interface design and code generation through Lovable;
-- generated backend client and types from OpenAPI contracts.
+- This directory is the **only** official frontend source for KitchenFlow.
+- Imported from Emergent snapshot `69f798f66b7987c4ed785c52c90a5539bf46f52e` (see [`docs/development/emergent-frontend-import-provenance.md`](../../docs/development/emergent-frontend-import-provenance.md)).
+- `kitchen-emergent` is a historical snapshot. There is **no** bidirectional sync.
+- Emergent and Lovable remain optional generation tools only (ADR-0007).
 
-React and Lovable are fixed stakeholder decisions. The exact Lovable-generated runtime, router, build system, component library, state library, localization library, and test tools are selected after the actual generated project is inspected and require a plan or ADR where they establish durable precedent.
+## Stack
 
-See [`ADR-0001`](../../docs/architecture/decisions/0001-frontend-platform-and-boundary.md).
+- React 19 + TypeScript (gradual migration; `allowJs` enabled)
+- Create React App + CRACO
+- Yarn classic (`packageManager` field)
 
-## Responsibilities
+## Development
 
-- responsive, multilingual, and accessible user experience;
-- account onboarding and progressive profile management;
-- inventory, attention, shopping, planning, recipe, cooking, history, notification, quota, and privacy workflows;
-- temporary UI state and optimistic presentation where safe;
-- upload initiation and job progress;
-- clear presentation of provenance, uncertainty, safety, quota, validation, and failure;
-- secure communication with backend/BFF endpoints.
+```bash
+cd apps/frontend
+yarn install
+yarn start
+```
 
-## Prohibited ownership
+### Quality scripts
 
-The frontend does not:
+```bash
+yarn typecheck
+yarn lint
+yarn test
+yarn build
+```
 
-- access PostgreSQL directly;
-- call AI providers directly;
-- store provider credentials or long-lived access and refresh tokens;
-- calculate official quota or subscription entitlement;
-- own inventory arithmetic, shelf-life authority, authorization, privacy deletion, or food-safety enforcement;
-- bypass generated contracts with duplicated hand-maintained API models.
+## Mock vs live adapters
 
-## Lovable workflow
+| Path | Role |
+|---|---|
+| `src/adapters/mock/` | Fixture-backed presentation projections for prototype flows |
+| `src/adapters/live/` | Placeholder for future generated OpenAPI clients |
+| `src/contracts/` | Presentation models (`PreparedComponentAvailability`, `ShoppingRequirementProjection`, preparation route) |
+| `src/features/` | Shared UI for preparation route, pantry availability bar, shopping review, cook handoff |
 
-Lovable output is reviewed as normal production code for:
+Presentation components consume projections. They must **not** perform authoritative inventory, reservation, or unit-conversion arithmetic.
 
-- component and feature boundaries;
-- accessibility and keyboard operation;
-- localization readiness;
-- responsive behavior;
-- secure session and CSRF interaction;
-- privacy and sensitive-data exposure;
-- maintainability and testability;
-- generated contract compatibility;
-- unnecessary dependencies and duplicated backend logic.
+## Session and API seams
 
-The Git repository remains the source of truth. Lovable must not create a parallel backend or undocumented architecture.
+- Browser auth remains BFF/session oriented (no token storage, no direct Keycloak admin).
+- AI providers are never called from the frontend.
+- Live backend wiring is intentionally incomplete until inventory/home contracts stabilize.
 
-## Required reading
+## CI
 
-- [`../../docs/README.md`](../../docs/README.md)
-- [`../../docs/product/user-journeys.md`](../../docs/product/user-journeys.md)
-- [`../../docs/product/initial-release.md`](../../docs/product/initial-release.md)
-- [`../../docs/domain/README.md`](../../docs/domain/README.md)
-- [`../../docs/architecture/overview.md`](../../docs/architecture/overview.md)
-- [`../../docs/security/privacy-and-data-protection.md`](../../docs/security/privacy-and-data-protection.md)
-- [`../../docs/testing/product-foundation-gates.md`](../../docs/testing/product-foundation-gates.md)
+GitHub Actions workflow: `.github/workflows/frontend.yml` (install, typecheck, lint, test, build, Emergent isolation guard).
+
+## TypeScript migration (PLAN-0014 Phase 8)
+
+Application sources under `src/` must be TypeScript (`.ts`/`.tsx`).
+
+Rules:
+
+1. Prefer rename + annotate over behavior rewrites.
+2. Do not change routes, `data-testid`s, mock scenarios, or UX copy unless typing requires it.
+3. Presentation components must not gain authoritative inventory/reservation arithmetic.
+4. After migration: `allowJs: false`, `yarn guard:ts-only`, `yarn typecheck`, `yarn lint`, `yarn test`, `yarn build`.
+

@@ -5,13 +5,13 @@
 - **Priority:** High
 - **Owner:** Unassigned frontend/product implementation agent
 - **Created:** 2026-07-30
-- **Last updated:** 2026-07-30
+- **Last updated:** 2026-07-31T20:15:00Z
 - **Branch:** `agent/plan-0011-contextual-home`
 - **Pull request:** Not opened
 - **Related documentation plan:** PLAN-0010
-- **Related frontend plan:** PLAN-0004
+- **Related frontend plan:** PLAN-0014 (PLAN-0004 superseded)
 - **Related product document:** `docs/product/entry-and-contextual-home.md`
-- **Dependencies:** Authoritative frontend snapshot integrated into `apps/frontend`; stable menu, profile, inventory-attention, and recommendation contracts for live phases
+- **Dependencies:** PLAN-0014 frontend baseline integrated and validated in `apps/frontend`; stable menu, profile, inventory-attention, and recommendation contracts for live phases
 
 ## Objective
 
@@ -26,9 +26,9 @@ The implementation must preserve the accepted source priority:
 
 ## Blocking state
 
-The product behavior is fully specified, but implementation must not begin in the official monorepo until the authoritative frontend snapshot is integrated into `apps/frontend` and its build, test, dependency, asset-portability, and prototype-isolation state are known.
+The product behavior is fully specified, but implementation must not begin in the official monorepo until PLAN-0014 completes the Emergent frontend baseline in `apps/frontend` and its build, test, dependency, asset-portability, and prototype-isolation state are known.
 
-The public landing page and mock-backed home can begin after that import. Live source adapters remain blocked until their backend contracts are accepted and published.
+The public landing page and mock-backed home can begin after that baseline is integrated. Live source adapters remain blocked until their backend contracts are accepted and published. This plan stays **Blocked** until PLAN-0014 acceptance criteria for the official frontend baseline are met.
 
 ## Scope
 
@@ -247,11 +247,18 @@ Automated coverage must include:
 - **Documentation delivered:** This future implementation plan.
 - **Validation performed:** Plan cross-checked against the canonical entry/home specification and existing frontend/backend boundaries.
 - **Known failures or limitations:** Live contract shapes do not yet exist for every tier.
-- **Blockers:** Authoritative frontend import; live menu/profile/recommendation contracts.
+- **Blockers:** PLAN-0014 frontend baseline not yet completed; live menu/profile/recommendation contracts.
 - **Partially modified areas:** None.
-- **Exact next action:** After the authoritative frontend snapshot is integrated and validated, claim this plan and implement Phase 1 plus the mock-backed Phase 2 before designing live contracts.
+- **Exact next action:** After PLAN-0014 integrates and validates the Emergent baseline in `apps/frontend`, claim this plan and implement Phase 1 plus the mock-backed Phase 2 before designing live contracts.
 - **Working tree state:** No implementation branch exists.
 
 ## Progress log
 
-_No implementation progress yet._
+### 2026-07-31T20:15:00Z — Cursor agent (PLAN-0014)
+
+- **Checkpoint:** Dependency restated against PLAN-0014; plan remains Blocked.
+- **Changes included in the commit:** Related frontend plan and blocker wording updated; PLAN-0004 reference replaced.
+- **Validation performed:** Confirmed PLAN-0014 owns the Emergent import that unblocks this plan.
+- **Result:** PLAN-0011 stays Blocked until PLAN-0014 baseline acceptance.
+- **Next action:** Do not claim until PLAN-0014 completes the official frontend baseline.
+- **Blockers or handoff notes:** None beyond documented blockers.
