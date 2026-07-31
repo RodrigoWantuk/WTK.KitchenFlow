@@ -337,7 +337,7 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** Commit A has transport-neutral explicit contracts for all seven Inventory use cases; R3 has concurrent conflict coverage and bounded retention validation; rate-limit and logout CSRF errors now include safe trace IDs.
+- **Current checkpoint:** Commit A has transport-neutral explicit contracts for all seven Inventory use cases and direct port-fake coverage of every contract; R3 has concurrent conflict coverage and bounded retention validation; rate-limit and logout CSRF errors include safe trace IDs.
 - **Execution status:** In Progress, not Validating.
 - **Confirmed completed phase:** R1.
 - **Partially completed phases:** R2, R3, R4, R5, R6, R7, R8, and R9.
@@ -347,6 +347,18 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 - **Exact next action:** Split the shared Inventory use-case implementation into individual handler classes and add direct no-HTTP/no-PostgreSQL tests for each contract; then add R3 race/rollback acceptance tests.
 
 ## Progress log
+
+### 2026-07-30T18:15:00Z — R2 direct use-case contract coverage (partial)
+
+- **Run delivery target:** Prove all seven Inventory use-case contracts are executable without ASP.NET Core, PostgreSQL, or Data Protection.
+- **Checkpoint:** Added direct unit coverage using only fake identity/read/write ports for list, get, create, update, adjust, delete, and history stable failure behavior.
+- **Material files changed:** Inventory application unit tests; this plan; and `docs/plan-status.md`.
+- **Documentation delivered:** Test XML documentation records the deliberately transport-free execution boundary.
+- **Commands and validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.UnitTests/KitchenFlow.UnitTests.csproj -c Release --no-build --filter "FullyQualifiedName~SevenUseCases"`.
+- **Result:** Release build passed with zero warnings/errors; direct use-case test passed (1/1).
+- **Known failures or unverified behavior:** Each contract still maps to a shared implementation class; physical handler extraction and successful-path unit tests remain pending. R3-R10 remain incomplete.
+- **Blockers:** None external.
+- **Exact next action:** Split the shared implementation behind the established interfaces and add successful use-case paths, then continue replay/rollback and OpenAPI acceptance work.
 
 ### 2026-07-30T17:50:00Z — R6 framework-error trace consistency and retention bounds
 
