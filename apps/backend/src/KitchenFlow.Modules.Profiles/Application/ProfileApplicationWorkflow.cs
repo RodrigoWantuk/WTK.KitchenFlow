@@ -612,7 +612,11 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyLanguage(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary") return;
+        if (mutation is null || mutation.Durability == "temporary")
+        {
+            return;
+        }
+
         switch (mutation.Action)
         {
             case "confirm" when LanguageTag.TryCreate(mutation.Value, out var value):
@@ -629,7 +633,11 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyRegion(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary") return;
+        if (mutation is null || mutation.Durability == "temporary")
+        {
+            return;
+        }
+
         switch (mutation.Action)
         {
             case "confirm" when RegionCode.TryCreate(mutation.Value, out var value):
@@ -646,7 +654,11 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyCurrency(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary") return;
+        if (mutation is null || mutation.Durability == "temporary")
+        {
+            return;
+        }
+
         switch (mutation.Action)
         {
             case "confirm" when CurrencyCode.TryCreate(mutation.Value, out var value):
@@ -663,7 +675,11 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyMeasurementSystem(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary") return;
+        if (mutation is null || mutation.Durability == "temporary")
+        {
+            return;
+        }
+
         switch (mutation.Action)
         {
             case "confirm" when ProfileEnumParser.TryParseMeasurementSystem(mutation.Value, out var value):
@@ -680,7 +696,11 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyTimeZone(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary") return;
+        if (mutation is null || mutation.Durability == "temporary")
+        {
+            return;
+        }
+
         switch (mutation.Action)
         {
             case "confirm" when IanaTimeZoneId.TryCreate(mutation.Value, out var value):
@@ -697,7 +717,11 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyPlanningCadence(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary") return;
+        if (mutation is null || mutation.Durability == "temporary")
+        {
+            return;
+        }
+
         switch (mutation.Action)
         {
             case "confirm" when ProfileEnumParser.TryParsePlanningCadence(mutation.Value, out var value):
@@ -714,7 +738,11 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyShoppingCadence(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary") return;
+        if (mutation is null || mutation.Durability == "temporary")
+        {
+            return;
+        }
+
         switch (mutation.Action)
         {
             case "confirm" when ProfileEnumParser.TryParseShoppingCadence(mutation.Value, out var value):
@@ -731,7 +759,11 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyOverallSkill(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary") return;
+        if (mutation is null || mutation.Durability == "temporary")
+        {
+            return;
+        }
+
         switch (mutation.Action)
         {
             case "confirm" when ProfileEnumParser.TryParseCookingSkillLevel(mutation.Value, out var value):
@@ -748,7 +780,11 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyConfidence(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary") return;
+        if (mutation is null || mutation.Durability == "temporary")
+        {
+            return;
+        }
+
         switch (mutation.Action)
         {
             case "confirm" when ProfileEnumParser.TryParseCookingConfidenceLevel(mutation.Value, out var value):
@@ -765,7 +801,11 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyInstructionDetail(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary") return;
+        if (mutation is null || mutation.Durability == "temporary")
+        {
+            return;
+        }
+
         switch (mutation.Action)
         {
             case "confirm" when ProfileEnumParser.TryParseInstructionDetailLevel(mutation.Value, out var value):
@@ -785,7 +825,11 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyTolerance(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing, Action<UserProfile, PreferenceTolerance?, ProfileFieldPresence> assign)
     {
-        if (mutation is null || mutation.Durability == "temporary") return;
+        if (mutation is null || mutation.Durability == "temporary")
+        {
+            return;
+        }
+
         switch (mutation.Action)
         {
             case "confirm" when ProfileEnumParser.TryParsePreferenceTolerance(mutation.Value, out var value):
@@ -802,7 +846,11 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyRepeatMeal(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary") return;
+        if (mutation is null || mutation.Durability == "temporary")
+        {
+            return;
+        }
+
         switch (mutation.Action)
         {
             case "confirm" when ProfileEnumParser.TryParseRepeatMealPreference(mutation.Value, out var value):
@@ -819,7 +867,11 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyReheating(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary") return;
+        if (mutation is null || mutation.Durability == "temporary")
+        {
+            return;
+        }
+
         switch (mutation.Action)
         {
             case "confirm" when ProfileEnumParser.TryParseReheatingPreference(mutation.Value, out var value):
@@ -836,7 +888,11 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyLeftover(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary") return;
+        if (mutation is null || mutation.Durability == "temporary")
+        {
+            return;
+        }
+
         switch (mutation.Action)
         {
             case "confirm" when ProfileEnumParser.TryParseLeftoverPreference(mutation.Value, out var value):
@@ -853,7 +909,11 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyFreezing(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary") return;
+        if (mutation is null || mutation.Durability == "temporary")
+        {
+            return;
+        }
+
         switch (mutation.Action)
         {
             case "confirm" when ProfileEnumParser.TryParseFreezingPreference(mutation.Value, out var value):

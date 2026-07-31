@@ -630,11 +630,31 @@ public static class ProfileCompletenessCalculator
         var adultCompleted = profile.AdultDeclared == true && !string.IsNullOrWhiteSpace(profile.TermsVersion) ? 1 : 0;
         var totalSections = 5;
         var completedSections = 0;
-        if (householdCompleted >= 3) completedSections++;
-        if (cookingCompleted >= 2) completedSections++;
-        if (activePreferenceCount > 0) completedSections++;
-        if (activeEquipmentCount > 0) completedSections++;
-        if (adultCompleted == 1) completedSections++;
+        if (householdCompleted >= 3)
+        {
+            completedSections++;
+        }
+
+        if (cookingCompleted >= 2)
+        {
+            completedSections++;
+        }
+
+        if (activePreferenceCount > 0)
+        {
+            completedSections++;
+        }
+
+        if (activeEquipmentCount > 0)
+        {
+            completedSections++;
+        }
+
+        if (adultCompleted == 1)
+        {
+            completedSections++;
+        }
+
         var percent = (int)Math.Round(completedSections * 100.0 / totalSections, MidpointRounding.AwayFromZero);
         return new ProfileCompletenessSummary(percent, completedSections, totalSections, householdCompleted, cookingCompleted, activePreferenceCount, activeEquipmentCount, knownTechniqueCount, goalCount, profile.AdultDeclarationState);
     }
