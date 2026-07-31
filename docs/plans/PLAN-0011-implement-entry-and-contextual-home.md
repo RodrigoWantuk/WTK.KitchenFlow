@@ -1,11 +1,11 @@
 # PLAN-0011: Implement the Public Entry and Contextual Home Experience
 
-- **Status:** Blocked
+- **Status:** Ready
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Unassigned frontend/product implementation agent
 - **Created:** 2026-07-30
-- **Last updated:** 2026-07-31T20:15:00Z
+- **Last updated:** 2026-07-31T22:21:00Z
 - **Branch:** `agent/plan-0011-contextual-home`
 - **Pull request:** Not opened
 - **Related documentation plan:** PLAN-0010
@@ -253,6 +253,13 @@ Automated coverage must include:
 - **Working tree state:** No implementation branch exists.
 
 ## Progress log
+
+### 2026-07-31T22:21:00Z — Cursor agent
+
+- **Checkpoint:** Unblocked for frontend baseline: PLAN-0014 merged to main via PR #14.
+- **Next action:** Claim branch and implement Phase 1 plus mock-backed Phase 2.
+- **Blockers or handoff notes:** Live menu/profile/inventory-attention/recommendation contracts still required for live phases.
+
 
 ### 2026-07-31T20:15:00Z — Cursor agent (PLAN-0014)
 
