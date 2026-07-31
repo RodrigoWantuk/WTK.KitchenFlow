@@ -115,10 +115,14 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
 
         var first = await CreateAsync(client, csrf, key);
         var second = await CreateAsync(client, csrf, key);
+        var firstBody = await first.Content.ReadAsStringAsync();
+        var secondBody = await second.Content.ReadAsStringAsync();
         var list = await client.GetFromJsonAsync<JsonElement>("/api/v1/inventory/lots");
 
         Assert.Equal(System.Net.HttpStatusCode.Created, first.StatusCode);
         Assert.Equal(System.Net.HttpStatusCode.Created, second.StatusCode);
+        Assert.Equal(firstBody, secondBody);
+        Assert.Equal(first.Headers.ETag!.Tag, second.Headers.ETag!.Tag);
         Assert.Equal(1, list.GetProperty("items").GetArrayLength());
     }
 
@@ -220,10 +224,14 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
 
         var first = await AdjustAsync(client, csrf, lotId, etag, key, 25m);
         var second = await AdjustAsync(client, csrf, lotId, etag, key, 25m);
+        var firstBody = await first.Content.ReadAsStringAsync();
+        var secondBody = await second.Content.ReadAsStringAsync();
         var history = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots/{lotId}/history");
 
         Assert.Equal(System.Net.HttpStatusCode.OK, first.StatusCode);
         Assert.Equal(System.Net.HttpStatusCode.OK, second.StatusCode);
+        Assert.Equal(firstBody, secondBody);
+        Assert.Equal(first.Headers.ETag!.Tag, second.Headers.ETag!.Tag);
         Assert.Equal(2, history.GetArrayLength());
     }
 
@@ -303,6 +311,72 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         Assert.Equal(2, history.GetArrayLength());
         Assert.Equal(100m, history[0].GetProperty("previousQuantity").GetProperty("measuredValue").GetDecimal());
         Assert.Equal(100m, history[0].GetProperty("resultingQuantity").GetProperty("measuredValue").GetDecimal());
+    }
+
+    [Fact]
+    public async Task VersionEtagIsBoundToItsInventoryLot()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var first = await CreateAsync(client, csrf, Guid.NewGuid().ToString(), "First version-bound lot");
+        var second = await CreateAsync(client, csrf, Guid.NewGuid().ToString(), "Second version-bound lot");
+        var secondLotId = (await second.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+
+        var rejected = await UpdateAsync(client, csrf, secondLotId, first.Headers.ETag!.Tag);
+
+        Assert.Equal(System.Net.HttpStatusCode.PreconditionFailed, rejected.StatusCode);
+        Assert.Equal("precondition_failed", (await rejected.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errorCode").GetString());
+    }
+
+    [Fact]
+    public async Task MetadataCorrectionRemainsVisibleAfterDeletionAndHistoryIsDeterministicallyOrdered()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var created = await CreateAsync(client, csrf, Guid.NewGuid().ToString(), "History ordering lot");
+        var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+        var corrected = await UpdateAsync(client, csrf, lotId, created.Headers.ETag!.Tag);
+        var deleted = await DeleteAsync(client, csrf, lotId, corrected.Headers.ETag!.Tag);
+
+        var history = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots/{lotId}/history");
+        var entries = history.EnumerateArray().ToArray();
+
+        Assert.Equal(System.Net.HttpStatusCode.NoContent, deleted.StatusCode);
+        Assert.Equal(3, entries.Length);
+        Assert.Contains(entries, entry => entry.GetProperty("kind").GetString() == "MetadataCorrection");
+        for (var index = 1; index < entries.Length; index++)
+        {
+            var previousTime = entries[index - 1].GetProperty("occurredAt").GetDateTimeOffset();
+            var currentTime = entries[index].GetProperty("occurredAt").GetDateTimeOffset();
+            Assert.True(previousTime >= currentTime);
+            if (previousTime == currentTime)
+            {
+                Assert.True(entries[index - 1].GetProperty("entryId").GetGuid().CompareTo(entries[index].GetProperty("entryId").GetGuid()) > 0);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task HistoryIsOwnerScopedAfterSoftDeletion()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var owner = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        using var other = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        other.DefaultRequestHeaders.Add("X-Test-Subject", "history-user-b");
+        var ownerCsrf = await GetCsrfAsync(owner);
+        await GetCsrfAsync(other);
+        var created = await CreateAsync(owner, ownerCsrf, Guid.NewGuid().ToString(), "Private history lot");
+        var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+        await DeleteAsync(owner, ownerCsrf, lotId, created.Headers.ETag!.Tag);
+
+        var response = await other.GetAsync($"/api/v1/inventory/lots/{lotId}/history");
+
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]

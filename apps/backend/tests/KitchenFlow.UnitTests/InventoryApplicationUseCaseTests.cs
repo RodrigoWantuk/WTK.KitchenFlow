@@ -31,7 +31,19 @@ public sealed class InventoryApplicationUseCaseTests
         Assert.Equal("resource_not_found", history.Problem!.ErrorCode);
     }
 
-    private static InventoryLotApplicationWorkflow CreateWorkflow() => new(new TestCurrentUser(), new TestReadStore(), new TestWriteStore(), TimeProvider.System, new InventoryLotLifecycleUseCase());
+    [Fact]
+    public async Task IncompleteIdempotencyReservationReturnsStableInProgressOutcome()
+    {
+        var incomplete = new InventoryIdempotencyRead(new string('A', 64), 201, null, null, null);
+        var workflow = CreateWorkflow(new TestWriteStore(incomplete));
+        var result = await new CreateInventoryLotHandler(workflow).CreateAsync(
+            new CreateInventoryLotCommand("Tomato", 1m, "Gram", null, "Pantry", null, null, null, null, Guid.NewGuid(), "test"),
+            CancellationToken.None);
+
+        Assert.Equal("idempotency_in_progress", result.Problem!.ErrorCode);
+    }
+
+    private static InventoryLotApplicationWorkflow CreateWorkflow(IInventoryLotWriteStore? writeStore = null) => new(new TestCurrentUser(), new TestReadStore(), writeStore ?? new TestWriteStore(), TimeProvider.System, new InventoryLotLifecycleUseCase());
 
     private sealed class TestCurrentUser : ICurrentUserAccessor
     {
@@ -45,9 +57,9 @@ public sealed class InventoryApplicationUseCaseTests
         public Task<InventoryLotReadPage> ListAsync(InventoryLotReadQuery query, CancellationToken cancellationToken) => Task.FromResult(new InventoryLotReadPage([], null));
     }
 
-    private sealed class TestWriteStore : IInventoryLotWriteStore
+    private sealed class TestWriteStore(InventoryIdempotencyRead? idempotency = null) : IInventoryLotWriteStore
     {
-        public Task<InventoryIdempotencyRead?> FindIdempotencyAsync(Guid ownerUserId, string scope, Guid key, CancellationToken cancellationToken) => Task.FromResult<InventoryIdempotencyRead?>(null);
+        public Task<InventoryIdempotencyRead?> FindIdempotencyAsync(Guid ownerUserId, string scope, Guid key, CancellationToken cancellationToken) => Task.FromResult(idempotency);
         public Task<InventoryLotMutationState?> LoadActiveAsync(Guid ownerUserId, Guid lotId, CancellationToken cancellationToken) => Task.FromResult<InventoryLotMutationState?>(null);
         public Task<InventoryWriteOutcome> SaveCreatedAsync(InventoryLotCreationWrite write, CancellationToken cancellationToken) => Task.FromResult(InventoryWriteOutcome.Saved);
         public Task<InventoryWriteOutcome> SaveMutationAsync(InventoryLotMutationWrite write, CancellationToken cancellationToken) => Task.FromResult(InventoryWriteOutcome.Saved);

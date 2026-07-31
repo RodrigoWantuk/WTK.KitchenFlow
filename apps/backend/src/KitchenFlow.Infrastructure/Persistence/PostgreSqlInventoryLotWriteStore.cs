@@ -6,6 +6,13 @@ using Npgsql;
 namespace KitchenFlow.Infrastructure.Persistence;
 
 /// <summary>PostgreSQL implementation of the atomic inventory mutation persistence boundary.</summary>
+/// <remarks>
+/// PostgreSQL unique-index insertion waits for a competing uncommitted row and then either wins or
+/// raises the named unique violation after the winner commits. Consequently, the losing request can
+/// clear its failed EF unit of work and immediately read the completed authoritative replay record.
+/// The <c>idempotency_in_progress</c> application outcome remains a defensive response for manually
+/// reserved or otherwise incomplete records and is not expected during this single-transaction path.
+/// </remarks>
 public sealed class PostgreSqlInventoryLotWriteStore(ApplicationDbContext database) : IInventoryLotWriteStore
 {
     /// <inheritdoc />

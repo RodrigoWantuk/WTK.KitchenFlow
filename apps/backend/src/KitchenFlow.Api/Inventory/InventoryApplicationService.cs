@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text.Json;
 using KitchenFlow.Modules.Inventory.Application;
@@ -47,7 +48,7 @@ public sealed class InventoryApplicationService(
     /// <summary>Maps a metadata-correction DTO and decoded ETag precondition to the application command.</summary>
     public async Task<IResult> UpdateAsync(Guid lotId, UpdateLotRequest request, HttpRequest requestContext, CancellationToken cancellationToken)
     {
-        var command = new UpdateInventoryLotCommand(lotId, request.ProductName, request.StorageLocation, request.CustomLocation, request.PackageState, request.PrintedExpirationDate, request.Notes, ReadPrecondition(requestContext), requestContext.HttpContext.TraceIdentifier);
+        var command = new UpdateInventoryLotCommand(lotId, request.ProductName, request.StorageLocation, request.CustomLocation, request.PackageState, request.PrintedExpirationDate, request.Notes, ReadPrecondition(lotId, requestContext), requestContext.HttpContext.TraceIdentifier);
         return ToLotResult("metadata_update", await updateLot.UpdateAsync(command, cancellationToken), requestContext.HttpContext.TraceIdentifier);
     }
 
@@ -55,14 +56,14 @@ public sealed class InventoryApplicationService(
     public async Task<IResult> AdjustAsync(Guid lotId, AdjustmentRequest request, HttpRequest requestContext, CancellationToken cancellationToken)
     {
         var key = Guid.TryParse(requestContext.Headers["Idempotency-Key"], out var parsed) ? parsed : (Guid?)null;
-        var command = new AdjustInventoryLotCommand(lotId, request.Type, request.Value, request.AvailabilityState, request.ReasonCode, request.Note, key, ReadPrecondition(requestContext), requestContext.HttpContext.TraceIdentifier);
+        var command = new AdjustInventoryLotCommand(lotId, request.Type, request.Value, request.AvailabilityState, request.ReasonCode, request.Note, key, ReadPrecondition(lotId, requestContext), requestContext.HttpContext.TraceIdentifier);
         return ToLotResult("adjust", await adjustLot.AdjustAsync(command, cancellationToken), requestContext.HttpContext.TraceIdentifier);
     }
 
     /// <summary>Maps a delete request and decoded ETag precondition to the application command.</summary>
     public async Task<IResult> DeleteAsync(Guid lotId, HttpRequest requestContext, CancellationToken cancellationToken)
     {
-        var command = new DeleteInventoryLotCommand(lotId, ReadPrecondition(requestContext), requestContext.HttpContext.TraceIdentifier);
+        var command = new DeleteInventoryLotCommand(lotId, ReadPrecondition(lotId, requestContext), requestContext.HttpContext.TraceIdentifier);
         return ToLotResult("delete", await deleteLot.DeleteAsync(command, cancellationToken), requestContext.HttpContext.TraceIdentifier);
     }
 
@@ -70,7 +71,7 @@ public sealed class InventoryApplicationService(
     public async Task<IResult> HistoryAsync(Guid lotId, HttpContext context, CancellationToken cancellationToken) =>
         ToResult(await getHistory.HistoryAsync(lotId, cancellationToken), items => (IReadOnlyList<LotHistoryResponse>)items.Select(item => new LotHistoryResponse(item.EntryId, item.Kind, item.TransactionType, ToQuantity(item.PreviousQuantity), ToQuantity(item.ResultingQuantity), item.ReasonCode, item.ChangedFields, item.OccurredAt)).ToList(), context.TraceIdentifier);
 
-    private LotResponse ToResponse(InventoryLotView item) => ToResponse(item, tokens.WriteVersion(item.Version));
+    private LotResponse ToResponse(InventoryLotView item) => ToResponse(item, tokens.WriteVersion(item.LotId, item.Version));
     private static LotResponse ToResponse(InventoryLotView item, string version) => new(item.LotId, item.ProductId, item.ProductName, ToQuantity(item.Quantity)!, item.StorageLocation, item.CustomLocation, item.PackageState, item.PrintedExpirationDate, item.Notes, version, item.CreatedAt, item.UpdatedAt);
     private static QuantityResponse? ToQuantity(InventoryQuantity? quantity) => quantity is null ? null : new QuantityResponse(quantity.MeasuredValue, quantity.Unit, quantity.AvailabilityState);
 
@@ -87,7 +88,7 @@ public sealed class InventoryApplicationService(
             return Results.NoContent();
         }
 
-        var version = tokens.WriteVersion(result.Value!.Version);
+        var version = tokens.WriteVersion(result.Value!.LotId, result.Value.Version);
         return new EtagResult<LotResponse>(ToResponse(result.Value!, version), Quote(version), StatusFor(result.Success));
     }
 
@@ -96,7 +97,7 @@ public sealed class InventoryApplicationService(
             ? Problem(result.Problem.ErrorCode, result.Problem.Detail, StatusFor(result.Problem.ErrorCode), traceId, result.Problem.Errors)
             : Results.Json(map(result.Value!), statusCode: StatusFor(result.Success));
 
-    private InventoryVersionPrecondition ReadPrecondition(HttpRequest request)
+    private InventoryVersionPrecondition ReadPrecondition(Guid lotId, HttpRequest request)
     {
         var raw = request.Headers.IfMatch.ToString();
         if (string.IsNullOrWhiteSpace(raw))
@@ -104,7 +105,7 @@ public sealed class InventoryApplicationService(
             return InventoryVersionPrecondition.Missing;
         }
 
-        return tokens.TryReadVersion(raw.Trim('"'), out var version) ? InventoryVersionPrecondition.Valid(version) : InventoryVersionPrecondition.Invalid;
+        return tokens.TryReadVersion(lotId, raw.Trim('"'), out var version) ? InventoryVersionPrecondition.Valid(version) : InventoryVersionPrecondition.Invalid;
     }
 
     private static int StatusFor(InventoryApplicationSuccess success) => success switch
@@ -152,10 +153,10 @@ public sealed class InventoryApplicationService(
 public interface IInventoryHttpTokenService
 {
     /// <summary>Formats an opaque HTTP ETag from a trusted raw concurrency version.</summary>
-    string WriteVersion(long version);
+    string WriteVersion(Guid lotId, long version);
 
-    /// <summary>Parses an opaque HTTP ETag into a raw concurrency version.</summary>
-    bool TryReadVersion(string token, out long version);
+    /// <summary>Parses an opaque resource-bound HTTP ETag into a raw concurrency version.</summary>
+    bool TryReadVersion(Guid lotId, string token, out long version);
 
     /// <summary>Formats a tamper-evident HTTP cursor from a trusted persistence sort position.</summary>
     string WriteCursor(InventoryLotReadCursor cursor);
@@ -169,20 +170,28 @@ public sealed class DataProtectionInventoryHttpTokenService(IDataProtectionProvi
 {
     private const string VersionPurpose = "KitchenFlow.Inventory.LotVersion.v1";
     private const string CursorPurpose = "KitchenFlow.Inventory.LotCursor.v1";
+    private readonly ConcurrentDictionary<(Guid LotId, long Version), string> versionTokens = new();
 
     /// <inheritdoc />
-    public string WriteVersion(long version) => dataProtection.CreateProtector(VersionPurpose).Protect(version.ToString(System.Globalization.CultureInfo.InvariantCulture));
+    public string WriteVersion(Guid lotId, long version) =>
+        versionTokens.GetOrAdd((lotId, version), static (state, provider) =>
+            provider.CreateProtector(VersionPurpose).Protect($"{state.LotId:N}:{state.Version.ToString(System.Globalization.CultureInfo.InvariantCulture)}"), dataProtection);
 
     /// <inheritdoc />
-    public bool TryReadVersion(string token, out long version)
+    public bool TryReadVersion(Guid lotId, string token, out long version)
     {
+        version = 0;
         try
         {
-            return long.TryParse(dataProtection.CreateProtector(VersionPurpose).Unprotect(token), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out version);
+            var payload = dataProtection.CreateProtector(VersionPurpose).Unprotect(token);
+            var separator = payload.IndexOf(':', StringComparison.Ordinal);
+            return separator > 0 &&
+                Guid.TryParseExact(payload.AsSpan(0, separator), "N", out var tokenLotId) &&
+                tokenLotId == lotId &&
+                long.TryParse(payload.AsSpan(separator + 1), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out version);
         }
         catch (CryptographicException)
         {
-            version = 0;
             return false;
         }
     }

@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend remediation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-30T12:26:00Z
+- **Last updated:** 2026-07-31T02:22:00Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, changes required)
 - **Current review head:** `fc92dd3c41ad99d64ae053f778cd5a6a46b84f44`
@@ -296,11 +296,11 @@ Every commit must update this plan's `Execution state` and `Progress log` and th
 - [x] Seven Inventory use cases are module-owned and transport-neutral.
 - [x] API alone maps outcomes to HTTP, protects cursor/version tokens, and formats ETags.
 - [x] Architecture tests enforce the intended semantic boundaries.
-- [ ] Idempotency distinguishes exact-key contention from unrelated persistence failures.
-- [ ] Concurrent create and adjustment behavior is deterministic and fully tested for identical and different payloads.
-- [ ] Non-idempotency failures roll back every atomic side effect.
-- [ ] Idempotency retention is configurable and validated.
-- [ ] Metadata corrections expose exact changed fields through an immutable owner-visible history contract.
+- [x] Idempotency distinguishes exact-key contention from unrelated persistence failures.
+- [x] Concurrent create and adjustment behavior is deterministic and fully tested for identical and different payloads.
+- [x] Non-idempotency failures roll back every atomic side effect.
+- [x] Idempotency retention is configurable and validated.
+- [x] Metadata corrections expose exact changed fields through an immutable owner-visible history contract.
 - [ ] OpenAPI matches runtime security, CSRF, ETag, quantity modes, nullability, errors, and examples.
 - [x] OpenAPI parses/lints as 3.1 and snapshot drift is checked in CI.
 - [ ] Production configuration uses typed validated options with no development fallback.
@@ -337,17 +337,28 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** R2 is complete: seven concrete transport-neutral handlers are independently registered/tested and the API depends only on their contracts; R3-R9 remain partially complete.
+- **Current checkpoint:** R2-R4 are complete: exact idempotency contention, atomic rollback, resource-bound replay ETags, append-only database history, safe correction projection, post-delete visibility, ownership, and ordering are covered.
 - **Execution status:** In Progress, not Validating.
-- **Confirmed completed phase:** R1.
-- **Confirmed completed phases:** R1 and R2.
-- **Partially completed phases:** R3, R4, R5, R6, R7, R8, and R9.
+- **Confirmed completed phases:** R1, R2, R3, and R4.
+- **Partially completed phases:** R5, R6, R7, R8, and R9.
 - **Not started at a valid final candidate:** R10.
 - **Current blocker:** None external. Remaining work is implementation and acceptance evidence inside this branch.
 - **Contract disposition:** OpenAPI snapshot is provisional and must not be consumed as PLAN-0004's stable live-client contract.
-- **Exact next action:** Complete R3/R4 replay, rollback, and immutable-history evidence before finalizing the OpenAPI contract.
+- **Exact next action:** Complete the R5 quantity nullability, problem examples, and route-by-route runtime agreement suite, then regenerate the snapshot.
 
 ## Progress log
+
+### 2026-07-31T02:22:00Z — R3/R4 idempotency, rollback, and immutable history completed
+
+- **Checkpoint:** Bound opaque concurrency tokens to lot identity and cached each emitted lot/version token so completed create and adjustment replay returns the exact original body and ETag during the running backend. Documented PostgreSQL unique-index wait/winner visibility and the defensive `idempotency_in_progress` behavior.
+- **Persistence and history:** Added an append-only PostgreSQL migration that rejects updates/deletes on inventory transactions and audit events. Added direct write-store proofs that unrelated foreign-key failures are rethrown, clear failed EF state, and atomically roll back create and adjustment graphs.
+- **Security and behavior:** Added tests for cross-lot ETag rejection, exact replay bodies/ETags, deterministic history ordering, correction visibility after soft deletion, post-delete owner isolation, and database-enforced audit immutability. Private correction values remain absent from history metadata.
+- **Material files changed:** API ETag adapter; PostgreSQL write store; append-only migration and designer; unit, API integration, and migration tests; this plan; and `docs/plan-status.md`.
+- **Commands and validation performed:** Release solution build; five targeted API replay/history tests; four migration/integrity tests; and the targeted adjustment rollback test.
+- **Result:** Build passed with zero warnings/errors; targeted API tests passed 5/5; migration/integrity tests passed 4/4 before the added adjustment case; targeted adjustment rollback passed 1/1.
+- **Known failures or unverified behavior:** Full suite is deferred until adjacent R5-R9 work is complete. Data Protection deliberately creates a new ciphertext after a process restart; old ETags remain verifiable through the persistent key ring and represent the same resource/version, while byte-for-byte replay identity is guaranteed within a running backend instance.
+- **Blockers:** None.
+- **Exact next action:** Complete R5 and regenerate the OpenAPI snapshot after executable runtime-contract checks pass.
 
 ### 2026-07-31T02:20:00Z — R2 concrete application handlers completed
 
