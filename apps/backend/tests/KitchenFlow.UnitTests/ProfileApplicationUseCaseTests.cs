@@ -52,6 +52,136 @@ public sealed class ProfileApplicationUseCaseTests
     }
 
     [Fact]
+    public async Task PutProfileClearsOmittedDisplayNameToAbsent()
+    {
+        var ownerId = Guid.NewGuid();
+        var readStore = new TestProfileReadStore();
+        var writeStore = new TestProfileWriteStore(readStore);
+        var workflow = new ProfileApplicationWorkflow(new TestCurrentUser(ownerId), readStore, writeStore, TimeProvider.System);
+        var patchHandler = new PatchProfileHandler(workflow);
+        await patchHandler.PatchAsync(new PatchProfileCommand(
+            new ProfileMutationInput(
+                DisplayName: new FieldMutation<string?>("confirm", "Alex", "durable"),
+                DefaultAdultCount: null,
+                DefaultChildCount: null,
+                DefaultServingCount: null,
+                Language: new FieldMutation<string?>("confirm", "pt-BR", "durable"),
+                Region: null,
+                Currency: null,
+                MeasurementSystem: null,
+                TimeZone: null,
+                PlanningCadence: null,
+                ShoppingCadence: null,
+                OverallSkill: null,
+                Confidence: null,
+                PreferredInstructionDetail: null,
+                OrdinaryPrepMinutes: null,
+                ExceptionalPrepMinutes: null,
+                EffortTolerance: null,
+                CleanupTolerance: null,
+                RepeatMealPreference: null,
+                ReheatingPreference: null,
+                LeftoverPreference: null,
+                FreezingPreference: null,
+                AdultDeclaration: null,
+                KnownTechniques: null,
+                TechniquesToLearn: null,
+                Goals: null,
+                AbandonmentReasons: null),
+            ProfileVersionPrecondition.Missing,
+            "test"), CancellationToken.None);
+
+        var putHandler = new PutProfileHandler(workflow);
+        var model = await readStore.FindAsync(ownerId, CancellationToken.None);
+        var result = await putHandler.PutAsync(new PutProfileCommand(
+            new ProfileMutationInput(
+                DisplayName: null,
+                DefaultAdultCount: null,
+                DefaultChildCount: null,
+                DefaultServingCount: null,
+                Language: new FieldMutation<string?>("confirm", "en", "durable"),
+                Region: null,
+                Currency: null,
+                MeasurementSystem: null,
+                TimeZone: null,
+                PlanningCadence: null,
+                ShoppingCadence: null,
+                OverallSkill: null,
+                Confidence: null,
+                PreferredInstructionDetail: null,
+                OrdinaryPrepMinutes: null,
+                ExceptionalPrepMinutes: null,
+                EffortTolerance: null,
+                CleanupTolerance: null,
+                RepeatMealPreference: null,
+                ReheatingPreference: null,
+                LeftoverPreference: null,
+                FreezingPreference: null,
+                AdultDeclaration: null,
+                KnownTechniques: null,
+                TechniquesToLearn: null,
+                Goals: null,
+                AbandonmentReasons: null),
+            ProfileVersionPrecondition.Valid(model!.Profile.ConcurrencyToken),
+            "test"), CancellationToken.None);
+
+        Assert.Null(result.Problem);
+        Assert.Equal("absent", result.Value!.DisplayName.Presence);
+        Assert.Equal("confirmed", result.Value.Household.Language.Presence);
+        Assert.Equal("en", result.Value.Household.Language.Value);
+    }
+
+    [Fact]
+    public async Task InvalidDurabilityIsRejected()
+    {
+        var ownerId = Guid.NewGuid();
+        var workflow = new ProfileApplicationWorkflow(new TestCurrentUser(ownerId), new TestProfileReadStore(), new TestProfileWriteStore(new TestProfileReadStore()), TimeProvider.System);
+        var handler = new PatchProfileHandler(workflow);
+        var result = await handler.PatchAsync(new PatchProfileCommand(
+            new ProfileMutationInput(
+                DisplayName: new FieldMutation<string?>("confirm", "Alex", "temporary"),
+                DefaultAdultCount: null,
+                DefaultChildCount: null,
+                DefaultServingCount: null,
+                Language: null,
+                Region: null,
+                Currency: null,
+                MeasurementSystem: null,
+                TimeZone: null,
+                PlanningCadence: null,
+                ShoppingCadence: null,
+                OverallSkill: null,
+                Confidence: null,
+                PreferredInstructionDetail: null,
+                OrdinaryPrepMinutes: null,
+                ExceptionalPrepMinutes: null,
+                EffortTolerance: null,
+                CleanupTolerance: null,
+                RepeatMealPreference: null,
+                ReheatingPreference: null,
+                LeftoverPreference: null,
+                FreezingPreference: null,
+                AdultDeclaration: null,
+                KnownTechniques: null,
+                TechniquesToLearn: null,
+                Goals: null,
+                AbandonmentReasons: null),
+            ProfileVersionPrecondition.Missing,
+            "test"), CancellationToken.None);
+
+        Assert.Equal("validation_failed", result.Problem!.ErrorCode);
+    }
+
+    [Fact]
+    public async Task PreferenceHistoryRedactionUsesGenericCodes()
+    {
+        var commands = new[] { new PreferenceMutationInput("add", "Allergy", "peanut_allergy", "severe") };
+        var codes = ProfileHistoryRedaction.RedactPreferenceFieldCodes(commands);
+        Assert.Contains("allergy_entry_added", codes);
+        Assert.DoesNotContain(codes, code => code.Contains("peanut", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task PutPreferencesRejectsInvalidCategory()
     {
         var ownerId = Guid.NewGuid();

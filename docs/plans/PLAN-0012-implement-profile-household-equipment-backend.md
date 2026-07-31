@@ -5,9 +5,9 @@
 - **Priority:** Critical
 - **Owner:** Cursor cloud agent
 - **Created:** 2026-07-31
-- **Last updated:** 2026-07-31T19:10:00Z
+- **Last updated:** 2026-07-31T22:45:00Z
 - **Branch:** `cursor/plan-0012-profile-backend-1672`
-- **Pull request:** Draft open
+- **Pull request:** Open — remediation round
 - **Base commit:** `f9d429346615bf5b157656822057917ca2fe4032` (PLAN-0003 merged via PR #9)
 - **Related specification:** PLAN-0002, `docs/product/audience-and-profile.md`
 - **Related ADRs:** ADR-0002, ADR-0003, ADR-0004, ADR-0006
@@ -68,17 +68,31 @@ Implement a production-shaped backend slice for progressive profile, single-hous
 - [x] Privacy-minimizing audit history without sensitive payloads
 - [x] Module-owned export and deletion projection interfaces prepared for Privacy workflows
 - [x] Architecture tests enforce module boundaries
-- [x] Full test suite deterministic with zero skipped tests (127/127 local Release)
+- [x] Full test suite deterministic with zero skipped tests (140/140 local Release)
 - [x] Release build zero warnings, locked restore, migrations from empty and prior main, OpenAPI truthful
 
 ## Execution state
 
-- **Current phase:** Validating — draft PR candidate
-- **Last verified checkpoint:** Release build 0 warnings; 127/127 tests; migration `20260731185224_InitialProfilesSlice`; OpenAPI export and lint passed locally
-- **Blockers:** Awaiting CI and independent review on final candidate SHA
-- **Exact next action:** Push branch, open draft PR, reconcile CI evidence, mark ready when checks agree
+- **Current phase:** Validating — remediation complete, awaiting CI
+- **Last verified checkpoint:** Release build 0 warnings; 140/140 tests; PostgreSQL optimistic concurrency; PUT replace semantics; action/durability validation; history redaction; equipment identity reconcile; collection ETags
+- **Blockers:** Awaiting CI on remediation SHA and independent review
+- **Exact next action:** Push remediation commit, reconcile CI, request review
 
 ## Progress log
+
+### 2026-07-31T22:45:00Z — Review remediation delivered
+
+- Fixed PostgreSQL `Version` increment (`ExpectedVersion + 1`) and real concurrent-write rejection.
+- Implemented true PUT replace semantics (omitted fields become `Absent`; omitted lists cleared).
+- Added strict `action`/`durability` validation; reject unsupported `temporary` with 400.
+- Redacted allergy/medical restriction codes in privacy-minimizing history.
+- Reconciled equipment by stable code with soft removal and preserved entry IDs.
+- Returned versioned collection responses and ETags for preferences/equipment GET/PUT.
+- Mapped duplicate profile creation to controlled `409 profile_already_exists` or `428` when If-Match is missing.
+- Added `ProfileRemediationTests` integration coverage and expanded unit tests.
+- Merged `main` (PLAN-0013 docs) and reconciled `docs/plan-status.md`.
+- **Validation:** `dotnet build/test/format -c Release` green with 140/140 tests.
+- **Next:** CI evidence and PR review on final SHA.
 
 ### 2026-07-31T19:10:00Z — Profile backend slice implemented
 

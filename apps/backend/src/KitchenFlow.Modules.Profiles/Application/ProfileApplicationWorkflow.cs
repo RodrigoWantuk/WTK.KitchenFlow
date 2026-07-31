@@ -6,8 +6,6 @@ namespace KitchenFlow.Modules.Profiles.Application;
 /// <summary>Module-owned application workflow for the authenticated profile slice.</summary>
 public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser, IProfileReadStore readStore, IProfileWriteStore writeStore, TimeProvider timeProvider)
 {
-    private static readonly string[] SensitiveRestrictionCategories = ["Allergy", "MedicalRestriction"];
-
     /// <summary>Returns the owner profile projection, using an absent scaffold when no profile exists yet.</summary>
     public async Task<ProfileApplicationResult<ProfileView>> GetAsync(CancellationToken cancellationToken)
     {
@@ -25,16 +23,21 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
         await MutateAsync(command.Input, command.Precondition, command.CorrelationId, replaceMissingWithAbsent: false, cancellationToken);
 
     /// <summary>Returns owner preferences and restrictions.</summary>
-    public async Task<ProfileApplicationResult<IReadOnlyList<PreferenceView>>> GetPreferencesAsync(CancellationToken cancellationToken)
+    public async Task<ProfileApplicationResult<VersionedCollectionView<PreferenceView>>> GetPreferencesAsync(CancellationToken cancellationToken)
     {
         var user = await currentUser.GetCurrentAsync(cancellationToken);
         var model = await readStore.FindAsync(user.Id, cancellationToken);
-        var items = model?.Preferences.Where(item => item.Presence == ProfileFieldPresence.Confirmed).Select(ToPreferenceView).ToList() ?? [];
-        return ProfileApplicationResult<IReadOnlyList<PreferenceView>>.Succeeded(items);
+        if (model is null)
+        {
+            return ProfileApplicationResult<VersionedCollectionView<PreferenceView>>.Succeeded(new VersionedCollectionView<PreferenceView>(user.Id, Guid.Empty, []));
+        }
+
+        var items = model.Preferences.Where(item => item.Presence == ProfileFieldPresence.Confirmed).Select(ToPreferenceView).ToList();
+        return ProfileApplicationResult<VersionedCollectionView<PreferenceView>>.Succeeded(new VersionedCollectionView<PreferenceView>(user.Id, model.Profile.ConcurrencyToken, items));
     }
 
     /// <summary>Replaces preferences and restrictions via explicit commands only.</summary>
-    public async Task<ProfileApplicationResult<IReadOnlyList<PreferenceView>>> PutPreferencesAsync(PutPreferencesCommand command, CancellationToken cancellationToken)
+    public async Task<ProfileApplicationResult<VersionedCollectionView<PreferenceView>>> PutPreferencesAsync(PutPreferencesCommand command, CancellationToken cancellationToken)
     {
         var user = await currentUser.GetCurrentAsync(cancellationToken);
         var now = timeProvider.GetUtcNow();
@@ -44,12 +47,12 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
         {
             if (!ValidatePrecondition(command.Precondition, out var preconditionProblem))
             {
-                return ProfileApplicationResult<IReadOnlyList<PreferenceView>>.Failure(preconditionProblem!.ErrorCode, preconditionProblem.Detail, preconditionProblem.Errors);
+                return ProfileApplicationResult<VersionedCollectionView<PreferenceView>>.Failure(preconditionProblem!.ErrorCode, preconditionProblem.Detail, preconditionProblem.Errors);
             }
 
             if (existing!.Profile.ConcurrencyToken != command.Precondition.Token)
             {
-                return ProfileApplicationResult<IReadOnlyList<PreferenceView>>.Failure("precondition_failed", "The profile version is out of date.");
+                return ProfileApplicationResult<VersionedCollectionView<PreferenceView>>.Failure("precondition_failed", "The profile version is out of date.");
             }
         }
 
@@ -58,35 +61,45 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
         var errors = ValidatePreferenceCommands(command.Entries);
         if (errors.Count > 0)
         {
-            return ProfileApplicationResult<IReadOnlyList<PreferenceView>>.Failure("validation_failed", "One or more preference commands are invalid.", errors);
+            return ProfileApplicationResult<VersionedCollectionView<PreferenceView>>.Failure("validation_failed", "One or more preference commands are invalid.", errors);
         }
 
         var preferences = ApplyPreferenceCommands(model.Preferences.ToList(), user.Id, command.Entries, now);
-        var changedCodes = command.Entries.Select(item => $"{item.Category}:{item.StableCode}").Distinct(StringComparer.Ordinal).ToList();
+        var changedCodes = ProfileHistoryRedaction.RedactPreferenceFieldCodes(command.Entries);
         model.Profile.ApplyDurableUpdate(_ => { }, now);
         var write = new ProfileMutationWrite(user.Id, model.Profile, preferences, model.Equipment.ToList(), model.OrderedCodes.ToList(), "preferences", changedCodes, command.CorrelationId, isCreate ? 0 : model.Version);
         var outcome = isCreate ? await writeStore.CreateAsync(write, cancellationToken) : await writeStore.SaveAsync(write, cancellationToken);
+        if (outcome == ProfileWriteOutcome.CreateConflict)
+        {
+            return ProfileApplicationResult<VersionedCollectionView<PreferenceView>>.Failure("profile_already_exists", "A profile already exists for this account.");
+        }
+
         if (outcome == ProfileWriteOutcome.ConcurrencyConflict)
         {
-            return ProfileApplicationResult<IReadOnlyList<PreferenceView>>.Failure("precondition_failed", "The profile version is out of date.");
+            return ProfileApplicationResult<VersionedCollectionView<PreferenceView>>.Failure("precondition_failed", "The profile version is out of date.");
         }
 
         var refreshed = await readStore.FindAsync(user.Id, cancellationToken);
         var items = refreshed!.Preferences.Where(item => item.Presence == ProfileFieldPresence.Confirmed).Select(ToPreferenceView).ToList();
-        return ProfileApplicationResult<IReadOnlyList<PreferenceView>>.Succeeded(items);
+        return ProfileApplicationResult<VersionedCollectionView<PreferenceView>>.Succeeded(new VersionedCollectionView<PreferenceView>(user.Id, refreshed.Profile.ConcurrencyToken, items));
     }
 
     /// <summary>Returns active owner equipment.</summary>
-    public async Task<ProfileApplicationResult<IReadOnlyList<EquipmentView>>> GetEquipmentAsync(CancellationToken cancellationToken)
+    public async Task<ProfileApplicationResult<VersionedCollectionView<EquipmentView>>> GetEquipmentAsync(CancellationToken cancellationToken)
     {
         var user = await currentUser.GetCurrentAsync(cancellationToken);
         var model = await readStore.FindAsync(user.Id, cancellationToken);
-        var items = model?.Equipment.Where(item => !item.IsRemoved).Select(ToEquipmentView).ToList() ?? [];
-        return ProfileApplicationResult<IReadOnlyList<EquipmentView>>.Succeeded(items);
+        if (model is null)
+        {
+            return ProfileApplicationResult<VersionedCollectionView<EquipmentView>>.Succeeded(new VersionedCollectionView<EquipmentView>(user.Id, Guid.Empty, []));
+        }
+
+        var items = model.Equipment.Where(item => !item.IsRemoved).OrderBy(item => item.SortOrder).Select(ToEquipmentView).ToList();
+        return ProfileApplicationResult<VersionedCollectionView<EquipmentView>>.Succeeded(new VersionedCollectionView<EquipmentView>(user.Id, model.Profile.ConcurrencyToken, items));
     }
 
     /// <summary>Replaces owner equipment.</summary>
-    public async Task<ProfileApplicationResult<IReadOnlyList<EquipmentView>>> PutEquipmentAsync(PutEquipmentCommand command, CancellationToken cancellationToken)
+    public async Task<ProfileApplicationResult<VersionedCollectionView<EquipmentView>>> PutEquipmentAsync(PutEquipmentCommand command, CancellationToken cancellationToken)
     {
         var user = await currentUser.GetCurrentAsync(cancellationToken);
         var now = timeProvider.GetUtcNow();
@@ -96,12 +109,12 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
         {
             if (!ValidatePrecondition(command.Precondition, out var preconditionProblem))
             {
-                return ProfileApplicationResult<IReadOnlyList<EquipmentView>>.Failure(preconditionProblem!.ErrorCode, preconditionProblem.Detail, preconditionProblem.Errors);
+                return ProfileApplicationResult<VersionedCollectionView<EquipmentView>>.Failure(preconditionProblem!.ErrorCode, preconditionProblem.Detail, preconditionProblem.Errors);
             }
 
             if (existing!.Profile.ConcurrencyToken != command.Precondition.Token)
             {
-                return ProfileApplicationResult<IReadOnlyList<EquipmentView>>.Failure("precondition_failed", "The profile version is out of date.");
+                return ProfileApplicationResult<VersionedCollectionView<EquipmentView>>.Failure("precondition_failed", "The profile version is out of date.");
             }
         }
 
@@ -110,31 +123,27 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
         var errors = ValidateEquipmentCommands(command.Entries);
         if (errors.Count > 0)
         {
-            return ProfileApplicationResult<IReadOnlyList<EquipmentView>>.Failure("validation_failed", "One or more equipment entries are invalid.", errors);
+            return ProfileApplicationResult<VersionedCollectionView<EquipmentView>>.Failure("validation_failed", "One or more equipment entries are invalid.", errors);
         }
 
-        var equipment = command.Entries.Select((item, index) =>
-        {
-            if (!StableCode.TryCreate(item.StableCode, out var code))
-            {
-                throw new InvalidOperationException("Validated equipment command contained an invalid stable code.");
-            }
-
-            return EquipmentEntry.Create(user.Id, code!, item.CustomName, item.Capacity, item.CapacityUnit, item.ConstraintNote, item.SortOrder == 0 ? index : item.SortOrder, now);
-        }).ToList();
-
-        var changedCodes = equipment.Select(item => item.StableCode.Value).ToList();
+        var equipment = ReconcileEquipment(model.Equipment.ToList(), user.Id, command.Entries, now);
+        var changedCodes = command.Entries.Select(item => item.StableCode).Distinct(StringComparer.Ordinal).ToList();
         model.Profile.ApplyDurableUpdate(_ => { }, now);
         var write = new ProfileMutationWrite(user.Id, model.Profile, model.Preferences.ToList(), equipment, model.OrderedCodes.ToList(), "equipment", changedCodes, command.CorrelationId, isCreate ? 0 : model.Version);
         var outcome = isCreate ? await writeStore.CreateAsync(write, cancellationToken) : await writeStore.SaveAsync(write, cancellationToken);
+        if (outcome == ProfileWriteOutcome.CreateConflict)
+        {
+            return ProfileApplicationResult<VersionedCollectionView<EquipmentView>>.Failure("profile_already_exists", "A profile already exists for this account.");
+        }
+
         if (outcome == ProfileWriteOutcome.ConcurrencyConflict)
         {
-            return ProfileApplicationResult<IReadOnlyList<EquipmentView>>.Failure("precondition_failed", "The profile version is out of date.");
+            return ProfileApplicationResult<VersionedCollectionView<EquipmentView>>.Failure("precondition_failed", "The profile version is out of date.");
         }
 
         var refreshed = await readStore.FindAsync(user.Id, cancellationToken);
-        var items = refreshed!.Equipment.Where(item => !item.IsRemoved).Select(ToEquipmentView).ToList();
-        return ProfileApplicationResult<IReadOnlyList<EquipmentView>>.Succeeded(items);
+        var items = refreshed!.Equipment.Where(item => !item.IsRemoved).OrderBy(item => item.SortOrder).Select(ToEquipmentView).ToList();
+        return ProfileApplicationResult<VersionedCollectionView<EquipmentView>>.Succeeded(new VersionedCollectionView<EquipmentView>(user.Id, refreshed.Profile.ConcurrencyToken, items));
     }
 
     /// <summary>Returns progressive completeness without blocking usage.</summary>
@@ -228,12 +237,26 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
             orderedCodes.AddRange(CreateOrderedCodes(user.Id, ProfileListNames.KnownTechniques, input.KnownTechniques, now));
             changedFields.Add("knownTechniques");
         }
+        else if (replaceMissingWithAbsent)
+        {
+            if (orderedCodes.RemoveAll(item => item.ListName == ProfileListNames.KnownTechniques) > 0)
+            {
+                changedFields.Add("knownTechniques");
+            }
+        }
 
         if (input.TechniquesToLearn is not null)
         {
             orderedCodes.RemoveAll(item => item.ListName == ProfileListNames.TechniquesToLearn);
             orderedCodes.AddRange(CreateOrderedCodes(user.Id, ProfileListNames.TechniquesToLearn, input.TechniquesToLearn, now));
             changedFields.Add("techniquesToLearn");
+        }
+        else if (replaceMissingWithAbsent)
+        {
+            if (orderedCodes.RemoveAll(item => item.ListName == ProfileListNames.TechniquesToLearn) > 0)
+            {
+                changedFields.Add("techniquesToLearn");
+            }
         }
 
         if (input.Goals is not null)
@@ -242,6 +265,13 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
             orderedCodes.AddRange(CreateOrderedCodes(user.Id, ProfileListNames.Goals, input.Goals, now));
             changedFields.Add("goals");
         }
+        else if (replaceMissingWithAbsent)
+        {
+            if (orderedCodes.RemoveAll(item => item.ListName == ProfileListNames.Goals) > 0)
+            {
+                changedFields.Add("goals");
+            }
+        }
 
         if (input.AbandonmentReasons is not null)
         {
@@ -249,9 +279,21 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
             orderedCodes.AddRange(CreateOrderedCodes(user.Id, ProfileListNames.AbandonmentReasons, input.AbandonmentReasons, now));
             changedFields.Add("abandonmentReasons");
         }
+        else if (replaceMissingWithAbsent)
+        {
+            if (orderedCodes.RemoveAll(item => item.ListName == ProfileListNames.AbandonmentReasons) > 0)
+            {
+                changedFields.Add("abandonmentReasons");
+            }
+        }
 
         var write = new ProfileMutationWrite(user.Id, model.Profile, model.Preferences.ToList(), model.Equipment.ToList(), orderedCodes, "profile", changedFields.Distinct(StringComparer.Ordinal).ToList(), correlationId, isCreate ? 0 : model.Version);
         var outcome = isCreate ? await writeStore.CreateAsync(write, cancellationToken) : await writeStore.SaveAsync(write, cancellationToken);
+        if (outcome == ProfileWriteOutcome.CreateConflict)
+        {
+            return ProfileApplicationResult<ProfileView>.Failure("profile_already_exists", "A profile already exists for this account.");
+        }
+
         if (outcome == ProfileWriteOutcome.ConcurrencyConflict)
         {
             return ProfileApplicationResult<ProfileView>.Failure("precondition_failed", "The profile version is out of date.");
@@ -348,20 +390,22 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
     {
         if (mutation is null)
         {
-            if (replaceMissing)
-            {
-                return;
-            }
-
             return;
         }
 
-        if (mutation.Action is "remove")
+        if (!ProfileFieldMutationRules.IsValidAction(mutation.Action, replaceMissing, out var actionError))
         {
+            addError(field, actionError);
             return;
         }
 
-        if (mutation.Durability == "temporary")
+        if (!ProfileFieldMutationRules.IsValidDurability(mutation.Durability, out var durabilityError))
+        {
+            addError(field, durabilityError);
+            return;
+        }
+
+        if (mutation.Action is "remove" or "absent")
         {
             return;
         }
@@ -374,7 +418,24 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ValidateCountField(FieldMutation<int?>? mutation, string field, bool replaceMissing, int min, int max, Action<string, string> addError)
     {
-        if (mutation is null || mutation.Action is "remove" || mutation.Durability == "temporary")
+        if (mutation is null)
+        {
+            return;
+        }
+
+        if (!ProfileFieldMutationRules.IsValidAction(mutation.Action, replaceMissing, out var actionError))
+        {
+            addError(field, actionError);
+            return;
+        }
+
+        if (!ProfileFieldMutationRules.IsValidDurability(mutation.Durability, out var durabilityError))
+        {
+            addError(field, durabilityError);
+            return;
+        }
+
+        if (mutation.Action is "remove" or "absent")
         {
             return;
         }
@@ -527,6 +588,37 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
         return working;
     }
 
+    private static List<EquipmentEntry> ReconcileEquipment(IList<EquipmentEntry> existing, Guid ownerUserId, IReadOnlyList<EquipmentMutationInput> commands, DateTimeOffset now)
+    {
+        var working = existing.ToList();
+        var requestedCodes = new HashSet<string>(commands.Select(item => item.StableCode), StringComparer.Ordinal);
+
+        foreach (var (command, index) in commands.Select((item, index) => (item, index)))
+        {
+            if (!StableCode.TryCreate(command.StableCode, out var code))
+            {
+                throw new InvalidOperationException("Validated equipment command contained an invalid stable code.");
+            }
+
+            var match = working.FirstOrDefault(item => item.StableCode.Value == code!.Value);
+            var sortOrder = command.SortOrder == 0 ? index : command.SortOrder;
+            if (match is null)
+            {
+                working.Add(EquipmentEntry.Create(ownerUserId, code!, command.CustomName, command.Capacity, command.CapacityUnit, command.ConstraintNote, sortOrder, now));
+                continue;
+            }
+
+            match.Update(command.CustomName, command.Capacity, command.CapacityUnit, command.ConstraintNote, sortOrder, now);
+        }
+
+        foreach (var item in working.Where(item => !item.IsRemoved && !requestedCodes.Contains(item.StableCode.Value)))
+        {
+            item.Remove(now);
+        }
+
+        return working;
+    }
+
     private static IEnumerable<OrderedCodeEntry> CreateOrderedCodes(Guid ownerUserId, string listName, IReadOnlyList<string> codes, DateTimeOffset now) =>
         codes.Select((code, index) =>
         {
@@ -566,7 +658,7 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
         {
             if (replaceMissing)
             {
-                profile.GetType();
+                SetProfile(profile, p => { p.DisplayName = null; p.DisplayNamePresence = ProfileFieldPresence.Absent; });
             }
 
             return;
@@ -591,7 +683,17 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyCount(UserProfile profile, FieldMutation<int?>? mutation, bool replaceMissing, int min, int max, Action<UserProfile, int?, ProfileFieldPresence> assign)
     {
-        if (mutation is null || mutation.Durability == "temporary")
+        if (mutation is null)
+        {
+            if (replaceMissing)
+            {
+                assign(profile, null, ProfileFieldPresence.Absent);
+            }
+
+            return;
+        }
+
+        if (mutation.Durability == "temporary")
         {
             return;
         }
@@ -612,7 +714,17 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyLanguage(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary")
+        if (mutation is null)
+        {
+            if (replaceMissing)
+            {
+                SetProfile(profile, p => { p.Language = null; p.LanguagePresence = ProfileFieldPresence.Absent; });
+            }
+
+            return;
+        }
+
+        if (mutation.Durability == "temporary")
         {
             return;
         }
@@ -633,7 +745,17 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyRegion(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary")
+        if (mutation is null)
+        {
+            if (replaceMissing)
+            {
+                SetProfile(profile, p => { p.Region = null; p.RegionPresence = ProfileFieldPresence.Absent; });
+            }
+
+            return;
+        }
+
+        if (mutation.Durability == "temporary")
         {
             return;
         }
@@ -654,7 +776,17 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyCurrency(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary")
+        if (mutation is null)
+        {
+            if (replaceMissing)
+            {
+                SetProfile(profile, p => { p.Currency = null; p.CurrencyPresence = ProfileFieldPresence.Absent; });
+            }
+
+            return;
+        }
+
+        if (mutation.Durability == "temporary")
         {
             return;
         }
@@ -675,7 +807,17 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyMeasurementSystem(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary")
+        if (mutation is null)
+        {
+            if (replaceMissing)
+            {
+                SetProfile(profile, p => { p.MeasurementSystem = null; p.MeasurementSystemPresence = ProfileFieldPresence.Absent; });
+            }
+
+            return;
+        }
+
+        if (mutation.Durability == "temporary")
         {
             return;
         }
@@ -696,7 +838,17 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyTimeZone(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary")
+        if (mutation is null)
+        {
+            if (replaceMissing)
+            {
+                SetProfile(profile, p => { p.TimeZone = null; p.TimeZonePresence = ProfileFieldPresence.Absent; });
+            }
+
+            return;
+        }
+
+        if (mutation.Durability == "temporary")
         {
             return;
         }
@@ -717,7 +869,17 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyPlanningCadence(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary")
+        if (mutation is null)
+        {
+            if (replaceMissing)
+            {
+                SetProfile(profile, p => { p.PlanningCadence = null; p.PlanningCadencePresence = ProfileFieldPresence.Absent; });
+            }
+
+            return;
+        }
+
+        if (mutation.Durability == "temporary")
         {
             return;
         }
@@ -738,7 +900,17 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyShoppingCadence(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary")
+        if (mutation is null)
+        {
+            if (replaceMissing)
+            {
+                SetProfile(profile, p => { p.ShoppingCadence = null; p.ShoppingCadencePresence = ProfileFieldPresence.Absent; });
+            }
+
+            return;
+        }
+
+        if (mutation.Durability == "temporary")
         {
             return;
         }
@@ -759,7 +931,17 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyOverallSkill(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary")
+        if (mutation is null)
+        {
+            if (replaceMissing)
+            {
+                SetProfile(profile, p => { p.OverallSkill = null; p.OverallSkillPresence = ProfileFieldPresence.Absent; });
+            }
+
+            return;
+        }
+
+        if (mutation.Durability == "temporary")
         {
             return;
         }
@@ -780,7 +962,17 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyConfidence(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary")
+        if (mutation is null)
+        {
+            if (replaceMissing)
+            {
+                SetProfile(profile, p => { p.Confidence = null; p.ConfidencePresence = ProfileFieldPresence.Absent; });
+            }
+
+            return;
+        }
+
+        if (mutation.Durability == "temporary")
         {
             return;
         }
@@ -801,7 +993,17 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyInstructionDetail(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary")
+        if (mutation is null)
+        {
+            if (replaceMissing)
+            {
+                SetProfile(profile, p => { p.PreferredInstructionDetail = null; p.PreferredInstructionDetailPresence = ProfileFieldPresence.Absent; });
+            }
+
+            return;
+        }
+
+        if (mutation.Durability == "temporary")
         {
             return;
         }
@@ -825,7 +1027,17 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyTolerance(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing, Action<UserProfile, PreferenceTolerance?, ProfileFieldPresence> assign)
     {
-        if (mutation is null || mutation.Durability == "temporary")
+        if (mutation is null)
+        {
+            if (replaceMissing)
+            {
+                assign(profile, null, ProfileFieldPresence.Absent);
+            }
+
+            return;
+        }
+
+        if (mutation.Durability == "temporary")
         {
             return;
         }
@@ -846,7 +1058,17 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyRepeatMeal(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary")
+        if (mutation is null)
+        {
+            if (replaceMissing)
+            {
+                SetProfile(profile, p => { p.RepeatMealPreference = null; p.RepeatMealPreferencePresence = ProfileFieldPresence.Absent; });
+            }
+
+            return;
+        }
+
+        if (mutation.Durability == "temporary")
         {
             return;
         }
@@ -867,7 +1089,17 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyReheating(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary")
+        if (mutation is null)
+        {
+            if (replaceMissing)
+            {
+                SetProfile(profile, p => { p.ReheatingPreference = null; p.ReheatingPreferencePresence = ProfileFieldPresence.Absent; });
+            }
+
+            return;
+        }
+
+        if (mutation.Durability == "temporary")
         {
             return;
         }
@@ -888,7 +1120,17 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyLeftover(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary")
+        if (mutation is null)
+        {
+            if (replaceMissing)
+            {
+                SetProfile(profile, p => { p.LeftoverPreference = null; p.LeftoverPreferencePresence = ProfileFieldPresence.Absent; });
+            }
+
+            return;
+        }
+
+        if (mutation.Durability == "temporary")
         {
             return;
         }
@@ -909,7 +1151,17 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
 
     private static void ApplyFreezing(UserProfile profile, FieldMutation<string?>? mutation, bool replaceMissing)
     {
-        if (mutation is null || mutation.Durability == "temporary")
+        if (mutation is null)
+        {
+            if (replaceMissing)
+            {
+                SetProfile(profile, p => { p.FreezingPreference = null; p.FreezingPreferencePresence = ProfileFieldPresence.Absent; });
+            }
+
+            return;
+        }
+
+        if (mutation.Durability == "temporary")
         {
             return;
         }
@@ -1098,28 +1350,28 @@ public sealed class PatchProfileHandler(ProfileApplicationWorkflow workflow) : I
 public sealed class GetPreferencesHandler(ProfileApplicationWorkflow workflow) : IGetPreferencesUseCase
 {
     /// <inheritdoc />
-    public Task<ProfileApplicationResult<IReadOnlyList<PreferenceView>>> GetAsync(CancellationToken cancellationToken) => workflow.GetPreferencesAsync(cancellationToken);
+    public Task<ProfileApplicationResult<VersionedCollectionView<PreferenceView>>> GetAsync(CancellationToken cancellationToken) => workflow.GetPreferencesAsync(cancellationToken);
 }
 
 /// <summary>Thin use-case handler delegating to the profile workflow.</summary>
 public sealed class PutPreferencesHandler(ProfileApplicationWorkflow workflow) : IPutPreferencesUseCase
 {
     /// <inheritdoc />
-    public Task<ProfileApplicationResult<IReadOnlyList<PreferenceView>>> PutAsync(PutPreferencesCommand command, CancellationToken cancellationToken) => workflow.PutPreferencesAsync(command, cancellationToken);
+    public Task<ProfileApplicationResult<VersionedCollectionView<PreferenceView>>> PutAsync(PutPreferencesCommand command, CancellationToken cancellationToken) => workflow.PutPreferencesAsync(command, cancellationToken);
 }
 
 /// <summary>Thin use-case handler delegating to the profile workflow.</summary>
 public sealed class GetEquipmentHandler(ProfileApplicationWorkflow workflow) : IGetEquipmentUseCase
 {
     /// <inheritdoc />
-    public Task<ProfileApplicationResult<IReadOnlyList<EquipmentView>>> GetAsync(CancellationToken cancellationToken) => workflow.GetEquipmentAsync(cancellationToken);
+    public Task<ProfileApplicationResult<VersionedCollectionView<EquipmentView>>> GetAsync(CancellationToken cancellationToken) => workflow.GetEquipmentAsync(cancellationToken);
 }
 
 /// <summary>Thin use-case handler delegating to the profile workflow.</summary>
 public sealed class PutEquipmentHandler(ProfileApplicationWorkflow workflow) : IPutEquipmentUseCase
 {
     /// <inheritdoc />
-    public Task<ProfileApplicationResult<IReadOnlyList<EquipmentView>>> PutAsync(PutEquipmentCommand command, CancellationToken cancellationToken) => workflow.PutEquipmentAsync(command, cancellationToken);
+    public Task<ProfileApplicationResult<VersionedCollectionView<EquipmentView>>> PutAsync(PutEquipmentCommand command, CancellationToken cancellationToken) => workflow.PutEquipmentAsync(command, cancellationToken);
 }
 
 /// <summary>Thin use-case handler delegating to the profile workflow.</summary>

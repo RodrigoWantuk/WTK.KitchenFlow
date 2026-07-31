@@ -87,6 +87,9 @@ public sealed record AdultDeclarationMutationDto(bool AdultDeclared, string Term
 /// <summary>Preference response DTO.</summary>
 public sealed record PreferenceResponse(Guid EntryId, string Category, string StableCode, string? Note, string Presence, int SortOrder);
 
+/// <summary>Versioned preference collection response DTO.</summary>
+public sealed record PreferencesCollectionResponse(string Version, IReadOnlyList<PreferenceResponse> Entries);
+
 /// <summary>Preference command request DTO.</summary>
 public sealed record PreferencesRequest(IReadOnlyList<PreferenceCommandDto> Entries);
 
@@ -95,6 +98,9 @@ public sealed record PreferenceCommandDto(string Action, string Category, string
 
 /// <summary>Equipment response DTO.</summary>
 public sealed record EquipmentResponse(Guid EntryId, string StableCode, string? CustomName, decimal? Capacity, string? CapacityUnit, string? ConstraintNote, bool IsActive, int SortOrder);
+
+/// <summary>Versioned equipment collection response DTO.</summary>
+public sealed record EquipmentCollectionResponse(string Version, IReadOnlyList<EquipmentResponse> Entries);
 
 /// <summary>Equipment replace request DTO.</summary>
 public sealed record EquipmentRequest(IReadOnlyList<EquipmentItemDto> Entries);

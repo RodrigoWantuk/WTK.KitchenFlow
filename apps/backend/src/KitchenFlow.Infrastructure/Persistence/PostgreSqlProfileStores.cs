@@ -2,6 +2,7 @@ using System.Text.Json;
 using KitchenFlow.Modules.Profiles.Application;
 using KitchenFlow.Modules.Profiles.Domain;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace KitchenFlow.Infrastructure.Persistence;
 
@@ -207,7 +208,9 @@ public sealed class PostgreSqlProfileWriteStore(ApplicationDbContext database) :
     /// <inheritdoc />
     public async Task<ProfileWriteOutcome> CreateAsync(ProfileMutationWrite write, CancellationToken cancellationToken)
     {
-        database.UserProfiles.Add(ToRecord(write.Profile));
+        var record = ToRecord(write.Profile);
+        record.Version = 1;
+        database.UserProfiles.Add(record);
         database.PreferenceEntries.AddRange(write.Preferences.Select(ToRecord));
         database.EquipmentEntries.AddRange(write.Equipment.Select(ToRecord));
         database.ProfileOrderedCodeEntries.AddRange(write.OrderedCodes.Select(ToRecord));
@@ -216,6 +219,11 @@ public sealed class PostgreSqlProfileWriteStore(ApplicationDbContext database) :
         {
             await database.SaveChangesAsync(cancellationToken);
             return ProfileWriteOutcome.Saved;
+        }
+        catch (DbUpdateException ex) when (IsDuplicateProfile(ex))
+        {
+            database.ChangeTracker.Clear();
+            return ProfileWriteOutcome.CreateConflict;
         }
         catch
         {
@@ -228,6 +236,7 @@ public sealed class PostgreSqlProfileWriteStore(ApplicationDbContext database) :
     public async Task<ProfileWriteOutcome> SaveAsync(ProfileMutationWrite write, CancellationToken cancellationToken)
     {
         var record = ToRecord(write.Profile);
+        record.Version = write.ExpectedVersion + 1;
         database.UserProfiles.Attach(record);
         database.Entry(record).State = EntityState.Modified;
         database.Entry(record).Property(item => item.Version).OriginalValue = write.ExpectedVersion;
@@ -255,6 +264,19 @@ public sealed class PostgreSqlProfileWriteStore(ApplicationDbContext database) :
             database.ChangeTracker.Clear();
             throw;
         }
+    }
+
+    private static bool IsDuplicateProfile(DbUpdateException exception)
+    {
+        for (Exception? current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is PostgresException postgres && postgres.SqlState == PostgresErrorCodes.UniqueViolation)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static ProfileChangeHistoryEntryRecord CreateHistory(ProfileMutationWrite write) => new()

@@ -890,8 +890,8 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         var preferences = await response.Content.ReadFromJsonAsync<JsonElement>();
 
         Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("Allergy", preferences[0].GetProperty("category").GetString());
-        Assert.Equal("peanut_allergy", preferences[0].GetProperty("stableCode").GetString());
+        Assert.Equal("Allergy", preferences.GetProperty("entries")[0].GetProperty("category").GetString());
+        Assert.Equal("peanut_allergy", preferences.GetProperty("entries")[0].GetProperty("stableCode").GetString());
     }
 
     private static object CreateLot(string productName = "Test tomato", decimal measuredValue = 100m) => new { productName, quantity = new { measuredValue, unit = "Gram", availabilityState = (string?)null }, storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null };

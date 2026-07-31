@@ -56,6 +56,9 @@ public sealed record PreferenceView(Guid EntryId, string Category, string Stable
 /// <summary>Equipment projection.</summary>
 public sealed record EquipmentView(Guid EntryId, string StableCode, string? CustomName, decimal? Capacity, string? CapacityUnit, string? ConstraintNote, bool IsActive, int SortOrder);
 
+/// <summary>Versioned collection projection for preferences or equipment.</summary>
+public sealed record VersionedCollectionView<T>(Guid OwnerUserId, Guid ConcurrencyToken, IReadOnlyList<T> Items);
+
 /// <summary>Completeness projection.</summary>
 public sealed record ProfileCompletenessView(int PercentComplete, int CompletedSections, int TotalSections, IReadOnlyDictionary<string, int> SectionCounts, string AdultDeclarationState, bool ProfileExists);
 
@@ -173,28 +176,28 @@ public interface IPatchProfileUseCase
 public interface IGetPreferencesUseCase
 {
     /// <summary>Returns owner preferences and restrictions.</summary>
-    Task<ProfileApplicationResult<IReadOnlyList<PreferenceView>>> GetAsync(CancellationToken cancellationToken);
+    Task<ProfileApplicationResult<VersionedCollectionView<PreferenceView>>> GetAsync(CancellationToken cancellationToken);
 }
 
 /// <summary>Executes the owner-scoped preferences-replace use case.</summary>
 public interface IPutPreferencesUseCase
 {
     /// <summary>Replaces preferences and restrictions via explicit commands.</summary>
-    Task<ProfileApplicationResult<IReadOnlyList<PreferenceView>>> PutAsync(PutPreferencesCommand command, CancellationToken cancellationToken);
+    Task<ProfileApplicationResult<VersionedCollectionView<PreferenceView>>> PutAsync(PutPreferencesCommand command, CancellationToken cancellationToken);
 }
 
 /// <summary>Executes the owner-scoped equipment-read use case.</summary>
 public interface IGetEquipmentUseCase
 {
     /// <summary>Returns active owner equipment.</summary>
-    Task<ProfileApplicationResult<IReadOnlyList<EquipmentView>>> GetAsync(CancellationToken cancellationToken);
+    Task<ProfileApplicationResult<VersionedCollectionView<EquipmentView>>> GetAsync(CancellationToken cancellationToken);
 }
 
 /// <summary>Executes the owner-scoped equipment-replace use case.</summary>
 public interface IPutEquipmentUseCase
 {
     /// <summary>Replaces owner equipment.</summary>
-    Task<ProfileApplicationResult<IReadOnlyList<EquipmentView>>> PutAsync(PutEquipmentCommand command, CancellationToken cancellationToken);
+    Task<ProfileApplicationResult<VersionedCollectionView<EquipmentView>>> PutAsync(PutEquipmentCommand command, CancellationToken cancellationToken);
 }
 
 /// <summary>Executes the owner-scoped completeness-read use case.</summary>

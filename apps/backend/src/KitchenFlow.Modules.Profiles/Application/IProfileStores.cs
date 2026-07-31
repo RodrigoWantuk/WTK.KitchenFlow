@@ -76,7 +76,9 @@ public enum ProfileWriteOutcome
     /// <summary>The mutation was saved.</summary>
     Saved,
     /// <summary>The expected version did not match.</summary>
-    ConcurrencyConflict
+    ConcurrencyConflict,
+    /// <summary>The profile already exists for the owner.</summary>
+    CreateConflict
 }
 
 /// <summary>Write persistence port for owner-scoped profile data.</summary>

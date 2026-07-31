@@ -32,19 +32,19 @@ public sealed class ProfileApplicationService(
 
     /// <summary>Maps the preferences-read query to a transport result.</summary>
     public async Task<IResult> GetPreferencesAsync(HttpContext context, CancellationToken cancellationToken) =>
-        ToResult(await getPreferences.GetAsync(cancellationToken), items => items.Select(ToResponse).ToList(), context.TraceIdentifier);
+        ToCollectionResult(await getPreferences.GetAsync(cancellationToken), collection => ToPreferencesResponse(collection, tokens.WriteVersion), context);
 
     /// <summary>Maps the preferences-replace command to a transport result.</summary>
     public async Task<IResult> PutPreferencesAsync(PreferencesRequest request, HttpRequest requestContext, CancellationToken cancellationToken) =>
-        ToPreferencesResult("put_preferences", await putPreferences.PutAsync(new PutPreferencesCommand(request.Entries.Select(item => new PreferenceMutationInput(item.Action, item.Category, item.StableCode, item.Note)).ToList(), ReadPrecondition(requestContext), requestContext.HttpContext.TraceIdentifier), cancellationToken), requestContext.HttpContext.TraceIdentifier);
+        ToCollectionResult("put_preferences", await putPreferences.PutAsync(new PutPreferencesCommand(request.Entries.Select(item => new PreferenceMutationInput(item.Action, item.Category, item.StableCode, item.Note)).ToList(), ReadPrecondition(requestContext), requestContext.HttpContext.TraceIdentifier), cancellationToken), collection => ToPreferencesResponse(collection, tokens.WriteVersion), requestContext.HttpContext);
 
     /// <summary>Maps the equipment-read query to a transport result.</summary>
     public async Task<IResult> GetEquipmentAsync(HttpContext context, CancellationToken cancellationToken) =>
-        ToResult(await getEquipment.GetAsync(cancellationToken), items => items.Select(ToResponse).ToList(), context.TraceIdentifier);
+        ToCollectionResult(await getEquipment.GetAsync(cancellationToken), collection => ToEquipmentResponse(collection, tokens.WriteVersion), context);
 
     /// <summary>Maps the equipment-replace command to a transport result.</summary>
     public async Task<IResult> PutEquipmentAsync(EquipmentRequest request, HttpRequest requestContext, CancellationToken cancellationToken) =>
-        ToEquipmentResult("put_equipment", await putEquipment.PutAsync(new PutEquipmentCommand(request.Entries.Select(item => new EquipmentMutationInput(item.StableCode, item.CustomName, item.Capacity, item.CapacityUnit, item.ConstraintNote, item.SortOrder)).ToList(), ReadPrecondition(requestContext), requestContext.HttpContext.TraceIdentifier), cancellationToken), requestContext.HttpContext.TraceIdentifier);
+        ToCollectionResult("put_equipment", await putEquipment.PutAsync(new PutEquipmentCommand(request.Entries.Select(item => new EquipmentMutationInput(item.StableCode, item.CustomName, item.Capacity, item.CapacityUnit, item.ConstraintNote, item.SortOrder)).ToList(), ReadPrecondition(requestContext), requestContext.HttpContext.TraceIdentifier), cancellationToken), collection => ToEquipmentResponse(collection, tokens.WriteVersion), requestContext.HttpContext);
 
     /// <summary>Maps the completeness-read query to a transport result.</summary>
     public async Task<IResult> GetCompletenessAsync(HttpContext context, CancellationToken cancellationToken) =>
@@ -62,21 +62,43 @@ public sealed class ProfileApplicationService(
         return new EtagResult<ProfileResponse>(ToResponse(result.Value, version), Quote(version), StatusFor(result.Success));
     }
 
-    private IResult ToPreferencesResult(string operation, ProfileApplicationResult<IReadOnlyList<PreferenceView>> result, string traceId)
+    private IResult ToCollectionResult<TView, TResponse>(
+        ProfileApplicationResult<VersionedCollectionView<TView>> result,
+        Func<VersionedCollectionView<TView>, TResponse> map,
+        HttpContext context) =>
+        ToCollectionResult(null, result, map, context);
+
+    private IResult ToCollectionResult<TView, TResponse>(
+        string? operation,
+        ProfileApplicationResult<VersionedCollectionView<TView>> result,
+        Func<VersionedCollectionView<TView>, TResponse> map,
+        HttpContext context)
     {
-        metrics.RecordMutation(operation, result.Problem?.ErrorCode);
-        return result.Problem is not null
-            ? Problem(result.Problem.ErrorCode, result.Problem.Detail, StatusFor(result.Problem.ErrorCode), traceId, result.Problem.Errors)
-            : Results.Json(result.Value!.Select(ToResponse).ToList());
+        if (operation is not null)
+        {
+            metrics.RecordMutation(operation, result.Problem?.ErrorCode);
+        }
+
+        if (result.Problem is not null)
+        {
+            return Problem(result.Problem.ErrorCode, result.Problem.Detail, StatusFor(result.Problem.ErrorCode), context.TraceIdentifier, result.Problem.Errors);
+        }
+
+        var collection = result.Value!;
+        if (collection.ConcurrencyToken == Guid.Empty)
+        {
+            return Results.Json(map(collection));
+        }
+
+        var version = tokens.WriteVersion(collection.OwnerUserId, collection.ConcurrencyToken);
+        return new EtagResult<TResponse>(map(collection), Quote(version), StatusCodes.Status200OK);
     }
 
-    private IResult ToEquipmentResult(string operation, ProfileApplicationResult<IReadOnlyList<EquipmentView>> result, string traceId)
-    {
-        metrics.RecordMutation(operation, result.Problem?.ErrorCode);
-        return result.Problem is not null
-            ? Problem(result.Problem.ErrorCode, result.Problem.Detail, StatusFor(result.Problem.ErrorCode), traceId, result.Problem.Errors)
-            : Results.Json(result.Value!.Select(ToResponse).ToList());
-    }
+    private static PreferencesCollectionResponse ToPreferencesResponse(VersionedCollectionView<PreferenceView> collection, Func<Guid, Guid, string> writeVersion) =>
+        new(writeVersion(collection.OwnerUserId, collection.ConcurrencyToken), collection.Items.Select(ToResponse).ToList());
+
+    private static EquipmentCollectionResponse ToEquipmentResponse(VersionedCollectionView<EquipmentView> collection, Func<Guid, Guid, string> writeVersion) =>
+        new(writeVersion(collection.OwnerUserId, collection.ConcurrencyToken), collection.Items.Select(ToResponse).ToList());
 
     private static IResult ToResult<TSource, TResponse>(ProfileApplicationResult<TSource> result, Func<TSource, TResponse> map, string traceId) =>
         result.Problem is not null
@@ -174,6 +196,7 @@ public sealed class ProfileApplicationService(
         "precondition_required" => StatusCodes.Status428PreconditionRequired,
         "precondition_failed" => StatusCodes.Status412PreconditionFailed,
         "domain_rule_violated" => StatusCodes.Status422UnprocessableEntity,
+        "profile_already_exists" => StatusCodes.Status409Conflict,
         _ => StatusCodes.Status409Conflict
     };
 
