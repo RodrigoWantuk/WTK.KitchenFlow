@@ -7,7 +7,7 @@
 - **Created:** 2026-07-31
 - **Last updated:** 2026-07-31T22:01:34Z
 - **Branch:** `agent/plan-0014-integrate-emergent-frontend`
-- **Pull request:** Opening draft after commit
+- **Pull request:** [Draft PR #14](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/14)
 - **Related implementation plans:** PLAN-0004 (superseded), PLAN-0005, PLAN-0011
 - **Related documentation plan:** PLAN-0013
 - **Related issues:** None
@@ -173,21 +173,30 @@ Authoritative inventory arithmetic, reservations, unit conversion, and food-safe
 - [x] Mock and production isolated; Emergent deps removed.
 - [x] Build, lint, typecheck, and tests green.
 - [x] Assets audited; CI active; docs complete.
-- [ ] Draft PR open against `main`; no unrelated changes; no merge.
+- [x] Draft PR open against `main`; no unrelated changes; no merge.
 
 ## Execution state
 
-- **Current checkpoint:** Phases 2–7 implemented locally: shared preparation route, reserved bar, cook handoff, shopping shortfall review, Emergent decoupling, TypeScript/adapters, tests, CI, asset audit. Draft PR pending push.
-- **Last completed step:** Local validation of typecheck, lint (warnings only), tests (10), and production build.
-- **Exact next action:** Commit remaining PLAN-0014 changes, push branch, open draft PR against `main` (no merge).
+- **Current checkpoint:** PLAN-0014 implementation complete on branch; draft PR #14 open against `main` (not merged).
+- **Last completed step:** Draft PR opened after features, Emergent removal, TS/CI/docs commits.
+- **Exact next action:** Owner review of draft PR #14; merge only after CI green and review approval.
 - **Blockers:** None.
-- **Partially modified areas:** None intentional; CRA snapshot JS still migrates gradually to TypeScript.
-- **Validation performed:** `yarn typecheck`; `yarn lint` (0 errors); `yarn test` (10 passed); `yarn build` success; Emergent package absent from `package.json`/`craco.config.js`.
-- **Known failures or limitations:** ESLint currently scopes to `.js/.jsx` (TypeScript covered by `tsc`); live OpenAPI adapters remain placeholders; mock remote imagery flagged in asset audit for later replacement.
-- **Working tree state:** Feature implementation, CI, yarn.lock, and docs uncommitted pending this handoff commit sequence.
-- **Substantial run target:** Complete PLAN-0014 through draft PR in this run.
+- **Partially modified areas:** Gradual JS→TS migration remains optional follow-up.
+- **Validation performed:** Local yarn typecheck/lint/test/build; draft PR URL recorded.
+- **Known failures or limitations:** ESLint scopes to JS/JSX; live adapters are placeholders; mock imagery needs later license replacement.
+- **Working tree state:** Clean after handoff commit recording PR #14.
+- **Substantial run target:** Achieved — draft PR opened.
 
 ## Progress log
+
+### 2026-07-31T22:05:00Z — Cursor agent
+
+- **Checkpoint:** Draft PR #14 opened for PLAN-0014 against `main` (no merge).
+- **Changes included in the commit:** Plan/registry delivery state with PR link.
+- **Validation performed:** `gh pr create --draft` succeeded.
+- **Result:** Handoff ready for owner review.
+- **Next action:** Wait for CI + owner review; do not merge from this agent run.
+- **Blockers or handoff notes:** None.
 
 ### 2026-07-31T22:02:30Z — Cursor agent
 
