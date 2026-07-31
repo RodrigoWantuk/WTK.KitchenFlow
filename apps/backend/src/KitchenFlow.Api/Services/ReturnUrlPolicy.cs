@@ -38,14 +38,51 @@ public static class ReturnUrlPolicy
             }
         }
 
-        var path = decoded.Split('?', '#')[0];
-        if (path.Equals("/signin-oidc", StringComparison.OrdinalIgnoreCase) ||
-            path.Equals("/signout-callback-oidc", StringComparison.OrdinalIgnoreCase) ||
-            path.StartsWith("/api/v1/auth/", StringComparison.OrdinalIgnoreCase))
+        var pathOnly = decoded.Split('?', '#')[0];
+        var normalizedPath = NormalizePath(pathOnly);
+        if (IsBlockedPath(normalizedPath))
         {
             return "/";
         }
 
-        return candidate;
+        var suffixStart = pathOnly.Length;
+        return string.Concat(normalizedPath, decoded[suffixStart..]);
     }
+
+    private static string NormalizePath(string path)
+    {
+        if (path is "/" or "")
+        {
+            return "/";
+        }
+
+        var stack = new List<string>();
+        foreach (var segment in path.Split('/', StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (segment == ".")
+            {
+                continue;
+            }
+
+            if (segment == "..")
+            {
+                if (stack.Count == 0)
+                {
+                    return "/";
+                }
+
+                stack.RemoveAt(stack.Count - 1);
+                continue;
+            }
+
+            stack.Add(segment);
+        }
+
+        return stack.Count == 0 ? "/" : "/" + string.Join('/', stack);
+    }
+
+    private static bool IsBlockedPath(string path) =>
+        path.Equals("/signin-oidc", StringComparison.OrdinalIgnoreCase) ||
+        path.Equals("/signout-callback-oidc", StringComparison.OrdinalIgnoreCase) ||
+        path.StartsWith("/api/v1/auth/", StringComparison.OrdinalIgnoreCase);
 }

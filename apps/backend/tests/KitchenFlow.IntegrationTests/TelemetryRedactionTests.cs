@@ -28,6 +28,9 @@ public sealed class TelemetryRedactionTests
     [InlineData("/signout-callback-oidc", "/")]
     [InlineData("/api/v1/auth/logout", "/")]
     [InlineData("/bad%zz", "/")]
+    [InlineData("/safe/../api/v1/auth/login", "/")]
+    [InlineData("/inventory/../api/v1/auth/logout", "/")]
+    [InlineData("/foo/./bar/../inventory/lots", "/foo/inventory/lots")]
     public void ReturnUrlPolicyAllowsOnlyLocalPaths(string? candidate, string expected)
     {
         Assert.Equal(expected, ReturnUrlPolicy.Normalize(candidate));

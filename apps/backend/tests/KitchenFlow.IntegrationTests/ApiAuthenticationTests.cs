@@ -171,6 +171,7 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
     [InlineData("/safe%5cattacker.example")]
     [InlineData("/signin-oidc")]
     [InlineData("/bad%zz")]
+    [InlineData("/safe/../api/v1/auth/login")]
     public async Task LoginEndpointNeverRedirectsDirectlyToUntrustedReturnUrl(string returnUrl)
     {
         await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: false);

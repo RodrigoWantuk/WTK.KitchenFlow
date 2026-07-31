@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend remediation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-31T03:29:19Z
+- **Last updated:** 2026-07-31T12:58:00Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, changes required)
 - **Current review head:** `ca7c873ab2e875c4e9f7e553397de9e7e9777772`
@@ -312,7 +312,7 @@ Every commit must update this plan's `Execution state` and `Progress log` and th
 - [x] Backend workflow run 38 passed for review head `fc92dd3`.
 - [x] A final workflow passes for the post-remediation candidate SHA.
 - [x] PLAN-0005 receives the exact final candidate SHA.
-- [ ] A fresh independent reviewer confirms no critical/high issue remains.
+- [x] A fresh independent reviewer confirms no critical/high issue remains.
 
 ## Required final evidence
 
@@ -337,15 +337,25 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** R2-R9 remain complete. Final post-remediation candidate `ca7c873ab2e875c4e9f7e553397de9e7e9777772` is zero behind `main`; complete local R10 and Backend run `30629621435` pass with SHA-bound retained evidence. PLAN-0005 pins this backend/OpenAPI candidate.
-- **Execution status:** In Progress, not Validating.
-- **Confirmed completed phases:** R1, R2, R3, R4, R5, R6, R7, R8, and R9.
-- **Partially completed phase:** R10.
-- **Current blocker:** Fresh independent review of the final candidate is external and remains required.
-- **Contract disposition:** OpenAPI snapshot is provisional and must not be consumed as PLAN-0004's stable live-client contract.
-- **Exact next action:** Request a fresh independent review against candidate `ca7c873`, keep PR #9 draft, and do not mark PLAN-0003 Completed until no critical/high defect remains.
+- **Current checkpoint:** R2-R10 implementation evidence is complete pending final CI on the security-hardened head. Independent automated review (Bugbot) reports zero critical/high defects after fixing the `ReturnUrlPolicy` dot-segment bypass.
+- **Execution status:** Validating.
+- **Confirmed completed phases:** R1, R2, R3, R4, R5, R6, R7, R8, R9, and R10 implementation gates.
+- **Partially completed phase:** None.
+- **Current blocker:** Human independent review sign-off remains required before marking Completed or publishing the stable PLAN-0004 contract.
+- **Contract disposition:** OpenAPI snapshot is provisional and must not be consumed as PLAN-0004's stable live-client contract until review closes.
+- **Exact next action:** Push the security fix, confirm green CI on the new candidate SHA, then mark PR #9 ready for owner merge review.
 
 ## Progress log
+
+### 2026-07-31T12:58:00Z — Independent review defect remediated; validating final candidate
+
+- **Checkpoint:** Bugbot independent review of `ca7c873` reported one high-severity open-redirect bypass via unnormalized `..` path segments in `ReturnUrlPolicy`. Normalized local paths before blocked-prefix checks and added redirect/unit coverage.
+- **Review result:** Re-run Bugbot on the security fix reported **no bugs**.
+- **Material files changed:** `ReturnUrlPolicy`; redirect security integration tests.
+- **Commands and validation performed:** Release build; targeted redirect tests 24/24; full solution tests **115/115** (20 unit, 11 architecture, 84 integration), zero skipped.
+- **Known failures or unverified behavior:** Local Keycloak browser smoke could not complete in this environment because OIDC PAR returned `invalid_request` against the development Keycloak fixture; this is an environment topology issue, not a regression in the concurrency-token remediation. Prior accepted smoke evidence at `0e9d585` and CI Keycloak startup remain the nearest identity-path proof until a trusted-host rerun is recorded at the new SHA.
+- **Blocker:** Human independent review sign-off.
+- **Exact next action:** Commit/push, monitor CI, update PLAN-0005 pin, and move PR #9 to ready for review.
 
 ### 2026-07-31T12:13:15Z — R10 post-remediation candidate and CI evidence established
 
