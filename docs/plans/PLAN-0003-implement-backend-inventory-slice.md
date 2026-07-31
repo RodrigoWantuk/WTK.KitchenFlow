@@ -337,7 +337,7 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** Commit A has transport-neutral explicit contracts for all seven Inventory use cases; R3 has PostgreSQL coverage for concurrent same-key different-payload adjustment conflict; metadata-correction history projects only actual changed field names.
+- **Current checkpoint:** Commit A has transport-neutral explicit contracts for all seven Inventory use cases; R3 has concurrent different-payload adjustment coverage and typed startup-validated idempotency retention; metadata-correction history projects only actual changed field names.
 - **Execution status:** In Progress, not Validating.
 - **Confirmed completed phase:** R1.
 - **Partially completed phases:** R2, R3, R4, R5, R6, R7, R8, and R9.
@@ -347,6 +347,18 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 - **Exact next action:** Split the shared Inventory use-case implementation into individual handler classes and add direct no-HTTP/no-PostgreSQL tests for each contract; then add R3 race/rollback acceptance tests.
 
 ## Progress log
+
+### 2026-07-30T17:25:00Z — R3 typed idempotency retention configuration (partial)
+
+- **Run delivery target:** Make idempotency replay retention explicit, bounded, and startup-validated without introducing an out-of-scope cleanup worker.
+- **Checkpoint:** Added `IdempotencyOptions` with a required retention period constrained to 1–90 days and `ValidateOnStart`; development supplies a 30-day fixture value while non-development hosts must configure the option explicitly.
+- **Material files changed:** API typed options, composition root, development configuration, this plan, and `docs/plan-status.md`.
+- **Documentation delivered:** XML documentation states that the setting constrains later cleanup work and that this plan does not register cleanup automation.
+- **Commands and validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-build --filter "FullyQualifiedName~RuntimeConfigurationReadiness"`.
+- **Result:** Release build passed with zero warnings/errors; targeted configuration test passed (1/1).
+- **Known failures or unverified behavior:** Dedicated options startup-matrix tests and retention cleanup/forward-repair documentation remain pending. Exact replay/rollback proof, handler extraction, and R4-R10 are incomplete.
+- **Blockers:** None external.
+- **Exact next action:** Add startup validation matrix tests for idempotency retention and then continue exact replay/rollback integration evidence.
 
 ### 2026-07-30T17:05:00Z — R3 concurrent different-payload adjustment evidence (partial)
 

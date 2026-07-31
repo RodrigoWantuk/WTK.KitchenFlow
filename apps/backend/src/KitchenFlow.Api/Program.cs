@@ -31,6 +31,10 @@ if (string.IsNullOrWhiteSpace(connectionString))
     throw new InvalidOperationException("KitchenFlow database configuration is required.");
 }
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddOptions<IdempotencyOptions>()
+    .Bind(builder.Configuration.GetSection("Idempotency"))
+    .Validate(options => options.IsValid(), "Idempotency:Retention must be between 1 and 90 days.")
+    .ValidateOnStart();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<CurrentUserService>();
