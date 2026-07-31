@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend remediation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-31T03:20:27Z
+- **Last updated:** 2026-07-31T03:24:46Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, changes required)
 - **Current review head:** `fc92dd3c41ad99d64ae053f778cd5a6a46b84f44`
@@ -337,15 +337,26 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** R2-R9 are complete. R10 local validation passes at candidate `5124c6ee2a8e6192dfe9a0280908fcc91462c6bf`; final CI exposed and now corrects dependency ordering before OIDC challenge tests.
+- **Current checkpoint:** R2-R9 are complete. R10 local validation passes; run `30601354305` proves corrected CI dependencies and all 110 tests, then exposes one shell-quoting defect in the migration-history assertion now corrected.
 - **Execution status:** In Progress, not Validating.
 - **Confirmed completed phases:** R1, R2, R3, R4, R5, R6, R7, R8, and R9.
 - **Partially completed phase:** R10.
 - **Current blocker:** None external. Remaining work is final-candidate acceptance evidence.
 - **Contract disposition:** OpenAPI snapshot is provisional and must not be consumed as PLAN-0004's stable live-client contract.
-- **Exact next action:** Commit and push the CI dependency-order/evidence-name correction, rerun the final workflow at the new candidate, then pin PLAN-0005 and request independent review.
+- **Exact next action:** Commit/push the corrected SQL assertion, require a fully green final workflow, then pin PLAN-0005 and request independent review.
 
 ## Progress log
+
+### 2026-07-31T03:24:46Z — R10 CI migration assertion corrected
+
+- **Checkpoint and failure:** Corrected workflow run `30601354305` passed Gitleaks, restore, vulnerability audit, formatting, Release build, Compose readiness, all 110 tests, empty migration, and upgrade migration. Both idempotent SQL applications succeeded, but the final count assertion exited 2 because backslashes inside a shell single-quoted SQL literal reached PostgreSQL.
+- **Correction:** Quote the mixed-case `__EFMigrationsHistory` identifier directly inside the shell single-quoted SQL argument. The assertion now returns integer `5` from the already double-applied candidate database.
+- **Material files changed:** Backend workflow; this plan; and `docs/plan-status.md`.
+- **Commands and validation performed:** Monitored run `30601354305`; inspected its failed job log; reproduced the exact count assertion against the final local candidate database; validated result `5`; and checked the workflow diff.
+- **Result:** Every substantive run gate through double idempotent SQL application passed. The remaining failure was isolated to evidence assertion quoting and is corrected.
+- **Known failures or unverified behavior:** OpenAPI CI steps were skipped after the assertion exit; the next workflow must prove those gates and artifact publication at the new SHA.
+- **Blockers:** None.
+- **Exact next action:** Commit/push this assertion correction and monitor the complete workflow.
 
 ### 2026-07-31T03:20:27Z — R10 final workflow failure diagnosed and corrected
 
