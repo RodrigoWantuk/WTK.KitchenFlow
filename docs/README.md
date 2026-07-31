@@ -10,7 +10,7 @@ Documentation is part of the product. Code, tests, contracts, plans, and operati
 plan-status.md       Canonical registry of active and completed plans
 plans/               Implementation, testing, research, documentation, and operations plans
 discovery/           Structured stakeholder discovery and reference evidence
-product/             Vision, audience, entry/home experience, journeys, and release scope
+product/             Vision, audience, entry/home, orchestration, journeys, and release scope
 domain/              Inventory, planning, shopping, recipes, cooking, and invariants
 architecture/        System architecture, principles, and ADRs
 development/         Supported Windows/Linux environment and execution conventions
@@ -44,6 +44,7 @@ Read:
 
 - [`product/audience-and-profile.md`](product/audience-and-profile.md)
 - [`product/entry-and-contextual-home.md`](product/entry-and-contextual-home.md)
+- [`product/closed-loop-kitchen-orchestration.md`](product/closed-loop-kitchen-orchestration.md)
 - [`product/user-journeys.md`](product/user-journeys.md)
 - [`product/initial-release.md`](product/initial-release.md)
 - [`domain/README.md`](domain/README.md)
@@ -56,6 +57,7 @@ Read:
 
 Read:
 
+- [`product/closed-loop-kitchen-orchestration.md`](product/closed-loop-kitchen-orchestration.md) when work affects planning, preparation, cooking, inventory reconciliation, recovery, or troubleshooting;
 - [`domain/inventory-lifecycle.md`](domain/inventory-lifecycle.md)
 - [`domain/planning-and-shopping.md`](domain/planning-and-shopping.md)
 - [`domain/recipes-and-cooking.md`](domain/recipes-and-cooking.md)
@@ -119,17 +121,23 @@ Do not silently resolve a conflict by choosing the easiest implementation.
 
 - The core question is how to transform available, usable food into useful meals under user intent and constraints.
 - Inventory tracks real products and lots, not only aggregate ingredients.
+- Prepared reusable components are first-class inventory lots with provenance, lifecycle, shelf-life evidence, and reservations.
 - Shelf-life guidance is sourced, confidence-aware, advisory, and actionable.
 - Quantity or an explicit availability state is required.
 - Planning, inventory, equipment, and history are optional context sources and degrade gracefully.
 - Menu plans are flexible intentions, not obligations.
+- Planning simulation uses projected sequential inventory, so earlier planned consumption changes later candidates.
 - Recommendations never silently rewrite accepted plans or authoritative inventory.
+- When reality changes, recovery preserves unaffected accepted decisions and proposes localized reversible changes.
 - The authenticated home prioritizes relevant accepted menu entries, then inventory attention, then profile fit, then a one- or two-question quick chooser.
 - Local-time meal context uses the user's timezone and never the server timezone or precise geolocation by default.
 - Execution completion and inventory reconciliation are atomic or explicitly pending.
+- Quick meal completion does not falsely imply inventory reconciliation.
+- Multi-day preparation is a dependency route, not a flat reminder list.
 - Recipes are user-owned, revisioned, derivable, and shared by immutable snapshot and copy.
+- Troubleshooting changes execution-local state by default; recipe or preference learning requires explicit confirmation.
 - AI never mutates authoritative state directly.
-- React/Lovable frontend and .NET backend are independently deployable.
+- React frontend and .NET backend are independently deployable.
 - Privacy, food safety, accessibility, localization, cost, and operability are first-class behavior.
 
 ## Plan execution
