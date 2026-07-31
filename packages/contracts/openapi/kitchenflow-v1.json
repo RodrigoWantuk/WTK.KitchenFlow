@@ -283,6 +283,9 @@
           },
           "errors": {
             "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
               "type": "array"
             },
             "description": "Field-level validation messages keyed by request field name.",
@@ -320,6 +323,10 @@
             ]
           }
         },
+        "required": [
+          "errorCode",
+          "traceId"
+        ],
         "type": "object"
       },
       "QuantityRequest": {
@@ -691,6 +698,16 @@
           "content": {
             "application/json": {
               "examples": {
+                "availabilityLot": {
+                  "summary": "A manually entered qualitative availability lot.",
+                  "value": {
+                    "productName": "Fresh herbs",
+                    "quantity": {
+                      "availabilityState": "Low"
+                    },
+                    "storageLocation": "Refrigerator"
+                  }
+                },
                 "measuredLot": {
                   "summary": "A manually entered measured pantry lot.",
                   "value": {
@@ -761,7 +778,8 @@
                     "summary": "A measured and availability quantity cannot be supplied together.",
                     "value": {
                       "errorCode": "domain_rule_violated",
-                      "status": 422
+                      "status": 422,
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00"
                     }
                   }
                 },
@@ -1137,7 +1155,8 @@
                     "summary": "The key was used for a different semantic command.",
                     "value": {
                       "errorCode": "idempotency_key_reused",
-                      "status": 409
+                      "status": 409,
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00"
                     }
                   }
                 },
@@ -1156,7 +1175,8 @@
                     "summary": "The supplied opaque ETag is no longer current.",
                     "value": {
                       "errorCode": "precondition_failed",
-                      "status": 412
+                      "status": 412,
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00"
                     }
                   }
                 },

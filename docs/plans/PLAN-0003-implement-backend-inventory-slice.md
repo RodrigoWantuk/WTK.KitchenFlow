@@ -348,6 +348,13 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Progress log
 
+### 2026-07-30T18:40:00Z — R5 OpenAPI Problem Details and quantity examples (partial)
+
+- **Checkpoint:** Generated OpenAPI now requires `errorCode` and `traceId`, declares string items for field errors, and includes valid measured and availability create examples plus traceable problem examples. Snapshot was regenerated from the local API.
+- **Validation:** Release build and generated OpenAPI lint passed; 12 non-blocking Redocly recommendations remain.
+- **Known limitations:** Full route-by-route runtime agreement, remaining examples, and quantity branch nullability work remain pending.
+- **Exact next action:** Add runtime contract tests and finish quantity oneOf nullability before claiming the snapshot stable.
+
 ### 2026-07-30T18:15:00Z — R2 direct use-case contract coverage (partial)
 
 - **Run delivery target:** Prove all seven Inventory use-case contracts are executable without ASP.NET Core, PostgreSQL, or Data Protection.

@@ -37,8 +37,11 @@ internal static class InventoryOpenApiTransformer
             {
                 Description = "Field-level validation messages keyed by request field name.",
                 Type = JsonSchemaType.Object,
-                AdditionalProperties = new OpenApiSchema { Type = JsonSchemaType.Array }
+                AdditionalProperties = new OpenApiSchema { Type = JsonSchemaType.Array, Items = new OpenApiSchema { Type = JsonSchemaType.String } }
             };
+            problemDetails.Required ??= new HashSet<string>(StringComparer.Ordinal);
+            problemDetails.Required.Add("errorCode");
+            problemDetails.Required.Add("traceId");
         }
 
         ConfigureDecimal(components, "QuantityRequest", "measuredValue");
@@ -173,14 +176,15 @@ internal static class InventoryOpenApiTransformer
         if (path.EndsWith("/lots", StringComparison.Ordinal) && method == HttpMethod.Post)
         {
             AddRequestExample(operation, "measuredLot", "A manually entered measured pantry lot.", """{"productName":"Red lentils","quantity":{"measuredValue":500,"unit":"Gram"},"storageLocation":"Pantry","customLocation":null,"packageState":"Sealed","printedExpirationDate":"2026-12-31","notes":null}""");
-            AddProblemExample(operation, "422", "invalidQuantity", "A measured and availability quantity cannot be supplied together.", """{"status":422,"errorCode":"domain_rule_violated"}""");
+            AddRequestExample(operation, "availabilityLot", "A manually entered qualitative availability lot.", """{"productName":"Fresh herbs","quantity":{"availabilityState":"Low"},"storageLocation":"Refrigerator"}""");
+            AddProblemExample(operation, "422", "invalidQuantity", "A measured and availability quantity cannot be supplied together.", """{"status":422,"errorCode":"domain_rule_violated","traceId":"00-00000000000000000000000000000000-0000000000000000-00"}""");
         }
 
         if (path.EndsWith("/adjustments", StringComparison.Ordinal) && method == HttpMethod.Post)
         {
             AddRequestExample(operation, "consume", "Consumes a measured quantity from the current lot version.", """{"type":"Consume","value":125,"availabilityState":null,"reasonCode":"meal","note":null}""");
-            AddProblemExample(operation, "412", "staleEtag", "The supplied opaque ETag is no longer current.", """{"status":412,"errorCode":"precondition_failed"}""");
-            AddProblemExample(operation, "409", "reusedIdempotencyKey", "The key was used for a different semantic command.", """{"status":409,"errorCode":"idempotency_key_reused"}""");
+            AddProblemExample(operation, "412", "staleEtag", "The supplied opaque ETag is no longer current.", """{"status":412,"errorCode":"precondition_failed","traceId":"00-00000000000000000000000000000000-0000000000000000-00"}""");
+            AddProblemExample(operation, "409", "reusedIdempotencyKey", "The key was used for a different semantic command.", """{"status":409,"errorCode":"idempotency_key_reused","traceId":"00-00000000000000000000000000000000-0000000000000000-00"}""");
         }
     }
 
