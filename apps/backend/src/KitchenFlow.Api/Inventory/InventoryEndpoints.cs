@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Antiforgery;
+using KitchenFlow.Api.Services;
 
 namespace KitchenFlow.Api.Inventory;
 
@@ -29,7 +30,7 @@ public static class InventoryEndpoints
             }
             catch (AntiforgeryValidationException)
             {
-                return Results.Problem(statusCode: StatusCodes.Status400BadRequest, extensions: new Dictionary<string, object?> { ["errorCode"] = "validation_failed", ["traceId"] = context.HttpContext.TraceIdentifier });
+                return ApiProblem.Create(context.HttpContext, StatusCodes.Status400BadRequest, "validation_failed", "The CSRF token is missing or invalid.");
             }
         }
 

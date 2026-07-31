@@ -7,6 +7,7 @@ using KitchenFlow.Api.Services;
 using KitchenFlow.Modules.Inventory.Application;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Options;
 
 namespace KitchenFlow.IntegrationTests;
 
@@ -18,7 +19,13 @@ public sealed class TelemetryRedactionTests
     [InlineData("https://attacker.example", "/")]
     [InlineData("//attacker.example", "/")]
     [InlineData("/\\attacker.example", "/")]
-    [InlineData("/%2f%2fattacker.example", "/%2f%2fattacker.example")]
+    [InlineData("/%2f%2fattacker.example", "/")]
+    [InlineData("/%252f%252fattacker.example", "/")]
+    [InlineData("/safe%5c%5cattacker.example", "/")]
+    [InlineData("/signin-oidc", "/")]
+    [InlineData("/signout-callback-oidc", "/")]
+    [InlineData("/api/v1/auth/logout", "/")]
+    [InlineData("/bad%zz", "/")]
     public void ReturnUrlPolicyAllowsOnlyLocalPaths(string? candidate, string expected)
     {
         Assert.Equal(expected, ReturnUrlPolicy.Normalize(candidate));
@@ -27,13 +34,54 @@ public sealed class TelemetryRedactionTests
     [Fact]
     public void RuntimeConfigurationReadinessRejectsProductionPlaceholderAndAcceptsValidConfiguration()
     {
-        var rejected = new RuntimeConfigurationReadiness(false, "Host=database", "https://identity.example/realms/kitchenflow", "kitchenflow", "development-only-change-me", "/var/lib/kitchenflow/keys");
-        var accepted = new RuntimeConfigurationReadiness(false, "Host=database", "https://identity.example/realms/kitchenflow", "kitchenflow", "non-placeholder-test-secret", "/var/lib/kitchenflow/keys");
-        var development = new RuntimeConfigurationReadiness(true, "Host=database", "http://127.0.0.1:8080/realms/kitchenflow", "kitchenflow", null, null);
+        var session = new SessionOptions();
+        var idempotency = new IdempotencyOptions { Retention = TimeSpan.FromDays(30) };
+        var rejected = new RuntimeConfigurationReadiness(
+            false,
+            new DatabaseOptions { ConnectionString = "Host=database;Password=valid-secret-value" },
+            new OidcOptions { Authority = "https://identity.example/realms/kitchenflow", ClientId = "kitchenflow", ClientSecret = "development-only-change-me" },
+            new DataProtectionOptions { KeyRingPath = "/var/lib/kitchenflow/keys" },
+            session,
+            idempotency);
+        var accepted = new RuntimeConfigurationReadiness(
+            false,
+            new DatabaseOptions { ConnectionString = "Host=database;Password=valid-secret-value" },
+            new OidcOptions { Authority = "https://identity.example/realms/kitchenflow", ClientId = "kitchenflow", ClientSecret = "valid-secret-value" },
+            new DataProtectionOptions { KeyRingPath = "/var/lib/kitchenflow/keys" },
+            session,
+            idempotency);
+        var development = new RuntimeConfigurationReadiness(
+            true,
+            new DatabaseOptions { ConnectionString = "Host=database;Password=development-only-change-me" },
+            new OidcOptions { Authority = "http://127.0.0.1:8080/realms/kitchenflow", ClientId = "kitchenflow" },
+            new DataProtectionOptions(),
+            session,
+            idempotency);
 
         Assert.Throws<InvalidOperationException>(rejected.ThrowIfInvalidForNonDevelopment);
         accepted.ThrowIfInvalidForNonDevelopment();
         Assert.True(development.IsReady);
+    }
+
+    [Fact]
+    public void ProductionStartupRejectsPlaceholderSecrets()
+    {
+        using var factory = CreateProductionFactory("development-only-change-me", "/var/lib/kitchenflow/keys");
+
+        var exception = Assert.ThrowsAny<Exception>(() => factory.CreateClient());
+
+        Assert.Contains("configuration", exception.ToString(), StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("development-only-change-me", exception.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ProductionStartupAcceptsCompleteTypedConfiguration()
+    {
+        var keyRingPath = Path.Combine(Path.GetTempPath(), $"kitchenflow-keyring-{Guid.NewGuid():N}");
+        using var factory = CreateProductionFactory("valid-secret-value", keyRingPath);
+        using var client = factory.CreateClient();
+
+        Assert.NotNull(client);
     }
 
     [Theory]
@@ -248,4 +296,15 @@ public sealed class TelemetryRedactionTests
             .Select(value => value.GetString()!)
             .ToArray();
     }
+
+    private static WebApplicationFactory<Program> CreateProductionFactory(string clientSecret, string keyRingPath) =>
+        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Production");
+            builder.UseSetting("KITCHENFLOW_DB_CONNECTION", "Host=database;Database=kitchenflow;Username=kitchenflow;Password=valid-secret-value");
+            builder.UseSetting("KITCHENFLOW_OIDC_AUTHORITY", "https://identity.example/realms/kitchenflow");
+            builder.UseSetting("KITCHENFLOW_OIDC_CLIENT_ID", "kitchenflow-backend");
+            builder.UseSetting("KITCHENFLOW_OIDC_CLIENT_SECRET", clientSecret);
+            builder.UseSetting("KITCHENFLOW_SESSION_KEYRING_PATH", keyRingPath);
+        });
 }

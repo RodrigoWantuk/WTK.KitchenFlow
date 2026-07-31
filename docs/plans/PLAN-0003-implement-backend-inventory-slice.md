@@ -303,8 +303,8 @@ Every commit must update this plan's `Execution state` and `Progress log` and th
 - [x] Metadata corrections expose exact changed fields through an immutable owner-visible history contract.
 - [x] OpenAPI matches runtime security, CSRF, ETag, quantity modes, nullability, errors, and examples.
 - [x] OpenAPI parses/lints as 3.1 and snapshot drift is checked in CI.
-- [ ] Production configuration uses typed validated options with no development fallback.
-- [ ] Readiness and all framework failures match the documented security/error contract.
+- [x] Production configuration uses typed validated options with no development fallback.
+- [x] Readiness and all framework failures match the documented security/error contract.
 - [ ] Required low-cardinality metrics have correct replay semantics and full-pipeline redaction evidence.
 - [ ] Unit, integration, architecture, migration, security, and contract tests cover the accepted PLAN-0002/PLAN-0003 matrix.
 - [ ] Idempotent migration SQL, upgrade evidence, retained artifacts, and forward-repair guidance exist.
@@ -337,16 +337,28 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** R2-R5 are complete: the generated OpenAPI now matches route security/concurrency headers, exclusive nullable quantity modes, Problem Details, response headers, and the accepted example matrix with warning-free lint.
+- **Current checkpoint:** R2-R6 are complete: typed environment-aware startup validation, secure session options, local configuration/PostgreSQL readiness, hardened redirects, and normalized framework failures are implemented and tested.
 - **Execution status:** In Progress, not Validating.
-- **Confirmed completed phases:** R1, R2, R3, R4, and R5.
-- **Partially completed phases:** R6, R7, R8, and R9.
+- **Confirmed completed phases:** R1, R2, R3, R4, R5, and R6.
+- **Partially completed phases:** R7, R8, and R9.
 - **Not started at a valid final candidate:** R10.
 - **Current blocker:** None external. Remaining work is implementation and acceptance evidence inside this branch.
 - **Contract disposition:** OpenAPI snapshot is provisional and must not be consumed as PLAN-0004's stable live-client contract.
-- **Exact next action:** Complete R6 typed environment-aware options, readiness, normalized framework errors, redirect matrix, and security tests.
+- **Exact next action:** Complete R7 full-pipeline trace/metric exporter evidence and expand the remaining R8 domain, persistence, ownership, concurrency, CSRF, list, cursor, and migration matrix.
 
 ## Progress log
+
+### 2026-07-31T02:39:00Z — R6 typed configuration and framework-error security completed
+
+- **Checkpoint:** Bound database, OIDC, Data Protection, secure session, and idempotency settings to documented typed options with environment-aware startup validation. Production rejects missing, placeholder, non-HTTPS identity, non-persistent key-ring, unsafe cookie, session-duration, and retention configuration; development-only identity defaults remain isolated to development configuration.
+- **Security behavior:** Hardened return URLs against absolute, scheme-relative, encoded, double-encoded, backslash, malformed, reserved callback, and auth-route targets. Normalized authentication, authorization, CSRF, rate limiting, malformed JSON, unsupported media type, route/query binding, readiness, and unexpected exceptions to privacy-safe `application/problem+json` with trace IDs.
+- **Readiness:** Preserved the deliberate local-only OIDC/Data Protection readiness decision, added PostgreSQL connectivity and all typed configuration, and documented the operational consequence. Readiness 503 now returns `service_unavailable`.
+- **Material files changed:** API startup and endpoint filters; typed runtime options/readiness/Problem Details/redirect services; root/development settings; backend documentation; API/security/configuration tests; regenerated OpenAPI snapshot; this plan; and `docs/plan-status.md`.
+- **Commands and validation performed:** `dotnet format`; Release solution build; targeted configuration, redirect, framework failure, CSRF, rate-limit, readiness, and production redaction tests; OpenAPI export/check/lint.
+- **Result:** Build passed with zero warnings/errors; targeted R6 test matrix passed 27/27 plus production configuration tests 3/3 and unexpected/rate-limit tests 2/2; OpenAPI lint remained warning-free.
+- **Known failures or unverified behavior:** Full solution test execution remains for R8/R10. Readiness intentionally does not call external OIDC discovery.
+- **Blockers:** None.
+- **Exact next action:** Complete R7 exporter evidence and the remaining R8 acceptance matrix.
 
 ### 2026-07-31T02:35:00Z — R5 runtime-aligned OpenAPI completed
 

@@ -1,11 +1,13 @@
 using System.Security.Claims;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Text.Encodings.Web;
 using KitchenFlow.Api.Services;
 using KitchenFlow.Infrastructure.Persistence;
 using KitchenFlow.Modules.Identity;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Testcontainers.PostgreSql;
 
 namespace KitchenFlow.IntegrationTests;
@@ -102,6 +105,123 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         var response = await client.SendAsync(request);
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task FrameworkBindingFailuresUseSafeProblemDetails()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        using var malformedRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/inventory/lots") { Content = new StringContent("{", Encoding.UTF8, "application/json") };
+        malformedRequest.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString());
+        malformedRequest.Headers.Add("X-CSRF-TOKEN", csrf);
+        using var unsupportedRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/inventory/lots") { Content = new StringContent("{}", Encoding.UTF8, "text/plain") };
+        unsupportedRequest.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString());
+        unsupportedRequest.Headers.Add("X-CSRF-TOKEN", csrf);
+
+        var malformed = await client.SendAsync(malformedRequest);
+        var unsupported = await client.SendAsync(unsupportedRequest);
+        var queryBinding = await client.GetAsync("/api/v1/inventory/lots?pageSize=not-a-number");
+
+        await AssertProblemAsync(malformed, System.Net.HttpStatusCode.BadRequest, "malformed_request");
+        await AssertProblemAsync(unsupported, System.Net.HttpStatusCode.UnsupportedMediaType, "unsupported_media_type");
+        await AssertProblemAsync(queryBinding, System.Net.HttpStatusCode.BadRequest, "malformed_request");
+    }
+
+    [Fact]
+    public async Task EveryCookieAuthenticatedMutationRejectsMissingCsrf()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true, AllowAutoRedirect = false });
+        var csrf = await GetCsrfAsync(client);
+        var created = await CreateAsync(client, csrf, Guid.NewGuid().ToString());
+        var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+        using var update = new HttpRequestMessage(HttpMethod.Patch, $"/api/v1/inventory/lots/{lotId}") { Content = JsonContent.Create(new { storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null }) };
+        update.Headers.TryAddWithoutValidation("If-Match", created.Headers.ETag!.Tag);
+        using var adjustment = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/inventory/lots/{lotId}/adjustments") { Content = JsonContent.Create(new { type = "Consume", value = 1m, availabilityState = (string?)null, reasonCode = "test", note = (string?)null }) };
+        adjustment.Headers.TryAddWithoutValidation("If-Match", created.Headers.ETag!.Tag);
+        adjustment.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString());
+        using var delete = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/inventory/lots/{lotId}");
+        delete.Headers.TryAddWithoutValidation("If-Match", created.Headers.ETag!.Tag);
+        using var logout = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/logout");
+
+        var responses = new[]
+        {
+            await client.SendAsync(update),
+            await client.SendAsync(adjustment),
+            await client.SendAsync(delete),
+            await client.SendAsync(logout)
+        };
+
+        foreach (var response in responses)
+        {
+            await AssertProblemAsync(response, System.Net.HttpStatusCode.BadRequest, "validation_failed");
+        }
+    }
+
+    [Theory]
+    [InlineData("/inventory/lots")]
+    [InlineData("https://attacker.example")]
+    [InlineData("//attacker.example")]
+    [InlineData("/%2f%2fattacker.example")]
+    [InlineData("/%252f%252fattacker.example")]
+    [InlineData("/safe%5cattacker.example")]
+    [InlineData("/signin-oidc")]
+    [InlineData("/bad%zz")]
+    public async Task LoginEndpointNeverRedirectsDirectlyToUntrustedReturnUrl(string returnUrl)
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: false);
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+
+        var response = await client.PostAsync($"/api/v1/auth/login?returnUrl={Uri.EscapeDataString(returnUrl)}", null);
+
+        Assert.Equal(System.Net.HttpStatusCode.Redirect, response.StatusCode);
+        Assert.NotNull(response.Headers.Location);
+        Assert.True(response.Headers.Location!.IsAbsoluteUri);
+        Assert.DoesNotContain("attacker.example", response.Headers.Location.OriginalString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ProductionUnexpectedFailureReturnsRedactedProblemDetails()
+    {
+        const string privateConnectionValue = "private-connection-value";
+        await using var factory = new KitchenFlowFactory($"Host=127.0.0.1;Port=1;Database=kitchenflow;Username=kitchenflow;Password={privateConnectionValue};Timeout=1;Command Timeout=1", authenticate: true, environment: "Production");
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+
+        var readiness = await client.GetAsync("/health/ready");
+        var response = await client.GetAsync("/api/v1/session");
+        var body = await response.Content.ReadAsStringAsync();
+
+        await AssertProblemAsync(readiness, System.Net.HttpStatusCode.ServiceUnavailable, "service_unavailable");
+        await AssertProblemAsync(response, System.Net.HttpStatusCode.InternalServerError, "unexpected_error");
+        Assert.DoesNotContain(privateConnectionValue, body, StringComparison.Ordinal);
+        Assert.DoesNotContain("integration-user", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task MutationRateLimitReturnsProblemDetails()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        HttpResponseMessage? response = null;
+        for (var attempt = 0; attempt < 61; attempt++)
+        {
+            response?.Dispose();
+            using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/inventory/lots") { Content = new StringContent("{", Encoding.UTF8, "application/json") };
+            request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString());
+            request.Headers.Add("X-CSRF-TOKEN", csrf);
+            response = await client.SendAsync(request);
+        }
+
+        using (response)
+        {
+            await AssertProblemAsync(response!, System.Net.HttpStatusCode.TooManyRequests, "rate_limit_exceeded");
+        }
     }
 
     [Fact]
@@ -646,12 +766,24 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         return await client.SendAsync(request);
     }
 
+    private static async Task AssertProblemAsync(HttpResponseMessage response, System.Net.HttpStatusCode expectedStatus, string expectedCode)
+    {
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(expectedStatus, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(expectedCode, problem.GetProperty("errorCode").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(problem.GetProperty("traceId").GetString()));
+        Assert.Equal((int)expectedStatus, problem.GetProperty("status").GetInt32());
+    }
+
     public Task InitializeAsync() => _postgres.StartAsync();
 
     public Task DisposeAsync() => _postgres.DisposeAsync().AsTask();
 
-    private sealed class KitchenFlowFactory(string connectionString, bool authenticate) : WebApplicationFactory<Program>
+    private sealed class KitchenFlowFactory(string connectionString, bool authenticate, string environment = "Development") : WebApplicationFactory<Program>
     {
+        private readonly string keyRingPath = Path.Combine(Path.GetTempPath(), $"kitchenflow-integration-keys-{Guid.NewGuid():N}");
+
         public async Task EnsureDatabaseAsync()
         {
             using var scope = Services.CreateScope();
@@ -675,12 +807,28 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
-            builder.UseEnvironment("Development");
+            builder.UseEnvironment(environment);
             builder.UseSetting("ConnectionStrings:KitchenFlow", connectionString);
+            if (!string.Equals(environment, "Development", StringComparison.Ordinal))
+            {
+                builder.UseSetting("KITCHENFLOW_OIDC_AUTHORITY", "https://identity.integration.test/realms/kitchenflow");
+                builder.UseSetting("KITCHENFLOW_OIDC_CLIENT_ID", "kitchenflow-backend");
+                builder.UseSetting("KITCHENFLOW_OIDC_CLIENT_SECRET", "valid-secret-value");
+                builder.UseSetting("KITCHENFLOW_SESSION_KEYRING_PATH", keyRingPath);
+            }
             builder.ConfigureServices(services =>
             {
                 services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
                 services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
+                services.PostConfigure<OpenIdConnectOptions>("oidc", options =>
+                {
+                    options.Configuration = new OpenIdConnectConfiguration
+                    {
+                        AuthorizationEndpoint = "https://identity.integration.test/authorize",
+                        Issuer = "https://identity.integration.test"
+                    };
+                    options.PushedAuthorizationBehavior = PushedAuthorizationBehavior.Disable;
+                });
                 if (authenticate)
                 {
                     services.AddAuthentication(TestAuthenticationHandler.TestScheme)

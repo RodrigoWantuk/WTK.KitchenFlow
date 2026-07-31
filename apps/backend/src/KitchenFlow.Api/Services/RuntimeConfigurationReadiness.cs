@@ -7,14 +7,12 @@ namespace KitchenFlow.Api.Services;
 /// </summary>
 public sealed class RuntimeConfigurationReadiness
 {
-    private static readonly string[] PlaceholderValues = ["development-only-change-me", "change-me", "placeholder"];
-
     /// <summary>Creates readiness validation for the active host environment.</summary>
-    public RuntimeConfigurationReadiness(bool isDevelopment, string databaseConnection, string? oidcAuthority, string? oidcClientId, string? oidcClientSecret, string? keyRingPath)
+    public RuntimeConfigurationReadiness(bool isDevelopment, DatabaseOptions database, OidcOptions oidc, DataProtectionOptions dataProtection, SessionOptions session, IdempotencyOptions idempotency)
     {
         IsDevelopment = isDevelopment;
-        IsReady = HasValue(databaseConnection) && HasValue(oidcAuthority) && HasValue(oidcClientId) && (isDevelopment || (HasValue(oidcClientSecret) && HasValue(keyRingPath) && !IsPlaceholder(oidcClientSecret)));
-        FailureReason = IsReady ? null : "Required database, OIDC, or data-protection configuration is absent or unsafe for this environment.";
+        IsReady = database.IsValid(isDevelopment) && oidc.IsValid(isDevelopment) && dataProtection.IsValid(isDevelopment) && session.IsValid() && idempotency.IsValid();
+        FailureReason = IsReady ? null : "Required database, OIDC, data-protection, session, or idempotency configuration is absent or unsafe for this environment.";
     }
 
     /// <summary>Gets whether this host is running with the explicitly relaxed development policy.</summary>
@@ -35,7 +33,4 @@ public sealed class RuntimeConfigurationReadiness
             throw new InvalidOperationException(FailureReason);
         }
     }
-
-    private static bool HasValue(string? value) => !string.IsNullOrWhiteSpace(value);
-    private static bool IsPlaceholder(string? value) => PlaceholderValues.Contains(value?.Trim(), StringComparer.OrdinalIgnoreCase);
 }

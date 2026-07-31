@@ -12,7 +12,36 @@ public static class ReturnUrlPolicy
     /// <returns>A local absolute-path reference suitable for authentication properties.</returns>
     public static string Normalize(string? candidate)
     {
-        if (string.IsNullOrWhiteSpace(candidate) || candidate[0] != '/' || candidate.StartsWith("//", StringComparison.Ordinal) || candidate.StartsWith("/\\", StringComparison.Ordinal) || !Uri.IsWellFormedUriString(candidate, UriKind.Relative))
+        if (string.IsNullOrWhiteSpace(candidate) || candidate[0] != '/' || !Uri.IsWellFormedUriString(candidate, UriKind.Relative))
+        {
+            return "/";
+        }
+
+        var decoded = candidate;
+        for (var pass = 0; pass < 3; pass++)
+        {
+            try
+            {
+                decoded = Uri.UnescapeDataString(decoded);
+            }
+            catch (UriFormatException)
+            {
+                return "/";
+            }
+
+            if (!decoded.StartsWith("/", StringComparison.Ordinal) ||
+                decoded.StartsWith("//", StringComparison.Ordinal) ||
+                decoded.Contains("\\", StringComparison.Ordinal) ||
+                decoded.Any(char.IsControl))
+            {
+                return "/";
+            }
+        }
+
+        var path = decoded.Split('?', '#')[0];
+        if (path.Equals("/signin-oidc", StringComparison.OrdinalIgnoreCase) ||
+            path.Equals("/signout-callback-oidc", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("/api/v1/auth/", StringComparison.OrdinalIgnoreCase))
         {
             return "/";
         }

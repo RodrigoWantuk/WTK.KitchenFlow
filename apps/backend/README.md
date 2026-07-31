@@ -23,6 +23,25 @@ Start PostgreSQL and Keycloak with `docker compose -f infrastructure/compose/com
 
 Configure `KITCHENFLOW_DB_CONNECTION`, `KITCHENFLOW_OIDC_AUTHORITY`, `KITCHENFLOW_OIDC_CLIENT_ID`, `KITCHENFLOW_OIDC_CLIENT_SECRET`, and `KITCHENFLOW_SESSION_KEYRING_PATH` through an ignored local environment file or secret store. The session key-ring path is development-local only; production deployments must provide a shared protected key ring. Do not place OIDC tokens or client secrets in browser configuration.
 
+The API binds and validates database, OIDC, Data Protection, secure-session, and idempotency options
+at startup. Production-like environments require a non-placeholder database connection, HTTPS OIDC
+authority, confidential client identifier and secret, and an absolute persistent key-ring path.
+`Session:CookieName` must retain the `__Host-` prefix, `Session:IdleTimeout` must be between five
+minutes and one day, and `Idempotency:Retention` must be between one and ninety days. Safe session
+and retention defaults live in `appsettings.json`; Keycloak fixture authority/client values live only
+in `appsettings.Development.json`. No production credential has a repository default.
+
+`/health/live` proves that the process pipeline is running. `/health/ready` validates the complete
+local configuration set and PostgreSQL connectivity. It deliberately does not call OIDC discovery:
+an identity-provider outage must be monitored independently and must not create an unbounded
+readiness dependency. A 503 response is normalized as `application/problem+json` with
+`service_unavailable`.
+
+Framework authentication, authorization, CSRF, rate-limit, malformed JSON, unsupported media type,
+route/query binding, dependency, and unexpected failures use the same privacy-safe Problem Details
+shape. Responses contain a stable `errorCode` and safe trace identifier; they do not copy exception
+messages, request bodies, credentials, cookies, tokens, private notes, or user identifiers.
+
 ## Responsibilities
 
 - backend-for-frontend and API endpoints;
