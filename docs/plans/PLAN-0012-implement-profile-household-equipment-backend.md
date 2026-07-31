@@ -1,13 +1,13 @@
 # PLAN-0012: Implement Account, Household, Profile and Equipment Backend Slice
 
-- **Status:** In Progress
+- **Status:** Validating
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** Cursor cloud agent
 - **Created:** 2026-07-31
-- **Last updated:** 2026-07-31T18:45:00Z
+- **Last updated:** 2026-07-31T19:10:00Z
 - **Branch:** `cursor/plan-0012-profile-backend-1672`
-- **Pull request:** Not opened
+- **Pull request:** Draft open
 - **Base commit:** `f9d429346615bf5b157656822057917ca2fe4032` (PLAN-0003 merged via PR #9)
 - **Related specification:** PLAN-0002, `docs/product/audience-and-profile.md`
 - **Related ADRs:** ADR-0002, ADR-0003, ADR-0004, ADR-0006
@@ -59,26 +59,35 @@ Implement a production-shaped backend slice for progressive profile, single-hous
 
 ## Acceptance criteria
 
-- [ ] Progressive profile distinguishes absent, confirmed, removed, default, temporary, and durable semantics at the contract level
-- [ ] Single household context per account with required cadence and locale fields
-- [ ] Eight restriction categories with stable non-localized codes; allergies and medical restrictions only via explicit user commands
-- [ ] Cooking context, equipment, adult declaration, and accepted terms versions persisted with owner consistency
-- [ ] All mutations owner-scoped with concurrency token and `If-Match`
-- [ ] Session endpoint never exposes restrictions, allergies, or private notes
-- [ ] Privacy-minimizing audit history without sensitive payloads
-- [ ] Module-owned export and deletion projection interfaces prepared for Privacy workflows
-- [ ] Architecture tests enforce module boundaries
-- [ ] Full test suite deterministic with zero skipped tests
-- [ ] Release build zero warnings, locked restore, migrations from empty and prior main, OpenAPI truthful
+- [x] Progressive profile distinguishes absent, confirmed, removed, default, temporary, and durable semantics at the contract level
+- [x] Single household context per account with required cadence and locale fields
+- [x] Eight restriction categories with stable non-localized codes; allergies and medical restrictions only via explicit user commands
+- [x] Cooking context, equipment, adult declaration, and accepted terms versions persisted with owner consistency
+- [x] All mutations owner-scoped with concurrency token and `If-Match`
+- [x] Session endpoint never exposes restrictions, allergies, or private notes
+- [x] Privacy-minimizing audit history without sensitive payloads
+- [x] Module-owned export and deletion projection interfaces prepared for Privacy workflows
+- [x] Architecture tests enforce module boundaries
+- [x] Full test suite deterministic with zero skipped tests (127/127 local Release)
+- [x] Release build zero warnings, locked restore, migrations from empty and prior main, OpenAPI truthful
 
 ## Execution state
 
-- **Current phase:** P0 — plan registration and module foundation
-- **Last verified checkpoint:** `main` at `f9d4293` confirmed; registry reconciliation and PLAN-0012 document created
-- **Blockers:** None
-- **Exact next action:** Implement `KitchenFlow.Modules.Profiles` domain and application layer, then persistence and API adapters
+- **Current phase:** Validating — draft PR candidate
+- **Last verified checkpoint:** Release build 0 warnings; 127/127 tests; migration `20260731185224_InitialProfilesSlice`; OpenAPI export and lint passed locally
+- **Blockers:** Awaiting CI and independent review on final candidate SHA
+- **Exact next action:** Push branch, open draft PR, reconcile CI evidence, mark ready when checks agree
 
 ## Progress log
+
+### 2026-07-31T19:10:00Z — Profile backend slice implemented
+
+- Added `KitchenFlow.Modules.Profiles` with domain, application use cases, PostgreSQL stores, API adapters, and `profiles` schema migration.
+- Extended `GET /api/v1/session` with safe profile projection fields only.
+- Added domain, application, architecture, and integration coverage for profile flows.
+- Exported OpenAPI snapshot and added `docs/operations/backend-profile-runbook.md`.
+- **Validation:** `dotnet build/test -c Release` green with 127 tests; OpenAPI lint passed locally.
+- **Next:** CI, Gitleaks, and independent review on pushed candidate SHA.
 
 ### 2026-07-31T18:45:00Z — Plan claimed
 

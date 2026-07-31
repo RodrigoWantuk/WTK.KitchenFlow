@@ -112,6 +112,13 @@
           "KitchenFlow.SharedKernel": "[1.0.0, )"
         }
       },
+      "kitchenflow.modules.profiles": {
+        "type": "Project",
+        "dependencies": {
+          "KitchenFlow.Modules.Identity": "[1.0.0, )",
+          "KitchenFlow.SharedKernel": "[1.0.0, )"
+        }
+      },
       "kitchenflow.sharedkernel": {
         "type": "Project"
       }

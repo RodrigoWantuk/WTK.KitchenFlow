@@ -1,8 +1,10 @@
 using KitchenFlow.Api.Inventory;
+using KitchenFlow.Api.Profiles;
 using KitchenFlow.Api.Observability;
 using KitchenFlow.Api.Services;
 using KitchenFlow.Infrastructure.Persistence;
 using KitchenFlow.Modules.Inventory.Application;
+using KitchenFlow.Modules.Profiles.Application;
 using KitchenFlow.Modules.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -66,6 +68,21 @@ builder.Services.AddScoped<IDeleteInventoryLotUseCase, DeleteInventoryLotHandler
 builder.Services.AddScoped<IGetInventoryLotHistoryUseCase, GetInventoryLotHistoryHandler>();
 builder.Services.AddScoped<InventoryApplicationService>();
 builder.Services.AddSingleton<InventoryLotLifecycleUseCase>();
+builder.Services.AddScoped<IProfileReadStore, PostgreSqlProfileReadStore>();
+builder.Services.AddScoped<IProfileWriteStore, PostgreSqlProfileWriteStore>();
+builder.Services.AddSingleton<IProfileHttpTokenService, ProfileHttpTokenService>();
+builder.Services.AddSingleton<ProfileMetrics>();
+builder.Services.AddScoped<ProfileApplicationWorkflow>();
+builder.Services.AddScoped<IGetProfileUseCase, GetProfileHandler>();
+builder.Services.AddScoped<IPutProfileUseCase, PutProfileHandler>();
+builder.Services.AddScoped<IPatchProfileUseCase, PatchProfileHandler>();
+builder.Services.AddScoped<IGetPreferencesUseCase, GetPreferencesHandler>();
+builder.Services.AddScoped<IPutPreferencesUseCase, PutPreferencesHandler>();
+builder.Services.AddScoped<IGetEquipmentUseCase, GetEquipmentHandler>();
+builder.Services.AddScoped<IPutEquipmentUseCase, PutEquipmentHandler>();
+builder.Services.AddScoped<IGetProfileCompletenessUseCase, GetProfileCompletenessHandler>();
+builder.Services.AddScoped<IGetProfileSessionProjectionUseCase, GetProfileSessionProjectionHandler>();
+builder.Services.AddScoped<ProfileApplicationService>();
 builder.Services.AddAntiforgery(options => { options.HeaderName = "X-CSRF-TOKEN"; options.Cookie.Name = "__Host-kitchenflow-antiforgery"; options.Cookie.Path = "/"; options.Cookie.SecurePolicy = CookieSecurePolicy.Always; });
 var dataProtection = builder.Services.AddDataProtection().SetApplicationName("KitchenFlow");
 if (!string.IsNullOrWhiteSpace(dataProtectionOptions.KeyRingPath))
@@ -118,7 +135,11 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("authentication", context => RateLimitPartition.GetFixedWindowLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
     options.AddPolicy("mutation", context => RateLimitPartition.GetFixedWindowLimiter(context.User.FindFirst("sub")?.Value ?? context.User.Identity?.Name ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = 60, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 });
-builder.Services.AddOpenApi(options => options.AddDocumentTransformer(InventoryOpenApiTransformer.ApplyAsync));
+builder.Services.AddOpenApi(options => options.AddDocumentTransformer(async (document, context, cancellationToken) =>
+{
+    await InventoryOpenApiTransformer.ApplyAsync(document, context, cancellationToken);
+    await ProfileOpenApiTransformer.ApplyAsync(document, context, cancellationToken);
+}));
 var telemetry = builder.Services.AddOpenTelemetry();
 telemetry.WithTracing(tracing =>
 {
@@ -130,7 +151,7 @@ telemetry.WithTracing(tracing =>
 });
 telemetry.WithMetrics(metrics =>
 {
-    metrics.AddAspNetCoreInstrumentation().AddMeter("KitchenFlow.Inventory").AddMeter("KitchenFlow.Security");
+    metrics.AddAspNetCoreInstrumentation().AddMeter("KitchenFlow.Inventory").AddMeter("KitchenFlow.Profiles").AddMeter("KitchenFlow.Security");
     if (Uri.TryCreate(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"], UriKind.Absolute, out var endpoint))
     {
         metrics.AddOtlpExporter(options => options.Endpoint = endpoint);
@@ -184,13 +205,15 @@ api.MapPost("/auth/logout", async (HttpContext context, IAntiforgery antiforgery
     catch (AntiforgeryValidationException) { metrics.RecordFailure("csrf"); return ApiProblem.Create(context, StatusCodes.Status400BadRequest, "validation_failed", "The CSRF token is missing or invalid."); }
     return Results.SignOut(new AuthenticationProperties { RedirectUri = "/" }, [CookieAuthenticationDefaults.AuthenticationScheme, "oidc"]);
 }).RequireAuthorization().Produces(StatusCodes.Status302Found).ProducesProblem(400).ProducesProblem(401);
-api.MapGet("/session", async (HttpContext context, IAntiforgery antiforgery, ICurrentUserAccessor currentUser, CancellationToken cancellationToken) =>
+api.MapGet("/session", async (HttpContext context, IAntiforgery antiforgery, ICurrentUserAccessor currentUser, IGetProfileSessionProjectionUseCase sessionProjection, CancellationToken cancellationToken) =>
 {
     var user = await currentUser.GetCurrentAsync(cancellationToken);
     var tokens = antiforgery.GetAndStoreTokens(context);
-    return Results.Ok(new SessionResponse(user.Id, tokens.RequestToken!, ["en", "pt-BR", "es"]));
+    var projection = await sessionProjection.GetAsync(user.Id, cancellationToken);
+    return Results.Ok(new SessionResponse(user.Id, tokens.RequestToken!, ["en", "pt-BR", "es"], projection.DisplayName, projection.Language, projection.TimeZone, projection.MeasurementSystem, projection.ProfileExists, projection.PercentComplete, projection.AdultDeclarationState.ToString()));
 }).RequireAuthorization().Produces<SessionResponse>().ProducesProblem(401);
 api.MapGroup("/inventory").RequireAuthorization().MapInventoryEndpoints();
+api.MapGroup("/profile").RequireAuthorization().MapProfileEndpoints();
 app.Run();
 
 /// <summary>Exposes the application entry point to the integration-test host.</summary>

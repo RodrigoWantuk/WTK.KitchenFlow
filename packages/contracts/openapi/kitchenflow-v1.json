@@ -49,6 +49,122 @@
         ],
         "type": "object"
       },
+      "AdultDeclarationDto": {
+        "description": "Adult declaration transport DTO.",
+        "properties": {
+          "acceptedAt": {
+            "format": "date-time",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "adultDeclared": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "privacyVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "state": {
+            "type": "string"
+          },
+          "termsVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "adultDeclared",
+          "termsVersion",
+          "privacyVersion",
+          "acceptedAt",
+          "state"
+        ],
+        "type": "object"
+      },
+      "AdultDeclarationMutationDto": {
+        "description": "Adult declaration mutation transport DTO.",
+        "properties": {
+          "adultDeclared": {
+            "type": "boolean"
+          },
+          "privacyVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "termsVersion": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "adultDeclared",
+          "termsVersion",
+          "privacyVersion"
+        ],
+        "type": "object"
+      },
+      "CookingContextDto": {
+        "description": "Cooking context transport DTO.",
+        "properties": {
+          "cleanupTolerance": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfstring"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfstring"
+          },
+          "effortTolerance": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfstring"
+          },
+          "exceptionalPrepMinutes": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfint"
+          },
+          "freezingPreference": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfstring"
+          },
+          "leftoverPreference": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfstring"
+          },
+          "ordinaryPrepMinutes": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfint"
+          },
+          "overallSkill": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfstring"
+          },
+          "preferredInstructionDetail": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfstring"
+          },
+          "reheatingPreference": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfstring"
+          },
+          "repeatMealPreference": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfstring"
+          }
+        },
+        "required": [
+          "overallSkill",
+          "confidence",
+          "preferredInstructionDetail",
+          "ordinaryPrepMinutes",
+          "exceptionalPrepMinutes",
+          "effortTolerance",
+          "cleanupTolerance",
+          "repeatMealPreference",
+          "reheatingPreference",
+          "leftoverPreference",
+          "freezingPreference"
+        ],
+        "type": "object"
+      },
       "CreateLotRequest": {
         "description": "Creates one manually entered, user-owned inventory lot.",
         "properties": {
@@ -110,6 +226,231 @@
           "packageState",
           "printedExpirationDate",
           "notes"
+        ],
+        "type": "object"
+      },
+      "EquipmentItemDto": {
+        "description": "Equipment item request DTO.",
+        "properties": {
+          "capacity": {
+            "format": "double",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ]
+          },
+          "capacityUnit": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "constraintNote": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sortOrder": {
+            "format": "int32",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ]
+          },
+          "stableCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "stableCode",
+          "customName",
+          "capacity",
+          "capacityUnit",
+          "constraintNote",
+          "sortOrder"
+        ],
+        "type": "object"
+      },
+      "EquipmentRequest": {
+        "description": "Equipment replace request DTO.",
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/EquipmentItemDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "entries"
+        ],
+        "type": "object"
+      },
+      "EquipmentResponse": {
+        "description": "Equipment response DTO.",
+        "properties": {
+          "capacity": {
+            "format": "double",
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ]
+          },
+          "capacityUnit": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "constraintNote": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "customName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "entryId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "sortOrder": {
+            "format": "int32",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ]
+          },
+          "stableCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "entryId",
+          "stableCode",
+          "customName",
+          "capacity",
+          "capacityUnit",
+          "constraintNote",
+          "isActive",
+          "sortOrder"
+        ],
+        "type": "object"
+      },
+      "FieldMutationDtoOfint": {
+        "description": "Field mutation transport DTO.",
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "durability": {
+            "default": "durable",
+            "type": "string"
+          },
+          "value": {
+            "format": "int32",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "action",
+          "value"
+        ],
+        "type": "object"
+      },
+      "FieldMutationDtoOfstring": {
+        "description": "Field mutation transport DTO.",
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "durability": {
+            "default": "durable",
+            "type": "string"
+          },
+          "value": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "action",
+          "value"
+        ],
+        "type": "object"
+      },
+      "HouseholdDto": {
+        "description": "Household context transport DTO.",
+        "properties": {
+          "currency": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfstring"
+          },
+          "defaultAdultCount": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfint"
+          },
+          "defaultChildCount": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfint"
+          },
+          "defaultServingCount": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfint"
+          },
+          "language": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfstring"
+          },
+          "measurementSystem": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfstring"
+          },
+          "planningCadence": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfstring"
+          },
+          "region": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfstring"
+          },
+          "shoppingCadence": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfstring"
+          },
+          "timeZone": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfstring"
+          }
+        },
+        "required": [
+          "defaultAdultCount",
+          "defaultChildCount",
+          "defaultServingCount",
+          "language",
+          "region",
+          "currency",
+          "measurementSystem",
+          "timeZone",
+          "planningCadence",
+          "shoppingCadence"
         ],
         "type": "object"
       },
@@ -276,6 +617,89 @@
         ],
         "type": "object"
       },
+      "PreferenceCommandDto": {
+        "description": "Explicit preference command DTO.",
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "stableCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "category",
+          "stableCode",
+          "note"
+        ],
+        "type": "object"
+      },
+      "PreferenceResponse": {
+        "description": "Preference response DTO.",
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "entryId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "presence": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "format": "int32",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ]
+          },
+          "stableCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "entryId",
+          "category",
+          "stableCode",
+          "note",
+          "presence",
+          "sortOrder"
+        ],
+        "type": "object"
+      },
+      "PreferencesRequest": {
+        "description": "Preference command request DTO.",
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/PreferenceCommandDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "entries"
+        ],
+        "type": "object"
+      },
       "ProblemDetails": {
         "properties": {
           "detail": {
@@ -329,6 +753,499 @@
         "required": [
           "errorCode",
           "traceId"
+        ],
+        "type": "object"
+      },
+      "ProfileCompletenessResponse": {
+        "description": "Profile completeness response DTO.",
+        "properties": {
+          "adultDeclarationState": {
+            "type": "string"
+          },
+          "completedSections": {
+            "format": "int32",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ]
+          },
+          "percentComplete": {
+            "format": "int32",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ]
+          },
+          "profileExists": {
+            "type": "boolean"
+          },
+          "sectionCounts": {
+            "additionalProperties": {
+              "format": "int32",
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ]
+            },
+            "type": "object"
+          },
+          "totalSections": {
+            "format": "int32",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "percentComplete",
+          "completedSections",
+          "totalSections",
+          "sectionCounts",
+          "adultDeclarationState",
+          "profileExists"
+        ],
+        "type": "object"
+      },
+      "ProfileFieldDtoOfint": {
+        "description": "Progressive profile field transport DTO.",
+        "properties": {
+          "defaultValue": {
+            "format": "int32",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ]
+          },
+          "durability": {
+            "type": "string"
+          },
+          "presence": {
+            "type": "string"
+          },
+          "value": {
+            "format": "int32",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "value",
+          "presence",
+          "defaultValue",
+          "durability"
+        ],
+        "type": "object"
+      },
+      "ProfileFieldDtoOfstring": {
+        "description": "Progressive profile field transport DTO.",
+        "properties": {
+          "defaultValue": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "durability": {
+            "type": "string"
+          },
+          "presence": {
+            "type": "string"
+          },
+          "value": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "value",
+          "presence",
+          "defaultValue",
+          "durability"
+        ],
+        "type": "object"
+      },
+      "ProfileMutationRequest": {
+        "description": "Profile mutation request body.",
+        "properties": {
+          "abandonmentReasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "adultDeclaration": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AdultDeclarationMutationDto"
+              }
+            ]
+          },
+          "cleanupTolerance": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfstring"
+              }
+            ]
+          },
+          "confidence": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfstring"
+              }
+            ]
+          },
+          "currency": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfstring"
+              }
+            ]
+          },
+          "defaultAdultCount": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfint"
+              }
+            ]
+          },
+          "defaultChildCount": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfint"
+              }
+            ]
+          },
+          "defaultServingCount": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfint"
+              }
+            ]
+          },
+          "displayName": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfstring"
+              }
+            ]
+          },
+          "effortTolerance": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfstring"
+              }
+            ]
+          },
+          "exceptionalPrepMinutes": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfint"
+              }
+            ]
+          },
+          "freezingPreference": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfstring"
+              }
+            ]
+          },
+          "goals": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "knownTechniques": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "language": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfstring"
+              }
+            ]
+          },
+          "leftoverPreference": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfstring"
+              }
+            ]
+          },
+          "measurementSystem": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfstring"
+              }
+            ]
+          },
+          "ordinaryPrepMinutes": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfint"
+              }
+            ]
+          },
+          "overallSkill": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfstring"
+              }
+            ]
+          },
+          "planningCadence": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfstring"
+              }
+            ]
+          },
+          "preferredInstructionDetail": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfstring"
+              }
+            ]
+          },
+          "region": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfstring"
+              }
+            ]
+          },
+          "reheatingPreference": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfstring"
+              }
+            ]
+          },
+          "repeatMealPreference": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfstring"
+              }
+            ]
+          },
+          "shoppingCadence": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfstring"
+              }
+            ]
+          },
+          "techniquesToLearn": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          },
+          "timeZone": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FieldMutationDtoOfstring"
+              }
+            ]
+          }
+        },
+        "required": [
+          "displayName",
+          "defaultAdultCount",
+          "defaultChildCount",
+          "defaultServingCount",
+          "language",
+          "region",
+          "currency",
+          "measurementSystem",
+          "timeZone",
+          "planningCadence",
+          "shoppingCadence",
+          "overallSkill",
+          "confidence",
+          "preferredInstructionDetail",
+          "ordinaryPrepMinutes",
+          "exceptionalPrepMinutes",
+          "effortTolerance",
+          "cleanupTolerance",
+          "repeatMealPreference",
+          "reheatingPreference",
+          "leftoverPreference",
+          "freezingPreference",
+          "adultDeclaration",
+          "knownTechniques",
+          "techniquesToLearn",
+          "goals",
+          "abandonmentReasons"
+        ],
+        "type": "object"
+      },
+      "ProfileResponse": {
+        "description": "Full profile response.",
+        "properties": {
+          "abandonmentReasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "adultDeclaration": {
+            "$ref": "#/components/schemas/AdultDeclarationDto"
+          },
+          "cookingContext": {
+            "$ref": "#/components/schemas/CookingContextDto"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "displayName": {
+            "$ref": "#/components/schemas/ProfileFieldDtoOfstring"
+          },
+          "goals": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "household": {
+            "$ref": "#/components/schemas/HouseholdDto"
+          },
+          "knownTechniques": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "ownerUserId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "techniquesToLearn": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ownerUserId",
+          "displayName",
+          "household",
+          "cookingContext",
+          "adultDeclaration",
+          "knownTechniques",
+          "techniquesToLearn",
+          "goals",
+          "abandonmentReasons",
+          "version",
+          "createdAt",
+          "updatedAt"
         ],
         "type": "object"
       },
@@ -477,16 +1394,54 @@
         "type": "object"
       },
       "SessionResponse": {
-        "description": "Returns the KitchenFlow internal user identifier and request-specific CSRF token for a backend-managed browser session.\nOIDC access and refresh tokens are intentionally never present in this response.",
+        "description": "Returns the KitchenFlow internal user identifier, request-specific CSRF token, and safe profile session projection\nfor a backend-managed browser session. OIDC access and refresh tokens are intentionally never present in this response.",
         "properties": {
+          "adultDeclarationState": {
+            "type": "string"
+          },
           "csrfToken": {
             "type": "string"
+          },
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "language": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "measurementSystem": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "profileExists": {
+            "type": "boolean"
+          },
+          "profilePercentComplete": {
+            "format": "int32",
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ]
           },
           "supportedLocales": {
             "items": {
               "type": "string"
             },
             "type": "array"
+          },
+          "timeZone": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "userId": {
             "format": "uuid",
@@ -496,7 +1451,14 @@
         "required": [
           "userId",
           "csrfToken",
-          "supportedLocales"
+          "supportedLocales",
+          "displayName",
+          "language",
+          "timeZone",
+          "measurementSystem",
+          "profileExists",
+          "profilePercentComplete",
+          "adultDeclarationState"
         ],
         "type": "object"
       },
@@ -2042,6 +3004,897 @@
           }
         ],
         "summary": "GET /api/v1/inventory/lots/{lotId}/history",
+        "tags": [
+          "KitchenFlow.Api"
+        ]
+      }
+    },
+    "/api/v1/profile": {
+      "get": {
+        "operationId": "getApiV1Profile",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "authenticationFailure": {
+                    "summary": "The backend-managed session is absent or invalid.",
+                    "value": {
+                      "detail": "Authentication is required.",
+                      "errorCode": "authentication_required",
+                      "status": 401,
+                      "title": "Unauthorized",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unexpectedFailure": {
+                    "summary": "An unexpected error was safely redacted.",
+                    "value": {
+                      "detail": "An unexpected error occurred.",
+                      "errorCode": "unexpected_error",
+                      "status": 500,
+                      "title": "Internal Server Error",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "An unexpected server error occurred."
+          }
+        },
+        "security": [
+          {
+            "kitchenflowSession": []
+          }
+        ],
+        "summary": "GET /api/v1/profile",
+        "tags": [
+          "KitchenFlow.Api"
+        ]
+      },
+      "patch": {
+        "operationId": "patchApiV1Profile",
+        "parameters": [
+          {
+            "description": "Required CSRF token issued by GET /api/v1/session.",
+            "in": "header",
+            "name": "X-CSRF-TOKEN",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Required for updates after the first create. Use the ETag returned by GET /api/v1/profile.",
+            "in": "header",
+            "name": "If-Match",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileMutationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "authenticationFailure": {
+                    "summary": "The backend-managed session is absent or invalid.",
+                    "value": {
+                      "detail": "Authentication is required.",
+                      "errorCode": "authentication_required",
+                      "status": 401,
+                      "title": "Unauthorized",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Authentication is required."
+          },
+          "412": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "415": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unsupportedMediaType": {
+                    "summary": "The request content type is unsupported.",
+                    "value": {
+                      "detail": "The request content type is not supported.",
+                      "errorCode": "unsupported_media_type",
+                      "status": 415,
+                      "title": "Unsupported Media Type",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "The request content type is not supported."
+          },
+          "428": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Precondition Required"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unexpectedFailure": {
+                    "summary": "An unexpected error was safely redacted.",
+                    "value": {
+                      "detail": "An unexpected error occurred.",
+                      "errorCode": "unexpected_error",
+                      "status": 500,
+                      "title": "Internal Server Error",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "An unexpected server error occurred."
+          }
+        },
+        "security": [
+          {
+            "kitchenflowSession": []
+          }
+        ],
+        "summary": "PATCH /api/v1/profile",
+        "tags": [
+          "KitchenFlow.Api"
+        ]
+      },
+      "put": {
+        "operationId": "putApiV1Profile",
+        "parameters": [
+          {
+            "description": "Required for updates after the first create. Use the ETag returned by GET /api/v1/profile.",
+            "in": "header",
+            "name": "If-Match",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileMutationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponse"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "authenticationFailure": {
+                    "summary": "The backend-managed session is absent or invalid.",
+                    "value": {
+                      "detail": "Authentication is required.",
+                      "errorCode": "authentication_required",
+                      "status": 401,
+                      "title": "Unauthorized",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Authentication is required."
+          },
+          "412": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "415": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unsupportedMediaType": {
+                    "summary": "The request content type is unsupported.",
+                    "value": {
+                      "detail": "The request content type is not supported.",
+                      "errorCode": "unsupported_media_type",
+                      "status": 415,
+                      "title": "Unsupported Media Type",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "The request content type is not supported."
+          },
+          "428": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Precondition Required"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unexpectedFailure": {
+                    "summary": "An unexpected error was safely redacted.",
+                    "value": {
+                      "detail": "An unexpected error occurred.",
+                      "errorCode": "unexpected_error",
+                      "status": 500,
+                      "title": "Internal Server Error",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "An unexpected server error occurred."
+          }
+        },
+        "security": [
+          {
+            "kitchenflowSession": []
+          }
+        ],
+        "summary": "PUT /api/v1/profile",
+        "tags": [
+          "KitchenFlow.Api"
+        ]
+      }
+    },
+    "/api/v1/profile/completeness": {
+      "get": {
+        "operationId": "getApiV1ProfileCompleteness",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileCompletenessResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "authenticationFailure": {
+                    "summary": "The backend-managed session is absent or invalid.",
+                    "value": {
+                      "detail": "Authentication is required.",
+                      "errorCode": "authentication_required",
+                      "status": 401,
+                      "title": "Unauthorized",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unexpectedFailure": {
+                    "summary": "An unexpected error was safely redacted.",
+                    "value": {
+                      "detail": "An unexpected error occurred.",
+                      "errorCode": "unexpected_error",
+                      "status": 500,
+                      "title": "Internal Server Error",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "An unexpected server error occurred."
+          }
+        },
+        "security": [
+          {
+            "kitchenflowSession": []
+          }
+        ],
+        "summary": "GET /api/v1/profile/completeness",
+        "tags": [
+          "KitchenFlow.Api"
+        ]
+      }
+    },
+    "/api/v1/profile/equipment": {
+      "get": {
+        "operationId": "getApiV1ProfileEquipment",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EquipmentResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "authenticationFailure": {
+                    "summary": "The backend-managed session is absent or invalid.",
+                    "value": {
+                      "detail": "Authentication is required.",
+                      "errorCode": "authentication_required",
+                      "status": 401,
+                      "title": "Unauthorized",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unexpectedFailure": {
+                    "summary": "An unexpected error was safely redacted.",
+                    "value": {
+                      "detail": "An unexpected error occurred.",
+                      "errorCode": "unexpected_error",
+                      "status": 500,
+                      "title": "Internal Server Error",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "An unexpected server error occurred."
+          }
+        },
+        "security": [
+          {
+            "kitchenflowSession": []
+          }
+        ],
+        "summary": "GET /api/v1/profile/equipment",
+        "tags": [
+          "KitchenFlow.Api"
+        ]
+      },
+      "put": {
+        "operationId": "putApiV1ProfileEquipment",
+        "parameters": [
+          {
+            "description": "Required for updates after the first create. Use the ETag returned by GET /api/v1/profile.",
+            "in": "header",
+            "name": "If-Match",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EquipmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EquipmentResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "authenticationFailure": {
+                    "summary": "The backend-managed session is absent or invalid.",
+                    "value": {
+                      "detail": "Authentication is required.",
+                      "errorCode": "authentication_required",
+                      "status": 401,
+                      "title": "Unauthorized",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Authentication is required."
+          },
+          "412": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "415": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unsupportedMediaType": {
+                    "summary": "The request content type is unsupported.",
+                    "value": {
+                      "detail": "The request content type is not supported.",
+                      "errorCode": "unsupported_media_type",
+                      "status": 415,
+                      "title": "Unsupported Media Type",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "The request content type is not supported."
+          },
+          "428": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Precondition Required"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unexpectedFailure": {
+                    "summary": "An unexpected error was safely redacted.",
+                    "value": {
+                      "detail": "An unexpected error occurred.",
+                      "errorCode": "unexpected_error",
+                      "status": 500,
+                      "title": "Internal Server Error",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "An unexpected server error occurred."
+          }
+        },
+        "security": [
+          {
+            "kitchenflowSession": []
+          }
+        ],
+        "summary": "PUT /api/v1/profile/equipment",
+        "tags": [
+          "KitchenFlow.Api"
+        ]
+      }
+    },
+    "/api/v1/profile/preferences": {
+      "get": {
+        "operationId": "getApiV1ProfilePreferences",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PreferenceResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "authenticationFailure": {
+                    "summary": "The backend-managed session is absent or invalid.",
+                    "value": {
+                      "detail": "Authentication is required.",
+                      "errorCode": "authentication_required",
+                      "status": 401,
+                      "title": "Unauthorized",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unexpectedFailure": {
+                    "summary": "An unexpected error was safely redacted.",
+                    "value": {
+                      "detail": "An unexpected error occurred.",
+                      "errorCode": "unexpected_error",
+                      "status": 500,
+                      "title": "Internal Server Error",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "An unexpected server error occurred."
+          }
+        },
+        "security": [
+          {
+            "kitchenflowSession": []
+          }
+        ],
+        "summary": "GET /api/v1/profile/preferences",
+        "tags": [
+          "KitchenFlow.Api"
+        ]
+      },
+      "put": {
+        "operationId": "putApiV1ProfilePreferences",
+        "parameters": [
+          {
+            "description": "Required for updates after the first create. Use the ETag returned by GET /api/v1/profile.",
+            "in": "header",
+            "name": "If-Match",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferencesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PreferenceResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "authenticationFailure": {
+                    "summary": "The backend-managed session is absent or invalid.",
+                    "value": {
+                      "detail": "Authentication is required.",
+                      "errorCode": "authentication_required",
+                      "status": 401,
+                      "title": "Unauthorized",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Authentication is required."
+          },
+          "412": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "415": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unsupportedMediaType": {
+                    "summary": "The request content type is unsupported.",
+                    "value": {
+                      "detail": "The request content type is not supported.",
+                      "errorCode": "unsupported_media_type",
+                      "status": 415,
+                      "title": "Unsupported Media Type",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "The request content type is not supported."
+          },
+          "428": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Precondition Required"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unexpectedFailure": {
+                    "summary": "An unexpected error was safely redacted.",
+                    "value": {
+                      "detail": "An unexpected error occurred.",
+                      "errorCode": "unexpected_error",
+                      "status": 500,
+                      "title": "Internal Server Error",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "An unexpected server error occurred."
+          }
+        },
+        "security": [
+          {
+            "kitchenflowSession": []
+          }
+        ],
+        "summary": "PUT /api/v1/profile/preferences",
         "tags": [
           "KitchenFlow.Api"
         ]

@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/KitchenFlow.Modules.Inventory/KitchenFlow.Modules.Inventory.csproj" />
+    <ProjectReference Include="../../src/KitchenFlow.Modules.Profiles/KitchenFlow.Modules.Profiles.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -814,6 +814,86 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         Assert.Equal("checked", history[0].GetProperty("reasonCode").GetString());
     }
 
+    [Fact]
+    public async Task ProfilePatchCreatesProgressiveProfileAndSessionProjectionStaysSafe()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        using var patch = new HttpRequestMessage(HttpMethod.Patch, "/api/v1/profile")
+        {
+            Content = JsonContent.Create(new
+            {
+                displayName = new { action = "confirm", value = "Alex", durability = "durable" },
+                language = new { action = "confirm", value = "pt-BR", durability = "durable" },
+                timeZone = new { action = "confirm", value = "America/Sao_Paulo", durability = "durable" },
+                adultDeclaration = new { adultDeclared = true, termsVersion = "2026-07-31", privacyVersion = "2026-07-31" }
+            })
+        };
+        patch.Headers.Add("X-CSRF-TOKEN", csrf);
+        var created = await client.SendAsync(patch);
+        var profile = await created.Content.ReadFromJsonAsync<JsonElement>();
+        var session = await client.GetFromJsonAsync<JsonElement>("/api/v1/session");
+
+        Assert.Equal(System.Net.HttpStatusCode.Created, created.StatusCode);
+        Assert.Equal("Alex", profile.GetProperty("displayName").GetProperty("value").GetString());
+        Assert.Equal("Alex", session.GetProperty("displayName").GetString());
+        Assert.True(session.GetProperty("profileExists").GetBoolean());
+        Assert.Equal("Declared", session.GetProperty("adultDeclarationState").GetString());
+        Assert.False(session.TryGetProperty("preferences", out _));
+        Assert.False(session.TryGetProperty("allergies", out _));
+    }
+
+    [Fact]
+    public async Task ProfileUpdateRequiresIfMatchAfterCreate()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        using var patch = new HttpRequestMessage(HttpMethod.Patch, "/api/v1/profile") { Content = JsonContent.Create(new { displayName = new { action = "confirm", value = "First", durability = "durable" } }) };
+        patch.Headers.Add("X-CSRF-TOKEN", csrf);
+        var created = await client.SendAsync(patch);
+        var etag = created.Headers.ETag!.Tag;
+        using var stale = new HttpRequestMessage(HttpMethod.Patch, "/api/v1/profile") { Content = JsonContent.Create(new { displayName = new { action = "confirm", value = "Second", durability = "durable" } }) };
+        stale.Headers.Add("X-CSRF-TOKEN", csrf);
+        stale.Headers.TryAddWithoutValidation("If-Match", "\"invalid\"");
+        var conflict = await client.SendAsync(stale);
+        using var valid = new HttpRequestMessage(HttpMethod.Patch, "/api/v1/profile") { Content = JsonContent.Create(new { displayName = new { action = "confirm", value = "Second", durability = "durable" } }) };
+        valid.Headers.Add("X-CSRF-TOKEN", csrf);
+        valid.Headers.TryAddWithoutValidation("If-Match", etag);
+        var updated = await client.SendAsync(valid);
+
+        await AssertProblemAsync(conflict, System.Net.HttpStatusCode.PreconditionFailed, "precondition_failed");
+        Assert.Equal(System.Net.HttpStatusCode.OK, updated.StatusCode);
+    }
+
+    [Fact]
+    public async Task ExplicitPreferenceCommandsPersistAllergyCodes()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        using var bootstrap = new HttpRequestMessage(HttpMethod.Patch, "/api/v1/profile") { Content = JsonContent.Create(new { displayName = new { action = "confirm", value = "Alex", durability = "durable" } }) };
+        bootstrap.Headers.Add("X-CSRF-TOKEN", csrf);
+        var created = await client.SendAsync(bootstrap);
+        var etag = created.Headers.ETag!.Tag;
+        using var put = new HttpRequestMessage(HttpMethod.Put, "/api/v1/profile/preferences")
+        {
+            Content = JsonContent.Create(new { entries = new[] { new { action = "add", category = "Allergy", stableCode = "peanut_allergy", note = (string?)null } } })
+        };
+        put.Headers.Add("X-CSRF-TOKEN", csrf);
+        put.Headers.TryAddWithoutValidation("If-Match", etag);
+        var response = await client.SendAsync(put);
+        var preferences = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("Allergy", preferences[0].GetProperty("category").GetString());
+        Assert.Equal("peanut_allergy", preferences[0].GetProperty("stableCode").GetString());
+    }
+
     private static object CreateLot(string productName = "Test tomato", decimal measuredValue = 100m) => new { productName, quantity = new { measuredValue, unit = "Gram", availabilityState = (string?)null }, storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null };
 
     private static async Task<string> GetCsrfAsync(HttpClient client)

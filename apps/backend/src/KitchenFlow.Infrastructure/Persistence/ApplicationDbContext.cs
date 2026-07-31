@@ -28,6 +28,21 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     /// <summary>Gets PostgreSQL-backed idempotency records.</summary>
     public DbSet<IdempotencyRecord> IdempotencyRecords => Set<IdempotencyRecord>();
 
+    /// <summary>Gets owner profile persistence records.</summary>
+    public DbSet<UserProfileRecord> UserProfiles => Set<UserProfileRecord>();
+
+    /// <summary>Gets preference and restriction persistence records.</summary>
+    public DbSet<PreferenceEntryRecord> PreferenceEntries => Set<PreferenceEntryRecord>();
+
+    /// <summary>Gets equipment persistence records.</summary>
+    public DbSet<EquipmentEntryRecord> EquipmentEntries => Set<EquipmentEntryRecord>();
+
+    /// <summary>Gets ordered profile code-list persistence records.</summary>
+    public DbSet<ProfileOrderedCodeEntryRecord> ProfileOrderedCodeEntries => Set<ProfileOrderedCodeEntryRecord>();
+
+    /// <summary>Gets privacy-minimizing profile change-history records.</summary>
+    public DbSet<ProfileChangeHistoryEntryRecord> ProfileChangeHistoryEntries => Set<ProfileChangeHistoryEntryRecord>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -129,6 +144,82 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             entity.Property(x => x.ResponseBody).HasColumnType("jsonb");
             entity.HasOne<InternalUser>().WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.Restrict);
             entity.HasIndex(x => new { x.OwnerUserId, x.Scope, x.Key }).IsUnique();
+        });
+
+        modelBuilder.Entity<UserProfileRecord>(entity =>
+        {
+            entity.ToTable("user_profiles", "profiles", table =>
+            {
+                table.HasCheckConstraint("ck_profiles_language", "\"Language\" IS NULL OR \"Language\" IN ('en', 'pt-BR', 'es')");
+                table.HasCheckConstraint("ck_profiles_currency", "\"Currency\" IS NULL OR \"Currency\" IN ('USD', 'BRL', 'EUR')");
+                table.HasCheckConstraint("ck_profiles_region", "\"Region\" IS NULL OR \"Region\" IN ('US', 'BR', 'ES')");
+                table.HasCheckConstraint("ck_profiles_measurement_system", "\"MeasurementSystem\" IS NULL OR \"MeasurementSystem\" IN ('Metric', 'UsCustomary')");
+                table.HasCheckConstraint("ck_profiles_default_adult_count", "\"DefaultAdultCount\" IS NULL OR (\"DefaultAdultCount\" BETWEEN 1 AND 20)");
+                table.HasCheckConstraint("ck_profiles_default_child_count", "\"DefaultChildCount\" IS NULL OR (\"DefaultChildCount\" BETWEEN 0 AND 20)");
+                table.HasCheckConstraint("ck_profiles_default_serving_count", "\"DefaultServingCount\" IS NULL OR (\"DefaultServingCount\" BETWEEN 1 AND 30)");
+            });
+            entity.HasKey(x => x.OwnerUserId);
+            entity.Property(x => x.DisplayName).HasMaxLength(80);
+            entity.Property(x => x.DisplayNamePresence).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.Language).HasMaxLength(10);
+            entity.Property(x => x.Region).HasMaxLength(10);
+            entity.Property(x => x.Currency).HasMaxLength(10);
+            entity.Property(x => x.MeasurementSystem).HasMaxLength(20);
+            entity.Property(x => x.TimeZone).HasMaxLength(64);
+            entity.Property(x => x.PlanningCadence).HasMaxLength(20);
+            entity.Property(x => x.ShoppingCadence).HasMaxLength(20);
+            entity.Property(x => x.TermsVersion).HasMaxLength(32);
+            entity.Property(x => x.PrivacyVersion).HasMaxLength(32);
+            entity.Property(x => x.Version).IsConcurrencyToken();
+            entity.Property(x => x.ConcurrencyToken).HasDefaultValueSql("gen_random_uuid()");
+            entity.HasIndex(x => x.ConcurrencyToken).IsUnique();
+            entity.HasOne<InternalUser>().WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PreferenceEntryRecord>(entity =>
+        {
+            entity.ToTable("preference_entries", "profiles");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Category).HasMaxLength(40).IsRequired();
+            entity.Property(x => x.StableCode).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Note).HasMaxLength(500);
+            entity.Property(x => x.Presence).HasMaxLength(20).IsRequired();
+            entity.HasOne<UserProfileRecord>().WithMany().HasForeignKey(x => x.OwnerUserId).HasPrincipalKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(x => new { x.OwnerUserId, x.Category, x.StableCode }).IsUnique();
+        });
+
+        modelBuilder.Entity<EquipmentEntryRecord>(entity =>
+        {
+            entity.ToTable("equipment_entries", "profiles", table => table.HasCheckConstraint("ck_equipment_capacity", "\"Capacity\" IS NULL OR \"Capacity\" >= 0"));
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.StableCode).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.CustomName).HasMaxLength(80);
+            entity.Property(x => x.Capacity).HasColumnType("numeric(18,3)");
+            entity.Property(x => x.CapacityUnit).HasMaxLength(20);
+            entity.Property(x => x.ConstraintNote).HasMaxLength(200);
+            entity.HasOne<UserProfileRecord>().WithMany().HasForeignKey(x => x.OwnerUserId).HasPrincipalKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(x => new { x.OwnerUserId, x.StableCode });
+        });
+
+        modelBuilder.Entity<ProfileOrderedCodeEntryRecord>(entity =>
+        {
+            entity.ToTable("ordered_code_entries", "profiles");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ListName).HasMaxLength(40).IsRequired();
+            entity.Property(x => x.StableCode).HasMaxLength(64).IsRequired();
+            entity.HasOne<UserProfileRecord>().WithMany().HasForeignKey(x => x.OwnerUserId).HasPrincipalKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(x => new { x.OwnerUserId, x.ListName, x.SortOrder });
+        });
+
+        modelBuilder.Entity<ProfileChangeHistoryEntryRecord>(entity =>
+        {
+            entity.ToTable("change_history", "profiles");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SectionChanged).HasMaxLength(40).IsRequired();
+            entity.Property(x => x.FieldCodesJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.CorrelationId).HasMaxLength(100).IsRequired();
+            entity.HasOne<UserProfileRecord>().WithMany().HasForeignKey(x => x.OwnerUserId).HasPrincipalKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(x => new { x.OwnerUserId, x.OccurredAt });
         });
     }
 }
