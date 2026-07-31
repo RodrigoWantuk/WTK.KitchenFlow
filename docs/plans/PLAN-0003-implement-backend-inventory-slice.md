@@ -305,8 +305,8 @@ Every commit must update this plan's `Execution state` and `Progress log` and th
 - [x] OpenAPI parses/lints as 3.1 and snapshot drift is checked in CI.
 - [x] Production configuration uses typed validated options with no development fallback.
 - [x] Readiness and all framework failures match the documented security/error contract.
-- [ ] Required low-cardinality metrics have correct replay semantics and full-pipeline redaction evidence.
-- [ ] Unit, integration, architecture, migration, security, and contract tests cover the accepted PLAN-0002/PLAN-0003 matrix.
+- [x] Required low-cardinality metrics have correct replay semantics and full-pipeline redaction evidence.
+- [x] Unit, integration, architecture, migration, security, and contract tests cover the accepted PLAN-0002/PLAN-0003 matrix.
 - [ ] Idempotent migration SQL, upgrade evidence, retained artifacts, and forward-repair guidance exist.
 - [ ] Developer and operator workflows are complete and executable.
 - [x] Backend workflow run 38 passed for review head `fc92dd3`.
@@ -337,16 +337,28 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** R2-R6 are complete: typed environment-aware startup validation, secure session options, local configuration/PostgreSQL readiness, hardened redirects, and normalized framework failures are implemented and tested.
+- **Current checkpoint:** R2-R8 are complete: bounded security/inventory metrics and optional OTLP export are documented and exporter-tested; the expanded domain, API, PostgreSQL, migration, security, architecture, and contract suite passes 110/110.
 - **Execution status:** In Progress, not Validating.
-- **Confirmed completed phases:** R1, R2, R3, R4, R5, and R6.
-- **Partially completed phases:** R7, R8, and R9.
+- **Confirmed completed phases:** R1, R2, R3, R4, R5, R6, R7, and R8.
+- **Partially completed phase:** R9.
 - **Not started at a valid final candidate:** R10.
 - **Current blocker:** None external. Remaining work is implementation and acceptance evidence inside this branch.
 - **Contract disposition:** OpenAPI snapshot is provisional and must not be consumed as PLAN-0004's stable live-client contract.
-- **Exact next action:** Complete R7 full-pipeline trace/metric exporter evidence and expand the remaining R8 domain, persistence, ownership, concurrency, CSRF, list, cursor, and migration matrix.
+- **Exact next action:** Complete R9 retained CI migration/test artifacts, executable idempotent-script evidence, vulnerability policy, and full developer/operator runbooks.
 
 ## Progress log
+
+### 2026-07-31T02:55:00Z — R7/R8 observability and acceptance matrix completed
+
+- **Observability:** Added bounded authentication, authorization, CSRF, and rate-limit failure metrics; preserved explicit completed/replayed/reused/in-progress idempotency outcomes; added optional standard OTLP trace/metric export; and documented names, units, labels, and operator semantics. Full processor/exporter tests prove forbidden trace values are absent and exported metrics use only registered low-cardinality labels and values.
+- **Domain and application:** Added Unicode-scalar product/location/note boundaries, maximum `numeric(18,3)` quantity enforcement, validated measured/availability restoration, expiration provenance, all availability transitions, consume/discard/correct precision and boundaries, deletion/repeated-mutation rules, rename/metadata timestamps, adjustment reason/note rules, and defensive in-progress coverage.
+- **Persistence and API:** Added exact concurrent identity provisioning classification, every prior-migration upgrade with representative data, complete lot constraint/owner checks, corrected the nullable expiration-provenance constraint, maximum decimal round-trip, full owner isolation, all ETag states for adjustment/delete, active/depleted/deleted filters, logout CSRF success, and the previously completed replay/rollback/security/contract matrix.
+- **Material files changed:** Inventory/identity domain and stores; API observability/startup; OTLP package locks; new expiration constraint migration; unit, API, telemetry, and migration tests; backend telemetry documentation; this plan; and `docs/plan-status.md`.
+- **Commands and validation performed:** Package restore; repeated Release builds; targeted exporter, unit, identity, ownership, ETag, list, decimal, logout, constraint, and migration-upgrade tests; then `dotnet format`, Release build, and complete solution tests.
+- **Result:** Locked solution dependencies restored; Release build passed with zero warnings/errors; exporter tests passed 2/2; unit tests passed 20/20; architecture tests passed 10/10; PostgreSQL-backed integration/security/contract/migration tests passed 80/80; complete suite passed 110/110.
+- **Known failures or unverified behavior:** R9 CI artifact retention/runbooks and R10 final candidate/Compose/real-Keycloak evidence remain. The full-suite count will be rerun after final CI/documentation changes.
+- **Blockers:** None.
+- **Exact next action:** Complete R9 artifacts, idempotent migration application, vulnerability policy, and operator documentation.
 
 ### 2026-07-31T02:39:00Z — R6 typed configuration and framework-error security completed
 

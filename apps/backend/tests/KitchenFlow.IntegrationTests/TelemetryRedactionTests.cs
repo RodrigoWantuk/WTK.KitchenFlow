@@ -7,7 +7,9 @@ using KitchenFlow.Api.Services;
 using KitchenFlow.Modules.Inventory.Application;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Options;
+using OpenTelemetry;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 
 namespace KitchenFlow.IntegrationTests;
 
@@ -120,6 +122,33 @@ public sealed class TelemetryRedactionTests
     }
 
     [Fact]
+    public void TraceExporterReceivesOnlyRedactedTagsAfterFullProcessorPipeline()
+    {
+        var exported = new List<Activity>();
+        using var provider = Sdk.CreateTracerProviderBuilder()
+            .AddSource("KitchenFlow.TelemetryTest")
+            .AddProcessor(new SensitiveTelemetryRedactionProcessor())
+            .AddProcessor(new SimpleActivityExportProcessor(new CapturingActivityExporter(exported)))
+            .Build();
+        using var source = new ActivitySource("KitchenFlow.TelemetryTest");
+        using (var activity = source.StartActivity("inventory.adjust"))
+        {
+            Assert.NotNull(activity);
+            activity.SetTag("http.request.header.authorization", "Bearer private-token");
+            activity.SetTag("http.request.header.cookie", "session=private-cookie");
+            activity.SetTag("inventory.product.name", "private product");
+            activity.SetTag("inventory.note", "private note");
+            activity.SetTag("http.request.body", "private body");
+            activity.SetTag("http.response.status_code", 200);
+        }
+
+        Assert.True(provider.ForceFlush());
+        var completed = Assert.Single(exported);
+        Assert.DoesNotContain(completed.TagObjects, tag => tag.Key.Contains("authorization", StringComparison.OrdinalIgnoreCase) || tag.Key.Contains("cookie", StringComparison.OrdinalIgnoreCase) || tag.Key.Contains("product", StringComparison.OrdinalIgnoreCase) || tag.Key.Contains("note", StringComparison.OrdinalIgnoreCase) || tag.Key.Contains("body", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(completed.TagObjects, tag => tag.Key == "http.response.status_code" && (int)tag.Value! == 200);
+    }
+
+    [Fact]
     public void InventoryMetricsUseOnlyStableLowCardinalityTags()
     {
         var observed = new List<(string Instrument, IReadOnlyDictionary<string, object?> Tags)>();
@@ -149,6 +178,37 @@ public sealed class TelemetryRedactionTests
         Assert.Contains(observed, measurement => measurement.Instrument == "kitchenflow.inventory.mutations" && measurement.Tags["operation"]?.ToString() == "adjust");
         Assert.Contains(observed, measurement => measurement.Instrument == "kitchenflow.inventory.rejections" && measurement.Tags["category"]?.ToString() == "domain_rule_violated");
         Assert.DoesNotContain(observed.SelectMany(measurement => measurement.Tags), tag => tag.Key.Contains("product", StringComparison.OrdinalIgnoreCase) || tag.Key.Contains("note", StringComparison.OrdinalIgnoreCase) || tag.Value?.ToString()?.Contains("private", StringComparison.OrdinalIgnoreCase) == true);
+    }
+
+    [Fact]
+    public void MetricExporterReceivesOnlyRegisteredNamesLabelsAndBoundedOutcomes()
+    {
+        var exporter = new CapturingMetricExporter();
+        using var provider = Sdk.CreateMeterProviderBuilder()
+            .AddMeter("KitchenFlow.Inventory")
+            .AddMeter("KitchenFlow.Security")
+            .AddReader(new PeriodicExportingMetricReader(exporter))
+            .Build();
+        var inventory = new InventoryMetrics();
+        var security = new SecurityMetrics();
+
+        inventory.RecordMutation("create", InventoryApplicationResult<object>.Succeeded(new object(), InventoryApplicationSuccess.Created, InventoryIdempotencyDisposition.Completed));
+        inventory.RecordMutation("adjust", InventoryApplicationResult<object>.Succeeded(new object(), idempotency: InventoryIdempotencyDisposition.Replayed));
+        inventory.RecordMutation("adjust", InventoryApplicationResult<object>.Failure("idempotency_key_reused", "private detail"));
+        inventory.RecordMutation("adjust", InventoryApplicationResult<object>.Failure("idempotency_in_progress", "private detail"));
+        security.RecordFailure("authentication");
+        security.RecordFailure("authorization");
+        security.RecordFailure("csrf");
+        security.RecordFailure("rate_limit");
+
+        Assert.True(provider.ForceFlush());
+        Assert.Contains(exporter.Measurements, measurement => measurement.Name == "kitchenflow.inventory.idempotency" && measurement.Tags["outcome"] == "completed");
+        Assert.Contains(exporter.Measurements, measurement => measurement.Name == "kitchenflow.inventory.idempotency" && measurement.Tags["outcome"] == "replayed");
+        Assert.Contains(exporter.Measurements, measurement => measurement.Name == "kitchenflow.inventory.idempotency" && measurement.Tags["outcome"] == "reused");
+        Assert.Contains(exporter.Measurements, measurement => measurement.Name == "kitchenflow.inventory.idempotency" && measurement.Tags["outcome"] == "in_progress");
+        Assert.Equal(["authentication", "authorization", "csrf", "rate_limit"], exporter.Measurements.Where(measurement => measurement.Name == "kitchenflow.security.access_failures").Select(measurement => measurement.Tags["category"]).Distinct(StringComparer.Ordinal).OrderBy(value => value, StringComparer.Ordinal).ToArray());
+        Assert.All(exporter.Measurements.SelectMany(measurement => measurement.Tags), tag => Assert.Contains(tag.Key, new[] { "operation", "outcome", "category" }));
+        Assert.DoesNotContain(exporter.Measurements.SelectMany(measurement => measurement.Tags), tag => tag.Value.Contains("private", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -307,4 +367,41 @@ public sealed class TelemetryRedactionTests
             builder.UseSetting("KITCHENFLOW_OIDC_CLIENT_SECRET", clientSecret);
             builder.UseSetting("KITCHENFLOW_SESSION_KEYRING_PATH", keyRingPath);
         });
+
+    private sealed class CapturingActivityExporter(List<Activity> exported) : BaseExporter<Activity>
+    {
+        public override ExportResult Export(in Batch<Activity> batch)
+        {
+            foreach (var activity in batch)
+            {
+                exported.Add(activity);
+            }
+
+            return ExportResult.Success;
+        }
+    }
+
+    private sealed class CapturingMetricExporter : BaseExporter<Metric>
+    {
+        public List<(string Name, IReadOnlyDictionary<string, string> Tags)> Measurements { get; } = [];
+
+        public override ExportResult Export(in Batch<Metric> batch)
+        {
+            foreach (var metric in batch)
+            {
+                foreach (ref readonly var point in metric.GetMetricPoints())
+                {
+                    var tags = new Dictionary<string, string>(StringComparer.Ordinal);
+                    foreach (var tag in point.Tags)
+                    {
+                        tags[tag.Key] = tag.Value?.ToString() ?? string.Empty;
+                    }
+
+                    Measurements.Add((metric.Name, tags));
+                }
+            }
+
+            return ExportResult.Success;
+        }
+    }
 }

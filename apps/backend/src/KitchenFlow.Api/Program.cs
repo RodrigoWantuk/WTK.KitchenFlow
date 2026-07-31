@@ -54,6 +54,8 @@ builder.Services.AddScoped<IInventoryLotReadStore, PostgreSqlInventoryLotReadSto
 builder.Services.AddScoped<IInventoryLotWriteStore, PostgreSqlInventoryLotWriteStore>();
 builder.Services.AddSingleton<IInventoryHttpTokenService, DataProtectionInventoryHttpTokenService>();
 builder.Services.AddSingleton<InventoryMetrics>();
+var securityMetrics = new SecurityMetrics();
+builder.Services.AddSingleton(securityMetrics);
 builder.Services.AddScoped<InventoryLotApplicationWorkflow>();
 builder.Services.AddScoped<ICreateInventoryLotUseCase, CreateInventoryLotHandler>();
 builder.Services.AddScoped<IListInventoryLotsUseCase, ListInventoryLotsHandler>();
@@ -83,8 +85,16 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     options.Cookie.SameSite = SameSiteMode.Lax;
     options.ExpireTimeSpan = sessionOptions.IdleTimeout;
     options.SlidingExpiration = true;
-    options.Events.OnRedirectToLogin = context => ApiProblem.Create(context.HttpContext, StatusCodes.Status401Unauthorized, "authentication_required", "Authentication is required.").ExecuteAsync(context.HttpContext);
-    options.Events.OnRedirectToAccessDenied = context => ApiProblem.Create(context.HttpContext, StatusCodes.Status403Forbidden, "authorization_denied", "Access is denied.").ExecuteAsync(context.HttpContext);
+    options.Events.OnRedirectToLogin = context =>
+    {
+        securityMetrics.RecordFailure("authentication");
+        return ApiProblem.Create(context.HttpContext, StatusCodes.Status401Unauthorized, "authentication_required", "Authentication is required.").ExecuteAsync(context.HttpContext);
+    };
+    options.Events.OnRedirectToAccessDenied = context =>
+    {
+        securityMetrics.RecordFailure("authorization");
+        return ApiProblem.Create(context.HttpContext, StatusCodes.Status403Forbidden, "authorization_denied", "Access is denied.").ExecuteAsync(context.HttpContext);
+    };
 }).AddOpenIdConnect("oidc", options =>
 {
     options.Authority = oidcOptions.Authority;
@@ -99,12 +109,32 @@ builder.Services.AddAuthorization();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.OnRejected = async (context, cancellationToken) => await ApiProblem.Create(context.HttpContext, StatusCodes.Status429TooManyRequests, "rate_limit_exceeded", "The request rate limit was exceeded.").ExecuteAsync(context.HttpContext);
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        securityMetrics.RecordFailure("rate_limit");
+        await ApiProblem.Create(context.HttpContext, StatusCodes.Status429TooManyRequests, "rate_limit_exceeded", "The request rate limit was exceeded.").ExecuteAsync(context.HttpContext);
+    };
     options.AddPolicy("authentication", context => RateLimitPartition.GetFixedWindowLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
     options.AddPolicy("mutation", context => RateLimitPartition.GetFixedWindowLimiter(context.User.FindFirst("sub")?.Value ?? context.User.Identity?.Name ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = 60, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 });
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer(InventoryOpenApiTransformer.ApplyAsync));
-builder.Services.AddOpenTelemetry().WithTracing(tracing => tracing.AddAspNetCoreInstrumentation().AddEntityFrameworkCoreInstrumentation().AddProcessor(new SensitiveTelemetryRedactionProcessor())).WithMetrics(metrics => metrics.AddAspNetCoreInstrumentation().AddMeter("KitchenFlow.Inventory"));
+var telemetry = builder.Services.AddOpenTelemetry();
+telemetry.WithTracing(tracing =>
+{
+    tracing.AddAspNetCoreInstrumentation().AddEntityFrameworkCoreInstrumentation().AddProcessor(new SensitiveTelemetryRedactionProcessor());
+    if (Uri.TryCreate(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"], UriKind.Absolute, out var endpoint))
+    {
+        tracing.AddOtlpExporter(options => options.Endpoint = endpoint);
+    }
+});
+telemetry.WithMetrics(metrics =>
+{
+    metrics.AddAspNetCoreInstrumentation().AddMeter("KitchenFlow.Inventory").AddMeter("KitchenFlow.Security");
+    if (Uri.TryCreate(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"], UriKind.Absolute, out var endpoint))
+    {
+        metrics.AddOtlpExporter(options => options.Endpoint = endpoint);
+    }
+});
 
 var app = builder.Build();
 app.UseExceptionHandler(error => error.Run(async context =>
@@ -147,10 +177,10 @@ app.MapGet("/health/live", () => Results.Ok()).Produces(StatusCodes.Status200OK)
 app.MapGet("/health/ready", async (ApplicationDbContext db, RuntimeConfigurationReadiness readiness, CancellationToken ct) => !readiness.IsReady || !await db.Database.CanConnectAsync(ct) ? Results.StatusCode(503) : Results.Ok()).Produces(StatusCodes.Status200OK).ProducesProblem(StatusCodes.Status503ServiceUnavailable).AllowAnonymous();
 var api = app.MapGroup("/api/v1");
 api.MapPost("/auth/login", (string? returnUrl) => Results.Challenge(new AuthenticationProperties { RedirectUri = ReturnUrlPolicy.Normalize(returnUrl) }, ["oidc"])).AllowAnonymous().RequireRateLimiting("authentication").Produces(StatusCodes.Status302Found);
-api.MapPost("/auth/logout", async (HttpContext context, IAntiforgery antiforgery) =>
+api.MapPost("/auth/logout", async (HttpContext context, IAntiforgery antiforgery, SecurityMetrics metrics) =>
 {
     try { await antiforgery.ValidateRequestAsync(context); }
-    catch (AntiforgeryValidationException) { return ApiProblem.Create(context, StatusCodes.Status400BadRequest, "validation_failed", "The CSRF token is missing or invalid."); }
+    catch (AntiforgeryValidationException) { metrics.RecordFailure("csrf"); return ApiProblem.Create(context, StatusCodes.Status400BadRequest, "validation_failed", "The CSRF token is missing or invalid."); }
     return Results.SignOut(new AuthenticationProperties { RedirectUri = "/" }, [CookieAuthenticationDefaults.AuthenticationScheme, "oidc"]);
 }).RequireAuthorization().Produces(StatusCodes.Status302Found).ProducesProblem(400).ProducesProblem(401);
 api.MapGet("/session", async (HttpContext context, IAntiforgery antiforgery, ICurrentUserAccessor currentUser, CancellationToken cancellationToken) =>

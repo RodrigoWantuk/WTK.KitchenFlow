@@ -324,10 +324,46 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         var lotId = createdLot.GetProperty("lotId").GetGuid();
 
         var missing = await UpdateAsync(client, csrf, lotId, null);
-        var stale = await UpdateAsync(client, csrf, lotId, "\"0\"");
+        var malformed = await UpdateAsync(client, csrf, lotId, "\"not-a-protected-version\"");
+        var valid = await UpdateAsync(client, csrf, lotId, created.Headers.ETag!.Tag);
+        var stale = await UpdateAsync(client, csrf, lotId, created.Headers.ETag!.Tag);
 
         Assert.Equal((System.Net.HttpStatusCode)428, missing.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.PreconditionFailed, malformed.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.OK, valid.StatusCode);
         Assert.Equal(System.Net.HttpStatusCode.PreconditionFailed, stale.StatusCode);
+    }
+
+    [Fact]
+    public async Task AdjustmentAndDeleteEnforceMissingMalformedStaleAndValidEtag()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var adjustedLot = await CreateAsync(client, csrf, Guid.NewGuid().ToString(), "Adjustment ETag lot");
+        var adjustedLotId = (await adjustedLot.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+        var adjustmentMissing = await AdjustmentAsync(client, csrf, adjustedLotId, null, Guid.NewGuid().ToString(), new { type = "Consume", value = 1m, availabilityState = (string?)null, reasonCode = "test", note = (string?)null });
+        var adjustmentMalformed = await AdjustmentAsync(client, csrf, adjustedLotId, "\"malformed\"", Guid.NewGuid().ToString(), new { type = "Consume", value = 1m, availabilityState = (string?)null, reasonCode = "test", note = (string?)null });
+        var adjustmentValid = await AdjustAsync(client, csrf, adjustedLotId, adjustedLot.Headers.ETag!.Tag, Guid.NewGuid().ToString(), 1m);
+        var adjustmentStale = await AdjustAsync(client, csrf, adjustedLotId, adjustedLot.Headers.ETag!.Tag, Guid.NewGuid().ToString(), 1m);
+
+        var deletedLot = await CreateAsync(client, csrf, Guid.NewGuid().ToString(), "Delete ETag lot");
+        var deletedLotId = (await deletedLot.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+        var deleteMissing = await DeleteAsync(client, csrf, deletedLotId, null);
+        var deleteMalformed = await DeleteAsync(client, csrf, deletedLotId, "\"malformed\"");
+        var corrected = await UpdateAsync(client, csrf, deletedLotId, deletedLot.Headers.ETag!.Tag);
+        var deleteStale = await DeleteAsync(client, csrf, deletedLotId, deletedLot.Headers.ETag!.Tag);
+        var deleteValid = await DeleteAsync(client, csrf, deletedLotId, corrected.Headers.ETag!.Tag);
+
+        Assert.Equal((System.Net.HttpStatusCode)428, adjustmentMissing.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.PreconditionFailed, adjustmentMalformed.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.OK, adjustmentValid.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.PreconditionFailed, adjustmentStale.StatusCode);
+        Assert.Equal((System.Net.HttpStatusCode)428, deleteMissing.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.PreconditionFailed, deleteMalformed.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.PreconditionFailed, deleteStale.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.NoContent, deleteValid.StatusCode);
     }
 
     [Fact]
@@ -625,10 +661,76 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
 
         var update = await UpdateAsync(other, otherCsrf, lotId, created.Headers.ETag!.Tag);
+        var adjustment = await AdjustAsync(other, otherCsrf, lotId, created.Headers.ETag!.Tag, Guid.NewGuid().ToString(), 1m);
         var delete = await DeleteAsync(other, otherCsrf, lotId, created.Headers.ETag!.Tag);
+        var history = await other.GetAsync($"/api/v1/inventory/lots/{lotId}/history");
+        var list = await other.GetFromJsonAsync<JsonElement>("/api/v1/inventory/lots");
 
         Assert.Equal(System.Net.HttpStatusCode.NotFound, update.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, adjustment.StatusCode);
         Assert.Equal(System.Net.HttpStatusCode.NotFound, delete.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, history.StatusCode);
+        Assert.Empty(list.GetProperty("items").EnumerateArray());
+    }
+
+    [Fact]
+    public async Task ListSeparatesActiveDepletedAndDeletedLotsAcrossFilters()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var active = await CreateAsync(client, csrf, Guid.NewGuid().ToString(), "Active pantry lot");
+        var depleted = await CreateAsync(client, csrf, Guid.NewGuid().ToString(), "Depleted pantry lot", 1m);
+        var depletedId = (await depleted.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+        await AdjustAsync(client, csrf, depletedId, depleted.Headers.ETag!.Tag, Guid.NewGuid().ToString(), 1m);
+        var deleted = await CreateAsync(client, csrf, Guid.NewGuid().ToString(), "Deleted pantry lot");
+        var deletedId = (await deleted.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+        await DeleteAsync(client, csrf, deletedId, deleted.Headers.ETag!.Tag);
+
+        var defaultList = await client.GetFromJsonAsync<JsonElement>("/api/v1/inventory/lots");
+        var activeList = await client.GetFromJsonAsync<JsonElement>("/api/v1/inventory/lots?status=active&storageLocation=Pantry&search=Active");
+        var depletedList = await client.GetFromJsonAsync<JsonElement>("/api/v1/inventory/lots?status=depleted&storageLocation=Pantry");
+        var deletedList = await client.GetFromJsonAsync<JsonElement>("/api/v1/inventory/lots?status=deleted&storageLocation=Pantry");
+
+        Assert.Single(defaultList.GetProperty("items").EnumerateArray());
+        Assert.Equal((await active.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid(), activeList.GetProperty("items")[0].GetProperty("lotId").GetGuid());
+        Assert.Single(depletedList.GetProperty("items").EnumerateArray());
+        Assert.Equal(depletedId, depletedList.GetProperty("items")[0].GetProperty("lotId").GetGuid());
+        Assert.Single(deletedList.GetProperty("items").EnumerateArray());
+        Assert.Equal(deletedId, deletedList.GetProperty("items")[0].GetProperty("lotId").GetGuid());
+    }
+
+    [Fact]
+    public async Task MaximumCanonicalDecimalRoundTripsWithoutPrecisionLoss()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+
+        var created = await CreateAsync(client, csrf, Guid.NewGuid().ToString(), "Maximum decimal lot", 999_999_999_999_999.999m);
+        var body = await created.Content.ReadFromJsonAsync<JsonElement>();
+        var read = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots/{body.GetProperty("lotId").GetGuid()}");
+
+        Assert.Equal(System.Net.HttpStatusCode.Created, created.StatusCode);
+        Assert.Equal(999_999_999_999_999.999m, body.GetProperty("quantity").GetProperty("measuredValue").GetDecimal());
+        Assert.Equal(999_999_999_999_999.999m, read.GetProperty("quantity").GetProperty("measuredValue").GetDecimal());
+    }
+
+    [Fact]
+    public async Task LogoutSucceedsOnlyWithIssuedCsrfToken()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true, AllowAutoRedirect = false });
+        var csrf = await GetCsrfAsync(client);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/logout");
+        request.Headers.Add("X-CSRF-TOKEN", csrf);
+
+        var response = await client.SendAsync(request);
+
+        Assert.Equal(System.Net.HttpStatusCode.Redirect, response.StatusCode);
     }
 
     [Fact]
@@ -749,20 +851,26 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         return await AdjustmentAsync(client, csrf, lotId, etag, key, new { type = "Consume", value, availabilityState = (string?)null, reasonCode = "meal", note = (string?)null });
     }
 
-    private static async Task<HttpResponseMessage> AdjustmentAsync(HttpClient client, string csrf, Guid lotId, string etag, string key, object payload)
+    private static async Task<HttpResponseMessage> AdjustmentAsync(HttpClient client, string csrf, Guid lotId, string? etag, string key, object payload)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/inventory/lots/{lotId}/adjustments") { Content = JsonContent.Create(payload) };
         request.Headers.Add("X-CSRF-TOKEN", csrf);
-        request.Headers.TryAddWithoutValidation("If-Match", etag);
+        if (etag is not null)
+        {
+            request.Headers.TryAddWithoutValidation("If-Match", etag);
+        }
         request.Headers.Add("Idempotency-Key", key);
         return await client.SendAsync(request);
     }
 
-    private static async Task<HttpResponseMessage> DeleteAsync(HttpClient client, string csrf, Guid lotId, string etag)
+    private static async Task<HttpResponseMessage> DeleteAsync(HttpClient client, string csrf, Guid lotId, string? etag)
     {
         var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/inventory/lots/{lotId}");
         request.Headers.Add("X-CSRF-TOKEN", csrf);
-        request.Headers.TryAddWithoutValidation("If-Match", etag);
+        if (etag is not null)
+        {
+            request.Headers.TryAddWithoutValidation("If-Match", etag);
+        }
         return await client.SendAsync(request);
     }
 

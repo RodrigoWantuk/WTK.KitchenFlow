@@ -56,7 +56,7 @@ public sealed record InventoryAdjustmentCommand(
         AvailabilityState? parsedAvailabilityState = null;
         if (hasType && transactionType is InventoryTransactionType.Consume or InventoryTransactionType.Discard or InventoryTransactionType.Correct)
         {
-            var validValue = value is { } measuredValue && decimal.Round(measuredValue, 3) == measuredValue && (transactionType == InventoryTransactionType.Correct ? measuredValue >= 0m : measuredValue > 0m);
+            var validValue = value is { } measuredValue && measuredValue <= LotQuantity.MaximumMeasuredValue && decimal.Round(measuredValue, 3) == measuredValue && (transactionType == InventoryTransactionType.Correct ? measuredValue >= 0m : measuredValue > 0m);
             if (!validValue)
             {
                 validationErrors["value"] = [transactionType == InventoryTransactionType.Correct ? "value must be a nonnegative decimal with at most three decimal places." : "value must be a positive decimal with at most three decimal places."];

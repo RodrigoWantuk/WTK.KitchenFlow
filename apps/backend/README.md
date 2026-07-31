@@ -42,6 +42,26 @@ route/query binding, dependency, and unexpected failures use the same privacy-sa
 shape. Responses contain a stable `errorCode` and safe trace identifier; they do not copy exception
 messages, request bodies, credentials, cookies, tokens, private notes, or user identifiers.
 
+## Inventory and security telemetry
+
+Set the optional standard `OTEL_EXPORTER_OTLP_ENDPOINT` server-side to export traces and metrics over
+OTLP. Without it, instrumentation remains local and no external collector is a required dependency
+for this slice. The redaction processor runs before configured trace export.
+
+The project-owned metric surface is intentionally bounded:
+
+| Metric | Unit | Labels | Interpretation |
+|---|---|---|---|
+| `kitchenflow.inventory.mutations` | `operations` | `operation`, `outcome` | Final create, metadata-update, adjustment, or delete outcome |
+| `kitchenflow.inventory.rejections` | `operations` | `category` | Stable validation or domain-rule rejection |
+| `kitchenflow.inventory.concurrency_failures` | `operations` | `operation` | Stale optimistic-concurrency mutation |
+| `kitchenflow.inventory.idempotency` | `operations` | `operation`, `outcome` | First completion, replay, reused key, or defensive in-progress response |
+| `kitchenflow.security.access_failures` | `failures` | `category` | Authentication, authorization, CSRF, or rate-limit rejection |
+
+Allowed labels never include internal user IDs, issuer/subject, addresses, product names, notes,
+headers, request bodies, cookies, authorization values, or tokens. ASP.NET Core instrumentation owns
+standard route, status, duration, and dependency measurements.
+
 ## Responsibilities
 
 - backend-for-frontend and API endpoints;

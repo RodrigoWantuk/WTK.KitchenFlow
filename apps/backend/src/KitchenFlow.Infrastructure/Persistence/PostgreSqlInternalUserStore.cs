@@ -1,5 +1,6 @@
 using KitchenFlow.Modules.Identity;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace KitchenFlow.Infrastructure.Persistence;
 
@@ -27,12 +28,21 @@ public sealed class PostgreSqlInternalUserStore(ApplicationDbContext database) :
             await database.SaveChangesAsync(cancellationToken);
             return created;
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (exception.InnerException is PostgresException
         {
-            database.Entry(created).State = EntityState.Detached;
+            SqlState: PostgresErrorCodes.UniqueViolation,
+            ConstraintName: "IX_users_Issuer_Subject"
+        })
+        {
+            database.ChangeTracker.Clear();
             return await database.Users.SingleAsync(
                 user => user.Issuer == subject.Issuer && user.Subject == subject.Subject,
                 cancellationToken);
+        }
+        catch
+        {
+            database.ChangeTracker.Clear();
+            throw;
         }
     }
 }

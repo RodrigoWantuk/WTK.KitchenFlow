@@ -3,6 +3,8 @@ using KitchenFlow.Modules.Identity;
 using KitchenFlow.Modules.Inventory.Application;
 using KitchenFlow.Modules.Inventory.Domain;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql;
 using Testcontainers.PostgreSql;
 
@@ -27,6 +29,115 @@ public sealed class PostgreSqlMigrationTests : IAsyncLifetime
 
         await context.Database.MigrateAsync();
         Assert.True(await context.Database.CanConnectAsync());
+        var constraints = await context.Database.SqlQueryRaw<string>(
+            """SELECT conname AS "Value" FROM pg_constraint WHERE connamespace IN ('inventory'::regnamespace, 'platform'::regnamespace)""").ToListAsync();
+        string[] requiredConstraints =
+        [
+            "ck_lots_quantity_mode",
+            "ck_lots_measured_value",
+            "ck_lots_measured_unit",
+            "ck_lots_availability_state",
+            "ck_lots_storage",
+            "ck_lots_package_state",
+            "ck_lots_expiration_provenance",
+            "ck_transactions_type",
+            "ck_transactions_previous_quantity",
+            "ck_transactions_resulting_quantity",
+            "ck_transactions_reason_code",
+            "ck_idempotency_completion",
+            "ck_idempotency_status_code",
+            "FK_lots_products_ProductId_OwnerUserId",
+            "FK_transactions_lots_LotId_OwnerUserId",
+            "FK_audit_events_users_ActorUserId",
+            "FK_idempotency_records_users_OwnerUserId"
+        ];
+        Assert.All(requiredConstraints, constraint => Assert.Contains(constraint, constraints));
+        var triggers = await context.Database.SqlQueryRaw<string>(
+            """SELECT tgname AS "Value" FROM pg_trigger WHERE NOT tgisinternal""").ToListAsync();
+        Assert.Contains("transactions_are_append_only", triggers);
+        Assert.Contains("audit_events_are_append_only", triggers);
+    }
+
+    [Fact]
+    public async Task EveryPriorMigrationUpgradesRepresentativeInventoryDataToLatest()
+    {
+        string[] priorMigrations =
+        [
+            "20260729013459_InitialInventorySlice",
+            "20260729123210_EnforceInventoryReferentialIntegrity",
+            "20260729193936_EnforceInventoryHistoryIntegrity",
+            "20260731021725_EnforceAppendOnlyHistory"
+        ];
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseNpgsql(_postgres.GetConnectionString())
+            .Options;
+
+        foreach (var priorMigration in priorMigrations)
+        {
+            await using var context = new ApplicationDbContext(options);
+            await context.Database.EnsureDeletedAsync();
+            var migrator = context.GetService<IMigrator>();
+            await migrator.MigrateAsync(priorMigration);
+            var ownerId = Guid.NewGuid();
+            var productId = Guid.NewGuid();
+            var lotId = Guid.NewGuid();
+            var now = DateTimeOffset.UtcNow;
+            context.Users.Add(new InternalUser(ownerId, $"https://issuer.test/{ownerId}", $"subject-{ownerId}", now));
+            context.Products.Add(new ProductRecord { Id = productId, OwnerUserId = ownerId, DisplayName = "Upgrade product", NormalizedSearchName = "UPGRADE PRODUCT", CreatedAt = now, UpdatedAt = now });
+            context.Lots.Add(new LotRecord { Id = lotId, OwnerUserId = ownerId, ProductId = productId, MeasuredValue = 10.125m, MeasuredUnit = "Gram", StorageLocation = "Pantry", Version = 1, CreatedAt = now, UpdatedAt = now });
+            context.Transactions.Add(new TransactionRecord { Id = Guid.NewGuid(), OwnerUserId = ownerId, LotId = lotId, Type = "Initial", ResultingMeasuredValue = 10.125m, ResultingMeasuredUnit = "Gram", OccurredAt = now });
+            context.AuditEvents.Add(new AuditEventRecord { Id = Guid.NewGuid(), ActorUserId = ownerId, EventName = "inventory.lot.created", TargetType = "inventory_lot", TargetId = lotId, CorrelationId = "upgrade-test", MetadataJson = "{}", OccurredAt = now });
+            context.IdempotencyRecords.Add(new IdempotencyRecord { Id = Guid.NewGuid(), OwnerUserId = ownerId, Scope = "inventory.lots.create", Key = Guid.NewGuid(), RequestHash = new string('A', 64), StatusCode = 201, ResponseBody = "{}", ETag = "1", CreatedAt = now, CompletedAt = now });
+            await context.SaveChangesAsync();
+            context.ChangeTracker.Clear();
+
+            await migrator.MigrateAsync();
+
+            Assert.Equal(10.125m, await context.Lots.AsNoTracking().Where(lot => lot.Id == lotId).Select(lot => lot.MeasuredValue).SingleAsync());
+            Assert.True(await context.Transactions.AsNoTracking().AnyAsync(transaction => transaction.LotId == lotId));
+            Assert.True(await context.AuditEvents.AsNoTracking().AnyAsync(audit => audit.TargetId == lotId));
+            Assert.True(await context.IdempotencyRecords.AsNoTracking().AnyAsync(record => record.OwnerUserId == ownerId));
+        }
+    }
+
+    [Fact]
+    public async Task ConcurrentIdentityProvisioningReturnsOneInternalUser()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseNpgsql(_postgres.GetConnectionString())
+            .Options;
+        await using (var migration = new ApplicationDbContext(options))
+        {
+            await migration.Database.MigrateAsync();
+        }
+
+        var subject = new OidcSubject("https://identity.test/realms/kitchenflow", $"concurrent-{Guid.NewGuid():N}");
+        await using var firstContext = new ApplicationDbContext(options);
+        await using var secondContext = new ApplicationDbContext(options);
+        var users = await Task.WhenAll(
+            new PostgreSqlInternalUserStore(firstContext).FindOrCreateAsync(subject, DateTimeOffset.UtcNow, CancellationToken.None),
+            new PostgreSqlInternalUserStore(secondContext).FindOrCreateAsync(subject, DateTimeOffset.UtcNow, CancellationToken.None));
+
+        Assert.Equal(users[0].Id, users[1].Id);
+        await using var verification = new ApplicationDbContext(options);
+        Assert.Equal(1, await verification.Users.CountAsync(user => user.Issuer == subject.Issuer && user.Subject == subject.Subject));
+    }
+
+    [Fact]
+    public async Task IdentityProvisioningDoesNotMisclassifyUnrelatedPersistenceFailure()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseNpgsql(_postgres.GetConnectionString())
+            .Options;
+        await using var context = new ApplicationDbContext(options);
+        await context.Database.MigrateAsync();
+        var store = new PostgreSqlInternalUserStore(context);
+        var subject = new OidcSubject($"https://identity.test/{new string('i', 501)}", Guid.NewGuid().ToString("N"));
+
+        var exception = await Assert.ThrowsAsync<DbUpdateException>(() => store.FindOrCreateAsync(subject, DateTimeOffset.UtcNow, CancellationToken.None));
+
+        Assert.IsType<PostgresException>(exception.InnerException);
+        Assert.Equal(PostgresErrorCodes.StringDataRightTruncation, ((PostgresException)exception.InnerException!).SqlState);
     }
 
     [Fact]
@@ -95,6 +206,55 @@ public sealed class PostgreSqlMigrationTests : IAsyncLifetime
         });
 
         await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync());
+    }
+
+    [Fact]
+    public async Task PostgreSqlEnforcesEveryLotModeMetadataAndOwnerConstraint()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseNpgsql(_postgres.GetConnectionString())
+            .Options;
+        await using var context = new ApplicationDbContext(options);
+        await context.Database.MigrateAsync();
+        var firstOwner = Guid.NewGuid();
+        var secondOwner = Guid.NewGuid();
+        var firstProduct = Guid.NewGuid();
+        var secondProduct = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        context.Users.AddRange(
+            new InternalUser(firstOwner, $"https://issuer.test/{firstOwner}", $"subject-{firstOwner}", now),
+            new InternalUser(secondOwner, $"https://issuer.test/{secondOwner}", $"subject-{secondOwner}", now));
+        context.Products.AddRange(
+            new ProductRecord { Id = firstProduct, OwnerUserId = firstOwner, DisplayName = "First product", NormalizedSearchName = "FIRST PRODUCT", CreatedAt = now, UpdatedAt = now },
+            new ProductRecord { Id = secondProduct, OwnerUserId = secondOwner, DisplayName = "Second product", NormalizedSearchName = "SECOND PRODUCT", CreatedAt = now, UpdatedAt = now });
+        await context.SaveChangesAsync();
+
+        await AssertRejectedAsync(new LotRecord { Id = Guid.NewGuid(), OwnerUserId = firstOwner, ProductId = firstProduct, MeasuredValue = 1m, MeasuredUnit = "Gram", AvailabilityState = "Low", StorageLocation = "Pantry", Version = 1, CreatedAt = now, UpdatedAt = now }, "ck_lots_quantity_mode");
+        await AssertRejectedAsync(new LotRecord { Id = Guid.NewGuid(), OwnerUserId = firstOwner, ProductId = firstProduct, MeasuredValue = 1m, MeasuredUnit = "Pound", StorageLocation = "Pantry", Version = 1, CreatedAt = now, UpdatedAt = now }, "ck_lots_measured_unit");
+        await AssertRejectedAsync(new LotRecord { Id = Guid.NewGuid(), OwnerUserId = firstOwner, ProductId = firstProduct, AvailabilityState = "Maybe", StorageLocation = "Pantry", Version = 1, CreatedAt = now, UpdatedAt = now }, "ck_lots_availability_state");
+        await AssertRejectedAsync(new LotRecord { Id = Guid.NewGuid(), OwnerUserId = firstOwner, ProductId = firstProduct, AvailabilityState = "Low", StorageLocation = "Other", Version = 1, CreatedAt = now, UpdatedAt = now }, "ck_lots_storage");
+        await AssertRejectedAsync(new LotRecord { Id = Guid.NewGuid(), OwnerUserId = firstOwner, ProductId = firstProduct, AvailabilityState = "Low", StorageLocation = "Pantry", CustomLocation = "Shelf", Version = 1, CreatedAt = now, UpdatedAt = now }, "ck_lots_storage");
+        await AssertRejectedAsync(new LotRecord { Id = Guid.NewGuid(), OwnerUserId = firstOwner, ProductId = firstProduct, AvailabilityState = "Low", StorageLocation = "Pantry", PackageState = "Damaged", Version = 1, CreatedAt = now, UpdatedAt = now }, "ck_lots_package_state");
+        await AssertRejectedAsync(new LotRecord { Id = Guid.NewGuid(), OwnerUserId = firstOwner, ProductId = firstProduct, AvailabilityState = "Low", StorageLocation = "Pantry", PrintedExpirationDate = new DateOnly(2026, 12, 31), Version = 1, CreatedAt = now, UpdatedAt = now }, "ck_lots_expiration_provenance");
+        await AssertRejectedAsync(new LotRecord { Id = Guid.NewGuid(), OwnerUserId = secondOwner, ProductId = firstProduct, AvailabilityState = "Low", StorageLocation = "Pantry", Version = 1, CreatedAt = now, UpdatedAt = now }, null);
+
+        var validLotId = Guid.NewGuid();
+        context.Lots.Add(new LotRecord { Id = validLotId, OwnerUserId = firstOwner, ProductId = firstProduct, MeasuredValue = LotQuantity.MaximumMeasuredValue, MeasuredUnit = "Gram", StorageLocation = "Other", CustomLocation = "Top shelf", PackageState = "Opened", PrintedExpirationDate = new DateOnly(2026, 12, 31), ExpirationProvenance = "UserEntered", Version = 1, CreatedAt = now, UpdatedAt = now });
+        await context.SaveChangesAsync();
+        Assert.Equal(LotQuantity.MaximumMeasuredValue, await context.Lots.AsNoTracking().Where(lot => lot.Id == validLotId).Select(lot => lot.MeasuredValue).SingleAsync());
+
+        async Task AssertRejectedAsync(LotRecord lot, string? expectedConstraint)
+        {
+            context.Lots.Add(lot);
+            var exception = await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync());
+            var postgres = Assert.IsType<PostgresException>(exception.InnerException);
+            if (expectedConstraint is not null)
+            {
+                Assert.Equal(expectedConstraint, postgres.ConstraintName);
+            }
+
+            context.ChangeTracker.Clear();
+        }
     }
 
     [Fact]

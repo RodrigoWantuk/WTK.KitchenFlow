@@ -363,7 +363,7 @@ public sealed class InventoryLotApplicationWorkflow(
 
     private static bool ValidateQuantity(decimal? value, string? unit, string? availabilityState, out string? error)
     {
-        var measured = value is > 0m and { } measuredValue && decimal.Round(measuredValue, 3) == measuredValue && unit is "Gram" or "Milliliter" or "Unit" && availabilityState is null;
+        var measured = value is > 0m and { } measuredValue && measuredValue <= LotQuantity.MaximumMeasuredValue && decimal.Round(measuredValue, 3) == measuredValue && unit is "Gram" or "Milliliter" or "Unit" && availabilityState is null;
         var available = value is null && unit is null && availabilityState is "Available" or "Low" or "Unavailable";
         error = measured || available ? null : "Quantity must be either a positive canonical measured value with a maximum of three decimal places or an availability state.";
         return error is null;

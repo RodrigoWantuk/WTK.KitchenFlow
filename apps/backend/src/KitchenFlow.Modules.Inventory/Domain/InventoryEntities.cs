@@ -41,6 +41,11 @@ public sealed class Product
     /// <summary>Restores a product loaded by an infrastructure adapter without exposing persistence types to the domain.</summary>
     public static Product Restore(Guid id, Guid ownerUserId, ProductName name, DateTimeOffset createdAt, DateTimeOffset updatedAt, bool isDeleted)
     {
+        if (id == Guid.Empty || ownerUserId == Guid.Empty || updatedAt < createdAt)
+        {
+            throw new ArgumentException("Persisted product identity and timestamps are invalid.");
+        }
+
         var product = new Product(id, ownerUserId, name, createdAt) { UpdatedAt = updatedAt, IsDeleted = isDeleted };
         return product;
     }
@@ -147,6 +152,11 @@ public sealed class InventoryLot
         DateTimeOffset updatedAt,
         DateTimeOffset? deletedAt)
     {
+        if (id == Guid.Empty || ownerUserId == Guid.Empty || productId == Guid.Empty || version < 1 || updatedAt < createdAt || deletedAt < createdAt)
+        {
+            throw new ArgumentException("Persisted inventory lot identity, version, or timestamps are invalid.");
+        }
+
         var lot = new InventoryLot(id, ownerUserId, productId, quantity, storage, packageState, printedExpiration, notes, createdAt)
         {
             Version = version,

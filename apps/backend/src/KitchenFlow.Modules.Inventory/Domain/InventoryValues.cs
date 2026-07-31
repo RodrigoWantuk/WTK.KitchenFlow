@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace KitchenFlow.Modules.Inventory.Domain;
 
 /// <summary>Canonical measured units persisted by the inventory module.</summary>
@@ -92,7 +94,7 @@ public sealed record ProductName
     public static bool TryCreate(string? value, out ProductName? productName)
     {
         var trimmed = value?.Trim();
-        if (string.IsNullOrWhiteSpace(trimmed) || trimmed.Length > 160)
+        if (string.IsNullOrWhiteSpace(trimmed) || trimmed.EnumerateRunes().Count() > 160)
         {
             productName = null;
             return false;
@@ -106,18 +108,61 @@ public sealed record ProductName
 /// <summary>Represents exactly one lot quantity mode.</summary>
 public abstract record LotQuantity
 {
+    /// <summary>Largest value representable by the PostgreSQL <c>numeric(18,3)</c> contract.</summary>
+    public const decimal MaximumMeasuredValue = 999_999_999_999_999.999m;
+
     private LotQuantity()
     {
     }
 
     /// <summary>Measured quantity in a canonical unit.</summary>
-    /// <param name="Value">Nonnegative decimal value retained by a lot.</param>
-    /// <param name="Unit">Canonical unit for the value.</param>
-    public sealed record Measured(decimal Value, CanonicalUnit Unit) : LotQuantity;
+    public sealed record Measured : LotQuantity
+    {
+        /// <summary>Creates a persisted nonnegative measured quantity with canonical precision.</summary>
+        /// <param name="value">Nonnegative quantity with at most three decimal places.</param>
+        /// <param name="unit">Defined canonical unit.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when value, precision, or unit is invalid.</exception>
+        public Measured(decimal value, CanonicalUnit unit)
+        {
+            if (value < 0m || value > MaximumMeasuredValue || decimal.Round(value, 3) != value)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "Measured quantity must be nonnegative with at most three decimal places.");
+            }
+
+            if (!Enum.IsDefined(unit))
+            {
+                throw new ArgumentOutOfRangeException(nameof(unit), "Measured quantity requires a canonical unit.");
+            }
+
+            Value = value;
+            Unit = unit;
+        }
+
+        /// <summary>Gets the canonical decimal quantity.</summary>
+        public decimal Value { get; }
+
+        /// <summary>Gets the canonical unit.</summary>
+        public CanonicalUnit Unit { get; }
+    }
 
     /// <summary>Qualitative availability quantity.</summary>
-    /// <param name="State">Current availability state.</param>
-    public sealed record Availability(AvailabilityState State) : LotQuantity;
+    public sealed record Availability : LotQuantity
+    {
+        /// <summary>Creates a qualitative quantity from a defined availability state.</summary>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="state"/> is undefined.</exception>
+        public Availability(AvailabilityState state)
+        {
+            if (!Enum.IsDefined(state))
+            {
+                throw new ArgumentOutOfRangeException(nameof(state), "Availability quantity requires a defined state.");
+            }
+
+            State = state;
+        }
+
+        /// <summary>Gets the qualitative availability state.</summary>
+        public AvailabilityState State { get; }
+    }
 
     /// <summary>Creates a valid positive measured quantity for lot creation.</summary>
     /// <param name="value">Positive decimal value with at most three decimal places.</param>
@@ -126,7 +171,7 @@ public abstract record LotQuantity
     /// <returns><see langword="true"/> when the measured quantity is valid.</returns>
     public static bool TryCreateMeasured(decimal value, CanonicalUnit unit, out LotQuantity? quantity)
     {
-        if (value <= 0m || decimal.Round(value, 3) != value)
+        if (value <= 0m || value > MaximumMeasuredValue || decimal.Round(value, 3) != value)
         {
             quantity = null;
             return false;
@@ -177,7 +222,7 @@ public sealed record LotStorage
             return false;
         }
 
-        if (trimmed?.Length > 80)
+        if (trimmed?.EnumerateRunes().Count() > 80)
         {
             storage = null;
             return false;
@@ -209,7 +254,7 @@ public sealed record PrivateNotes
             return true;
         }
 
-        if (trimmed.Length > 1000)
+        if (trimmed.EnumerateRunes().Count() > 1000)
         {
             notes = null;
             return false;
@@ -221,6 +266,26 @@ public sealed record PrivateNotes
 }
 
 /// <summary>Printed calendar expiration date and its user-entered provenance.</summary>
-/// <param name="Date">Calendar date printed on the package.</param>
-/// <param name="Provenance">Evidence source for the date.</param>
-public sealed record PrintedExpiration(DateOnly Date, ExpirationProvenance Provenance);
+public sealed record PrintedExpiration
+{
+    /// <summary>Creates printed expiration evidence with a supported provenance.</summary>
+    /// <param name="date">Calendar date printed on the package.</param>
+    /// <param name="provenance">Defined evidence provenance.</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when provenance is undefined.</exception>
+    public PrintedExpiration(DateOnly date, ExpirationProvenance provenance)
+    {
+        if (!Enum.IsDefined(provenance))
+        {
+            throw new ArgumentOutOfRangeException(nameof(provenance), "Printed expiration requires a defined provenance.");
+        }
+
+        Date = date;
+        Provenance = provenance;
+    }
+
+    /// <summary>Gets the printed calendar date.</summary>
+    public DateOnly Date { get; }
+
+    /// <summary>Gets the evidence provenance.</summary>
+    public ExpirationProvenance Provenance { get; }
+}
