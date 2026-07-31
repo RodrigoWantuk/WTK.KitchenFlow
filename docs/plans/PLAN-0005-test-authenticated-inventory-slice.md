@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Unassigned independent testing agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-31T12:13:15Z
+- **Last updated:** 2026-07-31T13:02:00Z
 - **Branch:** `agent/plan-0005-test-inventory-slice`
 - **Pull request:** Not opened
 - **System under test:** Stable PLAN-0003 and PLAN-0004 pull-request commits in an integrated test environment
@@ -74,16 +74,16 @@ Excluded features must not appear as falsely functional UI or hidden backend dep
 Before execution, fill all fields and commit them:
 
 - **Repository:** `RodrigoWantuk/WTK.KitchenFlow`
-- **Backend PR and commit:** [PR #9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) candidate `ca7c873ab2e875c4e9f7e553397de9e7e9777772`; pending fresh independent review
+- **Backend PR and commit:** [PR #9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) candidate `06857b69774a4fe52c40c2ae909ceec573435fb9`; ready for independent PLAN-0005 execution
 - **Frontend PR and commit:** Required
 - **Integrated branch/commit or environment image digest:** Required
-- **OpenAPI snapshot SHA:** Git blob `39348047801fa96422f9d88460d58917ffc26db8` from backend candidate `ca7c873ab2e875c4e9f7e553397de9e7e9777772`
+- **OpenAPI snapshot SHA:** Git blob `39348047801fa96422f9d88460d58917ffc26db8` from backend candidate `06857b69774a4fe52c40c2ae909ceec573435fb9`
 - **Lovable source repository commit:** Required
 - **Operating system:** Windows or Linux, exact version
 - **Docker/Compose versions:** Required
 - **.NET SDK and Node versions:** Required
 - **Container image versions/digests:** Required
-- **Database migration revision:** `20260731120209_AddInventoryLotConcurrencyToken` from backend candidate `ca7c873ab2e875c4e9f7e553397de9e7e9777772`
+- **Database migration revision:** `20260731120209_AddInventoryLotConcurrencyToken` from backend candidate `06857b69774a4fe52c40c2ae909ceec573435fb9`
 - **Browser versions:** Chromium, Firefox, and WebKit through Playwright where supported
 - **Locales:** `en`, `pt-BR`, `es`
 - **Test users:** synthetic user A and user B only

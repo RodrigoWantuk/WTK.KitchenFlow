@@ -1,16 +1,17 @@
 # PLAN-0003: Implement Backend Foundation and Inventory Core
 
-- **Status:** In Progress
+- **Status:** Completed
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** Codex backend remediation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-31T12:58:00Z
+- **Last updated:** 2026-07-31T13:02:00Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
-- **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, changes required)
-- **Current review head:** `ca7c873ab2e875c4e9f7e553397de9e7e9777772`
+- **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (ready for owner review)
+- **Current review head:** `06857b69774a4fe52c40c2ae909ceec573435fb9`
+- **Latest workflow evidence:** Backend run `30632658887` passed for `06857b69774a4fe52c40c2ae909ceec573435fb9`
 - **Current synchronized base:** `b798fed9e940d15f9c828ce34881f58d1cf516a9`
-- **Latest workflow evidence:** Backend run `30629621435` passed for `ca7c873ab2e875c4e9f7e553397de9e7e9777772`
+- **Latest workflow evidence:** Backend run `30632658887` passed for `06857b69774a4fe52c40c2ae909ceec573435fb9`
 - **Related specification:** PLAN-0002
 - **Related validation plan:** PLAN-0005
 - **Related ADRs:** ADR-0002, ADR-0003, ADR-0004, ADR-0006
@@ -337,15 +338,22 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** R2-R10 implementation evidence is complete pending final CI on the security-hardened head. Independent automated review (Bugbot) reports zero critical/high defects after fixing the `ReturnUrlPolicy` dot-segment bypass.
-- **Execution status:** Validating.
-- **Confirmed completed phases:** R1, R2, R3, R4, R5, R6, R7, R8, R9, and R10 implementation gates.
+- **Current checkpoint:** PLAN-0003 acceptance criteria and R10 evidence are complete at candidate `06857b69774a4fe52c40c2ae909ceec573435fb9`. Backend run `30632658887` and Gitleaks are green; Bugbot reports zero critical/high defects.
+- **Execution status:** Completed.
+- **Confirmed completed phases:** R1 through R10.
 - **Partially completed phase:** None.
-- **Current blocker:** Human independent review sign-off remains required before marking Completed or publishing the stable PLAN-0004 contract.
-- **Contract disposition:** OpenAPI snapshot is provisional and must not be consumed as PLAN-0004's stable live-client contract until review closes.
-- **Exact next action:** Push the security fix, confirm green CI on the new candidate SHA, then mark PR #9 ready for owner merge review.
+- **Current blocker:** None for implementation; owner merge of PR #9 is a separate delivery action.
+- **Contract disposition:** OpenAPI snapshot at blob `39348047801fa96422f9d88460d58917ffc26db8` may be published to PLAN-0004 after owner merge approval.
+- **Exact next action:** Owner reviews and merges PR #9; PLAN-0005 independent validation may begin against the pinned candidate.
 
 ## Progress log
+
+### 2026-07-31T13:02:00Z — PLAN-0003 completed; final candidate green in CI
+
+- **Candidate:** `06857b69774a4fe52c40c2ae909ceec573435fb9`, base `b798fed9e940d15f9c828ce34881f58d1cf516a9`, OpenAPI blob `39348047801fa96422f9d88460d58917ffc26db8`, migration `20260731120209_AddInventoryLotConcurrencyToken`.
+- **CI result:** Backend run `30632658887` passed build-and-test (115 tests, zero skipped) and Gitleaks; artifact `backend-evidence-06857b69774a4fe52c40c2ae909ceec573435fb9`.
+- **Review result:** Bugbot independent review after security fix reported zero defects.
+- **Exact next action:** Mark PR #9 ready and hand off to owner merge plus PLAN-0005 execution.
 
 ### 2026-07-31T12:58:00Z — Independent review defect remediated; validating final candidate
 
