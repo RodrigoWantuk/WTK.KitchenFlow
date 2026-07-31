@@ -8,9 +8,9 @@
 - **Last updated:** 2026-07-31T03:29:19Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, changes required)
-- **Current review head:** pending remediation push after concurrency-token migration completion
+- **Current review head:** `ca7c873ab2e875c4e9f7e553397de9e7e9777772`
 - **Current synchronized base:** `b798fed9e940d15f9c828ce34881f58d1cf516a9`
-- **Latest workflow evidence:** Backend run `30601535339` passed for superseded candidate `0e9d58540e5919dcf6e808c9fe0b1be73cc4033d`; head `09653161` failed integration tests pending remediation
+- **Latest workflow evidence:** Backend run `30629621435` passed for `ca7c873ab2e875c4e9f7e553397de9e7e9777772`
 - **Related specification:** PLAN-0002
 - **Related validation plan:** PLAN-0005
 - **Related ADRs:** ADR-0002, ADR-0003, ADR-0004, ADR-0006
@@ -337,15 +337,26 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** R2-R9 remain complete. Remediation commit adds migration `20260731120209_AddInventoryLotConcurrencyToken`, completes the stateless persistent concurrency-token design started at `09653161`, and restores green local validation before a new R10 candidate is pinned.
+- **Current checkpoint:** R2-R9 remain complete. Final post-remediation candidate `ca7c873ab2e875c4e9f7e553397de9e7e9777772` is zero behind `main`; complete local R10 and Backend run `30629621435` pass with SHA-bound retained evidence. PLAN-0005 pins this backend/OpenAPI candidate.
 - **Execution status:** In Progress, not Validating.
 - **Confirmed completed phases:** R1, R2, R3, R4, R5, R6, R7, R8, and R9.
 - **Partially completed phase:** R10.
-- **Current blocker:** Fresh independent review of the new post-remediation candidate is external and remains required.
+- **Current blocker:** Fresh independent review of the final candidate is external and remains required.
 - **Contract disposition:** OpenAPI snapshot is provisional and must not be consumed as PLAN-0004's stable live-client contract.
-- **Exact next action:** Push the remediation commit, rerun the complete local and CI matrix, pin the resulting SHA in PLAN-0005, and request fresh independent review while keeping PR #9 draft.
+- **Exact next action:** Request a fresh independent review against candidate `ca7c873`, keep PR #9 draft, and do not mark PLAN-0003 Completed until no critical/high defect remains.
 
 ## Progress log
+
+### 2026-07-31T12:13:15Z — R10 post-remediation candidate and CI evidence established
+
+- **Candidate:** Runtime/contract/migration candidate `ca7c873ab2e875c4e9f7e553397de9e7e9777772`, synchronized base `b798fed9e940d15f9c828ce34881f58d1cf516a9`, OpenAPI blob `39348047801fa96422f9d88460d58917ffc26db8`, latest migration `20260731120209_AddInventoryLotConcurrencyToken`.
+- **Local result:** Locked restore, formatting, Release build with zero warnings/errors, unit 20/20, architecture 11/11, PostgreSQL integration/security/contract/migration 80/80, zero skipped, vulnerability audit, empty/upgrade/idempotent migrations, HTTPS health, OpenAPI export/lint/drift, and Compose readiness all passed.
+- **CI result:** Backend run `30629621435` passed build-and-test and Gitleaks. It executed locked restore, fail-closed vulnerability JSON, formatting, Release build, healthy PostgreSQL/Keycloak startup, all 111 tests, empty/upgrade migration, idempotent SQL generation/application twice/filesystem-derived history assertion, OpenAPI export/lint/drift, and artifact upload.
+- **Retained evidence:** `backend-evidence-ca7c873ab2e875c4e9f7e553397de9e7e9777772` contains the migration SQL, vulnerability JSON, and TRX results.
+- **Material files changed:** PLAN-0003 evidence/state; PLAN-0005 backend/OpenAPI candidate pin and handoff; registry rows.
+- **Known failures or unverified behavior:** Real-Keycloak browser smoke was not rerun in this remediation turn because the concurrency-token defect was persistence-scoped and the prior accepted smoke evidence at `0e9d585` remains the nearest validated identity path. Fresh independent review is still required before stable publication/completion.
+- **Blocker:** Fresh independent review.
+- **Exact next action:** Publish this evidence commit and request independent review without marking the PR ready or the contract stable prematurely.
 
 ### 2026-07-31T12:15:00Z — Concurrency-token remediation and migration completion
 
