@@ -406,7 +406,10 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         var csrf = await GetCsrfAsync(client);
         var created = await CreateAsync(client, csrf, Guid.NewGuid().ToString());
         var lotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
-        var update = await UpdateAsync(client, csrf, lotId, created.Headers.ETag!.Tag);
+        using var request = new HttpRequestMessage(HttpMethod.Patch, $"/api/v1/inventory/lots/{lotId}") { Content = JsonContent.Create(new { storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null }) };
+        request.Headers.Add("X-CSRF-TOKEN", csrf);
+        request.Headers.TryAddWithoutValidation("If-Match", created.Headers.ETag!.Tag);
+        var update = await client.SendAsync(request);
         var history = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots/{lotId}/history");
 
         Assert.Equal(System.Net.HttpStatusCode.OK, update.StatusCode);
