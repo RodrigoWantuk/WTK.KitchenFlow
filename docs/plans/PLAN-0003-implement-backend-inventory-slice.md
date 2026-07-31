@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend remediation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-31T03:03:51Z
+- **Last updated:** 2026-07-31T03:12:32Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, changes required)
 - **Current review head:** `fc92dd3c41ad99d64ae053f778cd5a6a46b84f44`
@@ -337,16 +337,26 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** R2-R9 are complete. CI generates and applies idempotent migration SQL twice, retains SHA-bound migration/vulnerability/TRX evidence, and the executable backend runbook covers development, deployment, security, recovery, contract, and real-Keycloak workflows. The post-R9 suite passes 110/110.
+- **Current checkpoint:** R2-R9 are complete. R10 is executing on current `main` base `b798fed9e940d15f9c828ce34881f58d1cf516a9`; Compose, PostgreSQL empty/upgrade/idempotent paths, HTTPS health, OpenAPI export/lint/drift, and the accepted real-Keycloak browser/two-user smoke pass.
 - **Execution status:** In Progress, not Validating.
 - **Confirmed completed phases:** R1, R2, R3, R4, R5, R6, R7, R8, and R9.
-- **Partially completed phase:** None.
-- **Not started at a valid final candidate:** R10.
-- **Current blocker:** None external. Remaining work is final-candidate synchronization and acceptance evidence.
+- **Partially completed phase:** R10.
+- **Current blocker:** None external. Remaining work is final-candidate acceptance evidence.
 - **Contract disposition:** OpenAPI snapshot is provisional and must not be consumed as PLAN-0004's stable live-client contract.
-- **Exact next action:** Synchronize with current `main`, establish the R10 candidate, run the complete local/Compose/migration/OpenAPI/Keycloak matrix, push it, and require final CI plus independent review.
+- **Exact next action:** Commit the deterministic browser-smoke cleanup at the synchronized base, rerun the complete solution matrix at that candidate SHA, pin PLAN-0005, push, and require final CI plus independent review.
 
 ## Progress log
+
+### 2026-07-31T03:12:32Z — R10 trusted HTTPS and real-Keycloak validation stabilized
+
+- **Checkpoint:** Fetched current `main` and confirmed it remains at base `b798fed9e940d15f9c828ce34881f58d1cf516a9` with the branch zero commits behind. Started the pinned PostgreSQL 18.4 and Keycloak 26.7.0 services and validated readiness. Applied all five migrations to an empty database, upgraded initial-to-latest, applied generated idempotent SQL twice to a third database, and verified each result has all five migration-history entries, six owned tables, integrity constraints, and both append-only triggers.
+- **Browser validation correction:** The first accepted-certificate smoke attempt exposed nondeterministic Chromium profile cleanup that could mask the primary result. The smoke now terminates browsers with bounded TERM/KILL handling and bounded profile cleanup retries. Linux selects the explicitly configured operating-system trust store without disabling certificate validation. Documentation describes the developer-local CA fallback without committing keys.
+- **Commands and validation performed:** Current-main fetch/SHA comparison; complete environment inventory; Compose config/start/readiness; PostgreSQL empty, initial-upgrade, and double idempotent SQL application; trusted HTTPS live/ready probes; OpenAPI export/check/Redocly lint/snapshot drift; Node syntax validation; and the real Keycloak Authorization Code plus PKCE browser smoke with two deterministic users.
+- **Result:** Branch is zero behind current `main`; services are healthy; every database path reached the same five-migration/constraint/trigger state; HTTPS health and OpenAPI passed without an insecure-certificate switch; OpenAPI 3.1 lint reported zero warnings; real Keycloak session, CSRF create, and owner-versus-other-user `200/404` isolation passed.
+- **Material files changed:** Keycloak browser smoke cleanup/trust-store selection; operations and scripts documentation; this plan; and `docs/plan-status.md`.
+- **Known failures or unverified behavior:** The complete solution matrix must be rerun after this final validation-script change. GitHub workflow/Gitleaks and fresh independent review remain pending at the eventual pushed candidate.
+- **Blockers:** None.
+- **Exact next action:** Commit this validation correction, run the full R10 matrix at the resulting SHA, pin it in PLAN-0005, and publish it for CI and independent review.
 
 ### 2026-07-31T03:03:51Z — R9 CI evidence and executable operations completed
 

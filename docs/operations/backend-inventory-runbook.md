@@ -178,11 +178,15 @@ dotnet run --project apps/backend/src/KitchenFlow.Api/KitchenFlow.Api.csproj \
   --configuration Release --no-build --launch-profile https
 ```
 
-Linux/browser trust stores may require importing the ASP.NET Core development CA according to the
-browser and distribution. Do not disable certificate validation in application code, OIDC, normal
-smoke or OpenAPI commands, or CI. The smoke and OpenAPI scripts have explicit
-untrusted-certificate switches only for diagnosis; a run using either switch is not accepted
-evidence.
+Linux/browser trust stores may require importing the development certificate into the operating
+system and browser stores. When a browser refuses a self-signed ASP.NET development leaf as a trust
+anchor, use a developer-local CA with a `localhost`/loopback server certificate, import only that CA
+into the operating-system/browser trust stores, and configure Kestrel's certificate path and key
+path through ignored local settings. Never commit the CA key, server key, or exported certificate
+bundle. The Linux smoke selects the operating-system trust store; it does not disable certificate
+validation. Do not disable validation in application code, OIDC, normal smoke or OpenAPI commands,
+or CI. The smoke and OpenAPI scripts have explicit untrusted-certificate switches only for
+diagnosis; a run using either switch is not accepted evidence.
 
 Data Protection keys make session cookies, cursors, and ETags opaque and tamper-evident. Every API
 replica in one environment must share the same durable protected key ring and application name.

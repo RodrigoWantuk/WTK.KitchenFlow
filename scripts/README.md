@@ -31,7 +31,10 @@ Candidate responsibilities include:
 - `backend/check-openapi.sh` verifies that a running API has not drifted from that snapshot.
 - `backend/smoke-keycloak.mjs` drives the real Authorization Code plus PKCE flow in two isolated Chromium profiles. It verifies the backend-managed cookie session, absence of provider tokens from `/api/v1/session`, CSRF-protected lot creation, and a `404` cross-user ownership boundary. Start the local Compose services, apply migrations, and start the HTTPS API before running it. The two development-fixture passwords are supplied only through `KITCHENFLOW_SMOKE_PASSWORD_A` and `KITCHENFLOW_SMOKE_PASSWORD_B`; never put them in a command history, source file, CI log, or committed environment file.
 
-The Keycloak smoke expects a browser that trusts the local ASP.NET Core development certificate. `KITCHENFLOW_SMOKE_ALLOW_UNTRUSTED_LOCAL_CERTIFICATE=1` is available only to diagnose a local trust bootstrap problem and is not accepted validation evidence or a CI setting.
+The Keycloak smoke expects a browser that trusts the local HTTPS certificate. On Linux it selects
+the operating-system trust store so an explicitly installed development CA is honored; this does
+not bypass validation. `KITCHENFLOW_SMOKE_ALLOW_UNTRUSTED_LOCAL_CERTIFICATE=1` is available only to
+diagnose a local trust bootstrap problem and is not accepted validation evidence or a CI setting.
 
 The OpenAPI scripts likewise require a trusted local certificate by default.
 `KITCHENFLOW_OPENAPI_ALLOW_UNTRUSTED_LOCAL_CERTIFICATE=1` is a diagnostic-only local escape hatch;

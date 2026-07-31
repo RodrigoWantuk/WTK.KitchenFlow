@@ -9,6 +9,10 @@ const apiUrl = process.env.KITCHENFLOW_SMOKE_API_URL ?? "https://localhost:7443"
 const browserPath = process.env.KITCHENFLOW_SMOKE_BROWSER ?? "google-chrome";
 const allowUntrustedLocalCertificate = process.env.KITCHENFLOW_SMOKE_ALLOW_UNTRUSTED_LOCAL_CERTIFICATE === "1";
 const browserSandboxArguments = process.getuid?.() === 0 ? ["--no-sandbox"] : [];
+// Linux validation trusts the ASP.NET development certificate through the operating-system store.
+// Selecting that store is not a certificate-validation bypass and avoids Chrome's separate built-in
+// root list ignoring the explicitly installed local development trust anchor.
+const browserTrustStoreArguments = process.platform === "linux" ? ["--disable-features=ChromeRootStoreUsed"] : [];
 const users = [
   { username: process.env.KITCHENFLOW_SMOKE_USER_A ?? "inventory-user-a", password: process.env.KITCHENFLOW_SMOKE_PASSWORD_A },
   { username: process.env.KITCHENFLOW_SMOKE_USER_B ?? "inventory-user-b", password: process.env.KITCHENFLOW_SMOKE_PASSWORD_B }
@@ -36,6 +40,39 @@ async function waitFor(check, description, timeoutMs = 30000) {
     await delay(200);
   }
   throw new Error(`Timed out waiting for ${description}${lastError ? `: ${lastError.message}` : ""}.`);
+}
+
+async function terminateBrowserProcess(child) {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    return;
+  }
+
+  child.kill("SIGTERM");
+  const exited = await Promise.race([
+    new Promise((resolve) => child.once("exit", () => resolve(true))),
+    delay(5000).then(() => false)
+  ]);
+  if (!exited && child.exitCode === null && child.signalCode === null) {
+    child.kill("SIGKILL");
+    await Promise.race([
+      new Promise((resolve) => child.once("exit", resolve)),
+      delay(5000)
+    ]);
+  }
+}
+
+async function removeBrowserProfile(profile) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    try {
+      await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+      return;
+    } catch (error) {
+      if (attempt === 19) {
+        throw error;
+      }
+      await delay(500);
+    }
+  }
 }
 
 class DevToolsConnection {
@@ -96,6 +133,7 @@ async function startBrowser(port) {
     "--no-first-run",
     "--no-default-browser-check",
     ...browserSandboxArguments,
+    ...browserTrustStoreArguments,
     ...(allowUntrustedLocalCertificate ? ["--ignore-certificate-errors", "--allow-insecure-localhost"] : []),
     `--remote-debugging-port=${port}`,
     `--user-data-dir=${profile}`,
@@ -117,30 +155,16 @@ async function startBrowser(port) {
     await waitFor(async () => (await connection.evaluate("location.href")).startsWith(apiUrl), "KitchenFlow HTTPS endpoint");
     return { child, connection, profile };
   } catch (error) {
-    child.kill();
-    await rm(profile, { recursive: true, force: true });
+    await terminateBrowserProcess(child);
+    await removeBrowserProfile(profile);
     throw error;
   }
 }
 
 async function stopBrowser(browser) {
   browser.connection.close();
-  browser.child.kill();
-  await Promise.race([
-    new Promise((resolve) => browser.child.once("exit", resolve)),
-    delay(5000)
-  ]);
-  for (let attempt = 0; attempt < 5; attempt += 1) {
-    try {
-      await rm(browser.profile, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
-      return;
-    } catch (error) {
-      if (attempt === 4) {
-        throw error;
-      }
-      await delay(200);
-    }
-  }
+  await terminateBrowserProcess(browser.child);
+  await removeBrowserProfile(browser.profile);
 }
 
 async function currentUrl(browser) {
