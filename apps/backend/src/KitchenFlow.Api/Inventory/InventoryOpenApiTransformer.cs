@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
@@ -11,7 +12,16 @@ internal static class InventoryOpenApiTransformer
     {
         // The emitted contract must not drift merely because CI uses an HTTP loopback listener
         // while local cookie development uses HTTPS. Consumers configure their actual base URL.
-        document.Servers = [new OpenApiServer { Url = "https://localhost:7443", Description = "KitchenFlow local HTTPS development endpoint." }];
+        document.Servers = [new OpenApiServer { Url = "/", Description = "Current KitchenFlow backend origin. Local development defaults to https://localhost:7443." }];
+        document.Info.License = new OpenApiLicense
+        {
+            Name = "PolyForm Noncommercial License 1.0.0",
+            Url = new Uri("https://polyformproject.org/licenses/noncommercial/1.0.0/")
+        };
+        foreach (var tag in document.Tags ?? new HashSet<OpenApiTag>())
+        {
+            tag.Description ??= "KitchenFlow authenticated backend and health operations.";
+        }
         var components = document.Components ??= new OpenApiComponents();
         (components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>())["kitchenflowSession"] = new OpenApiSecurityScheme
         {
@@ -42,11 +52,16 @@ internal static class InventoryOpenApiTransformer
             problemDetails.Required ??= new HashSet<string>(StringComparer.Ordinal);
             problemDetails.Required.Add("errorCode");
             problemDetails.Required.Add("traceId");
+            if (problemDetails.Properties.TryGetValue("status", out var statusProperty) && statusProperty is OpenApiSchema statusSchema)
+            {
+                statusSchema.Type = JsonSchemaType.Integer;
+                statusSchema.Format = "int32";
+            }
         }
 
-        ConfigureDecimal(components, "QuantityRequest", "measuredValue");
-        ConfigureDecimal(components, "QuantityResponse", "measuredValue");
-        ConfigureDecimal(components, "AdjustmentRequest", "value");
+        ConfigureDecimal(components, "QuantityRequest", "measuredValue", true);
+        ConfigureDecimal(components, "QuantityResponse", "measuredValue", true);
+        ConfigureDecimal(components, "AdjustmentRequest", "value", true);
         ConfigureStringEnum(components, "QuantityRequest", "unit", true, "Gram", "Milliliter", "Unit");
         ConfigureStringEnum(components, "QuantityResponse", "unit", true, "Gram", "Milliliter", "Unit");
         ConfigureStringEnum(components, "QuantityRequest", "availabilityState", true, "Available", "Low", "Unavailable");
@@ -83,6 +98,8 @@ internal static class InventoryOpenApiTransformer
                 else
                 {
                     operation.Security = [new OpenApiSecurityRequirement { [new OpenApiSecuritySchemeReference("kitchenflowSession", document)] = [] }];
+                    EnsureProblemResponse(document, operation, "401", "Authentication is required.");
+                    EnsureProblemResponse(document, operation, "500", "An unexpected server error occurred.");
                 }
 
                 var isLoginChallenge = path.Equals("/api/v1/auth/login", StringComparison.Ordinal) && method == HttpMethod.Post;
@@ -91,6 +108,17 @@ internal static class InventoryOpenApiTransformer
                 {
                     operation.Parameters ??= [];
                     operation.Parameters.Add(Header("X-CSRF-TOKEN", "Required CSRF token issued by GET /api/v1/session."));
+                    EnsureProblemResponse(document, operation, "400", "The request or CSRF token is invalid.");
+                }
+
+                if (operation.RequestBody is not null)
+                {
+                    EnsureProblemResponse(document, operation, "415", "The request content type is not supported.");
+                }
+
+                if (stateChanging && path.Contains("/inventory/", StringComparison.Ordinal))
+                {
+                    EnsureProblemResponse(document, operation, "429", "The mutation rate limit was exceeded.");
                 }
 
                 if ((path.Contains("/lots", StringComparison.Ordinal) && (method == HttpMethod.Patch || method == HttpMethod.Delete)) || path.EndsWith("/adjustments", StringComparison.Ordinal))
@@ -106,6 +134,7 @@ internal static class InventoryOpenApiTransformer
                 }
 
                 AddExamples(path, method, operation);
+                AddStandardProblemExamples(operation);
 
                 var emitsLotEtag = path.EndsWith("/lots", StringComparison.Ordinal) && method == HttpMethod.Post ||
                     path.EndsWith("/lots/{lotId}", StringComparison.Ordinal) && (method == HttpMethod.Get || method == HttpMethod.Patch) ||
@@ -132,11 +161,11 @@ internal static class InventoryOpenApiTransformer
         Schema = new OpenApiSchema { Type = JsonSchemaType.String, Format = name == "Idempotency-Key" ? "uuid" : null }
     };
 
-    private static void ConfigureDecimal(OpenApiComponents components, string schemaName, string propertyName)
+    private static void ConfigureDecimal(OpenApiComponents components, string schemaName, string propertyName, bool nullable)
     {
         if (TryGetProperty(components, schemaName, propertyName, out var property))
         {
-            property.Type = JsonSchemaType.Number;
+            property.Type = nullable ? JsonSchemaType.Number | JsonSchemaType.Null : JsonSchemaType.Number;
             property.Format = "decimal";
         }
     }
@@ -145,8 +174,22 @@ internal static class InventoryOpenApiTransformer
     {
         if (TryGetProperty(components, schemaName, propertyName, out var property))
         {
-            property.Type = nullable ? JsonSchemaType.String | JsonSchemaType.Null : JsonSchemaType.String;
-            property.Enum = values.Select(value => (JsonNode)JsonValue.Create(value)!).Append(nullable ? JsonNode.Parse("null") : null).Where(value => value is not null).Cast<JsonNode>().ToList();
+            var enumValues = values.Select(value => (JsonNode)JsonValue.Create(value)!).ToList();
+            if (nullable)
+            {
+                property.Type = null;
+                property.Enum = null;
+                property.AnyOf =
+                [
+                    new OpenApiSchema { Type = JsonSchemaType.String, Enum = enumValues },
+                    new OpenApiSchema { Type = JsonSchemaType.Null }
+                ];
+            }
+            else
+            {
+                property.Type = JsonSchemaType.String;
+                property.Enum = enumValues;
+            }
         }
     }
 
@@ -166,8 +209,25 @@ internal static class InventoryOpenApiTransformer
         quantitySchema.Required = new HashSet<string>(StringComparer.Ordinal);
         quantitySchema.OneOf =
         [
-            new OpenApiSchema { Required = new HashSet<string>(StringComparer.Ordinal) { "measuredValue", "unit" } },
-            new OpenApiSchema { Required = new HashSet<string>(StringComparer.Ordinal) { "availabilityState" } }
+            new OpenApiSchema
+            {
+                Title = "Measured quantity",
+                Required = new HashSet<string>(StringComparer.Ordinal) { "measuredValue", "unit" },
+                Properties = new Dictionary<string, IOpenApiSchema>
+                {
+                    ["availabilityState"] = new OpenApiSchema { Type = JsonSchemaType.Null }
+                }
+            },
+            new OpenApiSchema
+            {
+                Title = "Availability quantity",
+                Required = new HashSet<string>(StringComparer.Ordinal) { "availabilityState" },
+                Properties = new Dictionary<string, IOpenApiSchema>
+                {
+                    ["measuredValue"] = new OpenApiSchema { Type = JsonSchemaType.Null },
+                    ["unit"] = new OpenApiSchema { Type = JsonSchemaType.Null }
+                }
+            }
         ];
     }
 
@@ -175,18 +235,78 @@ internal static class InventoryOpenApiTransformer
     {
         if (path.EndsWith("/lots", StringComparison.Ordinal) && method == HttpMethod.Post)
         {
-            AddRequestExample(operation, "measuredLot", "A manually entered measured pantry lot.", """{"productName":"Red lentils","quantity":{"measuredValue":500,"unit":"Gram"},"storageLocation":"Pantry","customLocation":null,"packageState":"Sealed","printedExpirationDate":"2026-12-31","notes":null}""");
-            AddRequestExample(operation, "availabilityLot", "A manually entered qualitative availability lot.", """{"productName":"Fresh herbs","quantity":{"availabilityState":"Low"},"storageLocation":"Refrigerator"}""");
-            AddProblemExample(operation, "422", "invalidQuantity", "A measured and availability quantity cannot be supplied together.", """{"status":422,"errorCode":"domain_rule_violated","traceId":"00-00000000000000000000000000000000-0000000000000000-00"}""");
+            AddRequestExample(operation, "measuredLot", "A manually entered measured pantry lot.", """{"productName":"Red lentils","quantity":{"measuredValue":500,"unit":"Gram","availabilityState":null},"storageLocation":"Pantry","customLocation":null,"packageState":"Sealed","printedExpirationDate":"2026-12-31","notes":null}""");
+            AddRequestExample(operation, "availabilityLot", "A manually entered qualitative availability lot.", """{"productName":"Fresh herbs","quantity":{"measuredValue":null,"unit":null,"availabilityState":"Low"},"storageLocation":"Refrigerator","customLocation":null,"packageState":null,"printedExpirationDate":null,"notes":null}""");
+            AddResponseExample(operation, "201", "completedCreate", "A newly completed create command.", LotExample("opaque-create-version"));
+            AddResponseExample(operation, "201", "completedCreateReplay", "The exact semantic response returned for a completed create replay.", LotExample("opaque-create-version"));
+            AddProblemExample(operation, "400", "fieldValidationFailure", "A required header or request field is malformed.", ProblemExample(400, "validation_failed", "A UUID Idempotency-Key header is required.", """{"Idempotency-Key":["A UUID Idempotency-Key header is required."]}"""));
+            AddProblemExample(operation, "422", "invalidQuantity", "A measured and availability quantity cannot be supplied together.", ProblemExample(422, "domain_rule_violated", "Quantity must use exactly one mode.", """{"quantity":["Quantity must use exactly one mode."]}"""));
         }
 
         if (path.EndsWith("/adjustments", StringComparison.Ordinal) && method == HttpMethod.Post)
         {
             AddRequestExample(operation, "consume", "Consumes a measured quantity from the current lot version.", """{"type":"Consume","value":125,"availabilityState":null,"reasonCode":"meal","note":null}""");
-            AddProblemExample(operation, "412", "staleEtag", "The supplied opaque ETag is no longer current.", """{"status":412,"errorCode":"precondition_failed","traceId":"00-00000000000000000000000000000000-0000000000000000-00"}""");
-            AddProblemExample(operation, "409", "reusedIdempotencyKey", "The key was used for a different semantic command.", """{"status":409,"errorCode":"idempotency_key_reused","traceId":"00-00000000000000000000000000000000-0000000000000000-00"}""");
+            AddResponseExample(operation, "200", "completedAdjustmentReplay", "The exact semantic response returned for a completed adjustment replay.", LotExample("opaque-adjusted-version", 375));
+            AddProblemExample(operation, "412", "staleEtag", "The supplied opaque ETag is no longer current.", ProblemExample(412, "precondition_failed", "The inventory lot was modified."));
+            AddProblemExample(operation, "409", "reusedIdempotencyKey", "The key was used for a different semantic command.", ProblemExample(409, "idempotency_key_reused", "The Idempotency-Key was used for a different request."));
+            AddProblemExample(operation, "422", "domainRuleFailure", "The adjustment violates an inventory rule.", ProblemExample(422, "domain_rule_violated", "The adjustment exceeds the current quantity.", """{"value":["The adjustment exceeds the current quantity."]}"""));
+        }
+
+        if (path.EndsWith("/lots", StringComparison.Ordinal) && method == HttpMethod.Get)
+        {
+            AddProblemExample(operation, "400", "invalidCursor", "The cursor is invalid or has been tampered with.", ProblemExample(400, "invalid_cursor", "The cursor is invalid."));
+        }
+
+        if ((method == HttpMethod.Patch || method == HttpMethod.Delete || path.EndsWith("/adjustments", StringComparison.Ordinal)) && path.Contains("/lots/", StringComparison.Ordinal))
+        {
+            AddProblemExample(operation, "428", "missingPrecondition", "The mutation requires If-Match.", ProblemExample(428, "precondition_required", "If-Match is required."));
         }
     }
+
+    private static void AddStandardProblemExamples(OpenApiOperation operation)
+    {
+        AddProblemExample(operation, "401", "authenticationFailure", "The backend-managed session is absent or invalid.", ProblemExample(401, "authentication_required", "Authentication is required."));
+        AddProblemExample(operation, "415", "unsupportedMediaType", "The request content type is unsupported.", ProblemExample(415, "unsupported_media_type", "The request content type is not supported."));
+        AddProblemExample(operation, "429", "rateLimitFailure", "The bounded mutation rate was exceeded.", ProblemExample(429, "rate_limit_exceeded", "The request rate limit was exceeded."));
+        AddProblemExample(operation, "500", "unexpectedFailure", "An unexpected error was safely redacted.", ProblemExample(500, "unexpected_error", "An unexpected error occurred."));
+    }
+
+    private static void EnsureProblemResponse(OpenApiDocument document, OpenApiOperation operation, string statusCode, string description)
+    {
+        operation.Responses ??= new OpenApiResponses();
+        if (operation.Responses.ContainsKey(statusCode))
+        {
+            return;
+        }
+
+        operation.Responses[statusCode] = new OpenApiResponse
+        {
+            Description = description,
+            Content = new Dictionary<string, OpenApiMediaType>
+            {
+                ["application/problem+json"] = new() { Schema = new OpenApiSchemaReference("ProblemDetails", document) }
+            }
+        };
+    }
+
+    private static string ProblemExample(int status, string errorCode, string detail, string? errors = null) =>
+        $$"""{"type":"about:blank","title":"{{ReasonPhrase(status)}}","status":{{status}},"detail":{{JsonSerializer.Serialize(detail)}},"errorCode":"{{errorCode}}","traceId":"00-00000000000000000000000000000000-0000000000000000-00"{{(errors is null ? string.Empty : $"," + "\"errors\":" + errors)}}}""";
+
+    private static string LotExample(string version, decimal measuredValue = 500) =>
+        $$"""{"lotId":"00000000-0000-0000-0000-000000000001","productId":"00000000-0000-0000-0000-000000000002","productName":"Red lentils","quantity":{"measuredValue":{{measuredValue.ToString(System.Globalization.CultureInfo.InvariantCulture)}},"unit":"Gram","availabilityState":null},"storageLocation":"Pantry","customLocation":null,"packageState":"Sealed","printedExpirationDate":"2026-12-31","notes":null,"version":"{{version}}","createdAt":"2026-07-31T00:00:00Z","updatedAt":"2026-07-31T00:00:00Z"}""";
+
+    private static string ReasonPhrase(int status) => status switch
+    {
+        400 => "Bad Request",
+        401 => "Unauthorized",
+        409 => "Conflict",
+        412 => "Precondition Failed",
+        415 => "Unsupported Media Type",
+        422 => "Unprocessable Entity",
+        428 => "Precondition Required",
+        429 => "Too Many Requests",
+        _ => "Internal Server Error"
+    };
 
     private static string CreateOperationId(HttpMethod method, string path) => method.Method.ToLowerInvariant() + string.Concat(path.Split('/', StringSplitOptions.RemoveEmptyEntries).Select(segment => ToPascalCaseSegment(segment)));
 
@@ -207,6 +327,14 @@ internal static class InventoryOpenApiTransformer
     private static void AddProblemExample(OpenApiOperation operation, string statusCode, string name, string summary, string value)
     {
         if (operation.Responses is { } responses && responses.TryGetValue(statusCode, out var response) && response.Content is { } content && content.TryGetValue("application/problem+json", out var responseMediaType) && responseMediaType is OpenApiMediaType mediaType)
+        {
+            (mediaType.Examples ??= new Dictionary<string, IOpenApiExample>())[name] = new OpenApiExample { Summary = summary, Value = JsonNode.Parse(value) };
+        }
+    }
+
+    private static void AddResponseExample(OpenApiOperation operation, string statusCode, string name, string summary, string value)
+    {
+        if (operation.Responses is { } responses && responses.TryGetValue(statusCode, out var response) && response.Content is { } content && content.TryGetValue("application/json", out var responseMediaType) && responseMediaType is OpenApiMediaType mediaType)
         {
             (mediaType.Examples ??= new Dictionary<string, IOpenApiExample>())[name] = new OpenApiExample { Summary = summary, Value = JsonNode.Parse(value) };
         }

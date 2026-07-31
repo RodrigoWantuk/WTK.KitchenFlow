@@ -301,7 +301,7 @@ Every commit must update this plan's `Execution state` and `Progress log` and th
 - [x] Non-idempotency failures roll back every atomic side effect.
 - [x] Idempotency retention is configurable and validated.
 - [x] Metadata corrections expose exact changed fields through an immutable owner-visible history contract.
-- [ ] OpenAPI matches runtime security, CSRF, ETag, quantity modes, nullability, errors, and examples.
+- [x] OpenAPI matches runtime security, CSRF, ETag, quantity modes, nullability, errors, and examples.
 - [x] OpenAPI parses/lints as 3.1 and snapshot drift is checked in CI.
 - [ ] Production configuration uses typed validated options with no development fallback.
 - [ ] Readiness and all framework failures match the documented security/error contract.
@@ -337,16 +337,27 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** R2-R4 are complete: exact idempotency contention, atomic rollback, resource-bound replay ETags, append-only database history, safe correction projection, post-delete visibility, ownership, and ordering are covered.
+- **Current checkpoint:** R2-R5 are complete: the generated OpenAPI now matches route security/concurrency headers, exclusive nullable quantity modes, Problem Details, response headers, and the accepted example matrix with warning-free lint.
 - **Execution status:** In Progress, not Validating.
-- **Confirmed completed phases:** R1, R2, R3, and R4.
-- **Partially completed phases:** R5, R6, R7, R8, and R9.
+- **Confirmed completed phases:** R1, R2, R3, R4, and R5.
+- **Partially completed phases:** R6, R7, R8, and R9.
 - **Not started at a valid final candidate:** R10.
 - **Current blocker:** None external. Remaining work is implementation and acceptance evidence inside this branch.
 - **Contract disposition:** OpenAPI snapshot is provisional and must not be consumed as PLAN-0004's stable live-client contract.
-- **Exact next action:** Complete the R5 quantity nullability, problem examples, and route-by-route runtime agreement suite, then regenerate the snapshot.
+- **Exact next action:** Complete R6 typed environment-aware options, readiness, normalized framework errors, redirect matrix, and security tests.
 
 ## Progress log
+
+### 2026-07-31T02:35:00Z — R5 runtime-aligned OpenAPI completed
+
+- **Checkpoint:** Replaced ambiguous quantity fragments with exclusive measured/availability branches that constrain inactive fields and accept explicit nulls. Corrected nullable enums and decimal/status schemas, declared standard secured-route failures, and completed measured, availability, validation, domain, precondition, replay, key-reuse, cursor, authentication, media-type, rate-limit, and unexpected-error examples.
+- **Contract evidence:** Added a route-by-route executable contract matrix for cookie security, CSRF, idempotency, `If-Match`, ETag responses, Problem Details content types, quantity branches/nullability, and required examples. Added the PolyForm license, a relative server, tag documentation, and narrowly documented lint-rule exceptions for truthful redirect/health operations.
+- **Material files changed:** OpenAPI transformer; OpenAPI contract tests; generated `kitchenflow-v1.json`; Redocly configuration and lint script; shared-contract handoff documentation; this plan; and `docs/plan-status.md`.
+- **Commands and validation performed:** Release solution build; targeted generated-contract tests; OpenAPI export; sorted snapshot drift check; repository schema check; and pinned Redocly lint.
+- **Result:** Release build passed with zero warnings/errors; contract tests passed 2/2; OpenAPI check passed; Redocly validated the OpenAPI 3.1 document with zero warnings.
+- **Known failures or unverified behavior:** The snapshot remains withheld as PLAN-0004's stable baseline until R8 and R10 complete.
+- **Blockers:** None.
+- **Exact next action:** Complete R6 typed configuration and normalized framework-error security.
 
 ### 2026-07-31T02:22:00Z — R3/R4 idempotency, rollback, and immutable history completed
 

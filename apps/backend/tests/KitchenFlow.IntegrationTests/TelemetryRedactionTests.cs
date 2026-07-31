@@ -141,14 +141,111 @@ public sealed class TelemetryRedactionTests
         var quantityUnit = schemas.GetProperty("QuantityRequest").GetProperty("properties").GetProperty("unit");
         var adjustmentType = schemas.GetProperty("AdjustmentRequest").GetProperty("properties").GetProperty("type");
 
-        Assert.Equal("number", measuredValue.GetProperty("type").GetString());
+        Assert.Contains("number", SchemaTypes(measuredValue));
+        Assert.Contains("null", SchemaTypes(measuredValue));
         Assert.Equal("decimal", measuredValue.GetProperty("format").GetString());
-        Assert.Contains(quantityUnit.GetProperty("enum").EnumerateArray(), value => value.GetString() == "Gram");
+        Assert.Contains("Gram", EnumValues(quantityUnit));
         Assert.Contains(adjustmentType.GetProperty("enum").EnumerateArray(), value => value.GetString() == "AvailabilityChanged");
 
         var problemProperties = schemas.GetProperty("ProblemDetails").GetProperty("properties");
         Assert.True(problemProperties.TryGetProperty("errorCode", out _));
         Assert.True(problemProperties.TryGetProperty("traceId", out _));
         Assert.True(problemProperties.TryGetProperty("errors", out _));
+        Assert.Equal(["integer"], SchemaTypes(problemProperties.GetProperty("status")));
+        var errorItems = problemProperties.GetProperty("errors").GetProperty("additionalProperties").GetProperty("items");
+        Assert.Equal(["string"], SchemaTypes(errorItems));
+    }
+
+    [Fact]
+    public async Task GeneratedOpenApiMatchesSecurityConcurrencyNullabilityAndExampleMatrix()
+    {
+        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder => builder.UseSetting("ConnectionStrings:KitchenFlow", "Host=127.0.0.1;Database=kitchenflow_contract_test;Username=test;Password=test"));
+        using var client = factory.CreateClient();
+        var document = await client.GetFromJsonAsync<JsonElement>("/openapi/v1.json");
+        var paths = document.GetProperty("paths");
+        var routes = new[]
+        {
+            (Path: "/api/v1/inventory/lots", Method: "get", Csrf: false, Idempotency: false, IfMatch: false, EtagStatus: (string?)null),
+            (Path: "/api/v1/inventory/lots", Method: "post", Csrf: true, Idempotency: true, IfMatch: false, EtagStatus: "201"),
+            (Path: "/api/v1/inventory/lots/{lotId}", Method: "get", Csrf: false, Idempotency: false, IfMatch: false, EtagStatus: "200"),
+            (Path: "/api/v1/inventory/lots/{lotId}", Method: "patch", Csrf: true, Idempotency: false, IfMatch: true, EtagStatus: "200"),
+            (Path: "/api/v1/inventory/lots/{lotId}", Method: "delete", Csrf: true, Idempotency: false, IfMatch: true, EtagStatus: (string?)null),
+            (Path: "/api/v1/inventory/lots/{lotId}/adjustments", Method: "post", Csrf: true, Idempotency: true, IfMatch: true, EtagStatus: "200"),
+            (Path: "/api/v1/inventory/lots/{lotId}/history", Method: "get", Csrf: false, Idempotency: false, IfMatch: false, EtagStatus: (string?)null)
+        };
+
+        foreach (var route in routes)
+        {
+            var operation = paths.GetProperty(route.Path).GetProperty(route.Method);
+            Assert.Equal("kitchenflowSession", operation.GetProperty("security")[0].EnumerateObject().Single().Name);
+            var headers = operation.TryGetProperty("parameters", out var parameters)
+                ? parameters.EnumerateArray().Where(parameter => parameter.GetProperty("in").GetString() == "header").Select(parameter => parameter.GetProperty("name").GetString()).ToHashSet(StringComparer.Ordinal)
+                : [];
+            Assert.Equal(route.Csrf, headers.Contains("X-CSRF-TOKEN"));
+            Assert.Equal(route.Idempotency, headers.Contains("Idempotency-Key"));
+            Assert.Equal(route.IfMatch, headers.Contains("If-Match"));
+            Assert.True(operation.GetProperty("responses").TryGetProperty("401", out _));
+            Assert.True(operation.GetProperty("responses").TryGetProperty("500", out _));
+            foreach (var response in operation.GetProperty("responses").EnumerateObject().Where(response => int.TryParse(response.Name, out var status) && status >= 400))
+            {
+                Assert.True(response.Value.GetProperty("content").TryGetProperty("application/problem+json", out _), $"{route.Method.ToUpperInvariant()} {route.Path} response {response.Name} must be Problem Details.");
+            }
+
+            if (route.EtagStatus is not null)
+            {
+                Assert.True(operation.GetProperty("responses").GetProperty(route.EtagStatus).GetProperty("headers").TryGetProperty("ETag", out _));
+            }
+        }
+
+        var schemas = document.GetProperty("components").GetProperty("schemas");
+        foreach (var schemaName in new[] { "QuantityRequest", "QuantityResponse" })
+        {
+            var schema = schemas.GetProperty(schemaName);
+            var branches = schema.GetProperty("oneOf").EnumerateArray().ToArray();
+            Assert.Equal(2, branches.Length);
+            var measured = Assert.Single(branches, branch => branch.GetProperty("title").GetString() == "Measured quantity");
+            var availability = Assert.Single(branches, branch => branch.GetProperty("title").GetString() == "Availability quantity");
+            Assert.Equal(["measuredValue", "unit"], measured.GetProperty("required").EnumerateArray().Select(value => value.GetString()!).OrderBy(value => value, StringComparer.Ordinal).ToArray());
+            Assert.Equal(["null"], SchemaTypes(measured.GetProperty("properties").GetProperty("availabilityState")));
+            Assert.Equal(["availabilityState"], availability.GetProperty("required").EnumerateArray().Select(value => value.GetString()!).ToArray());
+            Assert.Equal(["null"], SchemaTypes(availability.GetProperty("properties").GetProperty("measuredValue")));
+            Assert.Equal(["null"], SchemaTypes(availability.GetProperty("properties").GetProperty("unit")));
+        }
+
+        var create = paths.GetProperty("/api/v1/inventory/lots").GetProperty("post");
+        var createExamples = create.GetProperty("requestBody").GetProperty("content").GetProperty("application/json").GetProperty("examples");
+        Assert.Equal(JsonValueKind.Null, createExamples.GetProperty("measuredLot").GetProperty("value").GetProperty("quantity").GetProperty("availabilityState").ValueKind);
+        Assert.Equal(JsonValueKind.Null, createExamples.GetProperty("availabilityLot").GetProperty("value").GetProperty("quantity").GetProperty("measuredValue").ValueKind);
+        Assert.True(create.GetProperty("responses").GetProperty("201").GetProperty("content").GetProperty("application/json").GetProperty("examples").TryGetProperty("completedCreateReplay", out _));
+        var adjustment = paths.GetProperty("/api/v1/inventory/lots/{lotId}/adjustments").GetProperty("post");
+        Assert.True(adjustment.GetProperty("responses").GetProperty("200").GetProperty("content").GetProperty("application/json").GetProperty("examples").TryGetProperty("completedAdjustmentReplay", out _));
+        Assert.True(adjustment.GetProperty("responses").GetProperty("409").GetProperty("content").GetProperty("application/problem+json").GetProperty("examples").TryGetProperty("reusedIdempotencyKey", out _));
+        Assert.True(adjustment.GetProperty("responses").GetProperty("412").GetProperty("content").GetProperty("application/problem+json").GetProperty("examples").TryGetProperty("staleEtag", out _));
+        Assert.True(adjustment.GetProperty("responses").GetProperty("428").GetProperty("content").GetProperty("application/problem+json").GetProperty("examples").TryGetProperty("missingPrecondition", out _));
+        Assert.True(paths.GetProperty("/api/v1/inventory/lots").GetProperty("get").GetProperty("responses").GetProperty("400").GetProperty("content").GetProperty("application/problem+json").GetProperty("examples").TryGetProperty("invalidCursor", out _));
+        Assert.True(create.GetProperty("responses").GetProperty("401").GetProperty("content").GetProperty("application/problem+json").GetProperty("examples").TryGetProperty("authenticationFailure", out _));
+    }
+
+    private static string[] SchemaTypes(JsonElement schema)
+    {
+        var type = schema.GetProperty("type");
+        return type.ValueKind == JsonValueKind.Array
+            ? type.EnumerateArray().Select(value => value.GetString()!).OrderBy(value => value, StringComparer.Ordinal).ToArray()
+            : [type.GetString()!];
+    }
+
+    private static string[] EnumValues(JsonElement schema)
+    {
+        if (schema.TryGetProperty("enum", out var direct))
+        {
+            return direct.EnumerateArray().Where(value => value.ValueKind == JsonValueKind.String).Select(value => value.GetString()!).ToArray();
+        }
+
+        return schema.GetProperty("anyOf").EnumerateArray()
+            .Where(branch => branch.TryGetProperty("enum", out _))
+            .SelectMany(branch => branch.GetProperty("enum").EnumerateArray())
+            .Where(value => value.ValueKind == JsonValueKind.String)
+            .Select(value => value.GetString()!)
+            .ToArray();
     }
 }

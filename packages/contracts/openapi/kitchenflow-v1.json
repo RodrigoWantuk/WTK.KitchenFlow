@@ -34,7 +34,10 @@
           "value": {
             "format": "decimal",
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
-            "type": "number"
+            "type": [
+              "null",
+              "number"
+            ]
           }
         },
         "required": [
@@ -62,14 +65,18 @@
             ]
           },
           "packageState": {
-            "enum": [
-              "Sealed",
-              "Opened",
-              "Unknown"
-            ],
-            "type": [
-              "null",
-              "string"
+            "anyOf": [
+              {
+                "enum": [
+                  "Sealed",
+                  "Opened",
+                  "Unknown"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "printedExpirationDate": {
@@ -300,11 +307,7 @@
           "status": {
             "format": "int32",
             "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "null",
-              "integer",
-              "string"
-            ]
+            "type": "integer"
           },
           "title": {
             "type": [
@@ -333,43 +336,69 @@
         "description": "Represents exactly one inventory quantity mode supplied by an API client.",
         "oneOf": [
           {
+            "properties": {
+              "availabilityState": {
+                "type": "null"
+              }
+            },
             "required": [
               "measuredValue",
               "unit"
-            ]
+            ],
+            "title": "Measured quantity"
           },
           {
+            "properties": {
+              "measuredValue": {
+                "type": "null"
+              },
+              "unit": {
+                "type": "null"
+              }
+            },
             "required": [
               "availabilityState"
-            ]
+            ],
+            "title": "Availability quantity"
           }
         ],
         "properties": {
           "availabilityState": {
-            "enum": [
-              "Available",
-              "Low",
-              "Unavailable"
-            ],
-            "type": [
-              "null",
-              "string"
+            "anyOf": [
+              {
+                "enum": [
+                  "Available",
+                  "Low",
+                  "Unavailable"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "measuredValue": {
             "format": "decimal",
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
-            "type": "number"
-          },
-          "unit": {
-            "enum": [
-              "Gram",
-              "Milliliter",
-              "Unit"
-            ],
             "type": [
               "null",
-              "string"
+              "number"
+            ]
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "Gram",
+                  "Milliliter",
+                  "Unit"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ]
           }
         },
@@ -379,43 +408,69 @@
         "description": "Returns a measured or qualitative quantity without mixing the two modes.",
         "oneOf": [
           {
+            "properties": {
+              "availabilityState": {
+                "type": "null"
+              }
+            },
             "required": [
               "measuredValue",
               "unit"
-            ]
+            ],
+            "title": "Measured quantity"
           },
           {
+            "properties": {
+              "measuredValue": {
+                "type": "null"
+              },
+              "unit": {
+                "type": "null"
+              }
+            },
             "required": [
               "availabilityState"
-            ]
+            ],
+            "title": "Availability quantity"
           }
         ],
         "properties": {
           "availabilityState": {
-            "enum": [
-              "Available",
-              "Low",
-              "Unavailable"
-            ],
-            "type": [
-              "null",
-              "string"
+            "anyOf": [
+              {
+                "enum": [
+                  "Available",
+                  "Low",
+                  "Unavailable"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "measuredValue": {
             "format": "decimal",
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
-            "type": "number"
-          },
-          "unit": {
-            "enum": [
-              "Gram",
-              "Milliliter",
-              "Unit"
-            ],
             "type": [
               "null",
-              "string"
+              "number"
+            ]
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "Gram",
+                  "Milliliter",
+                  "Unit"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ]
           }
         },
@@ -461,14 +516,18 @@
             ]
           },
           "packageState": {
-            "enum": [
-              "Sealed",
-              "Opened",
-              "Unknown"
-            ],
-            "type": [
-              "null",
-              "string"
+            "anyOf": [
+              {
+                "enum": [
+                  "Sealed",
+                  "Opened",
+                  "Unknown"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "printedExpirationDate": {
@@ -515,6 +574,10 @@
     }
   },
   "info": {
+    "license": {
+      "name": "PolyForm Noncommercial License 1.0.0",
+      "url": "https://polyformproject.org/licenses/noncommercial/1.0.0/"
+    },
     "title": "KitchenFlow.Api | v1",
     "version": "1.0.0"
   },
@@ -575,12 +638,48 @@
           "401": {
             "content": {
               "application/problem+json": {
+                "examples": {
+                  "authenticationFailure": {
+                    "summary": "The backend-managed session is absent or invalid.",
+                    "value": {
+                      "detail": "Authentication is required.",
+                      "errorCode": "authentication_required",
+                      "status": 401,
+                      "title": "Unauthorized",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
             "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unexpectedFailure": {
+                    "summary": "An unexpected error was safely redacted.",
+                    "value": {
+                      "detail": "An unexpected error occurred.",
+                      "errorCode": "unexpected_error",
+                      "status": 500,
+                      "title": "Internal Server Error",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "An unexpected server error occurred."
           }
         },
         "security": [
@@ -653,12 +752,71 @@
           "400": {
             "content": {
               "application/problem+json": {
+                "examples": {
+                  "invalidCursor": {
+                    "summary": "The cursor is invalid or has been tampered with.",
+                    "value": {
+                      "detail": "The cursor is invalid.",
+                      "errorCode": "invalid_cursor",
+                      "status": 400,
+                      "title": "Bad Request",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
             "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "authenticationFailure": {
+                    "summary": "The backend-managed session is absent or invalid.",
+                    "value": {
+                      "detail": "Authentication is required.",
+                      "errorCode": "authentication_required",
+                      "status": 401,
+                      "title": "Unauthorized",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Authentication is required."
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unexpectedFailure": {
+                    "summary": "An unexpected error was safely redacted.",
+                    "value": {
+                      "detail": "An unexpected error occurred.",
+                      "errorCode": "unexpected_error",
+                      "status": 500,
+                      "title": "Internal Server Error",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "An unexpected server error occurred."
           }
         },
         "security": [
@@ -701,9 +859,15 @@
                 "availabilityLot": {
                   "summary": "A manually entered qualitative availability lot.",
                   "value": {
+                    "customLocation": null,
+                    "notes": null,
+                    "packageState": null,
+                    "printedExpirationDate": null,
                     "productName": "Fresh herbs",
                     "quantity": {
-                      "availabilityState": "Low"
+                      "availabilityState": "Low",
+                      "measuredValue": null,
+                      "unit": null
                     },
                     "storageLocation": "Refrigerator"
                   }
@@ -717,6 +881,7 @@
                     "printedExpirationDate": "2026-12-31",
                     "productName": "Red lentils",
                     "quantity": {
+                      "availabilityState": null,
                       "measuredValue": 500,
                       "unit": "Gram"
                     },
@@ -735,6 +900,50 @@
           "201": {
             "content": {
               "application/json": {
+                "examples": {
+                  "completedCreate": {
+                    "summary": "A newly completed create command.",
+                    "value": {
+                      "createdAt": "2026-07-31T00:00:00Z",
+                      "customLocation": null,
+                      "lotId": "00000000-0000-0000-0000-000000000001",
+                      "notes": null,
+                      "packageState": "Sealed",
+                      "printedExpirationDate": "2026-12-31",
+                      "productId": "00000000-0000-0000-0000-000000000002",
+                      "productName": "Red lentils",
+                      "quantity": {
+                        "availabilityState": null,
+                        "measuredValue": 500,
+                        "unit": "Gram"
+                      },
+                      "storageLocation": "Pantry",
+                      "updatedAt": "2026-07-31T00:00:00Z",
+                      "version": "opaque-create-version"
+                    }
+                  },
+                  "completedCreateReplay": {
+                    "summary": "The exact semantic response returned for a completed create replay.",
+                    "value": {
+                      "createdAt": "2026-07-31T00:00:00Z",
+                      "customLocation": null,
+                      "lotId": "00000000-0000-0000-0000-000000000001",
+                      "notes": null,
+                      "packageState": "Sealed",
+                      "printedExpirationDate": "2026-12-31",
+                      "productId": "00000000-0000-0000-0000-000000000002",
+                      "productName": "Red lentils",
+                      "quantity": {
+                        "availabilityState": null,
+                        "measuredValue": 500,
+                        "unit": "Gram"
+                      },
+                      "storageLocation": "Pantry",
+                      "updatedAt": "2026-07-31T00:00:00Z",
+                      "version": "opaque-create-version"
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/LotResponse"
                 }
@@ -753,12 +962,53 @@
           "400": {
             "content": {
               "application/problem+json": {
+                "examples": {
+                  "fieldValidationFailure": {
+                    "summary": "A required header or request field is malformed.",
+                    "value": {
+                      "detail": "A UUID Idempotency-Key header is required.",
+                      "errorCode": "validation_failed",
+                      "errors": {
+                        "Idempotency-Key": [
+                          "A UUID Idempotency-Key header is required."
+                        ]
+                      },
+                      "status": 400,
+                      "title": "Bad Request",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
             "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "authenticationFailure": {
+                    "summary": "The backend-managed session is absent or invalid.",
+                    "value": {
+                      "detail": "Authentication is required.",
+                      "errorCode": "authentication_required",
+                      "status": 401,
+                      "title": "Unauthorized",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Authentication is required."
           },
           "409": {
             "content": {
@@ -770,6 +1020,29 @@
             },
             "description": "Conflict"
           },
+          "415": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unsupportedMediaType": {
+                    "summary": "The request content type is unsupported.",
+                    "value": {
+                      "detail": "The request content type is not supported.",
+                      "errorCode": "unsupported_media_type",
+                      "status": 415,
+                      "title": "Unsupported Media Type",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "The request content type is not supported."
+          },
           "422": {
             "content": {
               "application/problem+json": {
@@ -777,9 +1050,17 @@
                   "invalidQuantity": {
                     "summary": "A measured and availability quantity cannot be supplied together.",
                     "value": {
+                      "detail": "Quantity must use exactly one mode.",
                       "errorCode": "domain_rule_violated",
+                      "errors": {
+                        "quantity": [
+                          "Quantity must use exactly one mode."
+                        ]
+                      },
                       "status": 422,
-                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00"
+                      "title": "Unprocessable Entity",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
                     }
                   }
                 },
@@ -789,6 +1070,52 @@
               }
             },
             "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "rateLimitFailure": {
+                    "summary": "The bounded mutation rate was exceeded.",
+                    "value": {
+                      "detail": "The request rate limit was exceeded.",
+                      "errorCode": "rate_limit_exceeded",
+                      "status": 429,
+                      "title": "Too Many Requests",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "The mutation rate limit was exceeded."
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unexpectedFailure": {
+                    "summary": "An unexpected error was safely redacted.",
+                    "value": {
+                      "detail": "An unexpected error occurred.",
+                      "errorCode": "unexpected_error",
+                      "status": 500,
+                      "title": "Internal Server Error",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "An unexpected server error occurred."
           }
         },
         "security": [
@@ -838,6 +1165,39 @@
           "204": {
             "description": "No Content"
           },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "The request or CSRF token is invalid."
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "authenticationFailure": {
+                    "summary": "The backend-managed session is absent or invalid.",
+                    "value": {
+                      "detail": "Authentication is required.",
+                      "errorCode": "authentication_required",
+                      "status": 401,
+                      "title": "Unauthorized",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Authentication is required."
+          },
           "404": {
             "content": {
               "application/problem+json": {
@@ -861,12 +1221,71 @@
           "428": {
             "content": {
               "application/problem+json": {
+                "examples": {
+                  "missingPrecondition": {
+                    "summary": "The mutation requires If-Match.",
+                    "value": {
+                      "detail": "If-Match is required.",
+                      "errorCode": "precondition_required",
+                      "status": 428,
+                      "title": "Precondition Required",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
             "description": "Precondition Required"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "rateLimitFailure": {
+                    "summary": "The bounded mutation rate was exceeded.",
+                    "value": {
+                      "detail": "The request rate limit was exceeded.",
+                      "errorCode": "rate_limit_exceeded",
+                      "status": 429,
+                      "title": "Too Many Requests",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "The mutation rate limit was exceeded."
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unexpectedFailure": {
+                    "summary": "An unexpected error was safely redacted.",
+                    "value": {
+                      "detail": "An unexpected error occurred.",
+                      "errorCode": "unexpected_error",
+                      "status": 500,
+                      "title": "Internal Server Error",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "An unexpected server error occurred."
           }
         },
         "security": [
@@ -911,6 +1330,29 @@
               }
             }
           },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "authenticationFailure": {
+                    "summary": "The backend-managed session is absent or invalid.",
+                    "value": {
+                      "detail": "Authentication is required.",
+                      "errorCode": "authentication_required",
+                      "status": 401,
+                      "title": "Unauthorized",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Authentication is required."
+          },
           "404": {
             "content": {
               "application/problem+json": {
@@ -920,6 +1362,29 @@
               }
             },
             "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unexpectedFailure": {
+                    "summary": "An unexpected error was safely redacted.",
+                    "value": {
+                      "detail": "An unexpected error occurred.",
+                      "errorCode": "unexpected_error",
+                      "status": 500,
+                      "title": "Internal Server Error",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "An unexpected server error occurred."
           }
         },
         "security": [
@@ -992,6 +1457,39 @@
               }
             }
           },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "The request or CSRF token is invalid."
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "authenticationFailure": {
+                    "summary": "The backend-managed session is absent or invalid.",
+                    "value": {
+                      "detail": "Authentication is required.",
+                      "errorCode": "authentication_required",
+                      "status": 401,
+                      "title": "Unauthorized",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Authentication is required."
+          },
           "404": {
             "content": {
               "application/problem+json": {
@@ -1012,6 +1510,29 @@
             },
             "description": "Precondition Failed"
           },
+          "415": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unsupportedMediaType": {
+                    "summary": "The request content type is unsupported.",
+                    "value": {
+                      "detail": "The request content type is not supported.",
+                      "errorCode": "unsupported_media_type",
+                      "status": 415,
+                      "title": "Unsupported Media Type",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "The request content type is not supported."
+          },
           "422": {
             "content": {
               "application/problem+json": {
@@ -1025,12 +1546,71 @@
           "428": {
             "content": {
               "application/problem+json": {
+                "examples": {
+                  "missingPrecondition": {
+                    "summary": "The mutation requires If-Match.",
+                    "value": {
+                      "detail": "If-Match is required.",
+                      "errorCode": "precondition_required",
+                      "status": 428,
+                      "title": "Precondition Required",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
             "description": "Precondition Required"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "rateLimitFailure": {
+                    "summary": "The bounded mutation rate was exceeded.",
+                    "value": {
+                      "detail": "The request rate limit was exceeded.",
+                      "errorCode": "rate_limit_exceeded",
+                      "status": 429,
+                      "title": "Too Many Requests",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "The mutation rate limit was exceeded."
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unexpectedFailure": {
+                    "summary": "An unexpected error was safely redacted.",
+                    "value": {
+                      "detail": "An unexpected error occurred.",
+                      "errorCode": "unexpected_error",
+                      "status": 500,
+                      "title": "Internal Server Error",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "An unexpected server error occurred."
           }
         },
         "security": [
@@ -1112,6 +1692,29 @@
           "200": {
             "content": {
               "application/json": {
+                "examples": {
+                  "completedAdjustmentReplay": {
+                    "summary": "The exact semantic response returned for a completed adjustment replay.",
+                    "value": {
+                      "createdAt": "2026-07-31T00:00:00Z",
+                      "customLocation": null,
+                      "lotId": "00000000-0000-0000-0000-000000000001",
+                      "notes": null,
+                      "packageState": "Sealed",
+                      "printedExpirationDate": "2026-12-31",
+                      "productId": "00000000-0000-0000-0000-000000000002",
+                      "productName": "Red lentils",
+                      "quantity": {
+                        "availabilityState": null,
+                        "measuredValue": 375,
+                        "unit": "Gram"
+                      },
+                      "storageLocation": "Pantry",
+                      "updatedAt": "2026-07-31T00:00:00Z",
+                      "version": "opaque-adjusted-version"
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/LotResponse"
                 }
@@ -1137,6 +1740,29 @@
             },
             "description": "Bad Request"
           },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "authenticationFailure": {
+                    "summary": "The backend-managed session is absent or invalid.",
+                    "value": {
+                      "detail": "Authentication is required.",
+                      "errorCode": "authentication_required",
+                      "status": 401,
+                      "title": "Unauthorized",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Authentication is required."
+          },
           "404": {
             "content": {
               "application/problem+json": {
@@ -1154,9 +1780,12 @@
                   "reusedIdempotencyKey": {
                     "summary": "The key was used for a different semantic command.",
                     "value": {
+                      "detail": "The Idempotency-Key was used for a different request.",
                       "errorCode": "idempotency_key_reused",
                       "status": 409,
-                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00"
+                      "title": "Conflict",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
                     }
                   }
                 },
@@ -1174,9 +1803,12 @@
                   "staleEtag": {
                     "summary": "The supplied opaque ETag is no longer current.",
                     "value": {
+                      "detail": "The inventory lot was modified.",
                       "errorCode": "precondition_failed",
                       "status": 412,
-                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00"
+                      "title": "Precondition Failed",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
                     }
                   }
                 },
@@ -1187,9 +1819,50 @@
             },
             "description": "Precondition Failed"
           },
+          "415": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unsupportedMediaType": {
+                    "summary": "The request content type is unsupported.",
+                    "value": {
+                      "detail": "The request content type is not supported.",
+                      "errorCode": "unsupported_media_type",
+                      "status": 415,
+                      "title": "Unsupported Media Type",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "The request content type is not supported."
+          },
           "422": {
             "content": {
               "application/problem+json": {
+                "examples": {
+                  "domainRuleFailure": {
+                    "summary": "The adjustment violates an inventory rule.",
+                    "value": {
+                      "detail": "The adjustment exceeds the current quantity.",
+                      "errorCode": "domain_rule_violated",
+                      "errors": {
+                        "value": [
+                          "The adjustment exceeds the current quantity."
+                        ]
+                      },
+                      "status": 422,
+                      "title": "Unprocessable Entity",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1200,12 +1873,71 @@
           "428": {
             "content": {
               "application/problem+json": {
+                "examples": {
+                  "missingPrecondition": {
+                    "summary": "The mutation requires If-Match.",
+                    "value": {
+                      "detail": "If-Match is required.",
+                      "errorCode": "precondition_required",
+                      "status": 428,
+                      "title": "Precondition Required",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
             "description": "Precondition Required"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "rateLimitFailure": {
+                    "summary": "The bounded mutation rate was exceeded.",
+                    "value": {
+                      "detail": "The request rate limit was exceeded.",
+                      "errorCode": "rate_limit_exceeded",
+                      "status": 429,
+                      "title": "Too Many Requests",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "The mutation rate limit was exceeded."
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unexpectedFailure": {
+                    "summary": "An unexpected error was safely redacted.",
+                    "value": {
+                      "detail": "An unexpected error occurred.",
+                      "errorCode": "unexpected_error",
+                      "status": 500,
+                      "title": "Internal Server Error",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "An unexpected server error occurred."
           }
         },
         "security": [
@@ -1247,6 +1979,29 @@
             },
             "description": "OK"
           },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "authenticationFailure": {
+                    "summary": "The backend-managed session is absent or invalid.",
+                    "value": {
+                      "detail": "Authentication is required.",
+                      "errorCode": "authentication_required",
+                      "status": 401,
+                      "title": "Unauthorized",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Authentication is required."
+          },
           "404": {
             "content": {
               "application/problem+json": {
@@ -1256,6 +2011,29 @@
               }
             },
             "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unexpectedFailure": {
+                    "summary": "An unexpected error was safely redacted.",
+                    "value": {
+                      "detail": "An unexpected error occurred.",
+                      "errorCode": "unexpected_error",
+                      "status": 500,
+                      "title": "Internal Server Error",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "An unexpected server error occurred."
           }
         },
         "security": [
@@ -1286,12 +2064,48 @@
           "401": {
             "content": {
               "application/problem+json": {
+                "examples": {
+                  "authenticationFailure": {
+                    "summary": "The backend-managed session is absent or invalid.",
+                    "value": {
+                      "detail": "Authentication is required.",
+                      "errorCode": "authentication_required",
+                      "status": 401,
+                      "title": "Unauthorized",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             },
             "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "examples": {
+                  "unexpectedFailure": {
+                    "summary": "An unexpected error was safely redacted.",
+                    "value": {
+                      "detail": "An unexpected error occurred.",
+                      "errorCode": "unexpected_error",
+                      "status": 500,
+                      "title": "Internal Server Error",
+                      "traceId": "00-00000000000000000000000000000000-0000000000000000-00",
+                      "type": "about:blank"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "An unexpected server error occurred."
           }
         },
         "security": [
@@ -1338,12 +2152,13 @@
   },
   "servers": [
     {
-      "description": "KitchenFlow local HTTPS development endpoint.",
-      "url": "https://localhost:7443"
+      "description": "Current KitchenFlow backend origin. Local development defaults to https://localhost:7443.",
+      "url": "/"
     }
   ],
   "tags": [
     {
+      "description": "KitchenFlow authenticated backend and health operations.",
       "name": "KitchenFlow.Api"
     }
   ]

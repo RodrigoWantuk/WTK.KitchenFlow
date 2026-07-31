@@ -1,0 +1,10 @@
+extends:
+  - recommended
+
+rules:
+  # OIDC login/logout are truthful redirect-only operations, so manufacturing a 2xx response would
+  # misrepresent runtime behavior.
+  operation-2xx-response: off
+  # Health endpoints intentionally have no client-error response, while framework failures for API
+  # routes are verified by executable contract tests.
+  operation-4xx-response: off
