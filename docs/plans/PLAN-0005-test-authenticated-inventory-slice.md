@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Unassigned independent testing agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29T00:25:00Z
+- **Last updated:** 2026-07-31T03:29:19Z
 - **Branch:** `agent/plan-0005-test-inventory-slice`
 - **Pull request:** Not opened
 - **System under test:** Stable PLAN-0003 and PLAN-0004 pull-request commits in an integrated test environment
@@ -74,16 +74,16 @@ Excluded features must not appear as falsely functional UI or hidden backend dep
 Before execution, fill all fields and commit them:
 
 - **Repository:** `RodrigoWantuk/WTK.KitchenFlow`
-- **Backend PR and commit:** Required
+- **Backend PR and commit:** [PR #9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) candidate `0e9d58540e5919dcf6e808c9fe0b1be73cc4033d`; pending fresh independent review
 - **Frontend PR and commit:** Required
 - **Integrated branch/commit or environment image digest:** Required
-- **OpenAPI snapshot SHA:** Required
+- **OpenAPI snapshot SHA:** Git blob `39348047801fa96422f9d88460d58917ffc26db8` from backend candidate `0e9d58540e5919dcf6e808c9fe0b1be73cc4033d`
 - **Lovable source repository commit:** Required
 - **Operating system:** Windows or Linux, exact version
 - **Docker/Compose versions:** Required
 - **.NET SDK and Node versions:** Required
 - **Container image versions/digests:** Required
-- **Database migration revision:** Required
+- **Database migration revision:** `20260731024742_TightenExpirationProvenance` from backend candidate `0e9d58540e5919dcf6e808c9fe0b1be73cc4033d`
 - **Browser versions:** Chromium, Firefox, and WebKit through Playwright where supported
 - **Locales:** `en`, `pt-BR`, `es`
 - **Test users:** synthetic user A and user B only
@@ -368,10 +368,10 @@ Do not fix implementation in the independent test branch unless explicitly reass
 
 ## Execution state
 
-- **Current checkpoint:** Independent test plan is specified and ready; entry criteria are not yet met.
-- **Last completed step:** Planning only.
-- **Exact next action:** After PLAN-0003 and PLAN-0004 publish stable PR commits, assign an independent testing agent, pin all baselines, and update status to `In Progress`.
-- **Blockers:** Stable backend/frontend implementation baselines do not exist yet.
+- **Current checkpoint:** Independent test plan is specified and ready; the final PLAN-0003 backend, OpenAPI, and migration candidate is pinned, while full entry criteria are not yet met.
+- **Last completed step:** Pinned PLAN-0003 candidate `0e9d58540e5919dcf6e808c9fe0b1be73cc4033d` and its generated OpenAPI blob.
+- **Exact next action:** Complete PLAN-0003 independent review and PLAN-0004, then assign an independent testing agent, pin frontend/integrated environment/browser baselines, and update status to `In Progress`.
+- **Blockers:** Fresh PLAN-0003 review and stable frontend/integrated implementation baselines.
 - **Tests executed:** None.
 - **Defects found:** None.
 - **Evidence produced:** Planning traceability only.
@@ -379,6 +379,16 @@ Do not fix implementation in the independent test branch unless explicitly reass
 - **Working tree state:** Not applicable until claimed.
 
 ## Progress log
+
+### 2026-07-31T03:29:19Z — PLAN-0003 backend candidate pinned
+
+- **Checkpoint:** Pinned PR #9 runtime candidate `0e9d58540e5919dcf6e808c9fe0b1be73cc4033d`, OpenAPI blob `39348047801fa96422f9d88460d58917ffc26db8`, and latest migration `20260731024742_TightenExpirationProvenance`.
+- **Evidence:** PLAN-0003 local R10 matrix and Backend run `30601535339` pass; SHA-bound migration, vulnerability, TRX, and Gitleaks artifacts exist.
+- **Tests executed by PLAN-0005:** None. This is a baseline pin, not independent execution evidence.
+- **Coverage gaps:** Fresh independent backend review, PLAN-0004 frontend, integrated environment, browser versions, and full independent test execution remain.
+- **Result:** Backend candidate is immutable for independent review/testing; PLAN-0005 remains `Ready` and dependency-gated.
+- **Next action:** Pin the reviewed stable backend disposition and the PLAN-0004/integrated baselines before claiming this testing plan.
+- **Blockers or handoff notes:** The PLAN-0003 implementation author must not serve as PLAN-0005's independent testing agent.
 
 ### 2026-07-29T00:25:00Z — AI planning agent
 

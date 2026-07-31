@@ -5,12 +5,12 @@
 - **Priority:** Critical
 - **Owner:** Codex backend remediation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-31T03:24:46Z
+- **Last updated:** 2026-07-31T03:29:19Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, changes required)
-- **Current review head:** `fc92dd3c41ad99d64ae053f778cd5a6a46b84f44`
+- **Current review head:** `0e9d58540e5919dcf6e808c9fe0b1be73cc4033d`
 - **Current synchronized base:** `b798fed9e940d15f9c828ce34881f58d1cf516a9`
-- **Latest workflow evidence:** Backend run `30536903985` / run 38 passed for `fc92dd3`
+- **Latest workflow evidence:** Backend run `30601535339` passed for `0e9d58540e5919dcf6e808c9fe0b1be73cc4033d`
 - **Related specification:** PLAN-0002
 - **Related validation plan:** PLAN-0005
 - **Related ADRs:** ADR-0002, ADR-0003, ADR-0004, ADR-0006
@@ -310,8 +310,8 @@ Every commit must update this plan's `Execution state` and `Progress log` and th
 - [x] Idempotent migration SQL, upgrade evidence, retained artifacts, and forward-repair guidance exist.
 - [x] Developer and operator workflows are complete and executable.
 - [x] Backend workflow run 38 passed for review head `fc92dd3`.
-- [ ] A final workflow passes for the post-remediation candidate SHA.
-- [ ] PLAN-0005 receives the exact final candidate SHA.
+- [x] A final workflow passes for the post-remediation candidate SHA.
+- [x] PLAN-0005 receives the exact final candidate SHA.
 - [ ] A fresh independent reviewer confirms no critical/high issue remains.
 
 ## Required final evidence
@@ -337,15 +337,26 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** R2-R9 are complete. R10 local validation passes; run `30601354305` proves corrected CI dependencies and all 110 tests, then exposes one shell-quoting defect in the migration-history assertion now corrected.
+- **Current checkpoint:** R2-R9 are complete. Final candidate `0e9d58540e5919dcf6e808c9fe0b1be73cc4033d` is zero behind `main`; complete local R10 and Backend run `30601535339` pass, with SHA-bound retained evidence. PLAN-0005 pins this backend/OpenAPI candidate.
 - **Execution status:** In Progress, not Validating.
 - **Confirmed completed phases:** R1, R2, R3, R4, R5, R6, R7, R8, and R9.
 - **Partially completed phase:** R10.
-- **Current blocker:** None external. Remaining work is final-candidate acceptance evidence.
+- **Current blocker:** Fresh independent review of the final candidate is external and remains required.
 - **Contract disposition:** OpenAPI snapshot is provisional and must not be consumed as PLAN-0004's stable live-client contract.
-- **Exact next action:** Commit/push the corrected SQL assertion, require a fully green final workflow, then pin PLAN-0005 and request independent review.
+- **Exact next action:** Commit/push the candidate pin and final evidence, request a fresh independent review against the resulting documentation-only head and runtime candidate `0e9d585`, and keep the PR draft until no critical/high defect remains.
 
 ## Progress log
+
+### 2026-07-31T03:29:19Z — R10 final candidate and CI evidence established
+
+- **Candidate:** Runtime/contract/migration candidate `0e9d58540e5919dcf6e808c9fe0b1be73cc4033d`, synchronized base `b798fed9e940d15f9c828ce34881f58d1cf516a9`, OpenAPI blob `39348047801fa96422f9d88460d58917ffc26db8`.
+- **Local result:** Locked restore, formatting, Release build with zero warnings/errors, unit 20/20, architecture 10/10, PostgreSQL integration/security/contract/migration 80/80, zero skipped, vulnerability audit, empty/upgrade/idempotent migrations, HTTPS health, OpenAPI export/lint/drift, Compose readiness, and accepted real-Keycloak browser/two-user smoke all passed.
+- **CI result:** Backend run `30601535339` passed build-and-test and Gitleaks. It executed locked restore, fail-closed vulnerability JSON, formatting, Release build, healthy PostgreSQL/Keycloak startup, all 110 tests, empty/upgrade migration, idempotent SQL generation/application twice/history assertion, OpenAPI export/lint/drift, and artifact upload.
+- **Retained evidence:** `backend-evidence-0e9d58540e5919dcf6e808c9fe0b1be73cc4033d` contains the migration SQL, vulnerability JSON, and TRX results; the separate Gitleaks SARIF artifact also exists. The artifact is tied to the PR head rather than the synthetic merge commit.
+- **Material files changed:** PLAN-0003 evidence/state; PLAN-0005 backend/OpenAPI candidate pin and handoff; registry rows.
+- **Known failures or unverified behavior:** No local or CI gate is failing. A GitHub annotation notes that selected third-party actions still declare Node 20 metadata while the runner forces Node 24; the actions completed successfully and application/tooling execution uses pinned Node 24.18.0. Fresh independent review is still required before stable publication/completion.
+- **Blocker:** Fresh independent review.
+- **Exact next action:** Publish this evidence-only commit and request independent review without marking the PR ready or the contract stable prematurely.
 
 ### 2026-07-31T03:24:46Z — R10 CI migration assertion corrected
 
