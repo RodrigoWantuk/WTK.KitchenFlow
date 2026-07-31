@@ -36,6 +36,19 @@ public sealed class TelemetryRedactionTests
         Assert.True(development.IsReady);
     }
 
+    [Theory]
+    [InlineData(0, false)]
+    [InlineData(1, true)]
+    [InlineData(30, true)]
+    [InlineData(90, true)]
+    [InlineData(91, false)]
+    public void IdempotencyRetentionIsBoundedToTheDocumentedReplayWindow(int days, bool expected)
+    {
+        var options = new IdempotencyOptions { Retention = TimeSpan.FromDays(days) };
+
+        Assert.Equal(expected, options.IsValid());
+    }
+
     [Fact]
     public void SensitiveTelemetryTagsAreRemovedBeforeExport()
     {

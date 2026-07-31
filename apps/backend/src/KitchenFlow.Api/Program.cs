@@ -78,7 +78,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.OnRejected = async (context, cancellationToken) => await Results.Problem(statusCode: StatusCodes.Status429TooManyRequests, extensions: new Dictionary<string, object?> { ["errorCode"] = "rate_limit_exceeded" }).ExecuteAsync(context.HttpContext);
+    options.OnRejected = async (context, cancellationToken) => await Results.Problem(statusCode: StatusCodes.Status429TooManyRequests, extensions: new Dictionary<string, object?> { ["errorCode"] = "rate_limit_exceeded", ["traceId"] = context.HttpContext.TraceIdentifier }).ExecuteAsync(context.HttpContext);
     options.AddPolicy("authentication", context => RateLimitPartition.GetFixedWindowLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
     options.AddPolicy("mutation", context => RateLimitPartition.GetFixedWindowLimiter(context.User.FindFirst("sub")?.Value ?? context.User.Identity?.Name ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = 60, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 });
@@ -102,7 +102,7 @@ api.MapPost("/auth/login", (string? returnUrl) => Results.Challenge(new Authenti
 api.MapPost("/auth/logout", async (HttpContext context, IAntiforgery antiforgery) =>
 {
     try { await antiforgery.ValidateRequestAsync(context); }
-    catch (AntiforgeryValidationException) { return Results.Problem(statusCode: 400, extensions: new Dictionary<string, object?> { ["errorCode"] = "validation_failed" }); }
+    catch (AntiforgeryValidationException) { return Results.Problem(statusCode: 400, extensions: new Dictionary<string, object?> { ["errorCode"] = "validation_failed", ["traceId"] = context.TraceIdentifier }); }
     return Results.SignOut(new AuthenticationProperties { RedirectUri = "/" }, [CookieAuthenticationDefaults.AuthenticationScheme, "oidc"]);
 }).RequireAuthorization().Produces(StatusCodes.Status302Found).ProducesProblem(400).ProducesProblem(401);
 api.MapGet("/session", async (HttpContext context, IAntiforgery antiforgery, ICurrentUserAccessor currentUser, CancellationToken cancellationToken) =>

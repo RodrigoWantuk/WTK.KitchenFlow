@@ -337,7 +337,7 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** Commit A has transport-neutral explicit contracts for all seven Inventory use cases; R3 has concurrent different-payload adjustment coverage and typed startup-validated idempotency retention; metadata-correction history projects only actual changed field names.
+- **Current checkpoint:** Commit A has transport-neutral explicit contracts for all seven Inventory use cases; R3 has concurrent conflict coverage and bounded retention validation; rate-limit and logout CSRF errors now include safe trace IDs.
 - **Execution status:** In Progress, not Validating.
 - **Confirmed completed phase:** R1.
 - **Partially completed phases:** R2, R3, R4, R5, R6, R7, R8, and R9.
@@ -347,6 +347,18 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 - **Exact next action:** Split the shared Inventory use-case implementation into individual handler classes and add direct no-HTTP/no-PostgreSQL tests for each contract; then add R3 race/rollback acceptance tests.
 
 ## Progress log
+
+### 2026-07-30T17:50:00Z — R6 framework-error trace consistency and retention bounds
+
+- **Run delivery target:** Close two documented API error-contract gaps while making the configured idempotency retention boundary executable.
+- **Checkpoint:** Rate-limit rejections and logout CSRF rejections now include the safe request trace ID; tests cover all permitted and rejected 1–90-day idempotency retention boundaries.
+- **Material files changed:** API host error mapping, integration configuration tests, this plan, and `docs/plan-status.md`.
+- **Documentation delivered:** Retention-bound test names document the replay-window policy.
+- **Commands and validation performed:** `dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore`; `dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-build --filter "FullyQualifiedName~IdempotencyRetention"`; `dotnet format apps/backend/KitchenFlow.slnx --verify-no-changes --no-restore`.
+- **Result:** Release build passed with zero warnings/errors; 5 targeted retention tests and formatting verification passed.
+- **Known failures or unverified behavior:** Full framework-error normalization and endpoint-level rate-limit/logout assertions remain required. R2-R10 are not complete and the contract remains provisional.
+- **Blockers:** None external.
+- **Exact next action:** Add exact idempotency replay response/ETag and atomic rollback coverage, then implement the remaining framework-error and OpenAPI contract cases.
 
 ### 2026-07-30T17:25:00Z — R3 typed idempotency retention configuration (partial)
 
