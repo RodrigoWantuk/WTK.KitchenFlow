@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend remediation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-31T03:12:32Z
+- **Last updated:** 2026-07-31T03:20:27Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, changes required)
 - **Current review head:** `fc92dd3c41ad99d64ae053f778cd5a6a46b84f44`
@@ -337,15 +337,27 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** R2-R9 are complete. R10 is executing on current `main` base `b798fed9e940d15f9c828ce34881f58d1cf516a9`; Compose, PostgreSQL empty/upgrade/idempotent paths, HTTPS health, OpenAPI export/lint/drift, and the accepted real-Keycloak browser/two-user smoke pass.
+- **Current checkpoint:** R2-R9 are complete. R10 local validation passes at candidate `5124c6ee2a8e6192dfe9a0280908fcc91462c6bf`; final CI exposed and now corrects dependency ordering before OIDC challenge tests.
 - **Execution status:** In Progress, not Validating.
 - **Confirmed completed phases:** R1, R2, R3, R4, R5, R6, R7, R8, and R9.
 - **Partially completed phase:** R10.
 - **Current blocker:** None external. Remaining work is final-candidate acceptance evidence.
 - **Contract disposition:** OpenAPI snapshot is provisional and must not be consumed as PLAN-0004's stable live-client contract.
-- **Exact next action:** Commit the deterministic browser-smoke cleanup at the synchronized base, rerun the complete solution matrix at that candidate SHA, pin PLAN-0005, push, and require final CI plus independent review.
+- **Exact next action:** Commit and push the CI dependency-order/evidence-name correction, rerun the final workflow at the new candidate, then pin PLAN-0005 and request independent review.
 
 ## Progress log
+
+### 2026-07-31T03:20:27Z — R10 final workflow failure diagnosed and corrected
+
+- **Checkpoint and failure:** Published candidate `5124c6ee2a8e6192dfe9a0280908fcc91462c6bf`. Backend run `30601178657` passed Gitleaks, locked restore, vulnerability audit, formatting, Release build, unit tests 20/20, and architecture tests 10/10, but failed 9 of 80 integration cases before later gates.
+- **Root cause:** The workflow ran the integration suite before starting Keycloak. OIDC login/logout challenge cases correctly attempted standard discovery at the configured local authority and received connection refused, producing privacy-safe 500 responses instead of the expected redirects. The developer host already had healthy Compose services, which is why the identical 110-test local suite passed. This was CI topology ordering, not a product workaround.
+- **Correction:** Start and verify PostgreSQL/Keycloak before the complete test suite. Also bind the retained evidence artifact name to the PR head SHA rather than GitHub's synthetic pull-request merge SHA; push events continue to use `github.sha`.
+- **Material files changed:** Backend GitHub Actions workflow; this plan; and `docs/plan-status.md`.
+- **Commands and validation performed:** Pushed candidate; monitored run `30601178657`; downloaded the retained TRX evidence; inspected failed job logs and exception stacks; correlated every failure with OIDC discovery before Compose startup; and validated workflow diff/whitespace.
+- **Result:** Exact deterministic root cause identified. Gitleaks and all pre-test gates were green; the ordering and evidence-identity defects are corrected locally.
+- **Known failures or unverified behavior:** Corrected workflow has not run yet. Candidate `5124c6e` is superseded by the upcoming workflow-only commit.
+- **Blockers:** None.
+- **Exact next action:** Commit/push the corrected workflow and monitor its complete build/test/migration/OpenAPI/artifact/Gitleaks result.
 
 ### 2026-07-31T03:12:32Z — R10 trusted HTTPS and real-Keycloak validation stabilized
 
