@@ -122,9 +122,9 @@ Authoritative inventory arithmetic, reservations, unit conversion, and food-safe
 
 ### Phase 1: Faithful import
 
-- [ ] Copy Emergent `frontend/` into `apps/frontend/`.
-- [ ] Record provenance.
-- [ ] Commit without feature refactors.
+- [x] Copy Emergent `frontend/` into `apps/frontend/`.
+- [x] Record provenance.
+- [x] Commit without feature refactors.
 
 ### Phase 2: Shared preparation route state
 
@@ -177,17 +177,26 @@ Authoritative inventory arithmetic, reservations, unit conversion, and food-safe
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0014 created; PLAN-0004 superseded; PLAN-0005/0011 reconciled; ADR-0007 drafted; branch `agent/plan-0014-integrate-emergent-frontend` created from `main` at `b5a36b4`.
-- **Last completed step:** Governance documentation for Phase 0.
-- **Exact next action:** Faithfully import Emergent `frontend/` at commit `69f798f66b7987c4ed785c52c90a5539bf46f52e` into `apps/frontend/` and commit with provenance.
+- **Current checkpoint:** Faithful Emergent frontend import at `69f798f66b7987c4ed785c52c90a5539bf46f52e` into `apps/frontend/`; provenance recorded.
+- **Last completed step:** Phase 1 faithful import commit.
+- **Exact next action:** Implement shared preparation-route application state so Home carousel and full route share completion/unlock behavior.
 - **Blockers:** None.
-- **Partially modified areas:** Documentation only.
-- **Validation performed:** Confirmed local Emergent clone at `69f798f66b7987c4ed785c52c90a5539bf46f52e`; `frontend/` present; excluded paths identified.
-- **Known failures or limitations:** No lockfile in Emergent snapshot; will be generated after import during stabilization.
-- **Working tree state:** Governance docs pending first commit.
+- **Partially modified areas:** None beyond imported snapshot and provenance doc.
+- **Validation performed:** Source commit verified; destination layout checked (`package.json`, `src/`, `public/`); no nested `frontend/frontend`; excluded backend/emergent/memory/test_reports/env.
+- **Known failures or limitations:** Snapshot still contains Emergent platform coupling and JavaScript sources; lockfile absent; features incomplete — addressed in later PLAN-0014 commits.
+- **Working tree state:** Import and provenance staged for this commit.
 - **Substantial run target:** Complete PLAN-0014 through draft PR in this run.
 
 ## Progress log
+
+### 2026-07-31T20:17:24Z — Cursor agent
+
+- **Checkpoint:** Faithful import of Emergent `frontend/` into `apps/frontend/`.
+- **Changes included in the commit:** Full filtered copy of snapshot sources; `docs/development/emergent-frontend-import-provenance.md`; plan/registry updates.
+- **Validation performed:** `git rev-parse` equals `69f798f66b7987c4ed785c52c90a5539bf46f52e`; layout checks passed.
+- **Result:** Official tree populated; no feature refactors in this commit.
+- **Next action:** Shared preparation route state (Home + full route).
+- **Blockers or handoff notes:** Do not treat Emergent as a sync remote.
 
 ### 2026-07-31T20:15:00Z — Cursor agent
 
