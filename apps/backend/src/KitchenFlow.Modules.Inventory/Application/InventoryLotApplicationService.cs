@@ -10,10 +10,10 @@ namespace KitchenFlow.Modules.Inventory.Application;
 public sealed record InventoryQuantity(decimal? MeasuredValue, string? Unit, string? AvailabilityState);
 
 /// <summary>
-/// Application representation of one owner-scoped inventory lot. <see cref="Version"/> is the
-/// raw persisted optimistic-concurrency value; only an outer HTTP adapter may make it opaque.
+/// Application representation of one owner-scoped inventory lot. <see cref="ConcurrencyToken"/>
+/// is random, resource-owned state; only an outer HTTP adapter may encode it as an ETag.
 /// </summary>
-public sealed record InventoryLotView(Guid LotId, Guid ProductId, string ProductName, InventoryQuantity Quantity, string StorageLocation, string? CustomLocation, string? PackageState, DateOnly? PrintedExpirationDate, string? Notes, long Version, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt);
+public sealed record InventoryLotView(Guid LotId, Guid ProductId, string ProductName, InventoryQuantity Quantity, string StorageLocation, string? CustomLocation, string? PackageState, DateOnly? PrintedExpirationDate, string? Notes, Guid ConcurrencyToken, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt);
 
 /// <summary>Application representation of an immutable inventory history entry.</summary>
 public sealed record InventoryHistoryEntry(Guid EntryId, string Kind, string? TransactionType, InventoryQuantity? PreviousQuantity, InventoryQuantity? ResultingQuantity, string? ReasonCode, IReadOnlyList<string>? ChangedFields, DateTimeOffset OccurredAt);
@@ -72,16 +72,16 @@ public sealed record AdjustInventoryLotCommand(Guid LotId, string? Type, decimal
 public sealed record DeleteInventoryLotCommand(Guid LotId, InventoryVersionPrecondition Precondition, string CorrelationId);
 
 /// <summary>Represents the client concurrency precondition after an outer transport decodes it.</summary>
-public sealed record InventoryVersionPrecondition(bool IsPresent, bool IsValid, long Version)
+public sealed record InventoryVersionPrecondition(bool IsPresent, bool IsValid, Guid Token)
 {
     /// <summary>Creates the missing-header precondition state.</summary>
-    public static InventoryVersionPrecondition Missing { get; } = new(false, false, 0);
+    public static InventoryVersionPrecondition Missing { get; } = new(false, false, Guid.Empty);
 
     /// <summary>Creates the invalid-token precondition state.</summary>
-    public static InventoryVersionPrecondition Invalid { get; } = new(true, false, 0);
+    public static InventoryVersionPrecondition Invalid { get; } = new(true, false, Guid.Empty);
 
     /// <summary>Creates a valid expected-version precondition.</summary>
-    public static InventoryVersionPrecondition Valid(long version) => new(true, true, version);
+    public static InventoryVersionPrecondition Valid(Guid token) => new(true, true, token);
 }
 
 /// <summary>Executes the owner-scoped create-lot use case.</summary>
@@ -203,7 +203,7 @@ public sealed class InventoryLotApplicationWorkflow(
         var prior = await writeStore.FindIdempotencyAsync(user.Id, "inventory.lots.create", command.IdempotencyKey.Value, cancellationToken);
         if (prior is not null)
         {
-            return Replay(prior, hash, 201);
+            return Replay(prior, hash);
         }
 
         var now = timeProvider.GetUtcNow();
@@ -212,11 +212,11 @@ public sealed class InventoryLotApplicationWorkflow(
         var domainLot = CreateDomainLot(user.Id, domainProduct.Id, command, now);
         var response = ToView(domainLot, domainProduct);
         var initial = InventoryTransaction.Create(domainLot.Id, user.Id, InventoryTransactionType.Initial, null, domainLot.Quantity, null, null, command.IdempotencyKey, now);
-        var idempotency = new InventoryIdempotencyWrite(command.IdempotencyKey.Value, "inventory.lots.create", hash, 201, JsonSerializer.Serialize(response), response.Version, now);
+        var idempotency = new InventoryIdempotencyWrite(command.IdempotencyKey.Value, "inventory.lots.create", hash, InventoryApplicationSuccess.Created, response, now);
         var outcome = await writeStore.SaveCreatedAsync(new InventoryLotCreationWrite(user.Id, domainProduct, domainLot, initial, command.CorrelationId, idempotency), cancellationToken);
         return outcome == InventoryWriteOutcome.Saved
             ? InventoryApplicationResult<InventoryLotView>.Succeeded(response, InventoryApplicationSuccess.Created, InventoryIdempotencyDisposition.Completed)
-            : Replay(await writeStore.FindIdempotencyAsync(user.Id, "inventory.lots.create", command.IdempotencyKey.Value, cancellationToken), hash, 201);
+            : Replay(await writeStore.FindIdempotencyAsync(user.Id, "inventory.lots.create", command.IdempotencyKey.Value, cancellationToken), hash);
     }
 
     /// <summary>Corrects mutable metadata for an owner-scoped lot using optimistic concurrency.</summary>
@@ -259,7 +259,7 @@ public sealed class InventoryLotApplicationWorkflow(
         var prior = await writeStore.FindIdempotencyAsync(user.Id, "inventory.lots.adjust", command.IdempotencyKey.Value, cancellationToken);
         if (prior is not null)
         {
-            return Replay(prior, hash, 200);
+            return Replay(prior, hash);
         }
 
         return await MutateAsync(command.LotId, command.Precondition, command.CorrelationId, command.IdempotencyKey, "inventory.lots.adjust", hash, "inventory.lot.adjusted", static (_, _) => "{}", cancellationToken, (lot, _, now) => lifecycleUseCase.ApplyAdjustment(lot, adjustment, command.IdempotencyKey.Value, now));
@@ -267,7 +267,7 @@ public sealed class InventoryLotApplicationWorkflow(
 
     /// <summary>Soft-deletes one active owner-scoped lot and records its immutable deletion transition.</summary>
     public Task<InventoryApplicationResult<InventoryLotView>> DeleteAsync(DeleteInventoryLotCommand command, CancellationToken cancellationToken) =>
-        MutateAsync(command.LotId, command.Precondition, command.CorrelationId, null, null, null, "inventory.lot.deleted", static (_, _) => "{}", cancellationToken, (lot, _, now) => lifecycleUseCase.Delete(lot, now), 204);
+        MutateAsync(command.LotId, command.Precondition, command.CorrelationId, null, null, null, "inventory.lot.deleted", static (_, _) => "{}", cancellationToken, (lot, _, now) => lifecycleUseCase.Delete(lot, now), InventoryApplicationSuccess.Deleted);
 
     /// <summary>Lists immutable transaction history for one owner-scoped lot.</summary>
     public async Task<InventoryApplicationResult<IReadOnlyList<InventoryHistoryEntry>>> HistoryAsync(Guid lotId, CancellationToken cancellationToken)
@@ -279,7 +279,7 @@ public sealed class InventoryLotApplicationWorkflow(
             : InventoryApplicationResult<IReadOnlyList<InventoryHistoryEntry>>.Succeeded(transactions.Select(item => new InventoryHistoryEntry(item.EntryId, item.Kind, item.TransactionType, ToQuantity(item.PreviousMeasuredValue, item.PreviousMeasuredUnit, item.PreviousAvailabilityState), ToQuantity(item.ResultingMeasuredValue, item.ResultingMeasuredUnit, item.ResultingAvailabilityState), item.ReasonCode, item.ChangedFields, item.OccurredAt)).ToList());
     }
 
-    private async Task<InventoryApplicationResult<InventoryLotView>> MutateAsync(Guid lotId, InventoryVersionPrecondition precondition, string correlationId, Guid? idempotencyKey, string? idempotencyScope, string? idempotencyHash, string auditEventName, Func<InventoryLot, Product, string> auditMetadata, CancellationToken cancellationToken, Func<InventoryLot, Product, DateTimeOffset, InventoryTransaction?> operation, int successStatus = 200)
+    private async Task<InventoryApplicationResult<InventoryLotView>> MutateAsync(Guid lotId, InventoryVersionPrecondition precondition, string correlationId, Guid? idempotencyKey, string? idempotencyScope, string? idempotencyHash, string auditEventName, Func<InventoryLot, Product, string> auditMetadata, CancellationToken cancellationToken, Func<InventoryLot, Product, DateTimeOffset, InventoryTransaction?> operation, InventoryApplicationSuccess success = InventoryApplicationSuccess.Succeeded)
     {
         if (!precondition.IsPresent) { return Failure<InventoryLotView>("precondition_required", "If-Match is required."); }
         if (!precondition.IsValid) { return Failure<InventoryLotView>("precondition_failed", "The inventory lot was modified."); }
@@ -287,7 +287,7 @@ public sealed class InventoryLotApplicationWorkflow(
         var user = await currentUser.GetCurrentAsync(cancellationToken);
         var state = await writeStore.LoadActiveAsync(user.Id, lotId, cancellationToken);
         if (state is null) { return Failure<InventoryLotView>("resource_not_found", "The inventory lot was not found."); }
-        if (state.Lot.Version != precondition.Version) { return Failure<InventoryLotView>("precondition_failed", "The inventory lot was modified."); }
+        if (state.Lot.ConcurrencyToken != precondition.Token) { return Failure<InventoryLotView>("precondition_failed", "The inventory lot was modified."); }
 
         try
         {
@@ -299,17 +299,18 @@ public sealed class InventoryLotApplicationWorkflow(
                 return InventoryApplicationResult<InventoryLotView>.Succeeded(ToView(state.Lot, state.Product));
             }
 
+            var expectedVersion = state.Lot.Version;
             var now = timeProvider.GetUtcNow();
             var transaction = operation(state.Lot, state.Product, now);
             var response = ToView(state.Lot, state.Product);
-            var idempotency = idempotencyKey is null ? null : new InventoryIdempotencyWrite(idempotencyKey.Value, idempotencyScope!, idempotencyHash!, 200, JsonSerializer.Serialize(response), response.Version, now);
-            var outcome = await writeStore.SaveMutationAsync(new InventoryLotMutationWrite(user.Id, state.Lot, state.Product, precondition.Version, transaction, auditEventName, auditMetadataJson, correlationId, idempotency), cancellationToken);
-            if (outcome == InventoryWriteOutcome.Saved) { return successStatus == 204 ? InventoryApplicationResult<InventoryLotView>.Succeeded(null, InventoryApplicationSuccess.Deleted) : InventoryApplicationResult<InventoryLotView>.Succeeded(response, InventoryApplicationSuccess.Succeeded, idempotencyKey is null ? InventoryIdempotencyDisposition.NotApplicable : InventoryIdempotencyDisposition.Completed); }
+            var idempotency = idempotencyKey is null ? null : new InventoryIdempotencyWrite(idempotencyKey.Value, idempotencyScope!, idempotencyHash!, success, response, now);
+            var outcome = await writeStore.SaveMutationAsync(new InventoryLotMutationWrite(user.Id, state.Lot, state.Product, expectedVersion, transaction, auditEventName, auditMetadataJson, correlationId, idempotency), cancellationToken);
+            if (outcome == InventoryWriteOutcome.Saved) { return success == InventoryApplicationSuccess.Deleted ? InventoryApplicationResult<InventoryLotView>.Succeeded(null, InventoryApplicationSuccess.Deleted) : InventoryApplicationResult<InventoryLotView>.Succeeded(response, success, idempotencyKey is null ? InventoryIdempotencyDisposition.NotApplicable : InventoryIdempotencyDisposition.Completed); }
             if (outcome == InventoryWriteOutcome.ConcurrencyConflict)
             {
                 if (idempotencyKey is not null)
                 {
-                    var replay = Replay(await writeStore.FindIdempotencyAsync(user.Id, idempotencyScope!, idempotencyKey.Value, cancellationToken), idempotencyHash!, successStatus);
+                    var replay = Replay(await writeStore.FindIdempotencyAsync(user.Id, idempotencyScope!, idempotencyKey.Value, cancellationToken), idempotencyHash!);
                     if (replay.Problem is null || replay.Problem.ErrorCode is "idempotency_key_reused" or "idempotency_in_progress")
                     {
                         return replay;
@@ -320,7 +321,7 @@ public sealed class InventoryLotApplicationWorkflow(
             }
             return idempotencyKey is null
                 ? Failure<InventoryLotView>("persistence_conflict", "The inventory lot could not be persisted.")
-                : Replay(await writeStore.FindIdempotencyAsync(user.Id, idempotencyScope!, idempotencyKey.Value, cancellationToken), idempotencyHash!, successStatus);
+                : Replay(await writeStore.FindIdempotencyAsync(user.Id, idempotencyScope!, idempotencyKey.Value, cancellationToken), idempotencyHash!);
         }
         catch (InvalidOperationException exception)
         {
@@ -328,17 +329,18 @@ public sealed class InventoryLotApplicationWorkflow(
         }
     }
 
-    private InventoryApplicationResult<InventoryLotView> Replay(InventoryIdempotencyRead? record, string hash, int successStatus)
+    private InventoryApplicationResult<InventoryLotView> Replay(InventoryIdempotencyRead? record, string hash)
     {
         if (record is null || record.CompletedAt is null) { return Failure<InventoryLotView>("idempotency_in_progress", "The request is still being processed."); }
         if (!string.Equals(record.RequestHash, hash, StringComparison.Ordinal)) { return Failure<InventoryLotView>("idempotency_key_reused", "The Idempotency-Key was used for a different request."); }
-        var response = JsonSerializer.Deserialize<InventoryLotView>(record.ResponseBody!);
-        return response is null ? Failure<InventoryLotView>("idempotency_in_progress", "The request is still being processed.") : InventoryApplicationResult<InventoryLotView>.Succeeded(response, successStatus == 201 ? InventoryApplicationSuccess.Created : InventoryApplicationSuccess.Succeeded, InventoryIdempotencyDisposition.Replayed);
+        return record.Response is null || record.Success is null
+            ? Failure<InventoryLotView>("idempotency_in_progress", "The request is still being processed.")
+            : InventoryApplicationResult<InventoryLotView>.Succeeded(record.Response, record.Success.Value, InventoryIdempotencyDisposition.Replayed);
     }
 
     private InventoryApplicationResult<InventoryLotView> Success(InventoryLotView view) => InventoryApplicationResult<InventoryLotView>.Succeeded(view);
-    private static InventoryLotView ToView(InventoryLot lot, Product product) => new(lot.Id, lot.ProductId, product.DisplayName, new InventoryQuantity(lot.Quantity is LotQuantity.Measured measured ? measured.Value : null, lot.Quantity is LotQuantity.Measured unit ? unit.Unit.ToString() : null, lot.Quantity is LotQuantity.Availability availability ? availability.State.ToString() : null), lot.Storage.Location.ToString(), lot.Storage.CustomLocation, lot.PackageState?.ToString(), lot.PrintedExpiration?.Date, lot.Notes?.Value, lot.Version, lot.CreatedAt, lot.UpdatedAt);
-    private static InventoryLotView ToView(InventoryLotReadModel lot) => new(lot.LotId, lot.ProductId, lot.ProductName, new InventoryQuantity(lot.MeasuredValue, lot.MeasuredUnit, lot.AvailabilityState), lot.StorageLocation, lot.CustomLocation, lot.PackageState, lot.PrintedExpirationDate, lot.Notes, lot.Version, lot.CreatedAt, lot.UpdatedAt);
+    private static InventoryLotView ToView(InventoryLot lot, Product product) => new(lot.Id, lot.ProductId, product.DisplayName, new InventoryQuantity(lot.Quantity is LotQuantity.Measured measured ? measured.Value : null, lot.Quantity is LotQuantity.Measured unit ? unit.Unit.ToString() : null, lot.Quantity is LotQuantity.Availability availability ? availability.State.ToString() : null), lot.Storage.Location.ToString(), lot.Storage.CustomLocation, lot.PackageState?.ToString(), lot.PrintedExpiration?.Date, lot.Notes?.Value, lot.ConcurrencyToken, lot.CreatedAt, lot.UpdatedAt);
+    private static InventoryLotView ToView(InventoryLotReadModel lot) => new(lot.LotId, lot.ProductId, lot.ProductName, new InventoryQuantity(lot.MeasuredValue, lot.MeasuredUnit, lot.AvailabilityState), lot.StorageLocation, lot.CustomLocation, lot.PackageState, lot.PrintedExpirationDate, lot.Notes, lot.ConcurrencyToken, lot.CreatedAt, lot.UpdatedAt);
     private static InventoryQuantity? ToQuantity(decimal? measuredValue, string? unit, string? availabilityState) => measuredValue is null && unit is null && availabilityState is null ? null : new InventoryQuantity(measuredValue, unit, availabilityState);
     private static InventoryApplicationResult<T> Failure<T>(string code, string detail, IReadOnlyDictionary<string, string[]>? errors = null) => InventoryApplicationResult<T>.Failure(code, detail, errors);
     private static InventoryLot CreateDomainLot(Guid ownerUserId, Guid productId, CreateInventoryLotCommand command, DateTimeOffset now)

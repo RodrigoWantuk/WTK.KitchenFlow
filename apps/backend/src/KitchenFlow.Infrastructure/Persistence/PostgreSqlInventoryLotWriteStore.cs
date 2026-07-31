@@ -2,6 +2,7 @@ using KitchenFlow.Modules.Inventory.Application;
 using KitchenFlow.Modules.Inventory.Domain;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using System.Text.Json;
 
 namespace KitchenFlow.Infrastructure.Persistence;
 
@@ -23,7 +24,7 @@ public sealed class PostgreSqlInventoryLotWriteStore(ApplicationDbContext databa
             .SingleOrDefaultAsync(cancellationToken);
         return record is null
             ? null
-            : new InventoryIdempotencyRead(record.RequestHash, record.StatusCode, record.ResponseBody, long.TryParse(record.ETag, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var version) ? version : null, record.CompletedAt);
+            : new InventoryIdempotencyRead(record.RequestHash, ToSuccess(record.StatusCode), DeserializeResponse(record.ResponseBody), record.CompletedAt);
     }
 
     /// <inheritdoc />
@@ -35,7 +36,7 @@ public sealed class PostgreSqlInventoryLotWriteStore(ApplicationDbContext databa
             ToRecord(write.Lot),
             ToRecord(write.InitialTransaction),
             new AuditEventRecord { Id = Guid.NewGuid(), ActorUserId = write.OwnerUserId, EventName = "inventory.lot.created", TargetType = "inventory_lot", TargetId = write.Lot.Id, CorrelationId = write.CorrelationId, MetadataJson = "{}", OccurredAt = write.Lot.CreatedAt },
-            new IdempotencyRecord { Id = Guid.NewGuid(), OwnerUserId = write.OwnerUserId, Scope = idempotency.Scope, Key = idempotency.Key, RequestHash = idempotency.RequestHash, StatusCode = idempotency.StatusCode, ResponseBody = idempotency.ResponseBody, ETag = idempotency.Version.ToString(System.Globalization.CultureInfo.InvariantCulture), CreatedAt = idempotency.CreatedAt, CompletedAt = idempotency.CreatedAt });
+            ToRecord(write.OwnerUserId, idempotency));
         try
         {
             await database.SaveChangesAsync(cancellationToken);
@@ -87,7 +88,7 @@ public sealed class PostgreSqlInventoryLotWriteStore(ApplicationDbContext databa
         if (write.Idempotency is not null)
         {
             var item = write.Idempotency;
-            database.IdempotencyRecords.Add(new IdempotencyRecord { Id = Guid.NewGuid(), OwnerUserId = write.OwnerUserId, Scope = item.Scope, Key = item.Key, RequestHash = item.RequestHash, StatusCode = item.StatusCode, ResponseBody = item.ResponseBody, ETag = item.Version.ToString(System.Globalization.CultureInfo.InvariantCulture), CreatedAt = item.CreatedAt, CompletedAt = item.CreatedAt });
+            database.IdempotencyRecords.Add(ToRecord(write.OwnerUserId, item));
         }
         try
         {
@@ -124,12 +125,16 @@ public sealed class PostgreSqlInventoryLotWriteStore(ApplicationDbContext databa
         var quantity = item.MeasuredValue is { } value ? new LotQuantity.Measured(value, Enum.Parse<CanonicalUnit>(item.MeasuredUnit!)) : LotQuantity.FromAvailability(Enum.Parse<AvailabilityState>(item.AvailabilityState!));
         LotStorage.TryCreate(Enum.Parse<StorageLocation>(item.StorageLocation), item.CustomLocation, out var storage);
         PrivateNotes.TryCreate(item.Notes, out var notes);
-        return InventoryLot.Restore(item.Id, item.OwnerUserId, item.ProductId, quantity, storage!, item.PackageState is null ? null : Enum.Parse<PackageState>(item.PackageState), item.PrintedExpirationDate is null ? null : new PrintedExpiration(item.PrintedExpirationDate.Value, ExpirationProvenance.UserEntered), notes, item.Version, item.CreatedAt, item.UpdatedAt, item.DeletedAt);
+        return InventoryLot.Restore(item.Id, item.OwnerUserId, item.ProductId, quantity, storage!, item.PackageState is null ? null : Enum.Parse<PackageState>(item.PackageState), item.PrintedExpirationDate is null ? null : new PrintedExpiration(item.PrintedExpirationDate.Value, ExpirationProvenance.UserEntered), notes, item.Version, item.ConcurrencyToken, item.CreatedAt, item.UpdatedAt, item.DeletedAt);
     }
 
     private static ProductRecord ToRecord(Product item) => new() { Id = item.Id, OwnerUserId = item.OwnerUserId, DisplayName = item.DisplayName, NormalizedSearchName = item.NormalizedSearchName, CreatedAt = item.CreatedAt, UpdatedAt = item.UpdatedAt, IsDeleted = item.IsDeleted };
-    private static LotRecord ToRecord(InventoryLot item) => new() { Id = item.Id, OwnerUserId = item.OwnerUserId, ProductId = item.ProductId, MeasuredValue = item.Quantity is LotQuantity.Measured measured ? measured.Value : null, MeasuredUnit = item.Quantity is LotQuantity.Measured unit ? unit.Unit.ToString() : null, AvailabilityState = item.Quantity is LotQuantity.Availability availability ? availability.State.ToString() : null, StorageLocation = item.Storage.Location.ToString(), CustomLocation = item.Storage.CustomLocation, PackageState = item.PackageState?.ToString(), PrintedExpirationDate = item.PrintedExpiration?.Date, ExpirationProvenance = item.PrintedExpiration?.Provenance.ToString(), Notes = item.Notes?.Value, Version = item.Version, CreatedAt = item.CreatedAt, UpdatedAt = item.UpdatedAt, DeletedAt = item.DeletedAt };
+    private static LotRecord ToRecord(InventoryLot item) => new() { Id = item.Id, OwnerUserId = item.OwnerUserId, ProductId = item.ProductId, MeasuredValue = item.Quantity is LotQuantity.Measured measured ? measured.Value : null, MeasuredUnit = item.Quantity is LotQuantity.Measured unit ? unit.Unit.ToString() : null, AvailabilityState = item.Quantity is LotQuantity.Availability availability ? availability.State.ToString() : null, StorageLocation = item.Storage.Location.ToString(), CustomLocation = item.Storage.CustomLocation, PackageState = item.PackageState?.ToString(), PrintedExpirationDate = item.PrintedExpiration?.Date, ExpirationProvenance = item.PrintedExpiration?.Provenance.ToString(), Notes = item.Notes?.Value, Version = item.Version, ConcurrencyToken = item.ConcurrencyToken, CreatedAt = item.CreatedAt, UpdatedAt = item.UpdatedAt, DeletedAt = item.DeletedAt };
     private static TransactionRecord ToRecord(InventoryTransaction item) => new() { Id = item.Id, OwnerUserId = item.OwnerUserId, LotId = item.LotId, Type = item.Type.ToString(), PreviousMeasuredValue = item.PreviousQuantity is LotQuantity.Measured previous ? previous.Value : null, PreviousMeasuredUnit = item.PreviousQuantity is LotQuantity.Measured previousUnit ? previousUnit.Unit.ToString() : null, PreviousAvailabilityState = item.PreviousQuantity is LotQuantity.Availability previousAvailability ? previousAvailability.State.ToString() : null, ResultingMeasuredValue = item.ResultingQuantity is LotQuantity.Measured resulting ? resulting.Value : null, ResultingMeasuredUnit = item.ResultingQuantity is LotQuantity.Measured resultingUnit ? resultingUnit.Unit.ToString() : null, ResultingAvailabilityState = item.ResultingQuantity is LotQuantity.Availability resultingAvailability ? resultingAvailability.State.ToString() : null, ReasonCode = item.ReasonCode, Note = item.Note, IdempotencyKey = item.IdempotencyKey, OccurredAt = item.OccurredAt };
+    private static IdempotencyRecord ToRecord(Guid ownerUserId, InventoryIdempotencyWrite item) => new() { Id = Guid.NewGuid(), OwnerUserId = ownerUserId, Scope = item.Scope, Key = item.Key, RequestHash = item.RequestHash, StatusCode = ToStatusCode(item.Success), ResponseBody = JsonSerializer.Serialize(item.Response), ETag = item.Response.ConcurrencyToken.ToString("N"), CreatedAt = item.CreatedAt, CompletedAt = item.CreatedAt };
+    private static InventoryLotView? DeserializeResponse(string? value) => string.IsNullOrWhiteSpace(value) ? null : JsonSerializer.Deserialize<InventoryLotView>(value);
+    private static int ToStatusCode(InventoryApplicationSuccess success) => success == InventoryApplicationSuccess.Created ? 201 : success == InventoryApplicationSuccess.Deleted ? 204 : 200;
+    private static InventoryApplicationSuccess? ToSuccess(int statusCode) => statusCode switch { 201 => InventoryApplicationSuccess.Created, 204 => InventoryApplicationSuccess.Deleted, 200 => InventoryApplicationSuccess.Succeeded, _ => null };
 
     private static bool IsIdempotencyKeyConflict(DbUpdateException exception) =>
         exception.InnerException is PostgresException

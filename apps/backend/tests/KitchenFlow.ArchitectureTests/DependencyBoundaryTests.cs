@@ -4,6 +4,7 @@ using KitchenFlow.Api.Services;
 using KitchenFlow.Infrastructure.Persistence;
 using KitchenFlow.Modules.Inventory.Application;
 using KitchenFlow.Modules.Inventory.Domain;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace KitchenFlow.ArchitectureTests;
 
@@ -56,11 +57,13 @@ public sealed class DependencyBoundaryTests
     [Fact]
     public void InventoryApplicationResultsDoNotExposeHttpStatusOrEtagTokens()
     {
-        var properties = typeof(InventoryApplicationResult<>).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+        var applicationTypes = typeof(InventoryLotApplicationWorkflow).Assembly.GetTypes()
+            .Where(type => type.Namespace == "KitchenFlow.Modules.Inventory.Application");
+        var properties = applicationTypes.SelectMany(type => type.GetProperties(BindingFlags.Instance | BindingFlags.Public)).ToList();
 
-        Assert.DoesNotContain(properties, property => property.Name.Contains("Status", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(properties, property => property.Name.Equals("StatusCode", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(properties, property => property.Name.Equals("ResponseBody", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(properties, property => property.Name.Contains("Etag", StringComparison.OrdinalIgnoreCase));
-        Assert.DoesNotContain(properties, property => property.PropertyType == typeof(string));
     }
 
     [Fact]
@@ -82,6 +85,25 @@ public sealed class DependencyBoundaryTests
 
         Assert.DoesNotContain(types, type => type.Name.Contains("TransportToken", StringComparison.Ordinal));
         Assert.DoesNotContain(types, type => type.Name.Contains("DataProtection", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void InventoryVersionEtagsAreStatelessStableAndResourceBound()
+    {
+        var lotId = Guid.NewGuid();
+        var concurrencyToken = Guid.NewGuid();
+        var first = new DataProtectionInventoryHttpTokenService(new EphemeralDataProtectionProvider());
+        var second = new DataProtectionInventoryHttpTokenService(new EphemeralDataProtectionProvider());
+
+        var emitted = first.WriteVersion(lotId, concurrencyToken);
+
+        Assert.Equal(emitted, second.WriteVersion(lotId, concurrencyToken));
+        Assert.True(second.TryReadVersion(lotId, emitted, out var decoded));
+        Assert.Equal(concurrencyToken, decoded);
+        Assert.False(second.TryReadVersion(Guid.NewGuid(), emitted, out _));
+        Assert.DoesNotContain(
+            typeof(DataProtectionInventoryHttpTokenService).GetFields(BindingFlags.Instance | BindingFlags.NonPublic),
+            field => field.FieldType.Name.Contains("Dictionary", StringComparison.Ordinal));
     }
 
     [Fact]

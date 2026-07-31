@@ -17,8 +17,8 @@ public sealed class InventoryApplicationUseCaseTests
         var list = await new ListInventoryLotsHandler(workflow).ListAsync(new ListInventoryLotsQuery(101, null, null, null, null), CancellationToken.None);
         var get = await new GetInventoryLotHandler(workflow).GetAsync(Guid.NewGuid(), CancellationToken.None);
         var create = await new CreateInventoryLotHandler(workflow).CreateAsync(new CreateInventoryLotCommand("Tomato", 1m, "Gram", null, "Pantry", null, null, null, null, null, "test"), CancellationToken.None);
-        var update = await new UpdateInventoryLotHandler(workflow).UpdateAsync(new UpdateInventoryLotCommand(Guid.NewGuid(), null, "Other", null, null, null, null, InventoryVersionPrecondition.Valid(1), "test"), CancellationToken.None);
-        var adjust = await new AdjustInventoryLotHandler(workflow).AdjustAsync(new AdjustInventoryLotCommand(Guid.NewGuid(), "Consume", 1m, null, "meal", null, null, InventoryVersionPrecondition.Valid(1), "test"), CancellationToken.None);
+        var update = await new UpdateInventoryLotHandler(workflow).UpdateAsync(new UpdateInventoryLotCommand(Guid.NewGuid(), null, "Other", null, null, null, null, InventoryVersionPrecondition.Valid(Guid.NewGuid()), "test"), CancellationToken.None);
+        var adjust = await new AdjustInventoryLotHandler(workflow).AdjustAsync(new AdjustInventoryLotCommand(Guid.NewGuid(), "Consume", 1m, null, "meal", null, null, InventoryVersionPrecondition.Valid(Guid.NewGuid()), "test"), CancellationToken.None);
         var delete = await new DeleteInventoryLotHandler(workflow).DeleteAsync(new DeleteInventoryLotCommand(Guid.NewGuid(), InventoryVersionPrecondition.Missing, "test"), CancellationToken.None);
         var history = await new GetInventoryLotHistoryHandler(workflow).HistoryAsync(Guid.NewGuid(), CancellationToken.None);
 
@@ -34,7 +34,7 @@ public sealed class InventoryApplicationUseCaseTests
     [Fact]
     public async Task IncompleteIdempotencyReservationReturnsStableInProgressOutcome()
     {
-        var incomplete = new InventoryIdempotencyRead(new string('A', 64), 201, null, null, null);
+        var incomplete = new InventoryIdempotencyRead(new string('A', 64), InventoryApplicationSuccess.Created, null, null);
         var workflow = CreateWorkflow(new TestWriteStore(incomplete));
         var result = await new CreateInventoryLotHandler(workflow).CreateAsync(
             new CreateInventoryLotCommand("Tomato", 1m, "Gram", null, "Pantry", null, null, null, null, Guid.NewGuid(), "test"),

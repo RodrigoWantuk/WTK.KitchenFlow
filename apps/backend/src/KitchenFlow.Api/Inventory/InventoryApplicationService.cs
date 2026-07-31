@@ -1,9 +1,9 @@
 using System.Diagnostics;
-using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text.Json;
 using KitchenFlow.Modules.Inventory.Application;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace KitchenFlow.Api.Inventory;
 
@@ -71,7 +71,7 @@ public sealed class InventoryApplicationService(
     public async Task<IResult> HistoryAsync(Guid lotId, HttpContext context, CancellationToken cancellationToken) =>
         ToResult(await getHistory.HistoryAsync(lotId, cancellationToken), items => (IReadOnlyList<LotHistoryResponse>)items.Select(item => new LotHistoryResponse(item.EntryId, item.Kind, item.TransactionType, ToQuantity(item.PreviousQuantity), ToQuantity(item.ResultingQuantity), item.ReasonCode, item.ChangedFields, item.OccurredAt)).ToList(), context.TraceIdentifier);
 
-    private LotResponse ToResponse(InventoryLotView item) => ToResponse(item, tokens.WriteVersion(item.LotId, item.Version));
+    private LotResponse ToResponse(InventoryLotView item) => ToResponse(item, tokens.WriteVersion(item.LotId, item.ConcurrencyToken));
     private static LotResponse ToResponse(InventoryLotView item, string version) => new(item.LotId, item.ProductId, item.ProductName, ToQuantity(item.Quantity)!, item.StorageLocation, item.CustomLocation, item.PackageState, item.PrintedExpirationDate, item.Notes, version, item.CreatedAt, item.UpdatedAt);
     private static QuantityResponse? ToQuantity(InventoryQuantity? quantity) => quantity is null ? null : new QuantityResponse(quantity.MeasuredValue, quantity.Unit, quantity.AvailabilityState);
 
@@ -88,7 +88,7 @@ public sealed class InventoryApplicationService(
             return Results.NoContent();
         }
 
-        var version = tokens.WriteVersion(result.Value!.LotId, result.Value.Version);
+        var version = tokens.WriteVersion(result.Value!.LotId, result.Value.ConcurrencyToken);
         return new EtagResult<LotResponse>(ToResponse(result.Value!, version), Quote(version), StatusFor(result.Success));
     }
 
@@ -153,10 +153,10 @@ public sealed class InventoryApplicationService(
 public interface IInventoryHttpTokenService
 {
     /// <summary>Formats an opaque HTTP ETag from a trusted raw concurrency version.</summary>
-    string WriteVersion(Guid lotId, long version);
+    string WriteVersion(Guid lotId, Guid concurrencyToken);
 
-    /// <summary>Parses an opaque resource-bound HTTP ETag into a raw concurrency version.</summary>
-    bool TryReadVersion(Guid lotId, string token, out long version);
+    /// <summary>Parses an opaque resource-bound HTTP ETag into a concurrency token.</summary>
+    bool TryReadVersion(Guid lotId, string token, out Guid concurrencyToken);
 
     /// <summary>Formats a tamper-evident HTTP cursor from a trusted persistence sort position.</summary>
     string WriteCursor(InventoryLotReadCursor cursor);
@@ -168,29 +168,33 @@ public interface IInventoryHttpTokenService
 /// <summary>ASP.NET Core Data Protection implementation of the API-only inventory token boundary.</summary>
 public sealed class DataProtectionInventoryHttpTokenService(IDataProtectionProvider dataProtection) : IInventoryHttpTokenService
 {
-    private const string VersionPurpose = "KitchenFlow.Inventory.LotVersion.v1";
     private const string CursorPurpose = "KitchenFlow.Inventory.LotCursor.v1";
-    private readonly ConcurrentDictionary<(Guid LotId, long Version), string> versionTokens = new();
 
     /// <inheritdoc />
-    public string WriteVersion(Guid lotId, long version) =>
-        versionTokens.GetOrAdd((lotId, version), static (state, provider) =>
-            provider.CreateProtector(VersionPurpose).Protect($"{state.LotId:N}:{state.Version.ToString(System.Globalization.CultureInfo.InvariantCulture)}"), dataProtection);
-
-    /// <inheritdoc />
-    public bool TryReadVersion(Guid lotId, string token, out long version)
+    public string WriteVersion(Guid lotId, Guid concurrencyToken)
     {
-        version = 0;
+        Span<byte> payload = stackalloc byte[32];
+        lotId.TryWriteBytes(payload[..16]);
+        concurrencyToken.TryWriteBytes(payload[16..]);
+        return WebEncoders.Base64UrlEncode(payload);
+    }
+
+    /// <inheritdoc />
+    public bool TryReadVersion(Guid lotId, string token, out Guid concurrencyToken)
+    {
+        concurrencyToken = Guid.Empty;
         try
         {
-            var payload = dataProtection.CreateProtector(VersionPurpose).Unprotect(token);
-            var separator = payload.IndexOf(':', StringComparison.Ordinal);
-            return separator > 0 &&
-                Guid.TryParseExact(payload.AsSpan(0, separator), "N", out var tokenLotId) &&
-                tokenLotId == lotId &&
-                long.TryParse(payload.AsSpan(separator + 1), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out version);
+            var payload = WebEncoders.Base64UrlDecode(token);
+            if (payload.Length != 32 || new Guid(payload.AsSpan(0, 16)) != lotId)
+            {
+                return false;
+            }
+
+            concurrencyToken = new Guid(payload.AsSpan(16, 16));
+            return concurrencyToken != Guid.Empty;
         }
-        catch (CryptographicException)
+        catch (FormatException)
         {
             return false;
         }

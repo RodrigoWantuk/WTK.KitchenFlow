@@ -166,6 +166,7 @@ public sealed class InventoryDomainTests
         Assert.True(ProductName.TryCreate("  Heirloom Tomato  ", out var renamed));
         product.Rename(renamed!, now.AddMinutes(1));
         var lot = CreateMeasuredLot(10m, out _);
+        var originalConcurrencyToken = lot.ConcurrencyToken;
         Assert.True(LotStorage.TryCreate(StorageLocation.Freezer, null, out var storage));
 
         lot.UpdateMetadata(storage!, PackageState.Opened, new PrintedExpiration(new DateOnly(2026, 8, 1), ExpirationProvenance.UserEntered), null, now.AddMinutes(2));
@@ -174,6 +175,8 @@ public sealed class InventoryDomainTests
         Assert.Equal("HEIRLOOM TOMATO", product.NormalizedSearchName);
         Assert.Equal(now.AddMinutes(1), product.UpdatedAt);
         Assert.Equal(2, lot.Version);
+        Assert.NotEqual(Guid.Empty, lot.ConcurrencyToken);
+        Assert.NotEqual(originalConcurrencyToken, lot.ConcurrencyToken);
         Assert.Equal(now.AddMinutes(2), lot.UpdatedAt);
         Assert.Equal(StorageLocation.Freezer, lot.Storage.Location);
     }
@@ -186,8 +189,9 @@ public sealed class InventoryDomainTests
         Assert.True(LotStorage.TryCreate(StorageLocation.Pantry, null, out var storage));
         Assert.Throws<ArgumentException>(() => Product.Restore(Guid.Empty, Guid.NewGuid(), name!, now, now, false));
         Assert.Throws<ArgumentException>(() => Product.Restore(Guid.NewGuid(), Guid.NewGuid(), name!, now, now.AddMinutes(-1), false));
-        Assert.Throws<ArgumentException>(() => InventoryLot.Restore(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), new LotQuantity.Measured(1m, CanonicalUnit.Gram), storage!, null, null, null, 0, now, now, null));
-        Assert.Throws<ArgumentException>(() => InventoryLot.Restore(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), new LotQuantity.Measured(1m, CanonicalUnit.Gram), storage!, null, null, null, 1, now, now, now.AddMinutes(-1)));
+        Assert.Throws<ArgumentException>(() => InventoryLot.Restore(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), new LotQuantity.Measured(1m, CanonicalUnit.Gram), storage!, null, null, null, 0, Guid.NewGuid(), now, now, null));
+        Assert.Throws<ArgumentException>(() => InventoryLot.Restore(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), new LotQuantity.Measured(1m, CanonicalUnit.Gram), storage!, null, null, null, 1, Guid.NewGuid(), now, now, now.AddMinutes(-1)));
+        Assert.Throws<ArgumentException>(() => InventoryLot.Restore(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), new LotQuantity.Measured(1m, CanonicalUnit.Gram), storage!, null, null, null, 1, Guid.Empty, now, now, null));
         Assert.Throws<ArgumentOutOfRangeException>(() => new LotQuantity.Measured(-1m, CanonicalUnit.Gram));
         Assert.Throws<ArgumentOutOfRangeException>(() => new LotQuantity.Measured(1.0001m, CanonicalUnit.Gram));
         Assert.Throws<ArgumentOutOfRangeException>(() => LotQuantity.FromAvailability((AvailabilityState)99));

@@ -66,7 +66,8 @@ public sealed class PostgreSqlMigrationTests : IAsyncLifetime
             "20260729013459_InitialInventorySlice",
             "20260729123210_EnforceInventoryReferentialIntegrity",
             "20260729193936_EnforceInventoryHistoryIntegrity",
-            "20260731021725_EnforceAppendOnlyHistory"
+            "20260731021725_EnforceAppendOnlyHistory",
+            "20260731024742_TightenExpirationProvenance"
         ];
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseNpgsql(_postgres.GetConnectionString())
@@ -82,18 +83,19 @@ public sealed class PostgreSqlMigrationTests : IAsyncLifetime
             var productId = Guid.NewGuid();
             var lotId = Guid.NewGuid();
             var now = DateTimeOffset.UtcNow;
-            context.Users.Add(new InternalUser(ownerId, $"https://issuer.test/{ownerId}", $"subject-{ownerId}", now));
-            context.Products.Add(new ProductRecord { Id = productId, OwnerUserId = ownerId, DisplayName = "Upgrade product", NormalizedSearchName = "UPGRADE PRODUCT", CreatedAt = now, UpdatedAt = now });
-            context.Lots.Add(new LotRecord { Id = lotId, OwnerUserId = ownerId, ProductId = productId, MeasuredValue = 10.125m, MeasuredUnit = "Gram", StorageLocation = "Pantry", Version = 1, CreatedAt = now, UpdatedAt = now });
-            context.Transactions.Add(new TransactionRecord { Id = Guid.NewGuid(), OwnerUserId = ownerId, LotId = lotId, Type = "Initial", ResultingMeasuredValue = 10.125m, ResultingMeasuredUnit = "Gram", OccurredAt = now });
-            context.AuditEvents.Add(new AuditEventRecord { Id = Guid.NewGuid(), ActorUserId = ownerId, EventName = "inventory.lot.created", TargetType = "inventory_lot", TargetId = lotId, CorrelationId = "upgrade-test", MetadataJson = "{}", OccurredAt = now });
-            context.IdempotencyRecords.Add(new IdempotencyRecord { Id = Guid.NewGuid(), OwnerUserId = ownerId, Scope = "inventory.lots.create", Key = Guid.NewGuid(), RequestHash = new string('A', 64), StatusCode = 201, ResponseBody = "{}", ETag = "1", CreatedAt = now, CompletedAt = now });
-            await context.SaveChangesAsync();
-            context.ChangeTracker.Clear();
+            // Seed through the historical schema rather than the current EF model so this test
+            // remains capable of detecting additive-column upgrade defects.
+            await context.Database.ExecuteSqlInterpolatedAsync($"""INSERT INTO identity.users ("Id", "Issuer", "Subject", "CreatedAt") VALUES ({ownerId}, {$"https://issuer.test/{ownerId}"}, {$"subject-{ownerId}"}, {now})""");
+            await context.Database.ExecuteSqlInterpolatedAsync($"""INSERT INTO inventory.products ("Id", "OwnerUserId", "DisplayName", "NormalizedSearchName", "CreatedAt", "UpdatedAt", "IsDeleted") VALUES ({productId}, {ownerId}, {"Upgrade product"}, {"UPGRADE PRODUCT"}, {now}, {now}, {false})""");
+            await context.Database.ExecuteSqlInterpolatedAsync($"""INSERT INTO inventory.lots ("Id", "OwnerUserId", "ProductId", "MeasuredValue", "MeasuredUnit", "StorageLocation", "Version", "CreatedAt", "UpdatedAt") VALUES ({lotId}, {ownerId}, {productId}, {10.125m}, {"Gram"}, {"Pantry"}, {1L}, {now}, {now})""");
+            await context.Database.ExecuteSqlInterpolatedAsync($"""INSERT INTO inventory.transactions ("Id", "OwnerUserId", "LotId", "Type", "ResultingMeasuredValue", "ResultingMeasuredUnit", "OccurredAt") VALUES ({Guid.NewGuid()}, {ownerId}, {lotId}, {"Initial"}, {10.125m}, {"Gram"}, {now})""");
+            await context.Database.ExecuteSqlInterpolatedAsync($"""INSERT INTO platform.audit_events ("Id", "ActorUserId", "EventName", "TargetType", "TargetId", "CorrelationId", "MetadataJson", "OccurredAt") VALUES ({Guid.NewGuid()}, {ownerId}, {"inventory.lot.created"}, {"inventory_lot"}, {lotId}, {"upgrade-test"}, CAST({"{}"} AS jsonb), {now})""");
+            await context.Database.ExecuteSqlInterpolatedAsync($"""INSERT INTO platform.idempotency_records ("Id", "OwnerUserId", "Scope", "Key", "RequestHash", "StatusCode", "ResponseBody", "ETag", "CreatedAt", "CompletedAt") VALUES ({Guid.NewGuid()}, {ownerId}, {"inventory.lots.create"}, {Guid.NewGuid()}, {new string('A', 64)}, {201}, CAST({"{}"} AS jsonb), {"1"}, {now}, {now})""");
 
             await migrator.MigrateAsync();
 
             Assert.Equal(10.125m, await context.Lots.AsNoTracking().Where(lot => lot.Id == lotId).Select(lot => lot.MeasuredValue).SingleAsync());
+            Assert.NotEqual(Guid.Empty, await context.Lots.AsNoTracking().Where(lot => lot.Id == lotId).Select(lot => lot.ConcurrencyToken).SingleAsync());
             Assert.True(await context.Transactions.AsNoTracking().AnyAsync(transaction => transaction.LotId == lotId));
             Assert.True(await context.AuditEvents.AsNoTracking().AnyAsync(audit => audit.TargetId == lotId));
             Assert.True(await context.IdempotencyRecords.AsNoTracking().AnyAsync(record => record.OwnerUserId == ownerId));
@@ -272,7 +274,8 @@ public sealed class PostgreSqlMigrationTests : IAsyncLifetime
         var product = Product.Create(missingOwnerId, productName!, now);
         var lot = InventoryLot.Create(missingOwnerId, product.Id, new LotQuantity.Measured(10m, CanonicalUnit.Gram), storage!, null, null, null, now);
         var transaction = InventoryTransaction.Create(lot.Id, missingOwnerId, InventoryTransactionType.Initial, null, lot.Quantity, null, null, Guid.NewGuid(), now);
-        var idempotency = new InventoryIdempotencyWrite(Guid.NewGuid(), "inventory.lots.create", new string('A', 64), 201, "{}", lot.Version, now);
+        var response = new InventoryLotView(lot.Id, product.Id, product.DisplayName, new InventoryQuantity(10m, "Gram", null), "Pantry", null, null, null, null, lot.ConcurrencyToken, now, now);
+        var idempotency = new InventoryIdempotencyWrite(Guid.NewGuid(), "inventory.lots.create", new string('A', 64), InventoryApplicationSuccess.Created, response, now);
         var store = new PostgreSqlInventoryLotWriteStore(context);
 
         var exception = await Assert.ThrowsAsync<DbUpdateException>(() =>
@@ -311,10 +314,12 @@ public sealed class PostgreSqlMigrationTests : IAsyncLifetime
         Assert.True(ProductName.TryCreate("Atomic mutation product", out var productName));
         Assert.True(LotStorage.TryCreate(StorageLocation.Pantry, null, out var storage));
         var product = Product.Restore(productId, ownerId, productName!, now, now, false);
-        var lot = InventoryLot.Restore(lotId, ownerId, productId, new LotQuantity.Measured(10m, CanonicalUnit.Gram), storage!, null, null, null, 1, now, now, null);
+        var concurrencyToken = Guid.NewGuid();
+        var lot = InventoryLot.Restore(lotId, ownerId, productId, new LotQuantity.Measured(10m, CanonicalUnit.Gram), storage!, null, null, null, 1, concurrencyToken, now, now, null);
         var transaction = lot.AdjustMeasured(InventoryTransactionType.Consume, 1m, "test", null, Guid.NewGuid(), now.AddMinutes(1));
         var invalidTransaction = InventoryTransaction.Create(lotId, Guid.NewGuid(), transaction.Type, transaction.PreviousQuantity, transaction.ResultingQuantity, transaction.ReasonCode, transaction.Note, transaction.IdempotencyKey, transaction.OccurredAt);
-        var idempotency = new InventoryIdempotencyWrite(transaction.IdempotencyKey!.Value, "inventory.lots.adjust", new string('B', 64), 200, "{}", lot.Version, now.AddMinutes(1));
+        var response = new InventoryLotView(lot.Id, product.Id, product.DisplayName, new InventoryQuantity(9m, "Gram", null), "Pantry", null, null, null, null, lot.ConcurrencyToken, lot.CreatedAt, lot.UpdatedAt);
+        var idempotency = new InventoryIdempotencyWrite(transaction.IdempotencyKey!.Value, "inventory.lots.adjust", new string('B', 64), InventoryApplicationSuccess.Succeeded, response, now.AddMinutes(1));
         var store = new PostgreSqlInventoryLotWriteStore(context);
 
         var exception = await Assert.ThrowsAsync<DbUpdateException>(() =>

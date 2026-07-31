@@ -78,6 +78,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             entity.Property(x => x.ExpirationProvenance).HasMaxLength(30);
             entity.Property(x => x.Notes).HasMaxLength(1000);
             entity.Property(x => x.Version).IsConcurrencyToken();
+            entity.Property(x => x.ConcurrencyToken).HasDefaultValueSql("gen_random_uuid()");
+            entity.HasIndex(x => x.ConcurrencyToken).IsUnique();
             entity.HasOne<InternalUser>().WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<ProductRecord>().WithMany().HasForeignKey(x => new { x.ProductId, x.OwnerUserId }).HasPrincipalKey(x => new { x.Id, x.OwnerUserId }).OnDelete(DeleteBehavior.Restrict);
             entity.HasIndex(x => new { x.OwnerUserId, x.UpdatedAt, x.Id });
@@ -179,6 +181,8 @@ public sealed class LotRecord
     public string? Notes { get; set; }
     /// <summary>Gets or sets the internal optimistic-concurrency version; it is never exposed directly.</summary>
     public long Version { get; set; }
+    /// <summary>Gets or sets the opaque externally observable concurrency token.</summary>
+    public Guid ConcurrencyToken { get; set; }
     /// <summary>Gets or sets the UTC creation instant.</summary>
     public DateTimeOffset CreatedAt { get; set; }
     /// <summary>Gets or sets the UTC instant of the last mutation.</summary>

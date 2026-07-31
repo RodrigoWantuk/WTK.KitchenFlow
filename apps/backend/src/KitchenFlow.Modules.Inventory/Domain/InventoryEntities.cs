@@ -82,6 +82,7 @@ public sealed class InventoryLot
         PrintedExpiration = printedExpiration;
         Notes = notes;
         Version = 1;
+        ConcurrencyToken = Guid.NewGuid();
         CreatedAt = now;
         UpdatedAt = now;
     }
@@ -112,6 +113,9 @@ public sealed class InventoryLot
 
     /// <summary>Gets the internal monotonically increasing concurrency version.</summary>
     public long Version { get; private set; }
+
+    /// <summary>Gets the opaque token that identifies the current externally observable version.</summary>
+    public Guid ConcurrencyToken { get; private set; }
 
     /// <summary>Gets the UTC creation instant.</summary>
     public DateTimeOffset CreatedAt { get; private set; }
@@ -148,11 +152,12 @@ public sealed class InventoryLot
         PrintedExpiration? printedExpiration,
         PrivateNotes? notes,
         long version,
+        Guid concurrencyToken,
         DateTimeOffset createdAt,
         DateTimeOffset updatedAt,
         DateTimeOffset? deletedAt)
     {
-        if (id == Guid.Empty || ownerUserId == Guid.Empty || productId == Guid.Empty || version < 1 || updatedAt < createdAt || deletedAt < createdAt)
+        if (id == Guid.Empty || ownerUserId == Guid.Empty || productId == Guid.Empty || version < 1 || concurrencyToken == Guid.Empty || updatedAt < createdAt || deletedAt < createdAt)
         {
             throw new ArgumentException("Persisted inventory lot identity, version, or timestamps are invalid.");
         }
@@ -160,6 +165,7 @@ public sealed class InventoryLot
         var lot = new InventoryLot(id, ownerUserId, productId, quantity, storage, packageState, printedExpiration, notes, createdAt)
         {
             Version = version,
+            ConcurrencyToken = concurrencyToken,
             UpdatedAt = updatedAt,
             DeletedAt = deletedAt
         };
@@ -249,6 +255,7 @@ public sealed class InventoryLot
     {
         UpdatedAt = now;
         Version++;
+        ConcurrencyToken = Guid.NewGuid();
     }
 
     private void EnsureActive()

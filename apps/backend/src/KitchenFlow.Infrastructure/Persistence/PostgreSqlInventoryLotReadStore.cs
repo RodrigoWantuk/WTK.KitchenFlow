@@ -72,7 +72,7 @@ public sealed class PostgreSqlInventoryLotReadStore(ApplicationDbContext databas
         return transactions.Concat(projectedCorrections).OrderByDescending(item => item.OccurredAt).ThenByDescending(item => item.EntryId).ToList();
     }
 
-    private static InventoryLotReadModel ToReadModel(LotRecord lot, string productName) => new(lot.Id, lot.ProductId, productName, lot.MeasuredValue, lot.MeasuredUnit, lot.AvailabilityState, lot.StorageLocation, lot.CustomLocation, lot.PackageState, lot.PrintedExpirationDate, lot.Notes, lot.Version, lot.CreatedAt, lot.UpdatedAt, lot.DeletedAt);
+    private static InventoryLotReadModel ToReadModel(LotRecord lot, string productName) => new(lot.Id, lot.ProductId, productName, lot.MeasuredValue, lot.MeasuredUnit, lot.AvailabilityState, lot.StorageLocation, lot.CustomLocation, lot.PackageState, lot.PrintedExpirationDate, lot.Notes, lot.ConcurrencyToken, lot.CreatedAt, lot.UpdatedAt, lot.DeletedAt);
 
     private static IReadOnlyList<string> ReadChangedFields(string metadataJson)
     {

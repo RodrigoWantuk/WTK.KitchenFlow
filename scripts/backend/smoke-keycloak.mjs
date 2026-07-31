@@ -233,7 +233,9 @@ async function fetchStatus(browser, path) {
 
 let browsers = [];
 try {
-  browsers = [await startBrowser(9222), await startBrowser(9223)];
+  // Register each child immediately so a later browser-start failure cannot orphan an earlier one.
+  browsers.push(await startBrowser(9222));
+  browsers.push(await startBrowser(9223));
   const readyStatuses = await Promise.all(browsers.map((browser) => fetchStatus(browser, "/health/ready")));
   if (readyStatuses.some((status) => status !== 200)) {
     throw new Error(`KitchenFlow API is not ready at ${apiUrl}. Start Compose, apply migrations, and start the HTTPS API first.`);
