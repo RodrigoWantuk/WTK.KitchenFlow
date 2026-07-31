@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Unassigned independent testing agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-31T15:30:00Z
+- **Last updated:** 2026-07-31T15:42:00Z
 - **Branch:** `agent/plan-0005-test-inventory-slice`
 - **Pull request:** Not opened
 - **System under test:** Stable PLAN-0003 and PLAN-0004 pull-request commits in an integrated test environment
@@ -74,16 +74,16 @@ Excluded features must not appear as falsely functional UI or hidden backend dep
 Before execution, fill all fields and commit them:
 
 - **Repository:** `RodrigoWantuk/WTK.KitchenFlow`
-- **Backend PR and commit:** [PR #9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) candidate `06857b69774a4fe52c40c2ae909ceec573435fb9`; ready for independent PLAN-0005 execution
+- **Backend PR and commit:** [PR #9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) candidate `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`; ready for independent PLAN-0005 execution after owner merge
 - **Frontend PR and commit:** Required
 - **Integrated branch/commit or environment image digest:** Required
-- **OpenAPI snapshot SHA:** Git blob `39348047801fa96422f9d88460d58917ffc26db8` from backend candidate `06857b69774a4fe52c40c2ae909ceec573435fb9`
+- **OpenAPI snapshot SHA:** Git blob `39348047801fa96422f9d88460d58917ffc26db8` from backend candidate `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`
 - **Lovable source repository commit:** Required
 - **Operating system:** Windows or Linux, exact version
 - **Docker/Compose versions:** Required
 - **.NET SDK and Node versions:** Required
 - **Container image versions/digests:** Required
-- **Database migration revision:** `20260731120209_AddInventoryLotConcurrencyToken` from backend candidate `06857b69774a4fe52c40c2ae909ceec573435fb9`
+- **Database migration revision:** `20260731120209_AddInventoryLotConcurrencyToken` from backend candidate `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`
 - **Browser versions:** Chromium, Firefox, and WebKit through Playwright where supported
 - **Locales:** `en`, `pt-BR`, `es`
 - **Test users:** synthetic user A and user B only
@@ -383,7 +383,7 @@ Do not fix implementation in the independent test branch unless explicitly reass
 ### 2026-07-31T15:30:00Z — Backend baseline reconciled to final PLAN-0003 candidate
 
 - **Checkpoint:** Replaced stale execution-state references to superseded candidate `0e9d585` with the current immutable backend baseline `06857b69774a4fe52c40c2ae909ceec573435fb9`.
-- **Pinned baseline:** Backend PR #9 candidate `06857b69774a4fe52c40c2ae909ceec573435fb9`; OpenAPI blob `39348047801fa96422f9d88460d58917ffc26db8`; migration `20260731120209_AddInventoryLotConcurrencyToken`.
+- **Pinned baseline:** Backend PR #9 candidate `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`; OpenAPI blob `39348047801fa96422f9d88460d58917ffc26db8`; migration `20260731120209_AddInventoryLotConcurrencyToken`.
 - **Tests executed by PLAN-0005:** None. This remains a baseline reconciliation, not independent execution evidence.
 - **Coverage gaps:** PLAN-0004 frontend, integrated branch/image digest, browser versions, and full independent test execution remain outstanding.
 - **Result:** PLAN-0005 now has one consistent backend SHA across baseline, execution state, and progress log.

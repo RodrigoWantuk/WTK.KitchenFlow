@@ -5,11 +5,11 @@
 - **Priority:** Critical
 - **Owner:** Codex backend remediation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-31T15:35:00Z
+- **Last updated:** 2026-07-31T15:42:00Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (ready for owner merge)
-- **Current review head:** pending merge-prep commit
-- **Latest workflow evidence:** Backend run `30632658887` passed for `06857b69774a4fe52c40c2ae909ceec573435fb9`; superseded by merge-prep validation in progress
+- **Current review head:** `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`
+- **Latest workflow evidence:** Backend run `30643543261` passed for `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`
 - **Current synchronized base:** `b798fed9e940d15f9c828ce34881f58d1cf516a9`
 - **Related specification:** PLAN-0002
 - **Related validation plan:** PLAN-0005
@@ -337,15 +337,30 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0003 acceptance criteria and R10 evidence are complete at candidate `06857b69774a4fe52c40c2ae909ceec573435fb9`. Backend run `30632658887` and Gitleaks are green; Bugbot reports zero critical/high defects.
+- **Current checkpoint:** Merge-prep complete at candidate `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`. Backend run `30643543261`, Gitleaks, 115 tests, Keycloak browser smoke, and Bugbot zero-defect review are green.
 - **Execution status:** Completed.
 - **Confirmed completed phases:** R1 through R10.
 - **Partially completed phase:** None.
 - **Current blocker:** None for implementation; owner merge of PR #9 is a separate delivery action.
 - **Contract disposition:** OpenAPI snapshot at blob `39348047801fa96422f9d88460d58917ffc26db8` may be published to PLAN-0004 after owner merge approval.
-- **Exact next action:** Owner reviews and merges PR #9; PLAN-0005 independent validation may begin against the pinned candidate.
+- **Exact next action:** Owner merges PR #9. PLAN-0005 may begin backend validation against `d9c67e1` after merge; integrated validation still requires a stable PLAN-0004 frontend baseline.
 
 ## Progress log
+
+### 2026-07-31T15:42:00Z — Final merge-prep candidate green in CI
+
+- **Candidate:** `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`, base `b798fed9e940d15f9c828ce34881f58d1cf516a9`, OpenAPI blob `39348047801fa96422f9d88460d58917ffc26db8`, migration `20260731120209_AddInventoryLotConcurrencyToken`.
+- **CI result:** Backend run `30643543261` passed build-and-test (115 tests, zero skipped) and Gitleaks; artifact `backend-evidence-d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`.
+- **Keycloak smoke:** Accepted browser smoke passed locally on this SHA with fixture users and documented development OIDC settings.
+- **Exact next action:** Owner merge.
+
+### 2026-07-31T15:35:00Z — Merge-prep corrections and Keycloak smoke rerun
+
+- **Checkpoint:** Addressed independent review blockers before owner merge: corrected measured over-consumption error messaging, disabled OIDC PAR for the development Keycloak fixture, reconciled PLAN-0005 internal baseline contradictions, documented `lint-openapi.sh`, and reran accepted browser smoke on the new build.
+- **Keycloak smoke:** `node scripts/backend/smoke-keycloak.mjs` passed with development fixture users after supplying `KITCHENFLOW_OIDC_CLIENT_SECRET` and rebuilding with `PushedAuthorizationBehavior.Disable`.
+- **Local validation:** Release build zero warnings/errors; **115/115** tests, zero skipped.
+- **Material files changed:** domain adjustment messaging; OIDC startup configuration; redirect/over-consumption tests; scripts README; PLAN-0005 execution state/progress log; PLAN-0003 header cleanup.
+- **Exact next action:** Commit/push, rerun full CI on the new candidate SHA, update PR description, and request final automated review.
 
 ### 2026-07-31T13:02:00Z — PLAN-0003 completed; final candidate green in CI
 
