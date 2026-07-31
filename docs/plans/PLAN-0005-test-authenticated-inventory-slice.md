@@ -368,7 +368,7 @@ Do not fix implementation in the independent test branch unless explicitly reass
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0005 is ready to execute against the single immutable backend baseline pinned below. PLAN-0003 implementation is complete and awaiting owner merge of PR #9.
+- **Current checkpoint:** PLAN-0005 is ready to execute against the single immutable backend baseline `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`. PLAN-0003 implementation is complete and awaiting owner merge of PR #9.
 - **Last completed step:** Pinned backend candidate, OpenAPI blob, and migration revision from the completed PLAN-0003 delivery.
 - **Exact next action:** After PR #9 merge, assign an independent testing agent, pin PLAN-0004 frontend and integrated environment/browser baselines, and move status to `In Progress`.
 - **Blockers:** Stable PLAN-0004 frontend baseline and integrated environment image digest remain unfilled.
