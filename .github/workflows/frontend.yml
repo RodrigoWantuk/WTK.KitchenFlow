@@ -38,7 +38,9 @@ jobs:
         run: yarn guard:ts-only
       - name: Production isolation guard
         run: |
-          if grep -R "@emergentbase" package.json craco.config.js src --include='*.js' --include='*.jsx' --include='*.ts' --include='*.tsx' --include='*.json'; then
+          if grep -R "@emergentbase" package.json craco.config.js src \
+            --include='*.js' --include='*.jsx' --include='*.ts' --include='*.tsx' --include='*.json' \
+            --exclude='*.test.ts' --exclude='*.test.tsx'; then
             echo "Emergent coupling must not remain in production frontend sources" >&2
             exit 1
           fi

@@ -259,6 +259,15 @@ Convert and type, in dependency order:
 
 ## Progress log
 
+### 2026-07-31T22:18:30Z — Cursor agent
+
+- **Checkpoint:** Fixed Frontend CI production-isolation false positive on isolation test string.
+- **Changes included in the commit:** Split banned package token in test; exclude `*.test.ts(x)` from CI grep.
+- **Validation performed:** `yarn test` (10); local isolation grep OK.
+- **Result:** Ready to re-run CI, then undraft/merge PR #14 on owner request.
+- **Next action:** Wait for CI green; mark PR ready; merge with owner authorization.
+- **Blockers or handoff notes:** None.
+
 ### 2026-07-31T22:15:19Z — Cursor agent
 
 - **Checkpoint:** Phase 8 full JS→TS migration complete under PLAN-0014.
