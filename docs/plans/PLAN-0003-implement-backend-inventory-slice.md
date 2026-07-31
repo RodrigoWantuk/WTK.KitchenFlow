@@ -5,7 +5,7 @@
 - **Priority:** Critical
 - **Owner:** Codex backend remediation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-31T02:22:00Z
+- **Last updated:** 2026-07-31T03:03:51Z
 - **Branch:** `agent/plan-0003-backend-inventory-slice`
 - **Pull request:** [#9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) (draft, changes required)
 - **Current review head:** `fc92dd3c41ad99d64ae053f778cd5a6a46b84f44`
@@ -307,8 +307,8 @@ Every commit must update this plan's `Execution state` and `Progress log` and th
 - [x] Readiness and all framework failures match the documented security/error contract.
 - [x] Required low-cardinality metrics have correct replay semantics and full-pipeline redaction evidence.
 - [x] Unit, integration, architecture, migration, security, and contract tests cover the accepted PLAN-0002/PLAN-0003 matrix.
-- [ ] Idempotent migration SQL, upgrade evidence, retained artifacts, and forward-repair guidance exist.
-- [ ] Developer and operator workflows are complete and executable.
+- [x] Idempotent migration SQL, upgrade evidence, retained artifacts, and forward-repair guidance exist.
+- [x] Developer and operator workflows are complete and executable.
 - [x] Backend workflow run 38 passed for review head `fc92dd3`.
 - [ ] A final workflow passes for the post-remediation candidate SHA.
 - [ ] PLAN-0005 receives the exact final candidate SHA.
@@ -337,16 +337,27 @@ Evidence must identify the exact candidate SHA and must not expose credentials, 
 
 ## Execution state
 
-- **Current checkpoint:** R2-R8 are complete: bounded security/inventory metrics and optional OTLP export are documented and exporter-tested; the expanded domain, API, PostgreSQL, migration, security, architecture, and contract suite passes 110/110.
+- **Current checkpoint:** R2-R9 are complete. CI generates and applies idempotent migration SQL twice, retains SHA-bound migration/vulnerability/TRX evidence, and the executable backend runbook covers development, deployment, security, recovery, contract, and real-Keycloak workflows. The post-R9 suite passes 110/110.
 - **Execution status:** In Progress, not Validating.
-- **Confirmed completed phases:** R1, R2, R3, R4, R5, R6, R7, and R8.
-- **Partially completed phase:** R9.
+- **Confirmed completed phases:** R1, R2, R3, R4, R5, R6, R7, R8, and R9.
+- **Partially completed phase:** None.
 - **Not started at a valid final candidate:** R10.
-- **Current blocker:** None external. Remaining work is implementation and acceptance evidence inside this branch.
+- **Current blocker:** None external. Remaining work is final-candidate synchronization and acceptance evidence.
 - **Contract disposition:** OpenAPI snapshot is provisional and must not be consumed as PLAN-0004's stable live-client contract.
-- **Exact next action:** Complete R9 retained CI migration/test artifacts, executable idempotent-script evidence, vulnerability policy, and full developer/operator runbooks.
+- **Exact next action:** Synchronize with current `main`, establish the R10 candidate, run the complete local/Compose/migration/OpenAPI/Keycloak matrix, push it, and require final CI plus independent review.
 
 ## Progress log
+
+### 2026-07-31T03:03:51Z — R9 CI evidence and executable operations completed
+
+- **Checkpoint:** Added a fail-closed machine-readable direct/transitive .NET vulnerability gate; reproducible idempotent EF migration generation; CI double-application and migration-history proof; and SHA-bound retention of migration SQL, vulnerability JSON, and TRX results. Aligned the repository EF design/tool patch at 10.0.4 so migration generation matches the resolved runtime and does not create malformed platform-path build artifacts.
+- **Documentation:** Added the complete backend inventory runbook covering prerequisites, ignored secret setup, dependency startup, restore/format/build/test/audit, migration creation/empty/upgrade/idempotent flows, rollback implications, forward repair, HTTPS trust, key-ring behavior, health interpretation, OpenAPI generation/drift, accepted Keycloak browser smoke, troubleshooting, and known limitations. Linked it from the documentation, backend, infrastructure, and scripts indexes. Normal OpenAPI commands now require certificate trust; their insecure switch is diagnostic-only and is not used by accepted evidence or CI.
+- **Material files changed:** Backend workflow; repository EF tool manifest and package locks; vulnerability/migration/OpenAPI scripts; backend, infrastructure, scripts, and documentation indexes; new operations runbook; this plan; and `docs/plan-status.md`.
+- **Commands and validation performed:** Locked restore; formatting verification; Release build; complete solution tests; machine-readable vulnerability check; idempotent migration SQL generation and nonempty/content checks; shell syntax checks; Node smoke-script syntax check; and whitespace validation.
+- **Result:** Restore passed; formatting passed; Release build passed with zero warnings/errors; unit tests passed 20/20, architecture tests passed 10/10, and PostgreSQL-backed integration/security/contract/migration tests passed 80/80 (110/110 total, zero skipped); vulnerability gate reported zero advisories; idempotent SQL contained all five migration-history entries; all script syntax and whitespace checks passed.
+- **Known failures or unverified behavior:** The amended workflow has not yet run on GitHub. R10 still requires current-main synchronization, Compose readiness, independent empty/idempotent database application, accepted browser/Keycloak smoke, OpenAPI runtime drift, Gitleaks, final CI, SHA pinning, and fresh independent review at one final candidate.
+- **Blockers:** None.
+- **Exact next action:** Execute R10 from a freshly synchronized `main` base, then publish and review the single validated candidate.
 
 ### 2026-07-31T02:55:00Z — R7/R8 observability and acceptance matrix completed
 

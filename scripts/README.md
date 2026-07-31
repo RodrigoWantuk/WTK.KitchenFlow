@@ -24,7 +24,18 @@ Candidate responsibilities include:
 ## Backend validation scripts
 
 - `backend/export-openapi.sh` exports the running API contract to the checked-in OpenAPI snapshot.
+- `backend/check-dotnet-vulnerabilities.sh` writes the .NET direct/transitive vulnerability result
+  as JSON and fails when any advisory is reported. CI retains this evidence for the candidate SHA.
+- `backend/generate-migration-script.sh` restores the repository tool manifest and creates a
+  nonempty idempotent PostgreSQL migration artifact from the complete EF Core migration chain.
 - `backend/check-openapi.sh` verifies that a running API has not drifted from that snapshot.
 - `backend/smoke-keycloak.mjs` drives the real Authorization Code plus PKCE flow in two isolated Chromium profiles. It verifies the backend-managed cookie session, absence of provider tokens from `/api/v1/session`, CSRF-protected lot creation, and a `404` cross-user ownership boundary. Start the local Compose services, apply migrations, and start the HTTPS API before running it. The two development-fixture passwords are supplied only through `KITCHENFLOW_SMOKE_PASSWORD_A` and `KITCHENFLOW_SMOKE_PASSWORD_B`; never put them in a command history, source file, CI log, or committed environment file.
 
 The Keycloak smoke expects a browser that trusts the local ASP.NET Core development certificate. `KITCHENFLOW_SMOKE_ALLOW_UNTRUSTED_LOCAL_CERTIFICATE=1` is available only to diagnose a local trust bootstrap problem and is not accepted validation evidence or a CI setting.
+
+The OpenAPI scripts likewise require a trusted local certificate by default.
+`KITCHENFLOW_OPENAPI_ALLOW_UNTRUSTED_LOCAL_CERTIFICATE=1` is a diagnostic-only local escape hatch;
+CI uses its loopback HTTP endpoint and accepted local evidence does not use this setting.
+
+See the [`backend inventory runbook`](../docs/operations/backend-inventory-runbook.md) for exact
+commands, deployment evidence, forward-repair policy, and troubleshooting.

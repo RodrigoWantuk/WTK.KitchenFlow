@@ -58,3 +58,7 @@ Default development policy:
 - Provider-specific choices require an ADR when they create durable cost, security, portability, or operational consequences.
 
 See [`../docs/operations/platform-and-reliability.md`](../docs/operations/platform-and-reliability.md), [`../docs/development/environment.md`](../docs/development/environment.md), and [`ADR-0006`](../docs/architecture/decisions/0006-deployment-and-observability.md).
+
+The first authenticated inventory slice's exact PostgreSQL, Keycloak, migration-artifact,
+forward-repair, readiness, HTTPS, key-ring, contract, and smoke-test procedures are maintained in
+the [`backend inventory runbook`](../docs/operations/backend-inventory-runbook.md).

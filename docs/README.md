@@ -65,6 +65,8 @@ Read:
 - [`ai/usage-and-cost-governance.md`](ai/usage-and-cost-governance.md)
 - [`security/security-and-abuse.md`](security/security-and-abuse.md)
 - [`operations/platform-and-reliability.md`](operations/platform-and-reliability.md)
+- [`operations/backend-inventory-runbook.md`](operations/backend-inventory-runbook.md) for PLAN-0003
+  development, migration, contract, identity, and recovery operations
 - [`testing/strategy.md`](testing/strategy.md)
 - [`testing/product-foundation-gates.md`](testing/product-foundation-gates.md)
 

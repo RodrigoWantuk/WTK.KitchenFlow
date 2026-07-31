@@ -33,16 +33,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24.18.0
+      - name: Create evidence directories
+        working-directory: .
+        run: mkdir -p artifacts/test-results
       - run: dotnet restore KitchenFlow.slnx --locked-mode
       - name: Fail on vulnerable .NET dependencies
-        run: |
-          dotnet list KitchenFlow.slnx package --vulnerable --include-transitive | tee /tmp/kitchenflow-vulnerabilities.txt
-          if grep -qi "has the following vulnerable packages" /tmp/kitchenflow-vulnerabilities.txt; then
-            exit 1
-          fi
+        working-directory: .
+        run: bash scripts/backend/check-dotnet-vulnerabilities.sh artifacts/dotnet-vulnerabilities.json
       - run: dotnet format KitchenFlow.slnx --verify-no-changes --no-restore
       - run: dotnet build KitchenFlow.slnx -c Release --no-restore
-      - run: dotnet test KitchenFlow.slnx -c Release --no-build
+      - name: Run complete backend tests with retained results
+        run: dotnet test KitchenFlow.slnx -c Release --no-build --logger "trx;LogFilePrefix=kitchenflow-" --results-directory "${{ github.workspace }}/artifacts/test-results"
       - name: Start required local dependencies
         working-directory: .
         run: docker compose -f infrastructure/compose/compose.dev.yml up -d postgres keycloak
@@ -54,9 +55,18 @@ jobs:
       - name: Apply empty-database migration and upgrade
         working-directory: .
         run: |
-          dotnet tool install --tool-path /tmp/kitchenflow-tools dotnet-ef --version 10.0.3
-          /tmp/kitchenflow-tools/dotnet-ef database update 20260729013459_InitialInventorySlice --project apps/backend/src/KitchenFlow.Infrastructure/KitchenFlow.Infrastructure.csproj --startup-project apps/backend/src/KitchenFlow.Api/KitchenFlow.Api.csproj --configuration Release --no-build
-          /tmp/kitchenflow-tools/dotnet-ef database update --project apps/backend/src/KitchenFlow.Infrastructure/KitchenFlow.Infrastructure.csproj --startup-project apps/backend/src/KitchenFlow.Api/KitchenFlow.Api.csproj --configuration Release --no-build
+          dotnet tool restore
+          dotnet ef database update 20260729013459_InitialInventorySlice --project apps/backend/src/KitchenFlow.Infrastructure/KitchenFlow.Infrastructure.csproj --startup-project apps/backend/src/KitchenFlow.Api/KitchenFlow.Api.csproj --configuration Release --no-build
+          dotnet ef database update --project apps/backend/src/KitchenFlow.Infrastructure/KitchenFlow.Infrastructure.csproj --startup-project apps/backend/src/KitchenFlow.Api/KitchenFlow.Api.csproj --configuration Release --no-build
+      - name: Generate and apply idempotent migration artifact twice
+        working-directory: .
+        run: |
+          bash scripts/backend/generate-migration-script.sh artifacts/kitchenflow-migrations.sql
+          docker compose -f infrastructure/compose/compose.dev.yml exec -T postgres psql -U kitchenflow_dev -d postgres -c 'DROP DATABASE IF EXISTS kitchenflow_idempotent WITH (FORCE)'
+          docker compose -f infrastructure/compose/compose.dev.yml exec -T postgres psql -U kitchenflow_dev -d postgres -c 'CREATE DATABASE kitchenflow_idempotent'
+          docker compose -f infrastructure/compose/compose.dev.yml exec -T postgres psql -v ON_ERROR_STOP=1 -U kitchenflow_dev -d kitchenflow_idempotent < artifacts/kitchenflow-migrations.sql
+          docker compose -f infrastructure/compose/compose.dev.yml exec -T postgres psql -v ON_ERROR_STOP=1 -U kitchenflow_dev -d kitchenflow_idempotent < artifacts/kitchenflow-migrations.sql
+          test "$(docker compose -f infrastructure/compose/compose.dev.yml exec -T postgres psql -tAc 'SELECT count(*) FROM \"__EFMigrationsHistory\"' -U kitchenflow_dev -d kitchenflow_idempotent | tr -d '[:space:]')" -eq 5
       - name: Export and verify OpenAPI drift
         working-directory: .
         env:
@@ -69,6 +79,17 @@ jobs:
           git diff --exit-code -- packages/contracts/openapi/kitchenflow-v1.json
           bash scripts/backend/check-openapi.sh
           bash scripts/backend/lint-openapi.sh
+      - name: Upload backend candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-evidence-${{ github.sha }}
+          path: |
+            artifacts/dotnet-vulnerabilities.json
+            artifacts/kitchenflow-migrations.sql
+            artifacts/test-results/*.trx
+          if-no-files-found: error
+          retention-days: 30
   secret-scan:
     runs-on: ubuntu-24.04
     permissions:

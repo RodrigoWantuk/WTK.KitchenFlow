@@ -42,6 +42,11 @@ route/query binding, dependency, and unexpected failures use the same privacy-sa
 shape. Responses contain a stable `errorCode` and safe trace identifier; they do not copy exception
 messages, request bodies, credentials, cookies, tokens, private notes, or user identifiers.
 
+The complete executable workflow for prerequisites, secrets, Compose, restore/build/test, dependency
+audit, migrations and forward repair, HTTPS, session keys, health, OpenAPI, the real-Keycloak smoke,
+and troubleshooting is in the
+[`backend inventory runbook`](../../docs/operations/backend-inventory-runbook.md).
+
 ## Inventory and security telemetry
 
 Set the optional standard `OTEL_EXPORTER_OTLP_ENDPOINT` server-side to export traces and metrics over

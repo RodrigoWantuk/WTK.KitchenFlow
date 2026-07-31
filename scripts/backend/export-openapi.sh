@@ -6,6 +6,11 @@ snapshot="packages/contracts/openapi/kitchenflow-v1.json"
 temporary_file="$(mktemp)"
 trap 'rm -f "$temporary_file"' EXIT
 
-curl --fail --silent --show-error --insecure "$api_url" | jq --sort-keys . > "$temporary_file"
-mv "$temporary_file" "$snapshot"
+curl_arguments=(--fail --silent --show-error)
+if [[ "${KITCHENFLOW_OPENAPI_ALLOW_UNTRUSTED_LOCAL_CERTIFICATE:-0}" == "1" ]]; then
+  # Diagnostic only: accepted validation uses a trusted certificate or the CI loopback HTTP URL.
+  curl_arguments+=(--insecure)
+fi
 
+curl "${curl_arguments[@]}" "$api_url" | jq --sort-keys . > "$temporary_file"
+mv "$temporary_file" "$snapshot"
