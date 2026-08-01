@@ -22,6 +22,7 @@ internal static class ProfileOpenApiTransformer
         AddNamedEnumSchema(document, "ProfileFieldDurability", "Only durable mutations are accepted on profile endpoints.", FieldDurabilities);
         AddNamedEnumSchema(document, "PreferenceCommandAction", "Explicit preference or restriction command action.", PreferenceActions);
         AddCollectionResponseSchemas(document);
+        WireProfileResponseSchema(document);
         WireFieldMutationEnums(document);
         WirePreferenceCommandAction(document);
 
@@ -42,13 +43,13 @@ internal static class ProfileOpenApiTransformer
             {
                 if (method == HttpMethod.Put || method == HttpMethod.Patch)
                 {
-                    EnsureHeader(operation, "If-Match", "Required after the first create. Use the ETag from GET /api/v1/profile or a collection GET when a profile exists.", required: false);
+                    EnsureHeader(operation, "If-Match", "Required for updates after the first create. Omit on the first profile create. Use the ETag from GET when a profile already exists.", required: false);
                     EnsureHeader(operation, "X-CSRF-TOKEN", "Required CSRF token issued by GET /api/v1/session.", required: true);
-                    EnsureProblem(operation, "400", "Validation failed for CSRF, action, durability, or field values.");
+                    EnsureProblem(operation, "400", "Validation failed for CSRF, action, durability, field values, or duplicate equipment codes.");
                     EnsureProblem(operation, "401", "Authentication is required.");
                     EnsureProblem(operation, "403", "The caller is not authorized for this profile.");
                     EnsureProblem(operation, "409", "A profile already exists or another controlled conflict occurred.");
-                    EnsureProblem(operation, "412", "The profile version is out of date.");
+                    EnsureProblem(operation, "412", "The profile version is out of date or the ETag is not bound to the authenticated owner.");
                     EnsureProblem(operation, "428", "An If-Match header is required for this update.");
                 }
 
@@ -62,11 +63,16 @@ internal static class ProfileOpenApiTransformer
                     WireCollectionOperationSchema(document, operation, method, path);
                 }
 
+                if (path == "/api/v1/profile" && method == HttpMethod.Get)
+                {
+                    WireMissingProfileGetDescription(operation);
+                }
+
                 if (EmitsEtag(path, method))
                 {
                     foreach (var status in new[] { "200", "201" })
                     {
-                        EnsureEtagOnStatus(operation, status);
+                        EnsureEtagOnStatus(operation, status, path, method);
                     }
                 }
             }
@@ -126,6 +132,39 @@ internal static class ProfileOpenApiTransformer
                 }
             }
         };
+    }
+
+    private static void WireProfileResponseSchema(OpenApiDocument document)
+    {
+        if (!document.Components!.Schemas!.TryGetValue("ProfileResponse", out var schema) || schema is not OpenApiSchema typed)
+        {
+            return;
+        }
+
+        typed.Properties ??= new Dictionary<string, IOpenApiSchema>();
+        typed.Properties["profileExists"] = new OpenApiSchema
+        {
+            Type = JsonSchemaType.Boolean,
+            Description = "True when a durable profile row is persisted for the authenticated owner."
+        };
+        typed.Properties["version"] = new OpenApiSchema
+        {
+            Type = JsonSchemaType.String | JsonSchemaType.Null,
+            Description = "Opaque profile version matching the ETag header when a profile exists; null when no profile exists yet."
+        };
+        typed.Required ??= new HashSet<string>(StringComparer.Ordinal);
+        typed.Required.Add("profileExists");
+    }
+
+    private static void WireMissingProfileGetDescription(OpenApiOperation operation)
+    {
+        operation.Responses ??= new OpenApiResponses();
+        if (!operation.Responses.TryGetValue("200", out var response) || response is not OpenApiResponse typed)
+        {
+            return;
+        }
+
+        typed.Description = "Progressive profile projection. profileExists is false, version is null, and ETag is omitted when no profile has been persisted yet.";
     }
 
     private static void WireFieldMutationEnums(OpenApiDocument document)
@@ -205,7 +244,7 @@ internal static class ProfileOpenApiTransformer
         operation.Responses[status] = new OpenApiResponse { Description = description };
     }
 
-    private static void EnsureEtagOnStatus(OpenApiOperation operation, string status)
+    private static void EnsureEtagOnStatus(OpenApiOperation operation, string status, string path, HttpMethod method)
     {
         operation.Responses ??= new OpenApiResponses();
         if (!operation.Responses.TryGetValue(status, out var response) || response is not OpenApiResponse typed)
@@ -213,10 +252,14 @@ internal static class ProfileOpenApiTransformer
             return;
         }
 
+        var description = path == "/api/v1/profile" && method == HttpMethod.Get
+            ? "Opaque profile version token. Omitted when profileExists is false."
+            : "Opaque profile version token. Omitted for preference/equipment collections when no profile exists.";
+
         typed.Headers ??= new Dictionary<string, IOpenApiHeader>();
         typed.Headers["ETag"] = new OpenApiHeader
         {
-            Description = "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+            Description = description,
             Schema = new OpenApiSchema { Type = JsonSchemaType.String }
         };
     }

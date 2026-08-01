@@ -33,7 +33,7 @@ public sealed record CookingContextDto(
 /// <summary>Adult declaration transport DTO.</summary>
 public sealed record AdultDeclarationDto(bool? AdultDeclared, string? TermsVersion, string? PrivacyVersion, DateTimeOffset? AcceptedAt, string State);
 
-/// <summary>Full profile response.</summary>
+/// <summary>Full profile response with progressive defaults and an explicit existence flag.</summary>
 public sealed record ProfileResponse(
     Guid OwnerUserId,
     ProfileFieldDto<string?> DisplayName,
@@ -44,7 +44,8 @@ public sealed record ProfileResponse(
     IReadOnlyList<string> TechniquesToLearn,
     IReadOnlyList<string> Goals,
     IReadOnlyList<string> AbandonmentReasons,
-    string Version,
+    bool ProfileExists,
+    string? Version,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
@@ -109,8 +110,8 @@ public sealed record EquipmentCollectionResponse(string? Version, IReadOnlyList<
 /// <summary>Equipment replace request DTO.</summary>
 public sealed record EquipmentRequest(IReadOnlyList<EquipmentItemDto> Entries);
 
-/// <summary>Equipment item request DTO.</summary>
-public sealed record EquipmentItemDto(string StableCode, string? CustomName, decimal? Capacity, string? CapacityUnit, string? ConstraintNote, int SortOrder);
+/// <summary>Equipment item request DTO. Order is the array position; response exposes sortOrder.</summary>
+public sealed record EquipmentItemDto(string StableCode, string? CustomName, decimal? Capacity, string? CapacityUnit, string? ConstraintNote);
 
 /// <summary>Profile completeness response DTO.</summary>
 public sealed record ProfileCompletenessResponse(int PercentComplete, int CompletedSections, int TotalSections, IReadOnlyDictionary<string, int> SectionCounts, string AdultDeclarationState, bool ProfileExists);

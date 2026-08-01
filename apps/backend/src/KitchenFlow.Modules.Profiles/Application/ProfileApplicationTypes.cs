@@ -5,7 +5,7 @@ namespace KitchenFlow.Modules.Profiles.Application;
 /// <summary>API-facing progressive field projection.</summary>
 public sealed record ProfileFieldView<T>(T? Value, string Presence, T? DefaultValue, string Durability = "durable");
 
-/// <summary>Application representation of the owner profile.</summary>
+/// <summary>Application representation of the owner profile, including whether a durable row exists.</summary>
 public sealed record ProfileView(
     Guid OwnerUserId,
     ProfileFieldView<string?> DisplayName,
@@ -18,7 +18,8 @@ public sealed record ProfileView(
     IReadOnlyList<string> AbandonmentReasons,
     Guid ConcurrencyToken,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    bool ProfileExists);
 
 /// <summary>Household context projection.</summary>
 public sealed record HouseholdView(
@@ -148,8 +149,8 @@ public sealed record AdultDeclarationMutationInput(bool AdultDeclared, string Te
 /// <summary>Explicit preference or restriction mutation input.</summary>
 public sealed record PreferenceMutationInput(string Action, string Category, string StableCode, string? Note);
 
-/// <summary>Equipment mutation input.</summary>
-public sealed record EquipmentMutationInput(string StableCode, string? CustomName, decimal? Capacity, string? CapacityUnit, string? ConstraintNote, int SortOrder);
+/// <summary>Equipment mutation input. Sort order is derived from array position by the workflow.</summary>
+public sealed record EquipmentMutationInput(string StableCode, string? CustomName, decimal? Capacity, string? CapacityUnit, string? ConstraintNote);
 
 /// <summary>Executes the owner-scoped profile-read use case.</summary>
 public interface IGetProfileUseCase

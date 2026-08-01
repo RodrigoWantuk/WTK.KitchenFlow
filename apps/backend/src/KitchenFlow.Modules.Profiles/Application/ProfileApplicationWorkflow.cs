@@ -94,7 +94,7 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
             return ProfileApplicationResult<VersionedCollectionView<EquipmentView>>.Succeeded(new VersionedCollectionView<EquipmentView>(user.Id, Guid.Empty, []));
         }
 
-        var items = model.Equipment.Where(item => !item.IsRemoved).OrderBy(item => item.SortOrder).Select(ToEquipmentView).ToList();
+        var items = model.Equipment.Where(item => !item.IsRemoved).OrderBy(item => item.SortOrder).ThenBy(item => item.StableCode.Value, StringComparer.Ordinal).Select(ToEquipmentView).ToList();
         return ProfileApplicationResult<VersionedCollectionView<EquipmentView>>.Succeeded(new VersionedCollectionView<EquipmentView>(user.Id, model.Profile.ConcurrencyToken, items));
     }
 
@@ -142,7 +142,7 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
         }
 
         var refreshed = await readStore.FindAsync(user.Id, cancellationToken);
-        var items = refreshed!.Equipment.Where(item => !item.IsRemoved).OrderBy(item => item.SortOrder).Select(ToEquipmentView).ToList();
+        var items = refreshed!.Equipment.Where(item => !item.IsRemoved).OrderBy(item => item.SortOrder).ThenBy(item => item.StableCode.Value, StringComparer.Ordinal).Select(ToEquipmentView).ToList();
         return ProfileApplicationResult<VersionedCollectionView<EquipmentView>>.Succeeded(new VersionedCollectionView<EquipmentView>(user.Id, refreshed.Profile.ConcurrencyToken, items));
     }
 
@@ -514,12 +514,22 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
             return errors;
         }
 
+        var seenCodes = new Dictionary<string, int>(StringComparer.Ordinal);
         for (var index = 0; index < entries.Count; index++)
         {
             var entry = entries[index];
-            if (!StableCode.TryCreate(entry.StableCode, out _))
+            if (!StableCode.TryCreate(entry.StableCode, out var code))
             {
                 errors[$"entries[{index}].stableCode"] = ["stableCode is invalid."];
+            }
+            else if (seenCodes.TryGetValue(code!.Value, out var firstIndex))
+            {
+                errors[$"entries[{index}].stableCode"] = [$"stableCode duplicates entries[{firstIndex}].stableCode."];
+                errors["entries"] = ["entries contains duplicate stableCode values after normalization."];
+            }
+            else
+            {
+                seenCodes[code.Value] = index;
             }
 
             if (entry.CustomName is not null && entry.CustomName.Length > 80)
@@ -591,7 +601,7 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
     private static List<EquipmentEntry> ReconcileEquipment(IList<EquipmentEntry> existing, Guid ownerUserId, IReadOnlyList<EquipmentMutationInput> commands, DateTimeOffset now)
     {
         var working = existing.ToList();
-        var requestedCodes = new HashSet<string>(commands.Select(item => item.StableCode), StringComparer.Ordinal);
+        var requestedCodes = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var (command, index) in commands.Select((item, index) => (item, index)))
         {
@@ -600,11 +610,13 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
                 throw new InvalidOperationException("Validated equipment command contained an invalid stable code.");
             }
 
-            var match = working.FirstOrDefault(item => item.StableCode.Value == code!.Value);
-            var sortOrder = command.SortOrder == 0 ? index : command.SortOrder;
+            requestedCodes.Add(code!.Value);
+            var match = working.FirstOrDefault(item => item.StableCode.Value == code.Value);
+            // Array position is the only canonical sort order; clients cannot send an ambiguous zero sentinel.
+            var sortOrder = index;
             if (match is null)
             {
-                working.Add(EquipmentEntry.Create(ownerUserId, code!, command.CustomName, command.Capacity, command.CapacityUnit, command.ConstraintNote, sortOrder, now));
+                working.Add(EquipmentEntry.Create(ownerUserId, code, command.CustomName, command.Capacity, command.CapacityUnit, command.ConstraintNote, sortOrder, now));
                 continue;
             }
 
@@ -1253,10 +1265,12 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
     private static ProfileView EmptyView(Guid ownerUserId, DateTimeOffset now)
     {
         var profile = UserProfile.Create(ownerUserId, now, Guid.Empty);
-        return ToView(new ProfileReadModel(profile, 0, [], [], []));
+        return ToView(new ProfileReadModel(profile, 0, [], [], []), profileExists: false);
     }
 
-    private static ProfileView ToView(ProfileReadModel model)
+    private static ProfileView ToView(ProfileReadModel model) => ToView(model, profileExists: true);
+
+    private static ProfileView ToView(ProfileReadModel model, bool profileExists)
     {
         var profile = model.Profile;
         string? defaultLanguage = "en";
@@ -1294,7 +1308,8 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
             Codes(model, ProfileListNames.AbandonmentReasons),
             profile.ConcurrencyToken,
             profile.CreatedAt,
-            profile.UpdatedAt);
+            profile.UpdatedAt,
+            profileExists);
     }
 
     private static IReadOnlyList<string> Codes(ProfileReadModel model, string listName) =>
