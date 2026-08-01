@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -6,9 +6,9 @@ namespace KitchenFlow.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     /// <remarks>
-    /// Enforces unique (OwnerUserId, StableCode) for equipment. The migration does not delete or merge
+    /// Enforces unique (OwnerUserId, StableCode) for equipment. This migration does not delete or merge
     /// duplicate rows. Environments that already contain duplicates must resolve them before applying;
-    /// PostgreSQL will reject the unique index creation until the data is clean.
+    /// PostgreSQL will reject unique index creation until the data is clean.
     /// </remarks>
     public partial class EnforceUniqueProfileEquipmentStableCode : Migration
     {

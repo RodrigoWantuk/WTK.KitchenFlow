@@ -165,7 +165,7 @@ public sealed class ProfileRemediationTests : IAsyncLifetime
         {
             using var request = new HttpRequestMessage(HttpMethod.Put, "/api/v1/profile/equipment")
             {
-                Content = JsonContent.Create(new { entries = new[] { new { stableCode = $"oven_{index}", customName = (string?)null, capacity = (decimal?)null, capacityUnit = (string?)null, constraintNote = (string?)null, sortOrder = 0 } } })
+                Content = JsonContent.Create(new { entries = new[] { new { stableCode = $"oven_{index}", customName = (string?)null, capacity = (decimal?)null, capacityUnit = (string?)null, constraintNote = (string?)null } } })
             };
             request.Headers.Add("X-CSRF-TOKEN", csrf);
             request.Headers.TryAddWithoutValidation("If-Match", etag);
@@ -237,8 +237,8 @@ public sealed class ProfileRemediationTests : IAsyncLifetime
             {
                 entries = new object[]
                 {
-                    new { stableCode = "oven", customName = (string?)"Main oven", capacity = (decimal?)null, capacityUnit = (string?)null, constraintNote = (string?)null, sortOrder = 0 },
-                    new { stableCode = "blender", customName = (string?)null, capacity = (decimal?)null, capacityUnit = (string?)null, constraintNote = (string?)null, sortOrder = 1 }
+                    new { stableCode = "oven", customName = (string?)"Main oven", capacity = (decimal?)null, capacityUnit = (string?)null, constraintNote = (string?)null },
+                    new { stableCode = "blender", customName = (string?)null, capacity = (decimal?)null, capacityUnit = (string?)null, constraintNote = (string?)null }
                 }
             })
         };
@@ -251,7 +251,7 @@ public sealed class ProfileRemediationTests : IAsyncLifetime
         var nextEtag = initialResponse.Headers.ETag!.Tag;
         using var replacePut = new HttpRequestMessage(HttpMethod.Put, "/api/v1/profile/equipment")
         {
-            Content = JsonContent.Create(new { entries = new[] { new { stableCode = "oven", customName = "Updated oven", capacity = (decimal?)null, capacityUnit = (string?)null, constraintNote = (string?)null, sortOrder = 0 } } })
+            Content = JsonContent.Create(new { entries = new[] { new { stableCode = "oven", customName = "Updated oven", capacity = (decimal?)null, capacityUnit = (string?)null, constraintNote = (string?)null } } })
         };
         replacePut.Headers.Add("X-CSRF-TOKEN", csrf);
         replacePut.Headers.TryAddWithoutValidation("If-Match", nextEtag);

@@ -221,7 +221,7 @@ public sealed class ProfileContractAndSecurityTests : IAsyncLifetime
         HttpContent content = path.EndsWith("/preferences", StringComparison.Ordinal)
             ? JsonContent.Create(new { entries = new[] { new { action = "add", category = "DietaryPattern", stableCode = "vegan", note = (string?)null } } })
             : path.EndsWith("/equipment", StringComparison.Ordinal)
-                ? JsonContent.Create(new { entries = new[] { new { stableCode = "oven", customName = (string?)null, capacity = (decimal?)null, capacityUnit = (string?)null, constraintNote = (string?)null, sortOrder = 0 } } })
+                ? JsonContent.Create(new { entries = new[] { new { stableCode = "oven", customName = (string?)null, capacity = (decimal?)null, capacityUnit = (string?)null, constraintNote = (string?)null } } })
                 : JsonContent.Create(new { displayName = new { action = "confirm", value = "Mutated", durability = "durable" } });
 
         using var missing = new HttpRequestMessage(new HttpMethod(method), path) { Content = content };
@@ -233,7 +233,7 @@ public sealed class ProfileContractAndSecurityTests : IAsyncLifetime
             Content = path.EndsWith("/preferences", StringComparison.Ordinal)
                 ? JsonContent.Create(new { entries = new[] { new { action = "add", category = "DietaryPattern", stableCode = "vegan", note = (string?)null } } })
                 : path.EndsWith("/equipment", StringComparison.Ordinal)
-                    ? JsonContent.Create(new { entries = new[] { new { stableCode = "oven", customName = (string?)null, capacity = (decimal?)null, capacityUnit = (string?)null, constraintNote = (string?)null, sortOrder = 0 } } })
+                    ? JsonContent.Create(new { entries = new[] { new { stableCode = "oven", customName = (string?)null, capacity = (decimal?)null, capacityUnit = (string?)null, constraintNote = (string?)null } } })
                     : JsonContent.Create(new { displayName = new { action = "confirm", value = "Mutated", durability = "durable" } })
         };
         invalid.Headers.Add("X-CSRF-TOKEN", "not-the-session-token");

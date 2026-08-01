@@ -254,7 +254,7 @@
         "type": "object"
       },
       "EquipmentItemDto": {
-        "description": "Equipment item request DTO.",
+        "description": "Equipment item request DTO. Order is the array position; response exposes sortOrder.",
         "properties": {
           "capacity": {
             "format": "double",
@@ -283,14 +283,6 @@
               "string"
             ]
           },
-          "sortOrder": {
-            "format": "int32",
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ]
-          },
           "stableCode": {
             "type": "string"
           }
@@ -300,8 +292,7 @@
           "customName",
           "capacity",
           "capacityUnit",
-          "constraintNote",
-          "sortOrder"
+          "constraintNote"
         ],
         "type": "object"
       },
@@ -1250,7 +1241,7 @@
         "type": "object"
       },
       "ProfileResponse": {
-        "description": "Full profile response.",
+        "description": "Full profile response with progressive defaults and an explicit existence flag.",
         "properties": {
           "abandonmentReasons": {
             "items": {
@@ -1290,6 +1281,10 @@
             "format": "uuid",
             "type": "string"
           },
+          "profileExists": {
+            "description": "True when a durable profile row is persisted for the authenticated owner.",
+            "type": "boolean"
+          },
           "techniquesToLearn": {
             "items": {
               "type": "string"
@@ -1301,7 +1296,11 @@
             "type": "string"
           },
           "version": {
-            "type": "string"
+            "description": "Opaque profile version matching the ETag header when a profile exists; null when no profile exists yet.",
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
         "required": [
@@ -1314,6 +1313,7 @@
           "techniquesToLearn",
           "goals",
           "abandonmentReasons",
+          "profileExists",
           "version",
           "createdAt",
           "updatedAt"
@@ -3092,10 +3092,10 @@
                 }
               }
             },
-            "description": "OK",
+            "description": "Progressive profile projection. profileExists is false, version is null, and ETag is omitted when no profile has been persisted yet.",
             "headers": {
               "ETag": {
-                "description": "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+                "description": "Opaque profile version token. Omitted when profileExists is false.",
                 "schema": {
                   "type": "string"
                 }
@@ -3182,7 +3182,7 @@
             }
           },
           {
-            "description": "Required after the first create. Use the ETag from GET /api/v1/profile or a collection GET when a profile exists.",
+            "description": "Required for updates after the first create. Omit on the first profile create. Use the ETag from GET when a profile already exists.",
             "in": "header",
             "name": "If-Match",
             "schema": {
@@ -3212,7 +3212,7 @@
             "description": "OK",
             "headers": {
               "ETag": {
-                "description": "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+                "description": "Opaque profile version token. Omitted for preference/equipment collections when no profile exists.",
                 "schema": {
                   "type": "string"
                 }
@@ -3230,7 +3230,7 @@
             "description": "Created",
             "headers": {
               "ETag": {
-                "description": "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+                "description": "Opaque profile version token. Omitted for preference/equipment collections when no profile exists.",
                 "schema": {
                   "type": "string"
                 }
@@ -3371,7 +3371,7 @@
         "operationId": "putApiV1Profile",
         "parameters": [
           {
-            "description": "Required after the first create. Use the ETag from GET /api/v1/profile or a collection GET when a profile exists.",
+            "description": "Required for updates after the first create. Omit on the first profile create. Use the ETag from GET when a profile already exists.",
             "in": "header",
             "name": "If-Match",
             "schema": {
@@ -3410,7 +3410,7 @@
             "description": "OK",
             "headers": {
               "ETag": {
-                "description": "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+                "description": "Opaque profile version token. Omitted for preference/equipment collections when no profile exists.",
                 "schema": {
                   "type": "string"
                 }
@@ -3428,7 +3428,7 @@
             "description": "Created",
             "headers": {
               "ETag": {
-                "description": "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+                "description": "Opaque profile version token. Omitted for preference/equipment collections when no profile exists.",
                 "schema": {
                   "type": "string"
                 }
@@ -3663,7 +3663,7 @@
             "description": "Collection returned. version is null and ETag is omitted when no profile exists yet.",
             "headers": {
               "ETag": {
-                "description": "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+                "description": "Opaque profile version token. Omitted for preference/equipment collections when no profile exists.",
                 "schema": {
                   "type": "string"
                 }
@@ -3741,7 +3741,7 @@
         "operationId": "putApiV1ProfileEquipment",
         "parameters": [
           {
-            "description": "Required after the first create. Use the ETag from GET /api/v1/profile or a collection GET when a profile exists.",
+            "description": "Required for updates after the first create. Omit on the first profile create. Use the ETag from GET when a profile already exists.",
             "in": "header",
             "name": "If-Match",
             "schema": {
@@ -3780,7 +3780,7 @@
             "description": "OK",
             "headers": {
               "ETag": {
-                "description": "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+                "description": "Opaque profile version token. Omitted for preference/equipment collections when no profile exists.",
                 "schema": {
                   "type": "string"
                 }
@@ -3933,7 +3933,7 @@
             "description": "Collection returned. version is null and ETag is omitted when no profile exists yet.",
             "headers": {
               "ETag": {
-                "description": "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+                "description": "Opaque profile version token. Omitted for preference/equipment collections when no profile exists.",
                 "schema": {
                   "type": "string"
                 }
@@ -4011,7 +4011,7 @@
         "operationId": "putApiV1ProfilePreferences",
         "parameters": [
           {
-            "description": "Required after the first create. Use the ETag from GET /api/v1/profile or a collection GET when a profile exists.",
+            "description": "Required for updates after the first create. Omit on the first profile create. Use the ETag from GET when a profile already exists.",
             "in": "header",
             "name": "If-Match",
             "schema": {
@@ -4050,7 +4050,7 @@
             "description": "OK",
             "headers": {
               "ETag": {
-                "description": "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+                "description": "Opaque profile version token. Omitted for preference/equipment collections when no profile exists.",
                 "schema": {
                   "type": "string"
                 }
