@@ -399,13 +399,10 @@ export default function Today() {
         >
           A realidade mudou
         </Button>
-        <Button
-          asChild
-          variant="outline"
-          size="sm"
-          data-testid="today-open-plan"
-        >
-          <Link to="/app/planejamento">Abrir planejamento</Link>
+        <Button asChild variant="outline" size="sm">
+          <Link to="/app/planejamento" data-testid="today-open-plan">
+            Abrir planejamento
+          </Link>
         </Button>
       </div>
 
