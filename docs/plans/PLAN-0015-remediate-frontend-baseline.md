@@ -1,21 +1,22 @@
 # PLAN-0015: Remediate and Validate the Imported Frontend Baseline
 
-- **Status:** Completed
+- **Status:** Validating
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** Cursor agent (PLAN-0015)
 - **Created:** 2026-07-31
-- **Last updated:** 2026-08-01T14:45:00Z
-- **Branch:** `agent/plan-0015-remediate-frontend-baseline` (merged); completion docs on `docs/complete-plan-0015-validation`
-- **Pull request:** [Merged via PR #16](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/16) (`mergedAt` 2026-08-01T06:22:00Z)
-- **Delivery:** Merged via PR #16
+- **Last updated:** 2026-08-01T15:20:00Z
+- **Branch:** `agent/plan-0015-remediate-frontend-baseline` (merged); evidence/docs on `docs/complete-plan-0015-validation` (PR #18)
+- **Pull request:** Implementation [Merged via PR #16](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/16); completion evidence [PR #18](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/18)
+- **Delivery:** PR #18 open (awaiting owner merge); implementation Merged via PR #16
 - **Frontend merge SHA:** `e248126346d60c99df82e9c1e9f1954a07e68da2`
 - **Automated headed Chromium native zoom:** Passed (`widthRatio=2.0`, `calculatedZoomPercent=200`) — evidence [`docs/evidence/plan-0015/browser-zoom-200-validation.md`](../evidence/plan-0015/browser-zoom-200-validation.md)
 - **Automated Firefox browser/responsive smoke:** Passed
 - **Firefox exact native zoom measurement:** Passed (`widthRatio=2.0`, `calculatedZoomPercent=200`)
+- **Required zoom scenarios:** 22/22 Passed (fail-closed); validator OK locally
 - **Manual visual review:** Deferred — non-blocking (owner decision)
 - **NVDA/VoiceOver manual audit:** Deferred — non-blocking (owner decision)
-- **Blocker:** None
+- **Blocker:** Awaiting Frontend CI green on PR #18 head before marking Completed
 - **Implementation SHA (prior reviewed head):** `11f00bdfdcd2f8139d449841c52968df587ed794`
 - **Last CI-validated code SHA (prior round):** `11f00bdfdcd2f8139d449841c52968df587ed794`
 - **Prior push workflow (green):** [Frontend #30680034509](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30680034509)
@@ -204,19 +205,29 @@ Bundle inspect: zero hits for forbidden prototype tokens in production JS.
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0015 **Completed**; automated headed native-browser-zoom smoke Passed; awaiting owner merge of PR #18.
-- **Last completed step:** Honesty remediations for zoom evidence (measurement fields, scenario assertions, evidence validator); manual gates deferred non-blocking.
-- **Exact next action:** Owner merges PR #18; then an independent agent may claim PLAN-0005. Do not start PLAN-0011.
-- **Blockers:** None for PLAN-0015. PLAN-0005 Ready. PLAN-0011 Blocked by PLAN-0005 automated validation.
-- **Validation performed:** Prior PR #16 CI + local dual builds; headed native zoom 200% (26 surfaces Passed).
-- **Working tree state:** Documentation/evidence only on `docs/complete-plan-0015-validation`.
-- **Substantial run target:** Achieved for Phase 0 manual zoom close-out.
+- **Current checkpoint:** PLAN-0015 **Validating**; fail-closed zoom evidence 22/22 Passed locally; awaiting Frontend CI green on PR #18 head.
+- **Last completed step:** Fail-closed smoke rewrite (Cook/dialog/carousel/item/language), validator + CI wiring, minimal dialog focus-restore for controlled RealityChangedDialog, local re-run Passed.
+- **Exact next action:** Confirm Frontend workflow green on exact head; then mark PLAN-0015 Completed; owner merges PR #18; do not start PLAN-0005 until merge; do not start PLAN-0011.
+- **Blockers:** Frontend CI on PR #18 head (must be green before Completed).
+- **Validation performed:** Local dual builds; headed native zoom 200% Chrome+Firefox Passed; 22 required scenarios Passed; `validate-zoom-evidence.mjs` OK; syntax check OK.
+- **Working tree state:** Evidence/scripts/docs + minimal a11y focus restore on `docs/complete-plan-0015-validation`.
+- **Substantial run target:** Fail-closed PLAN-0015 zoom gate honesty round.
 
 ## Progress log
 
+### 2026-08-01T15:20:00Z — Cursor agent
+
+- **Checkpoint:** Fail-closed zoom evidence remediation on PR #18; PLAN-0015 moved back to Validating until CI green.
+- **Fixes:** Cook CTA path proof (no body-keyword pass); Planning_dialog open/close/focus; Carousel_home item change; Item_detail link-click only; Language_selector split from FeatureUnavailable; SHA fields (`testedMainSha`/`evidenceBranchHead`/`frontendImplementationSha`); summarize fail-closed; validator strengthened; Frontend CI syntax+validator; minimal `returnFocusSelector` on RealityChangedDialog.
+- **Chrome/Firefox zoom:** Passed — `widthRatio=2.0`, `calculatedZoomPercent=200`
+- **Scenarios:** 22 Passed / 0 Failed / 0 Blocked / 0 Not applicable
+- **Validator:** OK locally
+- **PLAN-0005:** Ready, not started
+- **Next action:** Await Frontend CI green; then Completed; owner review of PR #18; no merge by agent
+
 ### 2026-08-01T14:45:00Z — Cursor agent
 
-- **Checkpoint:** Honesty fix for automated headed native-browser-zoom evidence on PR #18; PLAN-0015 remains Completed.
+- **Checkpoint:** Honesty fix for automated headed native-browser-zoom evidence on PR #18; PLAN-0015 was marked Completed (superseded by fail-closed round).
 - **Reclassification:** Not “manual browser validation”; automated headed native-browser-zoom smoke.
 - **Chrome/Chromium zoom:** Passed — `calculatedZoomPercent=200`, `widthRatio=2.0`, `zoomConfirmed200=true`
 - **Firefox zoom:** Passed — same measurement fields; no contradictory `approxZoomPercent`
@@ -283,7 +294,7 @@ Bundle inspect: zero hits for forbidden prototype tokens in production JS.
 
 - [x] Acceptance criteria truthful for delivered work.
 - [x] Implementation merged via PR #16 (`e248126`); agent did not self-merge.
-- [x] PLAN-0015 status `Completed` after real browser zoom 200% Passed (docs PR awaits owner merge).
+- [ ] PLAN-0015 status `Completed` after fail-closed zoom evidence + Frontend CI green on PR #18 head (docs PR awaits owner merge).
 - [x] Implementation SHA vs Last CI-validated code SHA terminology documented.
 - [x] Quality + browser-smoke CI, vulns, smoke, zoom evidence, limitations listed for owner.
 - [x] AT audit explicitly deferred to PLAN-0005; PLAN-0005 Ready; PLAN-0011 Blocked.

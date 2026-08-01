@@ -2,7 +2,7 @@
 
 ## Final disposition
 
-**Passed** (`zoomDisposition: Passed`)
+**Passed** (`zoomDisposition: Passed`) — fail-closed required scenario set (22/22 Passed).
 
 | Gate | Result |
 |---|---|
@@ -19,11 +19,12 @@ Headed mode does **not** mean human review. This is automated Playwright + OS-le
 
 | Field | Value |
 |---|---|
-| Tested main SHA | `da295932cd678eef5b8559c39217e19f101d7a80` (branch docs head may differ) |
-| Frontend implementation SHA (PR #16) | `e248126346d60c99df82e9c1e9f1954a07e68da2` |
+| `testedMainSha` | `da295932cd678eef5b8559c39217e19f101d7a80` (`origin/main` / `ZOOM_TESTED_MAIN_SHA`) |
+| `evidenceBranchHead` | recorded in JSON (`git rev-parse HEAD` on evidence branch) |
+| `frontendImplementationSha` | `e248126346d60c99df82e9c1e9f1954a07e68da2` (PR #16) |
 | Test finished (UTC) | see JSON `finishedAt` |
 | OS | Linux 6.12.96+deb13-amd64 (x64) |
-| Window target | 1280 × 800 |
+| Window target | 1280 × 800 (Firefox may report display-native baseline) |
 | Modes | `production` (`build-production/`), `prototype` (`build-prototype/`) |
 
 ## Commands
@@ -33,8 +34,10 @@ cd apps/frontend
 yarn install --frozen-lockfile
 yarn build:production
 yarn build:prototype
-# static SPA serve on :4173 (production) and :4174 (prototype)
-node apps/frontend/scripts/browser-zoom-200-validation.js
+ZOOM_TESTED_MAIN_SHA=da295932cd678eef5b8559c39217e19f101d7a80 \
+  node scripts/browser-zoom-200-validation.js
+cd ../..
+node --check apps/frontend/scripts/browser-zoom-200-validation.js
 node scripts/frontend/validate-zoom-evidence.mjs
 ```
 
@@ -58,11 +61,8 @@ Excluded substitutes: CSS `zoom`, `transform:scale()`, `deviceScaleFactor` as so
 
 | Field | Value |
 |---|---|
-| `baselineInnerWidthAt100` | 1280 |
-| `zoomedInnerWidth` | 640 |
 | `widthRatio` | 2.0 |
 | `calculatedZoomPercent` | 200 |
-| `numberOfZoomInActions` | 5 |
 | `zoomConfirmed200` | true |
 | `status` | Passed |
 
@@ -70,42 +70,37 @@ Excluded substitutes: CSS `zoom`, `transform:scale()`, `deviceScaleFactor` as so
 
 | Field | Value |
 |---|---|
-| `baselineInnerWidthAt100` | 1366 |
-| `zoomedInnerWidth` | 683 |
 | `widthRatio` | 2.0 |
 | `calculatedZoomPercent` | 200 |
-| `numberOfZoomInActions` | 6 |
 | `zoomConfirmed200` | true |
 | `status` | Passed |
 
-No contradictory `approxZoomPercent: 100` with `zoomConfirmed200: true`.
+## Required scenarios (fail-closed)
 
-## Scenario results
-
-Summary: **22 Passed / 0 Failed / 0 Blocked / 4 Not applicable**.
-
-Each scenario records `startPath`, `action`, `expectedPath`/`expectedState`, `actualPath`/`actualState`, `assertion`, `status`.
-
-`Passed` is used only with an assertion. Interactions that are not present are **Not applicable** (not Passed).
-
-### Production
+Exactly **22** required IDs (11 × Chrome + 11 × Firefox). Summary: **22 Passed / 0 Failed / 0 Blocked / 0 Not applicable / 0 Unsupported**.
 
 | Surface | Chromium | Firefox |
 |---|---|---|
 | Landing | Passed | Passed |
 | Access | Passed | Passed |
-| Language / FeatureUnavailable (`/acesso`) | Passed | Passed |
-| FeatureUnavailable `/app/hoje` | Passed | Passed |
+| FeatureUnavailable | Passed | Passed |
+| Language_selector | Passed | Passed |
+| Home | Passed | Passed |
+| Pantry | Passed | Passed |
+| Planning_dialog | Passed | Passed |
+| Shopping | Passed | Passed |
+| Carousel_home | Passed | Passed |
+| Cook_CTA | Passed | Passed |
+| Item_detail_navigation | Passed | Passed |
 
-### Prototype (after automated demo-session entry)
+### Scenario honesty notes
 
-| Surface | Chromium | Firefox |
-|---|---|---|
-| Landing / Access / Home / Pantry / Shopping | Passed | Passed |
-| Planning dialog | Not applicable | Not applicable |
-| Carousel next | Not applicable | Not applicable |
-| Cook CTA navigation | Passed | Passed |
-| Item detail route | Passed | Passed |
+- **Cook_CTA:** requires `actualPath === href` (or documented cook route / new destination dialog). Body keyword match alone is rejected. Primary activation is normal `click()`; `force: true` is not accepted as proof. Keyboard Enter after overlay-blocked pointer may be recorded as `enter-after-click-blocked`.
+- **Planning_dialog:** `open-reality-changed` → `role=dialog` with name; Escape closes; `focusReturned=true` required.
+- **Carousel_home:** scenario `routeWithDeps`; Next/Arrow must change active item/index (`changed=true`).
+- **Item_detail_navigation:** link click must navigate (`linkClickNavigation=true`); `page.goto` fallback does not pass the interaction scenario.
+- **Language_selector:** separate from FeatureUnavailable; requires accessible control + known string change + restore.
+- **FeatureUnavailable:** message/readable/no overflow/no mock data only.
 
 ## Evidence validator
 
@@ -113,11 +108,13 @@ Each scenario records `startPath`, `action`, `expectedPath`/`expectedState`, `ac
 node scripts/frontend/validate-zoom-evidence.mjs
 ```
 
-Result: **OK** (no contradictory zoom claims; no Passed without assertion; summary matches scenarios).
+Result: **OK** — all required Passed; disposition recomputed; Cook/dialog/carousel/item/language rules enforced; manual claims remain Deferred.
+
+CI (`.github/workflows/frontend.yml` quality job) runs `node --check` on the smoke script and this validator against the versioned JSON.
 
 ## Screenshots
 
-Optional, non-gating, gitignored under `docs/evidence/plan-0015/artifacts/`. Not required for disposition.
+Optional, non-gating, gitignored under `docs/evidence/plan-0015/artifacts/`.
 
 ## Deferred (non-blocking)
 
@@ -127,11 +124,10 @@ NVDA manual audit: Deferred — non-blocking in the current phase
 VoiceOver manual audit: Deferred — non-blocking in the current phase
 Manual exploratory charters: Deferred — non-blocking
 Manual screenshot inspection: Deferred — non-blocking
-Candidate for a later pre-release validation plan
 ```
 
 ## Plan impact
 
-- PLAN-0015 → **Completed** (implementation Merged via PR #16; zoom smoke Passed)
+- PLAN-0015 → **Validating** until Frontend CI is green on the evidence head; then **Completed**
 - PLAN-0005 → **Ready** (not started in this PR)
-- PLAN-0011 → **Blocked** by PLAN-0005 automated validation
+- PLAN-0011 → **Blocked** by PLAN-0005

@@ -38,10 +38,13 @@ export function RealityChangedDialog({
   open,
   onOpenChange,
   onApply,
+  /** CSS selector for the control that opened this controlled dialog (focus restore). */
+  returnFocusSelector,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   onApply?: (v: any) => void;
+  returnFocusSelector?: string;
 }) {
   const [reason, setReason] = useState<string | null>(null);
   const [option, setOption] = useState<string | null>(null);
@@ -54,7 +57,15 @@ export function RealityChangedDialog({
   };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent
+        className="max-w-2xl"
+        onCloseAutoFocus={(event) => {
+          // Controlled dialogs without DialogTrigger do not restore focus by default.
+          if (!returnFocusSelector) return;
+          event.preventDefault();
+          document.querySelector<HTMLElement>(returnFocusSelector)?.focus();
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">
             A realidade mudou
