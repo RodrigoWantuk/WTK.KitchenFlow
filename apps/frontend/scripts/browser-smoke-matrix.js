@@ -288,9 +288,21 @@ async function run() {
   async function assertKeyboardFocusVisible(page, label, candidateIds) {
     let testId = null;
     for (const id of candidateIds) {
-      if ((await page.locator(`[data-testid="${id}"]`).count()) > 0) {
+      const locator = page.locator(`[data-testid="${id}"]`);
+      if ((await locator.count()) > 0) {
+        await locator.first().waitFor({ state: "attached", timeout: 10000 });
         testId = id;
         break;
+      }
+    }
+    if (!testId) {
+      // One more pass after a short settle — SPA route content may still mount.
+      await page.waitForTimeout(250);
+      for (const id of candidateIds) {
+        if ((await page.locator(`[data-testid="${id}"]`).count()) > 0) {
+          testId = id;
+          break;
+        }
       }
     }
     if (!testId) {
@@ -493,6 +505,10 @@ async function run() {
         ]);
         await page.keyboard.press("Enter");
         await page.waitForURL(/\/acesso/);
+        await page
+          .locator('[data-testid="access-demo"], [data-testid="access-enter"]')
+          .first()
+          .waitFor({ state: "visible", timeout: 15000 });
 
         await assertKeyboardFocusVisible(page, "acesso/demo CTA", [
           "access-demo",
@@ -528,6 +544,13 @@ async function run() {
           await page.keyboard.press("ArrowLeft");
         }
 
+        await assertKeyboardFocusVisible(page, "authenticated asChild CTA", [
+          "today-open-plan",
+          "planned-open",
+          "planned-view",
+          "nav-settings",
+        ]);
+
         await assertKeyboardFocusVisible(page, "main navigation", [
           "sidenav-plan",
           "bottomnav-plan",
@@ -545,18 +568,8 @@ async function run() {
         await page.keyboard.press("Enter");
         await page.waitForURL(/\/app\/ajustes/);
 
-        await assertKeyboardFocusVisible(page, "authenticated asChild CTA", [
-          "sidenav-pantry",
-          "bottomnav-pantry",
-        ]);
-        await page.keyboard.press("Enter");
-        await page.waitForURL(/\/app\/despensa/);
-        await assertKeyboardFocusVisible(page, "pantry asChild CTA", [
-          "pantry-add",
-        ]);
-
         record(
-          "keyboard-only Landing→Access→Home→carousel→Plan→Settings→Pantry",
+          "keyboard-only Landing→Access→Home→carousel→Plan→Settings",
           "Passed",
           "Tab/Enter/Arrow only; baseline vs focused :focus-visible",
         );

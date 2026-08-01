@@ -146,8 +146,8 @@ export default function Pantry() {
             {pantry.length} {pantry.length === 1 ? "item" : "itens"}
           </p>
         </div>
-        <Button asChild data-testid="pantry-add" className="rounded-full">
-          <Link to="/app/despensa/novo">
+        <Button asChild className="rounded-full">
+          <Link to="/app/despensa/novo" data-testid="pantry-add">
             <Plus className="mr-1 h-4 w-4" />
             {tr("pantry.add")}
           </Link>
