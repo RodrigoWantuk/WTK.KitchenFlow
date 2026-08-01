@@ -1,13 +1,13 @@
 <!doctype html><meta charset="utf-8"/><title>Browser smoke</title><pre>{
   "kind": "automated-browser-smoke",
-  "commitSha": "b6859859435835d871e00096c88e349f71931dd5",
+  "commitSha": "eeb7b6be5833919536466c8858ec5558f589d4d5",
   "nodeVersion": "v24.18.0",
   "yarnVersion": "1.22.22",
   "playwrightVersion": "1.55.1",
   "chromiumVersion": "140.0.7339.186",
   "frontendMode": "prototype",
   "baseUrl": "http://127.0.0.1:3000",
-  "timestamp": "2026-08-01T01:40:52.411Z",
+  "timestamp": "2026-08-01T01:45:57.918Z",
   "headless": true,
   "operatingSystem": "linux 6.12.96+deb13-amd64 x64",
   "results": [
@@ -53,29 +53,11 @@
     },
     {
       "check": "locale pt-BR",
-      "result": "Passed",
-      "notes": "selector + 3 distinct strings"
-    },
-    {
-      "check": "locale en",
-      "result": "Passed",
-      "notes": "selector + 3 distinct strings"
-    },
-    {
-      "check": "locale es",
-      "result": "Passed",
-      "notes": "selector + 3 distinct strings"
-    },
-    {
-      "check": "Despensa déficit → compras review",
-      "result": "Passed",
-      "notes": ""
-    },
-    {
-      "check": "CTA Cozinhar navegação",
-      "result": "Passed",
-      "notes": "http://127.0.0.1:3000/app/cozinhar/r3?sourcePreparationRouteId=prep-route-bean-soup&relatedPlanEntryId=pl-route-r3"
+      "result": "Failed",
+      "notes": "expected translated strings missing (found 0/3). sample=Prototype mode — synthetic data and scenario tooling are active. Not a production session.\nC\nCocinaris\nPT-BR\nEN\nES\nEntrar no Cocinaris\nCozinhar de verdade, todo dia\nO cozinhar do dia a dia, sem stress taglineSeen=O cozinhar do dia a dia, sem stress."
     }
   ],
-  "failedArtifacts": []
+  "failedArtifacts": [
+    "/home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/frontend/docs/browser-smoke/failures/locale_pt_BR.png"
+  ]
 }</pre>

@@ -109,11 +109,13 @@ async function run() {
         ...process.env,
         BROWSER: "none",
         CI: "true",
+        HOST: process.env.HOST || "127.0.0.1",
+        PORT: process.env.PORT || "3000",
         REACT_APP_FRONTEND_MODE: "prototype",
       },
       stdio: "pipe",
     });
-    await waitForServer(BASE);
+    await waitForServer(BASE, 180000);
   } else {
     await waitForServer(BASE, 30000).catch((err) => {
       throw new Error(
@@ -208,19 +210,19 @@ async function run() {
 
   const localeExpectations = {
     "pt-BR": {
-      tagline: "O cozinhar do dia a dia, sem stress.",
-      cta: "Entrar no Cocinaris",
-      demo: "Continuar em modo demo",
+      a: "O cozinhar do dia a dia, sem stress.",
+      b: "Entrar no Cocinaris",
+      c: "Entrar em modo demo",
     },
     en: {
-      tagline: "Everyday cooking, without the stress.",
-      cta: "Enter Cocinaris",
-      demo: "Continue in demo mode",
+      a: "Everyday cooking, without the stress.",
+      b: "Enter Cocinaris",
+      c: "Enter demo mode",
     },
     es: {
-      tagline: "Cocinar cada día, sin estrés.",
-      cta: "Entrar en Cocinaris",
-      demo: "Continuar en modo demo",
+      a: "Cocinar cada día, sin estrés.",
+      b: "Entrar en Cocinaris",
+      c: "Entrar en modo demo",
     },
   };
 
@@ -497,26 +499,26 @@ async function run() {
             .first()
             .innerText()
             .catch(() => "");
-          // tagline key renders in h1 via tr("tagline")
           const body = await page.locator("body").innerText();
-          const hits = [expected.tagline, expected.cta, expected.demo].filter(
-            (s) => body.includes(s),
-          );
+          const needed = [expected.a, expected.b, expected.c];
+          const hits = needed.filter((s) => body.includes(s));
           if (hits.length < 3) {
-            // Access page demo text may only appear after navigation; check landing then access
-            await page.getByTestId("landing-enter").click();
-            await page.waitForURL(/acesso/);
-            const accessBody = await page.locator("body").innerText();
-            const combined = `${body}\n${accessBody}`;
-            const hits2 = [
-              expected.tagline,
-              expected.cta,
-              expected.demo,
-            ].filter((s) => combined.includes(s));
-            if (hits2.length < 3) {
+            fail(
+              `locale ${lang}`,
+              `expected translated strings missing (found ${hits.length}/3). sample=${body.slice(0, 240)} taglineSeen=${tagline}`,
+            );
+          }
+          // Confirm language actually changed away from another locale's tagline
+          const otherTaglines = Object.entries(localeExpectations)
+            .filter(([code]) => code !== lang)
+            .map(([, v]) => v.a);
+          if (otherTaglines.some((t) => body.includes(t) && t !== expected.a)) {
+            // Allow shared fragments only if exact other tagline present incorrectly
+            const wrong = otherTaglines.find((t) => body.includes(t));
+            if (wrong && wrong !== expected.a) {
               fail(
                 `locale ${lang}`,
-                `expected translated strings missing (found ${hits2.length}/3). sample=${combined.slice(0, 200)} taglineSeen=${tagline}`,
+                `page still contains other locale tagline: ${wrong}`,
               );
             }
           }
