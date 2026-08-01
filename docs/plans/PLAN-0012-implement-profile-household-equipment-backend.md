@@ -73,12 +73,18 @@ Implement a production-shaped backend slice for progressive profile, single-hous
 
 ## Execution state
 
-- **Current phase:** Validating — final security/contract remediation pushed; awaiting Backend CI and owner re-review
-- **Last verified checkpoint:** Owner-bound ETag validation; missing-profile `profileExists`/`version:null` without ETag; unique equipment stable codes + ordering by array position; migration `EnforceUniqueProfileEquipmentStableCode`; OpenAPI snapshot refreshed; local 165/165; migrations idempotent artifact OK
-- **Blockers:** Owner re-review after green Backend CI on the final remediation head
+- **Current phase:** Validating — final remediation delivered; Backend CI green on head `e6eac62472678f1469fabc0b80f658014112f5a8`
+- **Last verified checkpoint:** Owner-bound ETag validation; missing-profile `profileExists`/`version:null` without ETag; unique equipment stable codes + ordering by array position; migration `EnforceUniqueProfileEquipmentStableCode`; OpenAPI snapshot refreshed; local 165/165; Backend CI https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30689893826 green
+- **Blockers:** Owner re-review
 - **Exact next action:** Owner re-review of PR #12; do not merge or mark Completed without approval
 
 ## Progress log
+
+### 2026-08-01T07:36:00Z — Backend CI green on final remediation head
+
+- Backend workflow https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30689893826 succeeded on `e6eac62472678f1469fabc0b80f658014112f5a8` (build-and-test + secret-scan), including OpenAPI export/drift/lint and unique equipment migration.
+- Vulnerability scan: no vulnerable packages reported.
+- **Next:** Owner re-review. Keep Validating; do not merge or mark Completed.
 
 ### 2026-08-01T07:30:00Z — Final security and contract remediation
 
