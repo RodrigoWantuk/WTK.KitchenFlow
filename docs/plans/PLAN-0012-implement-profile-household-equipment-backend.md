@@ -68,17 +68,27 @@ Implement a production-shaped backend slice for progressive profile, single-hous
 - [x] Privacy-minimizing audit history without sensitive payloads
 - [x] Module-owned export and deletion projection interfaces prepared for Privacy workflows
 - [x] Architecture tests enforce module boundaries
-- [x] Full test suite deterministic with zero skipped tests (165/165 local Release: 14 architecture + 29 unit + 122 integration)
+- [x] Full test suite deterministic with zero skipped tests (local Release: 14 architecture + 46 unit + 131 integration = 191)
 - [x] Release build zero warnings, locked restore, migrations from empty and prior main, OpenAPI truthful
 
 ## Execution state
 
-- **Current phase:** Validating — final remediation delivered; Backend CI green on head `e6eac62472678f1469fabc0b80f658014112f5a8`
-- **Last verified checkpoint:** Owner-bound ETag validation; missing-profile `profileExists`/`version:null` without ETag; unique equipment stable codes + ordering by array position; migration `EnforceUniqueProfileEquipmentStableCode`; OpenAPI snapshot refreshed; local 165/165; Backend CI https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30689893826 green
+- **Current phase:** Validating — privacy/history/timestamp/error-path remediation validated locally; awaiting Backend CI and owner re-review
+- **Last verified checkpoint:** Local Release green with enum-based sensitive history redaction, null missing-profile timestamps, canonical audit codes, nested adultDeclaration error paths, runbook + duplicate-migration fail-closed test, OpenAPI export, 14/46/131 tests (191). Prior reviewed head was `ba6c57d7fa2bf3e738320a8aee7709e81fab3cd6`.
 - **Blockers:** Owner re-review
-- **Exact next action:** Owner re-review of PR #12; do not merge or mark Completed without approval
+- **Exact next action:** Push remediation head; await Backend CI; owner re-review of PR #12; do not merge or mark Completed without approval
 
 ## Progress log
+
+### 2026-08-01T08:15:00Z — Privacy and contract final blockers remediation
+
+- Preference history redaction now uses validated `PreferenceCategory` enums (case-insensitive request casing cannot bypass redaction).
+- Missing-profile GET returns null `createdAt`/`updatedAt` (no synthetic timestamps); OpenAPI transformer documents nullability; snapshot regenerated via export.
+- Equipment/preference history uses canonical stable codes; adultDeclaration validation errors use nested paths; malformed field mutations return controlled `validation_failed`.
+- Runbook documents `EnforceUniqueProfileEquipmentStableCode` preflight/fail-closed remediation; migration test covers duplicate-data failure without silent cleanup.
+- Reconciled `docs/plan-status.md`: PLAN-0015 delivery = Merged via PR #16; PLAN-0011/0005 no longer wait on draft/open PR #16.
+- **Validation:** `dotnet restore --locked-mode`, format verify, Release build 0 warnings, tests 14/46/131 (191 total, 0 skipped), vuln scan clean, empty+upgrade migrations, idempotent script ×2, OpenAPI export/drift/lint, duplicate-equipment migration fail-closed.
+- **Next:** Push head; await Backend CI; owner re-review. Keep Validating; do not merge or mark Completed.
 
 ### 2026-08-01T07:36:00Z — Backend CI green on final remediation head
 

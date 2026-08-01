@@ -5,9 +5,11 @@
 - **Priority:** Critical
 - **Owner:** Cursor agent (PLAN-0015)
 - **Created:** 2026-07-31
-- **Last updated:** 2026-08-01T05:20:00Z
-- **Branch:** `agent/plan-0015-remediate-frontend-baseline`
-- **Pull request:** [Draft PR #16](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/16)
+- **Last updated:** 2026-08-01T08:10:00Z
+- **Branch:** `agent/plan-0015-remediate-frontend-baseline` (merged)
+- **Pull request:** [Merged via PR #16](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/16) (`mergedAt` 2026-08-01T06:22:00Z)
+- **Delivery:** Merged via PR #16 — plan remains Validating until remaining manual frontend validation is recorded and the owner decides Completed
+- **Blocker:** Remaining concrete manual frontend validation (not PR merge/approval)
 - **Implementation SHA (prior reviewed head):** `11f00bdfdcd2f8139d449841c52968df587ed794`
 - **Last CI-validated code SHA (prior round):** `11f00bdfdcd2f8139d449841c52968df587ed794`
 - **Prior push workflow (green):** [Frontend #30680034509](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30680034509)

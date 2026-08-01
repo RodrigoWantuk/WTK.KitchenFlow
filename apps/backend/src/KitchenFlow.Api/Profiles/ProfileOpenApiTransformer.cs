@@ -152,6 +152,18 @@ internal static class ProfileOpenApiTransformer
             Type = JsonSchemaType.String | JsonSchemaType.Null,
             Description = "Opaque profile version matching the ETag header when a profile exists; null when no profile exists yet."
         };
+        typed.Properties["createdAt"] = new OpenApiSchema
+        {
+            Type = JsonSchemaType.String | JsonSchemaType.Null,
+            Format = "date-time",
+            Description = "Persisted profile creation timestamp; null when profileExists is false."
+        };
+        typed.Properties["updatedAt"] = new OpenApiSchema
+        {
+            Type = JsonSchemaType.String | JsonSchemaType.Null,
+            Format = "date-time",
+            Description = "Persisted profile last-update timestamp; null when profileExists is false."
+        };
         typed.Required ??= new HashSet<string>(StringComparer.Ordinal);
         typed.Required.Add("profileExists");
     }
@@ -164,7 +176,7 @@ internal static class ProfileOpenApiTransformer
             return;
         }
 
-        typed.Description = "Progressive profile projection. profileExists is false, version is null, and ETag is omitted when no profile has been persisted yet.";
+        typed.Description = "Progressive profile projection. profileExists is false, version/createdAt/updatedAt are null, and ETag is omitted when no profile has been persisted yet.";
     }
 
     private static void WireFieldMutationEnums(OpenApiDocument document)

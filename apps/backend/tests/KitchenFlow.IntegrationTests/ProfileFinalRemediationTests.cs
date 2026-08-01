@@ -37,8 +37,15 @@ public sealed class ProfileFinalRemediationTests : IAsyncLifetime
         Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
         Assert.False(body.GetProperty("profileExists").GetBoolean());
         Assert.Equal(JsonValueKind.Null, body.GetProperty("version").ValueKind);
+        Assert.Equal(JsonValueKind.Null, body.GetProperty("createdAt").ValueKind);
+        Assert.Equal(JsonValueKind.Null, body.GetProperty("updatedAt").ValueKind);
         Assert.Null(response.Headers.ETag);
         Assert.Equal("absent", body.GetProperty("displayName").GetProperty("presence").GetString());
+
+        var second = await client.GetAsync("/api/v1/profile");
+        var secondBody = await second.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(JsonValueKind.Null, secondBody.GetProperty("createdAt").ValueKind);
+        Assert.Equal(JsonValueKind.Null, secondBody.GetProperty("updatedAt").ValueKind);
     }
 
     [Fact]
@@ -54,12 +61,17 @@ public sealed class ProfileFinalRemediationTests : IAsyncLifetime
         var etag = created.Headers.ETag!.Tag;
         Assert.True(createdBody.GetProperty("profileExists").GetBoolean());
         Assert.Equal(etag.Trim('"'), createdBody.GetProperty("version").GetString());
+        Assert.NotEqual(JsonValueKind.Null, createdBody.GetProperty("createdAt").ValueKind);
+        Assert.NotEqual(JsonValueKind.Null, createdBody.GetProperty("updatedAt").ValueKind);
+        var createdAt = createdBody.GetProperty("createdAt").GetDateTimeOffset();
+        var createdUpdatedAt = createdBody.GetProperty("updatedAt").GetDateTimeOffset();
 
         var get = await client.GetAsync("/api/v1/profile");
         var getBody = await get.Content.ReadFromJsonAsync<JsonElement>();
         Assert.True(getBody.GetProperty("profileExists").GetBoolean());
         Assert.NotEqual(JsonValueKind.Null, getBody.GetProperty("version").ValueKind);
         Assert.Equal(get.Headers.ETag!.Tag.Trim('"'), getBody.GetProperty("version").GetString());
+        Assert.Equal(createdAt, getBody.GetProperty("createdAt").GetDateTimeOffset());
 
         using var missingMatch = new HttpRequestMessage(HttpMethod.Patch, "/api/v1/profile")
         {
@@ -78,6 +90,8 @@ public sealed class ProfileFinalRemediationTests : IAsyncLifetime
         Assert.Equal(System.Net.HttpStatusCode.OK, updated.StatusCode);
         var updatedBody = await updated.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Equal("Updated", updatedBody.GetProperty("displayName").GetProperty("value").GetString());
+        Assert.Equal(createdAt, updatedBody.GetProperty("createdAt").GetDateTimeOffset());
+        Assert.True(updatedBody.GetProperty("updatedAt").GetDateTimeOffset() >= createdUpdatedAt);
 
         using var stale = new HttpRequestMessage(HttpMethod.Patch, "/api/v1/profile")
         {
@@ -114,6 +128,81 @@ public sealed class ProfileFinalRemediationTests : IAsyncLifetime
         var otherProfile = await other.GetFromJsonAsync<JsonElement>("/api/v1/profile");
         Assert.Equal("Owner", ownerProfile.GetProperty("displayName").GetProperty("value").GetString());
         Assert.Equal("Other", otherProfile.GetProperty("displayName").GetProperty("value").GetString());
+    }
+
+    [Fact]
+    public async Task EquipmentHistoryPersistsCanonicalStableCodesOnly()
+    {
+        await using var factory = await CreateFactoryAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        var created = await PatchProfileAsync(client, csrf, new { displayName = new { action = "confirm", value = "Alex", durability = "durable" } });
+        var etag = created.Headers.ETag!.Tag;
+        using var put = new HttpRequestMessage(HttpMethod.Put, "/api/v1/profile/equipment")
+        {
+            Content = new StringContent("""{"entries":[{"stableCode":" blender "},{"stableCode":"oven"}]}""", System.Text.Encoding.UTF8, "application/json")
+        };
+        put.Headers.Add("X-CSRF-TOKEN", csrf);
+        put.Headers.TryAddWithoutValidation("If-Match", etag);
+        var response = await client.SendAsync(put);
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+
+        using var scope = factory.Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var history = await database.ProfileChangeHistoryEntries.AsNoTracking().OrderByDescending(item => item.OccurredAt).FirstAsync();
+        var codes = System.Text.Json.JsonSerializer.Deserialize<string[]>(history.FieldCodesJson) ?? [];
+        Assert.Equal(["blender", "oven"], codes);
+        Assert.DoesNotContain(history.FieldCodesJson, " blender ", StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("""{"displayName":{"value":"Alex"}}""")]
+    [InlineData("""{"displayName":{"action":null,"value":"Alex","durability":"durable"}}""")]
+    [InlineData("""{"displayName":{"action":"confirm","value":"Alex","durability":null}}""")]
+    [InlineData("""{"displayName":{"action":"","value":"Alex","durability":""}}""")]
+    public async Task MalformedDisplayNamePayloadsReturnValidationFailed(string payload)
+    {
+        await using var factory = await CreateFactoryAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        using var request = new HttpRequestMessage(HttpMethod.Patch, "/api/v1/profile")
+        {
+            Content = new StringContent(payload, System.Text.Encoding.UTF8, "application/json")
+        };
+        request.Headers.Add("X-CSRF-TOKEN", csrf);
+        var response = await client.SendAsync(request);
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("validation_failed", problem.GetProperty("errorCode").GetString());
+    }
+
+    [Fact]
+    public async Task AdultDeclarationValidationErrorsUseNestedPaths()
+    {
+        await using var factory = await CreateFactoryAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        using var request = new HttpRequestMessage(HttpMethod.Patch, "/api/v1/profile")
+        {
+            Content = JsonContent.Create(new
+            {
+                adultDeclaration = new
+                {
+                    adultDeclared = true,
+                    termsVersion = "",
+                    privacyVersion = new string('p', 33)
+                }
+            })
+        };
+        request.Headers.Add("X-CSRF-TOKEN", csrf);
+        var response = await client.SendAsync(request);
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("validation_failed", problem.GetProperty("errorCode").GetString());
+        Assert.True(problem.GetProperty("errors").TryGetProperty("adultDeclaration.termsVersion", out _));
+        Assert.True(problem.GetProperty("errors").TryGetProperty("adultDeclaration.privacyVersion", out _));
+        Assert.False(problem.GetProperty("errors").TryGetProperty("termsVersion", out _));
+        Assert.False(problem.GetProperty("errors").TryGetProperty("privacyVersion", out _));
     }
 
     [Fact]
@@ -266,6 +355,8 @@ public sealed class ProfileFinalRemediationTests : IAsyncLifetime
         var profileSchema = document.GetProperty("components").GetProperty("schemas").GetProperty("ProfileResponse").GetProperty("properties");
         Assert.Contains("boolean", SchemaTypes(profileSchema.GetProperty("profileExists")));
         Assert.Contains("null", SchemaTypes(profileSchema.GetProperty("version")));
+        Assert.Contains("null", SchemaTypes(profileSchema.GetProperty("createdAt")));
+        Assert.Contains("null", SchemaTypes(profileSchema.GetProperty("updatedAt")));
         Assert.Contains(document.GetProperty("components").GetProperty("schemas").GetProperty("ProfileResponse").GetProperty("required").EnumerateArray().Select(item => item.GetString()), value => value == "profileExists");
 
         var equipmentItem = document.GetProperty("components").GetProperty("schemas").GetProperty("EquipmentItemDto").GetProperty("properties");

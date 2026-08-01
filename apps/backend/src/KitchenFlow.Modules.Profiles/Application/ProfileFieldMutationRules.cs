@@ -14,8 +14,14 @@ public static class ProfileFieldMutationRules
     /// <param name="allowAbsent">Whether absent is allowed for replace semantics.</param>
     /// <param name="error">The validation error when invalid.</param>
     /// <returns><see langword="true"/> when the action is valid.</returns>
-    public static bool IsValidAction(string action, bool allowAbsent, out string error)
+    public static bool IsValidAction(string? action, bool allowAbsent, out string error)
     {
+        if (string.IsNullOrWhiteSpace(action))
+        {
+            error = "action must be confirm, remove, or absent.";
+            return false;
+        }
+
         if (string.Equals(action, "absent", StringComparison.Ordinal) && !allowAbsent)
         {
             error = "action 'absent' is only allowed in PUT requests.";
@@ -36,8 +42,14 @@ public static class ProfileFieldMutationRules
     /// <param name="durability">The requested durability.</param>
     /// <param name="error">The validation error when invalid.</param>
     /// <returns><see langword="true"/> when the durability is valid.</returns>
-    public static bool IsValidDurability(string durability, out string error)
+    public static bool IsValidDurability(string? durability, out string error)
     {
+        if (string.IsNullOrWhiteSpace(durability))
+        {
+            error = "durability must be durable.";
+            return false;
+        }
+
         if (string.Equals(durability, "temporary", StringComparison.Ordinal))
         {
             error = "temporary durability is not supported on this endpoint.";

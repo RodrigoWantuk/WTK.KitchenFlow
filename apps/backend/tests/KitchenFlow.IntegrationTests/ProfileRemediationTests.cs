@@ -198,8 +198,10 @@ public sealed class ProfileRemediationTests : IAsyncLifetime
             || item.StatusCode == System.Net.HttpStatusCode.PreconditionRequired));
     }
 
-    [Fact]
-    public async Task PreferenceHistoryRedactsSensitiveAllergyCodes()
+    [Theory]
+    [InlineData("allergy", "peanut", "severe", "allergy_entry_added")]
+    [InlineData("medicalrestriction", "low_sodium", "doctor", "medical_restriction_added")]
+    public async Task PreferenceHistoryRedactsSensitiveCategoriesRegardlessOfCasing(string category, string stableCode, string note, string expectedMarker)
     {
         await using var factory = await CreateFactoryAsync();
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
@@ -208,19 +210,30 @@ public sealed class ProfileRemediationTests : IAsyncLifetime
         var etag = created.Headers.ETag!.Tag;
         using var put = new HttpRequestMessage(HttpMethod.Put, "/api/v1/profile/preferences")
         {
-            Content = JsonContent.Create(new { entries = new[] { new { action = "add", category = "Allergy", stableCode = "peanut_allergy", note = "severe reaction" } } })
+            Content = JsonContent.Create(new { entries = new[] { new { action = "add", category, stableCode, note } } })
         };
         put.Headers.Add("X-CSRF-TOKEN", csrf);
         put.Headers.TryAddWithoutValidation("If-Match", etag);
-        await client.SendAsync(put);
+        var response = await client.SendAsync(put);
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
 
         using var scope = factory.Services.CreateScope();
         var database = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var history = await database.ProfileChangeHistoryEntries.AsNoTracking().OrderByDescending(item => item.OccurredAt).FirstAsync();
         var codes = JsonSerializer.Deserialize<string[]>(history.FieldCodesJson) ?? [];
 
-        Assert.DoesNotContain(codes, code => code.Contains("peanut", StringComparison.Ordinal));
-        Assert.Contains("allergy_entry_added", codes);
+        Assert.Equal([expectedMarker], codes);
+        Assert.DoesNotContain(codes, code => code.Contains(stableCode, StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(codes, code => code.Contains(note, StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(history.FieldCodesJson, stableCode, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(history.FieldCodesJson, note, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(history.FieldCodesJson, $":{stableCode}", StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task PreferenceHistoryRedactsSensitiveAllergyCodes()
+    {
+        await PreferenceHistoryRedactsSensitiveCategoriesRegardlessOfCasing("Allergy", "peanut_allergy", "severe reaction", "allergy_entry_added");
     }
 
     [Fact]

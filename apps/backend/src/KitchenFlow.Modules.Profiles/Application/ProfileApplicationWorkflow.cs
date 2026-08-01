@@ -65,7 +65,7 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
         }
 
         var preferences = ApplyPreferenceCommands(model.Preferences.ToList(), user.Id, command.Entries, now);
-        var changedCodes = ProfileHistoryRedaction.RedactPreferenceFieldCodes(command.Entries);
+        var changedCodes = ProfileHistoryRedaction.RedactPreferenceFieldCodes(ToValidatedPreferenceCommands(command.Entries));
         model.Profile.ApplyDurableUpdate(_ => { }, now);
         var write = new ProfileMutationWrite(user.Id, model.Profile, preferences, model.Equipment.ToList(), model.OrderedCodes.ToList(), "preferences", changedCodes, command.CorrelationId, isCreate ? 0 : model.Version);
         var outcome = isCreate ? await writeStore.CreateAsync(write, cancellationToken) : await writeStore.SaveAsync(write, cancellationToken);
@@ -127,7 +127,13 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
         }
 
         var equipment = ReconcileEquipment(model.Equipment.ToList(), user.Id, command.Entries, now);
-        var changedCodes = command.Entries.Select(item => item.StableCode).Distinct(StringComparer.Ordinal).ToList();
+        var canonicalCodes = command.Entries
+            .Select(item =>
+            {
+                StableCode.TryCreate(item.StableCode, out var code);
+                return code!.Value;
+            });
+        var changedCodes = ProfileHistoryRedaction.CanonicalEquipmentFieldCodes(canonicalCodes);
         model.Profile.ApplyDurableUpdate(_ => { }, now);
         var write = new ProfileMutationWrite(user.Id, model.Profile, model.Preferences.ToList(), equipment, model.OrderedCodes.ToList(), "equipment", changedCodes, command.CorrelationId, isCreate ? 0 : model.Version);
         var outcome = isCreate ? await writeStore.CreateAsync(write, cancellationToken) : await writeStore.SaveAsync(write, cancellationToken);
@@ -374,12 +380,12 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
         {
             if (string.IsNullOrWhiteSpace(input.AdultDeclaration.TermsVersion) || input.AdultDeclaration.TermsVersion.Length > 32)
             {
-                Add("termsVersion", "termsVersion is required and must be at most 32 characters.");
+                Add("adultDeclaration.termsVersion", "termsVersion is required and must be at most 32 characters.");
             }
 
             if (input.AdultDeclaration.PrivacyVersion is not null && input.AdultDeclaration.PrivacyVersion.Length > 32)
             {
-                Add("privacyVersion", "privacyVersion must be at most 32 characters.");
+                Add("adultDeclaration.privacyVersion", "privacyVersion must be at most 32 characters.");
             }
         }
 
@@ -1307,9 +1313,22 @@ public sealed class ProfileApplicationWorkflow(ICurrentUserAccessor currentUser,
             Codes(model, ProfileListNames.Goals),
             Codes(model, ProfileListNames.AbandonmentReasons),
             profile.ConcurrencyToken,
-            profile.CreatedAt,
-            profile.UpdatedAt,
+            profileExists ? profile.CreatedAt : null,
+            profileExists ? profile.UpdatedAt : null,
             profileExists);
+    }
+
+    private static IReadOnlyList<ProfileHistoryRedaction.ValidatedPreferenceCommand> ToValidatedPreferenceCommands(IReadOnlyList<PreferenceMutationInput> entries)
+    {
+        var commands = new List<ProfileHistoryRedaction.ValidatedPreferenceCommand>(entries.Count);
+        foreach (var entry in entries)
+        {
+            ProfileEnumParser.TryParsePreferenceCategory(entry.Category, out var category);
+            StableCode.TryCreate(entry.StableCode, out var code);
+            commands.Add(new ProfileHistoryRedaction.ValidatedPreferenceCommand(category, code!, entry.Action));
+        }
+
+        return commands;
     }
 
     private static IReadOnlyList<string> Codes(ProfileReadModel model, string listName) =>

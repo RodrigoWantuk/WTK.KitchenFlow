@@ -173,12 +173,15 @@ public sealed class ProfileApplicationUseCaseTests
     }
 
     [Fact]
-    public async Task PreferenceHistoryRedactionUsesGenericCodes()
+    public void PreferenceHistoryRedactionUsesGenericCodes()
     {
-        var commands = new[] { new PreferenceMutationInput("add", "Allergy", "peanut_allergy", "severe") };
-        var codes = ProfileHistoryRedaction.RedactPreferenceFieldCodes(commands);
+        Assert.True(StableCode.TryCreate("peanut_allergy", out var code));
+        var codes = ProfileHistoryRedaction.RedactPreferenceFieldCodes(
+        [
+            new ProfileHistoryRedaction.ValidatedPreferenceCommand(PreferenceCategory.Allergy, code!, "add")
+        ]);
         Assert.Contains("allergy_entry_added", codes);
-        Assert.DoesNotContain(codes, code => code.Contains("peanut", StringComparison.Ordinal));
+        Assert.DoesNotContain(codes, item => item.Contains("peanut", StringComparison.Ordinal));
     }
 
     [Fact]

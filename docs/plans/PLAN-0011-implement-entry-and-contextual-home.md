@@ -11,7 +11,7 @@
 - **Related documentation plan:** PLAN-0010
 - **Related frontend plan:** PLAN-0014 (on main); remediation [PLAN-0015](PLAN-0015-remediate-frontend-baseline.md)
 - **Related product document:** `docs/product/entry-and-contextual-home.md`
-- **Dependencies:** PLAN-0015 owner approval of the remediated frontend baseline; stable menu, profile, inventory-attention, and recommendation contracts for live phases
+- **Dependencies:** Remaining PLAN-0015 manual frontend validation / owner decision that the remediated baseline is accepted; stable menu, profile, inventory-attention, and recommendation contracts for live phases
 
 ## Objective
 
@@ -26,9 +26,9 @@ The implementation must preserve the accepted source priority:
 
 ## Blocking state
 
-PLAN-0014 imported the Emergent frontend onto `main`, but remediation and independent validation remain open under PLAN-0015. Implementation of this plan must **not** begin until the owner approves PLAN-0015.
+PLAN-0014 imported the Emergent frontend onto `main`, and PLAN-0015 remediation merged via PR #16. Remaining manual frontend validation under PLAN-0015 is still open, so this plan stays **Blocked** until that validation is accepted. Do not treat PR #16 merge alone as unblock.
 
-The public landing page and mock-backed home can begin after that approval. Live source adapters remain blocked until their backend contracts are accepted and published. This plan stays **Blocked** until PLAN-0015 is approved.
+The public landing page and mock-backed home can begin after that remaining validation is accepted. Live source adapters remain blocked until their backend contracts are accepted and published.
 
 ## Scope
 
@@ -247,9 +247,9 @@ Automated coverage must include:
 - **Documentation delivered:** This future implementation plan.
 - **Validation performed:** Plan cross-checked against the canonical entry/home specification and existing frontend/backend boundaries.
 - **Known failures or limitations:** Live contract shapes do not yet exist for every tier.
-- **Blockers:** PLAN-0015 remediation not owner-approved; live menu/profile/recommendation contracts.
+- **Blockers:** Remaining PLAN-0015 manual frontend validation / owner decision; live menu/profile/recommendation contracts.
 - **Partially modified areas:** None.
-- **Exact next action:** After the owner approves PLAN-0015, claim this plan and implement Phase 1 plus the mock-backed Phase 2 before designing live contracts.
+- **Exact next action:** After remaining PLAN-0015 manual validation is accepted, claim this plan and implement Phase 1 plus the mock-backed Phase 2 before designing live contracts.
 - **Working tree state:** No implementation branch exists.
 
 ## Progress log

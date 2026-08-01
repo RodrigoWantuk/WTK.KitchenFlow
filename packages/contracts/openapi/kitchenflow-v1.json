@@ -1256,8 +1256,12 @@
             "$ref": "#/components/schemas/CookingContextDto"
           },
           "createdAt": {
+            "description": "Persisted profile creation timestamp; null when profileExists is false.",
             "format": "date-time",
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "displayName": {
             "$ref": "#/components/schemas/ProfileFieldDtoOfstring"
@@ -1292,8 +1296,12 @@
             "type": "array"
           },
           "updatedAt": {
+            "description": "Persisted profile last-update timestamp; null when profileExists is false.",
             "format": "date-time",
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "version": {
             "description": "Opaque profile version matching the ETag header when a profile exists; null when no profile exists yet.",
@@ -3092,7 +3100,7 @@
                 }
               }
             },
-            "description": "Progressive profile projection. profileExists is false, version is null, and ETag is omitted when no profile has been persisted yet.",
+            "description": "Progressive profile projection. profileExists is false, version/createdAt/updatedAt are null, and ETag is omitted when no profile has been persisted yet.",
             "headers": {
               "ETag": {
                 "description": "Opaque profile version token. Omitted when profileExists is false.",

@@ -46,8 +46,8 @@ public sealed record ProfileResponse(
     IReadOnlyList<string> AbandonmentReasons,
     bool ProfileExists,
     string? Version,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset? CreatedAt,
+    DateTimeOffset? UpdatedAt);
 
 /// <summary>Profile mutation request body.</summary>
 public sealed record ProfileMutationRequest(
@@ -80,7 +80,7 @@ public sealed record ProfileMutationRequest(
     IReadOnlyList<string>? AbandonmentReasons);
 
 /// <summary>Field mutation transport DTO.</summary>
-public sealed record FieldMutationDto<T>(string Action, T? Value, string Durability = "durable");
+public sealed record FieldMutationDto<T>(string? Action, T? Value, string? Durability = "durable");
 
 /// <summary>Adult declaration mutation transport DTO.</summary>
 public sealed record AdultDeclarationMutationDto(bool AdultDeclared, string TermsVersion, string? PrivacyVersion);

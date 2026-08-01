@@ -12,7 +12,7 @@
 - **Related implementation plans:** PLAN-0003, PLAN-0014 (on main), PLAN-0015 (remediation)
 - **Related issues:** None
 - **Related ADRs:** ADR-0001 (historical), ADR-0007, ADR-0002 through ADR-0006
-- **Dependencies:** PLAN-0002 merged; PLAN-0015 owner approval before treating the frontend SHA as the definitive baseline; stable implementation baselines and deployable environment
+- **Dependencies:** PLAN-0002 merged; PLAN-0015 merged via PR #16 with remaining manual validation before treating a frontend SHA as the definitive baseline; stable implementation baselines and deployable environment
 
 ## Objective
 
@@ -75,7 +75,7 @@ Before execution, fill all fields and commit them:
 
 - **Repository:** `RodrigoWantuk/WTK.KitchenFlow`
 - **Backend PR and commit:** [PR #9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) candidate `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`; ready for independent PLAN-0005 execution after owner merge
-- **Frontend PR and commit:** Required — pin only after PLAN-0015 owner approval; provisional PLAN-0014 code on main (`4166973`) is not the definitive frontend baseline until then
+- **Frontend PR and commit:** Required — pin after remaining PLAN-0015 manual validation; PR #16 is already merged and must not be treated as still draft/open
 - **Integrated branch/commit or environment image digest:** Required
 - **OpenAPI snapshot SHA:** Git blob `39348047801fa96422f9d88460d58917ffc26db8` from backend candidate `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`
 - **Lovable source repository commit:** Required
@@ -368,10 +368,10 @@ Do not fix implementation in the independent test branch unless explicitly reass
 
 ## Execution state
 
-- **Current checkpoint:** Backend baseline from PLAN-0003 remains pin-ready. Frontend code from PLAN-0014 is on main but is **not** the definitive frontend baseline until PLAN-0015 is owner-approved.
-- **Last completed step:** Dependency notes updated under PLAN-0015 governance.
-- **Exact next action:** After PLAN-0015 owner approval, assign an independent testing agent, pin the approved frontend SHA and integrated environment/browser baselines, and move status to `In Progress`.
-- **Blockers:** PLAN-0015 owner approval for definitive frontend baseline; integrated environment image digest remain unfilled.
+- **Current checkpoint:** Backend baseline from PLAN-0003 remains pin-ready. Frontend remediation merged via PR #16; definitive frontend SHA pin still waits on remaining PLAN-0015 manual validation.
+- **Last completed step:** Registry reconciled after PR #16 merge (no longer blocked on draft/open PR #16).
+- **Exact next action:** After remaining PLAN-0015 manual validation, assign an independent testing agent, pin the approved frontend SHA and integrated environment/browser baselines, and move status to `In Progress`.
+- **Blockers:** Remaining PLAN-0015 manual validation before definitive frontend pin; integrated environment image digest remain unfilled.
 - **Tests executed:** None.
 - **Defects found:** None.
 - **Evidence produced:** Immutable backend baseline pin only.

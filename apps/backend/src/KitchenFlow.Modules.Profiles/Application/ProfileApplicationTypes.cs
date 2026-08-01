@@ -17,8 +17,8 @@ public sealed record ProfileView(
     IReadOnlyList<string> Goals,
     IReadOnlyList<string> AbandonmentReasons,
     Guid ConcurrencyToken,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt,
+    DateTimeOffset? CreatedAt,
+    DateTimeOffset? UpdatedAt,
     bool ProfileExists);
 
 /// <summary>Household context projection.</summary>
@@ -141,7 +141,7 @@ public sealed record ProfileMutationInput(
     IReadOnlyList<string>? AbandonmentReasons);
 
 /// <summary>Describes one progressive field mutation.</summary>
-public sealed record FieldMutation<T>(string Action, T? Value, string Durability = "durable");
+public sealed record FieldMutation<T>(string? Action, T? Value, string? Durability = "durable");
 
 /// <summary>Explicit adult declaration mutation input.</summary>
 public sealed record AdultDeclarationMutationInput(bool AdultDeclared, string TermsVersion, string? PrivacyVersion);

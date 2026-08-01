@@ -371,6 +371,42 @@ public sealed class PostgreSqlMigrationTests : IAsyncLifetime
         Assert.True(await context.AuditEvents.AsNoTracking().AnyAsync(item => item.Id == auditId));
     }
 
+    [Fact]
+    public async Task UniqueEquipmentStableCodeMigrationFailsClosedWhenDuplicatesExist()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseNpgsql(_postgres.GetConnectionString())
+            .Options;
+        await using var context = new ApplicationDbContext(options);
+        await context.Database.EnsureDeletedAsync();
+        var migrator = context.GetService<IMigrator>();
+        await migrator.MigrateAsync("20260731185224_InitialProfilesSlice");
+
+        var ownerId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        await context.Database.ExecuteSqlInterpolatedAsync($"""INSERT INTO identity.users ("Id", "Issuer", "Subject", "CreatedAt") VALUES ({ownerId}, {$"https://issuer.test/{ownerId}"}, {$"subject-{ownerId}"}, {now})""");
+        await context.Database.ExecuteSqlInterpolatedAsync($"""INSERT INTO profiles.user_profiles ("OwnerUserId", "DisplayNamePresence", "DefaultAdultCountPresence", "DefaultChildCountPresence", "DefaultServingCountPresence", "LanguagePresence", "RegionPresence", "CurrencyPresence", "MeasurementSystemPresence", "TimeZonePresence", "PlanningCadencePresence", "ShoppingCadencePresence", "OverallSkillPresence", "ConfidencePresence", "PreferredInstructionDetailPresence", "OrdinaryPrepMinutesPresence", "ExceptionalPrepMinutesPresence", "EffortTolerancePresence", "CleanupTolerancePresence", "RepeatMealPreferencePresence", "ReheatingPreferencePresence", "LeftoverPreferencePresence", "FreezingPreferencePresence", "Version", "ConcurrencyToken", "CreatedAt", "UpdatedAt") VALUES ({ownerId}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {"Absent"}, {1L}, {Guid.NewGuid()}, {now}, {now})""");
+        var firstId = Guid.NewGuid();
+        var secondId = Guid.NewGuid();
+        await context.Database.ExecuteSqlInterpolatedAsync($"""INSERT INTO profiles.equipment_entries ("Id", "OwnerUserId", "StableCode", "IsRemoved", "SortOrder", "CreatedAt", "UpdatedAt") VALUES ({firstId}, {ownerId}, {"oven"}, {false}, {0}, {now}, {now})""");
+        await context.Database.ExecuteSqlInterpolatedAsync($"""INSERT INTO profiles.equipment_entries ("Id", "OwnerUserId", "StableCode", "IsRemoved", "SortOrder", "CreatedAt", "UpdatedAt") VALUES ({secondId}, {ownerId}, {"oven"}, {true}, {1}, {now}, {now})""");
+
+        var exception = await Assert.ThrowsAnyAsync<Exception>(() => migrator.MigrateAsync());
+        Assert.Contains("unique", exception.ToString(), StringComparison.OrdinalIgnoreCase);
+
+        var remaining = await context.Database.SqlQueryRaw<Guid>("""SELECT "Id" AS "Value" FROM profiles.equipment_entries""").ToListAsync();
+        Assert.Equal(2, remaining.Count);
+        Assert.Contains(firstId, remaining);
+        Assert.Contains(secondId, remaining);
+
+        await context.Database.ExecuteSqlInterpolatedAsync($"""DELETE FROM profiles.equipment_entries WHERE "Id" = {secondId}""");
+        await migrator.MigrateAsync();
+
+        var indexes = await context.Database.SqlQueryRaw<string>("""SELECT indexdef AS "Value" FROM pg_indexes WHERE schemaname = 'profiles' AND tablename = 'equipment_entries' AND indexname = 'IX_equipment_entries_OwnerUserId_StableCode'""").ToListAsync();
+        Assert.Contains(indexes, definition => definition.Contains("UNIQUE", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(1, await context.Database.SqlQueryRaw<int>("""SELECT COUNT(*)::int AS "Value" FROM profiles.equipment_entries""").SingleAsync());
+    }
+
     public Task InitializeAsync() => _postgres.StartAsync();
 
     public Task DisposeAsync() => _postgres.DisposeAsync().AsTask();
