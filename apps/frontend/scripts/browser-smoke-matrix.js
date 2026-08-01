@@ -112,8 +112,12 @@ async function run() {
         HOST: process.env.HOST || "127.0.0.1",
         PORT: process.env.PORT || "3000",
         REACT_APP_FRONTEND_MODE: "prototype",
+        // Prevent CRA interactive prompt when port is busy.
+        WDS_SOCKET_PORT: "0",
       },
-      stdio: "pipe",
+      // Do not pipe stdio — CRA can deadlock when stdout buffers fill.
+      stdio: "ignore",
+      detached: false,
     });
     await waitForServer(BASE, 180000);
   } else {
