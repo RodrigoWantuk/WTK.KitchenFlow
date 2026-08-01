@@ -1,13 +1,19 @@
 # PLAN-0012: Implement Account, Household, Profile and Equipment Backend Slice
 
-- **Status:** Validating
+- **Status:** Completed
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** Cursor cloud agent
 - **Created:** 2026-07-31
-- **Last updated:** 2026-08-01T07:30:00Z
-- **Branch:** `cursor/plan-0012-profile-backend-1672`
-- **Pull request:** Open — [PR #12](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/12) (Changes requested; final security/contract remediation)
+- **Last updated:** 2026-08-01T13:43:37Z
+- **Branch:** `cursor/plan-0012-profile-backend-1672` (merged; safe to delete)
+- **Pull request:** [Merged via PR #12](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/12)
+- **Implementation head (pre-merge):** `3deaf5ba4837e16383bf1c3c577c014f914b5c94`
+- **Merge SHA:** `49985f94d336e6079f1979a2140555f1beab765c`
+- **Final Backend CI:** https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30692221374
+- **Evidence artifact:** `8816091197` (`backend-evidence-3deaf5ba4837e16383bf1c3c577c014f914b5c94`)
+- **Final tests:** 14 architecture + 46 unit + 131 integration = 191 (0 failed, 0 skipped)
+- **Owner approval:** Explicit owner approval granted; PR #12 merged at `2026-08-01T13:43:37Z`
 - **Base commit:** `f9d429346615bf5b157656822057917ca2fe4032` (PLAN-0003 merged via PR #9)
 - **Related specification:** PLAN-0002, `docs/product/audience-and-profile.md`
 - **Related ADRs:** ADR-0002, ADR-0003, ADR-0004, ADR-0006
@@ -73,12 +79,22 @@ Implement a production-shaped backend slice for progressive profile, single-hous
 
 ## Execution state
 
-- **Current phase:** Validating — final privacy/contract/concurrency remediation delivered; Backend CI green on head `0e40d5a1c7266779593535e53f4badf25cdb841c`
-- **Last verified checkpoint:** Enum-based sensitive history redaction; null missing-profile timestamps; canonical audit codes; nested adultDeclaration paths; unique-equipment migration fail-closed; concurrent deadlock→412; OpenAPI export; local+CI 14/46/131 (191). Exact-head Backend https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30692041555 ; evidence artifact 8816035477
-- **Blockers:** Owner re-review
-- **Exact next action:** Owner re-review of PR #12; do not merge or mark Completed without approval
+- **Current phase:** Completed — owner-approved merge of PR #12 onto `main`
+- **Last verified checkpoint:** Implementation head `3deaf5ba4837e16383bf1c3c577c014f914b5c94`; merge SHA `49985f94d336e6079f1979a2140555f1beab765c`; Backend CI https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30692221374; evidence artifact **8816091197**; tests 14/46/131 = 191; all PR #12 review threads resolved before merge
+- **Blockers:** None
+- **Exact next action:** None for PLAN-0012. Continue with registry reconciliation for PLAN-0015 (manual validation) and PLAN-0005 (independent inventory/profile integration testing) when baselines are accepted.
 
 ## Progress log
+
+### 2026-08-01T13:43:37Z — Owner approved and merged PR #12
+
+- Explicit owner approval granted; PR #12 merged to `main` as `49985f94d336e6079f1979a2140555f1beab765c`.
+- Pre-merge implementation head: `3deaf5ba4837e16383bf1c3c577c014f914b5c94`.
+- Final exact-head Backend CI: https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30692221374 (artifact **8816091197**).
+- Final tests: 14 architecture + 46 unit + 131 integration = 191 (0 failed, 0 skipped).
+- All PR #12 review threads were resolved prior to merge.
+- PLAN-0012 marked **Completed**. Working branch `cursor/plan-0012-profile-backend-1672` may be deleted.
+- **Next:** Do not reopen PLAN-0012. Independent validation of the authenticated slice continues under PLAN-0005 after remaining PLAN-0015 manual validation is decided.
 
 ### 2026-08-01T08:45:00Z — Backend CI green on privacy + concurrency head
 
