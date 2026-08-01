@@ -198,7 +198,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             entity.Property(x => x.CapacityUnit).HasMaxLength(20);
             entity.Property(x => x.ConstraintNote).HasMaxLength(200);
             entity.HasOne<UserProfileRecord>().WithMany().HasForeignKey(x => x.OwnerUserId).HasPrincipalKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.Cascade);
-            entity.HasIndex(x => new { x.OwnerUserId, x.StableCode });
+            entity.HasIndex(x => new { x.OwnerUserId, x.StableCode }).IsUnique();
         });
 
         modelBuilder.Entity<ProfileOrderedCodeEntryRecord>(entity =>
