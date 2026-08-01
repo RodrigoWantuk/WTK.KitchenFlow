@@ -109,12 +109,14 @@ public sealed class ProfileRemediationTests : IAsyncLifetime
     public async Task ConcurrentProfileUpdatesAllowOnlyOneSuccess()
     {
         await using var factory = await CreateFactoryAsync();
-        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
-        var csrf = await GetCsrfAsync(client);
-        var created = await PatchProfileAsync(client, csrf, new { displayName = new { action = "confirm", value = "Seed", durability = "durable" } });
+        using var seedClient = CreateAuthenticatedClient(factory, "profile-concurrent-update");
+        var seedCsrf = await GetCsrfAsync(seedClient);
+        var created = await PatchProfileAsync(seedClient, seedCsrf, new { displayName = new { action = "confirm", value = "Seed", durability = "durable" } });
         var etag = created.Headers.ETag!.Tag;
-        var tasks = Enumerable.Range(0, 2).Select(index => Task.Run(async () =>
+        var responses = await Task.WhenAll(Enumerable.Range(0, 2).Select(index => Task.Run(async () =>
         {
+            using var client = CreateAuthenticatedClient(factory, "profile-concurrent-update");
+            var csrf = await GetCsrfAsync(client);
             using var request = new HttpRequestMessage(HttpMethod.Patch, "/api/v1/profile")
             {
                 Content = JsonContent.Create(new { displayName = new { action = "confirm", value = $"Writer-{index}", durability = "durable" } })
@@ -122,23 +124,23 @@ public sealed class ProfileRemediationTests : IAsyncLifetime
             request.Headers.Add("X-CSRF-TOKEN", csrf);
             request.Headers.TryAddWithoutValidation("If-Match", etag);
             return await client.SendAsync(request);
-        })).ToArray();
-        var responses = await Task.WhenAll(tasks);
+        })));
 
-        Assert.Equal(1, responses.Count(item => item.StatusCode == System.Net.HttpStatusCode.OK));
-        Assert.Equal(1, responses.Count(item => item.StatusCode == System.Net.HttpStatusCode.PreconditionFailed));
+        await AssertConcurrentWinnerAndLoserAsync(responses);
     }
 
     [Fact]
     public async Task ConcurrentPreferenceUpdatesAllowOnlyOneSuccess()
     {
         await using var factory = await CreateFactoryAsync();
-        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
-        var csrf = await GetCsrfAsync(client);
-        var created = await PatchProfileAsync(client, csrf, new { displayName = new { action = "confirm", value = "Alex", durability = "durable" } });
+        using var seedClient = CreateAuthenticatedClient(factory, "profile-concurrent-preferences");
+        var seedCsrf = await GetCsrfAsync(seedClient);
+        var created = await PatchProfileAsync(seedClient, seedCsrf, new { displayName = new { action = "confirm", value = "Alex", durability = "durable" } });
         var etag = created.Headers.ETag!.Tag;
-        var tasks = Enumerable.Range(0, 2).Select(index => Task.Run(async () =>
+        var responses = await Task.WhenAll(Enumerable.Range(0, 2).Select(index => Task.Run(async () =>
         {
+            using var client = CreateAuthenticatedClient(factory, "profile-concurrent-preferences");
+            var csrf = await GetCsrfAsync(client);
             using var request = new HttpRequestMessage(HttpMethod.Put, "/api/v1/profile/preferences")
             {
                 Content = JsonContent.Create(new { entries = new[] { new { action = "add", category = "DietaryPattern", stableCode = $"diet_{index}", note = (string?)null } } })
@@ -146,23 +148,23 @@ public sealed class ProfileRemediationTests : IAsyncLifetime
             request.Headers.Add("X-CSRF-TOKEN", csrf);
             request.Headers.TryAddWithoutValidation("If-Match", etag);
             return await client.SendAsync(request);
-        })).ToArray();
-        var responses = await Task.WhenAll(tasks);
+        })));
 
-        Assert.Equal(1, responses.Count(item => item.StatusCode == System.Net.HttpStatusCode.OK));
-        Assert.Equal(1, responses.Count(item => item.StatusCode == System.Net.HttpStatusCode.PreconditionFailed));
+        await AssertConcurrentWinnerAndLoserAsync(responses);
     }
 
     [Fact]
     public async Task ConcurrentEquipmentUpdatesAllowOnlyOneSuccess()
     {
         await using var factory = await CreateFactoryAsync();
-        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
-        var csrf = await GetCsrfAsync(client);
-        var created = await PatchProfileAsync(client, csrf, new { displayName = new { action = "confirm", value = "Alex", durability = "durable" } });
+        using var seedClient = CreateAuthenticatedClient(factory, "profile-concurrent-equipment");
+        var seedCsrf = await GetCsrfAsync(seedClient);
+        var created = await PatchProfileAsync(seedClient, seedCsrf, new { displayName = new { action = "confirm", value = "Alex", durability = "durable" } });
         var etag = created.Headers.ETag!.Tag;
-        var tasks = Enumerable.Range(0, 2).Select(index => Task.Run(async () =>
+        var responses = await Task.WhenAll(Enumerable.Range(0, 2).Select(index => Task.Run(async () =>
         {
+            using var client = CreateAuthenticatedClient(factory, "profile-concurrent-equipment");
+            var csrf = await GetCsrfAsync(client);
             using var request = new HttpRequestMessage(HttpMethod.Put, "/api/v1/profile/equipment")
             {
                 Content = JsonContent.Create(new { entries = new[] { new { stableCode = $"oven_{index}", customName = (string?)null, capacity = (decimal?)null, capacityUnit = (string?)null, constraintNote = (string?)null } } })
@@ -170,27 +172,25 @@ public sealed class ProfileRemediationTests : IAsyncLifetime
             request.Headers.Add("X-CSRF-TOKEN", csrf);
             request.Headers.TryAddWithoutValidation("If-Match", etag);
             return await client.SendAsync(request);
-        })).ToArray();
-        var responses = await Task.WhenAll(tasks);
+        })));
 
-        Assert.Equal(1, responses.Count(item => item.StatusCode == System.Net.HttpStatusCode.OK));
-        Assert.Equal(1, responses.Count(item => item.StatusCode == System.Net.HttpStatusCode.PreconditionFailed));
+        await AssertConcurrentWinnerAndLoserAsync(responses);
     }
 
     [Fact]
     public async Task ConcurrentProfileCreationReturnsControlledConflict()
     {
         await using var factory = await CreateFactoryAsync();
-        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
-        var csrf = await GetCsrfAsync(client);
+        var subject = "profile-concurrent-create";
         var payload = new { displayName = new { action = "confirm", value = "Race", durability = "durable" } };
-        var tasks = Enumerable.Range(0, 2).Select(_ => Task.Run(async () =>
+        var responses = await Task.WhenAll(Enumerable.Range(0, 2).Select(_ => Task.Run(async () =>
         {
+            using var client = CreateAuthenticatedClient(factory, subject);
+            var csrf = await GetCsrfAsync(client);
             using var request = new HttpRequestMessage(HttpMethod.Patch, "/api/v1/profile") { Content = JsonContent.Create(payload) };
             request.Headers.Add("X-CSRF-TOKEN", csrf);
             return await client.SendAsync(request);
-        })).ToArray();
-        var responses = await Task.WhenAll(tasks);
+        })));
 
         Assert.Equal(1, responses.Count(item => item.StatusCode == System.Net.HttpStatusCode.Created || item.StatusCode == System.Net.HttpStatusCode.OK));
         Assert.Equal(1, responses.Count(item => item.StatusCode == System.Net.HttpStatusCode.Conflict
@@ -325,6 +325,28 @@ public sealed class ProfileRemediationTests : IAsyncLifetime
     public Task InitializeAsync() => _postgres.StartAsync();
 
     public Task DisposeAsync() => _postgres.DisposeAsync().AsTask();
+
+    private static HttpClient CreateAuthenticatedClient(KitchenFlowFactory factory, string subject)
+    {
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        client.DefaultRequestHeaders.Add("X-Test-Subject", subject);
+        return client;
+    }
+
+    private static async Task AssertConcurrentWinnerAndLoserAsync(HttpResponseMessage[] responses)
+    {
+        var details = new List<string>();
+        foreach (var response in responses)
+        {
+            var body = await response.Content.ReadAsStringAsync();
+            details.Add($"{(int)response.StatusCode} {response.StatusCode}: {body}");
+        }
+
+        Assert.True(
+            responses.Count(item => item.StatusCode == System.Net.HttpStatusCode.OK) == 1
+            && responses.Count(item => item.StatusCode == System.Net.HttpStatusCode.PreconditionFailed) == 1,
+            $"Expected exactly one OK and one PreconditionFailed, got:{Environment.NewLine}{string.Join(Environment.NewLine, details)}");
+    }
 
     private async Task<KitchenFlowFactory> CreateFactoryAsync()
     {

@@ -80,6 +80,13 @@ Implement a production-shaped backend slice for progressive profile, single-hous
 
 ## Progress log
 
+### 2026-08-01T08:30:00Z — Concurrent mutation 500→412 fix after CI flake
+
+- Backend CI on `a387667` failed once on concurrent profile updates (loser returned 500 from PostgreSQL deadlock `40P01` wrapped as transient `InvalidOperationException`).
+- `SaveAsync` now replaces child rows via transactional `ExecuteDelete` + insert, and maps deadlock/serialization/unique races (entire exception chain) to `ConcurrencyConflict` → 412.
+- Concurrent profile tests use isolated `X-Test-Subject` clients; stress 5× green. Full local suite 14/46/131 (191).
+- **Next:** Push head; await Backend CI; owner re-review. Keep Validating; do not merge or mark Completed.
+
 ### 2026-08-01T08:15:00Z — Privacy and contract final blockers remediation
 
 - Preference history redaction now uses validated `PreferenceCategory` enums (case-insensitive request casing cannot bypass redaction).

@@ -235,42 +235,78 @@ public sealed class PostgreSqlProfileWriteStore(ApplicationDbContext database) :
     /// <inheritdoc />
     public async Task<ProfileWriteOutcome> SaveAsync(ProfileMutationWrite write, CancellationToken cancellationToken)
     {
-        var record = ToRecord(write.Profile);
-        record.Version = write.ExpectedVersion + 1;
-        database.UserProfiles.Attach(record);
-        database.Entry(record).State = EntityState.Modified;
-        database.Entry(record).Property(item => item.Version).OriginalValue = write.ExpectedVersion;
-
-        database.PreferenceEntries.RemoveRange(database.PreferenceEntries.Where(item => item.OwnerUserId == write.OwnerUserId));
-        database.EquipmentEntries.RemoveRange(database.EquipmentEntries.Where(item => item.OwnerUserId == write.OwnerUserId));
-        database.ProfileOrderedCodeEntries.RemoveRange(database.ProfileOrderedCodeEntries.Where(item => item.OwnerUserId == write.OwnerUserId));
-        database.PreferenceEntries.AddRange(write.Preferences.Select(ToRecord));
-        database.EquipmentEntries.AddRange(write.Equipment.Select(ToRecord));
-        database.ProfileOrderedCodeEntries.AddRange(write.OrderedCodes.Select(ToRecord));
-        database.ProfileChangeHistoryEntries.Add(CreateHistory(write));
-
+        await using var transaction = await database.Database.BeginTransactionAsync(cancellationToken);
         try
         {
+            // ExecuteDelete avoids tracking conflicts that occur when RemoveRange marks rows deleted
+            // and AddRange re-inserts the same primary keys retained by equipment/preference identity.
+            await database.PreferenceEntries.Where(item => item.OwnerUserId == write.OwnerUserId).ExecuteDeleteAsync(cancellationToken);
+            await database.EquipmentEntries.Where(item => item.OwnerUserId == write.OwnerUserId).ExecuteDeleteAsync(cancellationToken);
+            await database.ProfileOrderedCodeEntries.Where(item => item.OwnerUserId == write.OwnerUserId).ExecuteDeleteAsync(cancellationToken);
+
+            var record = ToRecord(write.Profile);
+            record.Version = write.ExpectedVersion + 1;
+            database.UserProfiles.Attach(record);
+            database.Entry(record).State = EntityState.Modified;
+            database.Entry(record).Property(item => item.Version).OriginalValue = write.ExpectedVersion;
+
+            database.PreferenceEntries.AddRange(write.Preferences.Select(ToRecord));
+            database.EquipmentEntries.AddRange(write.Equipment.Select(ToRecord));
+            database.ProfileOrderedCodeEntries.AddRange(write.OrderedCodes.Select(ToRecord));
+            database.ProfileChangeHistoryEntries.Add(CreateHistory(write));
+
             await database.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
             return ProfileWriteOutcome.Saved;
         }
-        catch (DbUpdateConcurrencyException)
+        catch (Exception ex) when (IsConcurrentMutationConflictException(ex))
         {
+            await transaction.RollbackAsync(cancellationToken);
             database.ChangeTracker.Clear();
             return ProfileWriteOutcome.ConcurrencyConflict;
         }
         catch
         {
+            await transaction.RollbackAsync(cancellationToken);
             database.ChangeTracker.Clear();
             throw;
         }
     }
 
-    private static bool IsDuplicateProfile(DbUpdateException exception)
+    private static bool IsDuplicateProfile(DbUpdateException exception) =>
+        IsPostgresState(exception, PostgresErrorCodes.UniqueViolation);
+
+    /// <summary>
+    /// Returns true when a write conflict (optimistic concurrency, deadlock, serialization, or unique race)
+    /// should surface as a controlled concurrency precondition failure instead of an unexpected 500.
+    /// </summary>
+    private static bool IsConcurrentMutationConflictException(Exception exception)
     {
         for (Exception? current = exception; current is not null; current = current.InnerException)
         {
-            if (current is PostgresException postgres && postgres.SqlState == PostgresErrorCodes.UniqueViolation)
+            if (current is DbUpdateConcurrencyException)
+            {
+                return true;
+            }
+
+            if (current is PostgresException postgres
+                && postgres.SqlState is PostgresErrorCodes.UniqueViolation
+                    or PostgresErrorCodes.DeadlockDetected
+                    or PostgresErrorCodes.SerializationFailure
+                    or PostgresErrorCodes.ExclusionViolation)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsPostgresState(Exception exception, string sqlState)
+    {
+        for (Exception? current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is PostgresException postgres && postgres.SqlState == sqlState)
             {
                 return true;
             }
