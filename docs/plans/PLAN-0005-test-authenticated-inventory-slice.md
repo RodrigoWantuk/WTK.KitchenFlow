@@ -1,6 +1,6 @@
 # PLAN-0005: Independently Validate the Authenticated Inventory Slice
 
-- **Status:** Validating
+- **Status:** Completed
 - **Type:** Testing
 - **Priority:** Critical
 - **Owner:** independent-agent:composer-plan-0005
@@ -8,13 +8,13 @@
 - **Last updated:** 2026-08-01T19:10:00Z
 - **Branch:** `agent/plan-0005-test-inventory-slice`
 - **Pull request:** [Draft PR #19](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/19)
-- **Delivery:** Draft PR — changes requested (evidence integrity); agent must not merge
+- **Delivery:** Draft PR — awaiting owner re-review after evidence-integrity rewrite; agent must not merge
 - **System under test:** Integrated `main` after PR #18 merge (`b94abd9a83fe29d88b095e3e9a42f10d01c05414`)
 - **Related implementation plans:** PLAN-0003, PLAN-0014 (on main), PLAN-0015 (Completed via PR #18)
 - **Related issues:** #20 (High), #21 (Medium), #22 (Medium), #24 (coverage Blocked)
 - **Related ADRs:** ADR-0001 (historical), ADR-0007, ADR-0002 through ADR-0006
 - **Dependencies:** PLAN-0002 merged; PR #18 merged by owner; independent agent claim required
-- **Final outcome:** Provisional Conditional Pass (pending evidence-integrity CI on rewritten tip)
+- **Final outcome:** Conditional Pass
 
 ## Objective
 
@@ -510,19 +510,26 @@ Do not fix implementation in the independent test branch unless explicitly reass
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0005 **Validating** with outcome **Provisional Conditional Pass** — evidence integrity corrective round in progress (SHA identity, outage serialization, absolute evidence paths, consistency gates, historical P1 console, gitleaks history rewrite, container/PG metrics, issue repro text, reconciled counts).
-- **Last completed step:** Local harness/docs updates for integrity round; awaiting history rewrite + CI on new tip.
-- **Exact next action:** Soft-reset/squash onto `b94abd9…`, force-with-lease, confirm synthetic PAT unreachable, run Backend/Frontend/PLAN-0005/secret-scan; then mark Completed Conditional Pass and request owner re-review. No merge. No PLAN-0011. No #20/#21/#22/#24 functional fixes.
-- **Blockers:** Evidence package integrity until rewritten tip CI is green.
-- **Tests executed:** Prior tip CI green but evidence package rejected for integrity defects listed in the corrective brief.
+- **Current checkpoint:** PLAN-0005 **Completed** with outcome **Conditional Pass** after evidence-integrity rewrite. Evidence-generation head `a1112a221cc492d52bd08f3dc1dcff1a02ae4885` (CI PLAN-0005 `30713714393`).
+- **Last completed step:** History rewrite (synthetic PAT unreachable); SHA identity fields; outage serialization; absolute evidence paths; consistency gates; P1 historical console rename; Compose vs Testcontainers sampling; PG connections sampled during load; #21/#22 native zoom repro; reconciled counts; exact-tip CI green.
+- **Exact next action:** Owner re-reviews Draft PR #19. Do not agent-merge. Do not start PLAN-0011 until owner go/no-go. Implementation plans for #20/#21/#22/#24 on separate branches.
+- **Blockers:** None for the independent test plan. Residual High #20 blocks unconditional production inventory UX readiness.
+- **Tests executed:** P0 + P1 + evidence-consistency + secret-scan on evidence-generation head `a1112a2`.
 - **Defects found:** Critical 0; High 1 (#20); Medium 2 (#21, #22); coverage Blocked #24.
-- **Evidence produced:** Regenerating under `docs/evidence/plan-0005/` + CI artifacts named with real `prHeadSha`.
+- **Evidence produced:** CI artifacts `plan-0005-p0-evidence-a1112a2…` / `p1` / `evidence-consistency` (IDs in `final-quality-assessment.json`).
 - **Known coverage gaps:** TEST-0005-128/130/131 Deferred; manual AT Deferred non-blocking; UI Blocked behind #20; generated client #24.
 - **Working tree state:** Validation harness + evidence only; no functional product fixes.
 - **PLAN-0011:** Not started (Blocked).
 
 
 ## Progress log
+
+### 2026-08-01T19:15:00Z — independent-agent:composer-plan-0005
+
+- **Checkpoint:** Completed Conditional Pass after evidence-integrity rewrite + exact-tip CI green (`a1112a221cc492d52bd08f3dc1dcff1a02ae4885`; workflow `30713714393`).
+- **Outage 132:** baseline qty 12; duringOutage read/mutation `timeout` safe; afterRestore identical; afterRetry qty 11 / idempotency 1 / no replay effect.
+- **Secret scan:** gitleaks clean on `b94abd9..HEAD`; commit `0398f39` not reachable; no whole-commit allowlist.
+- **Next action:** Owner re-review of Draft PR #19 (no agent merge). PLAN-0011 remains Blocked.
 
 ### 2026-08-01T19:10:00Z — independent-agent:composer-plan-0005
 

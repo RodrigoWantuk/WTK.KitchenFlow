@@ -1,16 +1,9 @@
 {
   "plan": "PLAN-0005",
-  "testId": "TEST-0005-137",
-  "status": "Passed",
   "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
   "prHeadSha": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885",
   "checkedOutCommitSha": "5680f9dff8c3a593ea57fad5a508de27349a6a7f",
   "evidenceGenerationSha": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885",
-  "concurrentCreates": 10,
-  "distinctIdempotencyKeys": 10,
-  "lots": 10,
-  "initialTransactions": 10,
-  "duplicates": 0,
-  "partialResults": 0,
-  "generatedAtUtc": "2026-08-01T19:03:01Z"
+  "workflowRunId": "30713714393",
+  "workflowStartedAtUtc": "2026-08-01T18:57:54Z"
 }

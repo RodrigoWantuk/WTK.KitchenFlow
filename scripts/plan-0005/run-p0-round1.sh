@@ -12,11 +12,12 @@ REPORT_DIR="${EVIDENCE_DIR}/reports"
 mkdir -p "$REPORT_DIR" "$EVIDENCE_DIR/artifacts"
 : > "${REPORT_DIR}/group-results.tsv"
 plan0005_write_identity_json
+: > "${REPORT_DIR}/container-samples.tsv"
 # Background Docker sampling for Compose vs Testcontainers honesty.
 (
   while true; do
     bash "${ROOT}/scripts/plan-0005/container-count.sh" sample || true
-    sleep 5
+    sleep 2
   done
 ) &
 CONTAINER_SAMPLER_PID=$!

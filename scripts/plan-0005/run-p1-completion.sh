@@ -10,13 +10,14 @@ REPORT_DIR="${EVIDENCE_DIR}/reports"
 mkdir -p "$REPORT_DIR"
 : > "${REPORT_DIR}/p1-group-results.tsv"
 plan0005_write_identity_json
+: > "${REPORT_DIR}/container-samples.tsv"
 export HOME="${PLAYWRIGHT_HOME:-/root}" PLAYWRIGHT_HOME="${PLAYWRIGHT_HOME:-/root}"
 unset XAUTHORITY || true
 export DISPLAY="${PLAYWRIGHT_DISPLAY:-}"
 (
   while true; do
     bash "${ROOT}/scripts/plan-0005/container-count.sh" sample || true
-    sleep 5
+    sleep 2
   done
 ) &
 CONTAINER_SAMPLER_PID=$!

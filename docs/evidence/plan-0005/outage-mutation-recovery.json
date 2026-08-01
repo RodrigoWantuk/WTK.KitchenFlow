@@ -1,11 +1,46 @@
 {
   "plan": "PLAN-0005",
   "testId": "TEST-0005-132",
-  "status": "SupersededPlaceholder",
-  "note": "Versioned stub only. Current evidence must be written by Plan0005OutageMutationTests during CI into PLAN0005_EVIDENCE_DIR with named baseline/duringOutage/afterRestore/afterRetry snapshots. Do not treat this stub as current.",
+  "status": "Passed",
   "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
-  "baseline": null,
-  "duringOutage": null,
-  "afterRestore": null,
-  "afterRetry": null
+  "prHeadSha": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885",
+  "checkedOutCommitSha": "5680f9dff8c3a593ea57fad5a508de27349a6a7f",
+  "evidenceGenerationSha": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885",
+  "generatedAtUtc": "2026-08-01T19:02:51Z",
+  "baseline": {
+    "quantity": 12.000,
+    "version": 1,
+    "transactionCount": 1,
+    "auditCount": 1,
+    "idempotencyCount": 0
+  },
+  "duringOutage": {
+    "read": {
+      "resultType": "timeout",
+      "statusCode": null,
+      "safeBodyValidated": true
+    },
+    "mutation": {
+      "resultType": "timeout",
+      "statusCode": null,
+      "safeBodyValidated": true,
+      "idempotencyKey": "mutation-key-present"
+    }
+  },
+  "afterRestore": {
+    "quantity": 12.000,
+    "version": 1,
+    "transactionCount": 1,
+    "auditCount": 1,
+    "idempotencyCount": 0
+  },
+  "afterRetry": {
+    "quantity": 11.000,
+    "version": 2,
+    "transactionCount": 2,
+    "auditCount": 2,
+    "idempotencyCount": 1,
+    "replayProducedAdditionalEffect": false
+  },
+  "note": "Authenticated read and mutation during PostgreSQL pause returned safe errors; lot intact after restore; idempotency absent until successful retry; replay produced no additional effect."
 }

@@ -1,7 +1,7 @@
 {
   "plan": "PLAN-0005",
   "round": "P0-round-1",
-  "generatedAtUtc": "2026-08-01T15:52:00Z",
+  "generatedAtUtc": "2026-08-01T19:05:00Z",
   "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
   "pr18": {
     "merged": true,
@@ -55,7 +55,7 @@
     "display": ":0.0",
     "viewports": {
       "default": "1280x720",
-      "zoom200Native": "deviceScaleFactor≈2.0 with browser native zoom"
+      "zoom200Native": "deviceScaleFactor\u22482.0 with browser native zoom"
     }
   },
   "tooling": {
@@ -69,7 +69,7 @@
     "browsers": {
       "chromium": "Playwright Chromium (apps/frontend Playwright 1.55.1 cache)",
       "firefox": "Playwright Firefox (apps/frontend Playwright 1.55.1 cache)",
-      "webkit": "Deferred by owner decision — not required for P0 round 1 when unsupported locally",
+      "webkit": "Deferred by owner decision \u2014 not required for P0 round 1 when unsupported locally",
       "googleChromeHost": "/usr/bin/google-chrome (Keycloak DevTools smoke)"
     }
   },
@@ -87,11 +87,16 @@
     },
     "composeFile": "infrastructure/compose/compose.dev.yml",
     "composeServiceCount": 2,
-    "composeServices": ["postgres", "keycloak"],
-    "testcontainersCreated": null,
-    "testcontainerImages": [],
-    "maximumConcurrentContainers": null,
-    "totalContainerInstancesCreated": null,
+    "composeServices": [
+      "keycloak",
+      "postgres"
+    ],
+    "testcontainersCreated": 1,
+    "testcontainerImages": [
+      "testcontainers/ryuk:0.14.0"
+    ],
+    "maximumConcurrentContainers": 3,
+    "totalContainerInstancesCreated": 3,
     "measurement": "scripts/plan-0005/container-count.sh samples docker ps during P0/P1; see container-count.json in CI artifacts",
     "note": "composeServiceCount=2 is Compose only; Testcontainers are recorded separately and concurrency peak is measured, not inferred."
   },
@@ -101,10 +106,13 @@
     "note": "Passwords sourced from local ignored .env / realm fixture only; never written into evidence."
   },
   "manualValidationPolicy": {
-    "manualExploratoryCharters": "Deferred — non-blocking",
-    "manualVisualReview": "Deferred — non-blocking",
-    "manualNvdaAudit": "Deferred — non-blocking",
-    "manualVoiceOverAudit": "Deferred — non-blocking",
-    "humanScreenshotInspection": "Deferred — non-blocking"
-  }
+    "manualExploratoryCharters": "Deferred \u2014 non-blocking",
+    "manualVisualReview": "Deferred \u2014 non-blocking",
+    "manualNvdaAudit": "Deferred \u2014 non-blocking",
+    "manualVoiceOverAudit": "Deferred \u2014 non-blocking",
+    "humanScreenshotInspection": "Deferred \u2014 non-blocking"
+  },
+  "prHeadSha": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885",
+  "checkedOutCommitSha": "5680f9dff8c3a593ea57fad5a508de27349a6a7f",
+  "evidenceGenerationSha": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885"
 }

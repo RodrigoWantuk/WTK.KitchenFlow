@@ -1,7 +1,7 @@
 {
   "plan": "PLAN-0005",
   "group": "gitleaks-policy",
-  "gitleaksBinary": "/tmp/gitleaks821",
+  "gitleaksBinary": "gitleaks",
   "results": [
     {
       "testId": "TEST-0005-GITLEAKS-LEGIT-SHA",

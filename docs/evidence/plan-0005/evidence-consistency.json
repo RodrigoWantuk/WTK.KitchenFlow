@@ -1,0 +1,280 @@
+{
+  "plan": "PLAN-0005",
+  "group": "evidence-consistency",
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+  "prHeadSha": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885",
+  "checkedOutCommitSha": "5680f9dff8c3a593ea57fad5a508de27349a6a7f",
+  "evidenceGenerationSha": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885",
+  "workflowStartedAtUtc": "2026-08-01T19:03:51Z",
+  "checks": [
+    {
+      "name": "p0-artifact-present",
+      "status": "Passed",
+      "note": "plan-0005-p0-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885"
+    },
+    {
+      "name": "p0-artifact-name-pr-head",
+      "status": "Passed",
+      "note": "contains prHeadSha a1112a221cc492d52bd08f3dc1dcff1a02ae4885"
+    },
+    {
+      "name": "p1-artifact-present",
+      "status": "Passed",
+      "note": "plan-0005-p1-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885"
+    },
+    {
+      "name": "p1-artifact-name-pr-head",
+      "status": "Passed",
+      "note": "contains prHeadSha a1112a221cc492d52bd08f3dc1dcff1a02ae4885"
+    },
+    {
+      "name": "p0:firefox-zoom-pointer-keyboard.json",
+      "status": "Passed",
+      "note": "/tmp/plan-0005-artifacts/plan-0005-p0-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/firefox-zoom-pointer-keyboard.json"
+    },
+    {
+      "name": "p0:p0-round1-timing.json",
+      "status": "Passed",
+      "note": "/tmp/plan-0005-artifacts/plan-0005-p0-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/p0-round1-timing.json"
+    },
+    {
+      "name": "p0:keycloak-p0-auth.json",
+      "status": "Passed",
+      "note": "/tmp/plan-0005-artifacts/plan-0005-p0-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/keycloak-p0-auth.json"
+    },
+    {
+      "name": "p0:frontend-production-inventory.json",
+      "status": "Passed",
+      "note": "/tmp/plan-0005-artifacts/plan-0005-p0-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/frontend-production-inventory.json"
+    },
+    {
+      "name": "p0:container-count.json",
+      "status": "Passed",
+      "note": "/tmp/plan-0005-artifacts/plan-0005-p0-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/container-count.json"
+    },
+    {
+      "name": "p0:run-identity.json",
+      "status": "Passed",
+      "note": "/tmp/plan-0005-artifacts/plan-0005-p0-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/run-identity.json"
+    },
+    {
+      "name": "p1:observability-performance-p1.json",
+      "status": "Passed",
+      "note": "/tmp/plan-0005-artifacts/plan-0005-p1-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/observability-performance-p1.json"
+    },
+    {
+      "name": "p1:performance-smoke.json",
+      "status": "Passed",
+      "note": "/tmp/plan-0005-artifacts/plan-0005-p1-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/performance-smoke.json"
+    },
+    {
+      "name": "p1:performance-concurrent-creates.json",
+      "status": "Passed",
+      "note": "/tmp/plan-0005-artifacts/plan-0005-p1-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/performance-concurrent-creates.json"
+    },
+    {
+      "name": "p1:openapi-p1.json",
+      "status": "Passed",
+      "note": "/tmp/plan-0005-artifacts/plan-0005-p1-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/openapi-p1.json"
+    },
+    {
+      "name": "p1:readiness-postgres-outage.json",
+      "status": "Passed",
+      "note": "/tmp/plan-0005-artifacts/plan-0005-p1-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/readiness-postgres-outage.json"
+    },
+    {
+      "name": "p1:outage-mutation-recovery.json",
+      "status": "Passed",
+      "note": "/tmp/plan-0005-artifacts/plan-0005-p1-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/outage-mutation-recovery.json"
+    },
+    {
+      "name": "p1:container-count.json",
+      "status": "Passed",
+      "note": "/tmp/plan-0005-artifacts/plan-0005-p1-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/container-count.json"
+    },
+    {
+      "name": "p1:run-identity.json",
+      "status": "Passed",
+      "note": "/tmp/plan-0005-artifacts/plan-0005-p1-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/run-identity.json"
+    },
+    {
+      "name": "firefox-zoom:identity",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "native-zoom-technique",
+      "status": "Passed",
+      "note": "native-ctrl-plus-xdotool"
+    },
+    {
+      "name": "native-zoom-ratio",
+      "status": "Passed",
+      "note": "ratios=[2, 2, 2]"
+    },
+    {
+      "name": "p0-timing-overall",
+      "status": "Passed",
+      "note": "overall=Passed"
+    },
+    {
+      "name": "p0-container-honesty",
+      "status": "Passed",
+      "note": "{\"composeServiceCount\": 2, \"composeServices\": [\"keycloak\", \"postgres\"], \"testcontainersCreated\": 0, \"testcontainerImages\": [], \"maximumConcurrentContainers\": 2, \"totalContainerInstancesCreated\": 2}"
+    },
+    {
+      "name": "p0-run:identity",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "p1-timing-overall",
+      "status": "Passed",
+      "note": "overall=Passed"
+    },
+    {
+      "name": "p1-container-honesty",
+      "status": "Passed",
+      "note": "{\"composeServiceCount\": 2, \"composeServices\": [\"keycloak\", \"postgres\"], \"testcontainersCreated\": 1, \"testcontainerImages\": [\"testcontainers/ryuk:0.14.0\"], \"maximumConcurrentContainers\": 3, \"totalContainerInstancesCreated\": 3}"
+    },
+    {
+      "name": "p1-run:identity",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "performance-smoke:identity",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "performance-smoke:freshness",
+      "status": "Passed",
+      "note": "2026-08-01T19:03:01Z"
+    },
+    {
+      "name": "performance-metrics",
+      "status": "Passed",
+      "note": "missing=[]"
+    },
+    {
+      "name": "performance-status",
+      "status": "Passed",
+      "note": "Passed"
+    },
+    {
+      "name": "performance-creates:freshness",
+      "status": "Passed",
+      "note": "2026-08-01T19:03:01Z"
+    },
+    {
+      "name": "concurrent-creates-137",
+      "status": "Passed",
+      "note": "{'status': 'Passed', 'lots': 10, 'duplicates': 0}"
+    },
+    {
+      "name": "outage-132:identity",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "outage-132:freshness",
+      "status": "Passed",
+      "note": "2026-08-01T19:02:51Z"
+    },
+    {
+      "name": "outage-mutation-132",
+      "status": "Passed",
+      "note": "Authenticated read and mutation during PostgreSQL pause returned safe errors; lot intact after restore; idempotency absent until successful retry; replay produced no additional effect."
+    },
+    {
+      "name": "p0-historical-failed-console",
+      "status": "Passed",
+      "note": "p1-initial-failed-console.txt explicitly historical"
+    },
+    {
+      "name": "p0-historical-failed-console",
+      "status": "Passed",
+      "note": "p0-round1-initial-failed-console.txt explicitly historical"
+    },
+    {
+      "name": "p1-current-console-name",
+      "status": "Passed",
+      "note": "no ambiguous p1-completion-console.txt"
+    },
+    {
+      "name": "p1-historical-failed-console",
+      "status": "Passed",
+      "note": "p1-initial-failed-console.txt explicitly historical"
+    },
+    {
+      "name": "p1-historical-failed-console",
+      "status": "Passed",
+      "note": "p0-round1-initial-failed-console.txt explicitly historical"
+    },
+    {
+      "name": "p1-current-console-name",
+      "status": "Passed",
+      "note": "no ambiguous p1-completion-console.txt"
+    },
+    {
+      "name": "final-assessment-head",
+      "status": "Passed",
+      "note": "None"
+    },
+    {
+      "name": "final-assessment-head",
+      "status": "Passed",
+      "note": "None"
+    },
+    {
+      "name": "result-matrix-math",
+      "status": "Passed",
+      "note": "sum=104"
+    },
+    {
+      "name": "subscenario-matrix",
+      "status": "Passed",
+      "note": "subScenarioSum=4 detail={'TEST-0005-109': {'Cook_pointer': 'Failed', 'Cook_keyboard': 'Passed', 'Pantry_pointer': 'Failed', 'Pantry_keyboard': 'Passed'}, 'Passed': 2, 'Failed': 2, 'note': 'Sub-scenario counts for TEST-0005-109 only; two pointer failures remain visible and map to issues #21 and #22.'}"
+    },
+    {
+      "name": "gitleaks-no-commit-allowlist",
+      "status": "Passed",
+      "note": "no whole-commit allowlist"
+    },
+    {
+      "name": "gitleaks-commits-key-absent",
+      "status": "Passed",
+      "note": "commits key absent"
+    },
+    {
+      "name": "p0-container-count",
+      "status": "Passed",
+      "note": "missing=[] peak=2"
+    },
+    {
+      "name": "p1-container-count",
+      "status": "Passed",
+      "note": "missing=[] peak=3"
+    },
+    {
+      "name": "pr-head-sha-recorded",
+      "status": "Passed",
+      "note": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885"
+    },
+    {
+      "name": "checked-out-sha-recorded",
+      "status": "Passed",
+      "note": "5680f9dff8c3a593ea57fad5a508de27349a6a7f"
+    },
+    {
+      "name": "integrated-sha-pin",
+      "status": "Passed",
+      "note": "b94abd9a83fe29d88b095e3e9a42f10d01c05414"
+    }
+  ],
+  "summary": {
+    "passed": 53,
+    "failed": 0
+  }
+}
