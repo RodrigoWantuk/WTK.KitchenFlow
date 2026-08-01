@@ -5,7 +5,11 @@ import * as React from "react";
 const TOAST_LIMIT = 1;
 const TOAST_REMOVE_DELAY = 1000000;
 
-type ActionType = "ADD_TOAST" | "UPDATE_TOAST" | "DISMISS_TOAST" | "REMOVE_TOAST";
+type ActionType =
+  | "ADD_TOAST"
+  | "UPDATE_TOAST"
+  | "DISMISS_TOAST"
+  | "REMOVE_TOAST";
 
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
@@ -30,7 +34,10 @@ type ToastState = {
 
 type ToastAction =
   | { type: "ADD_TOAST"; toast: ToasterToast }
-  | { type: "UPDATE_TOAST"; toast: Partial<ToasterToast> & Pick<ToasterToast, "id"> }
+  | {
+      type: "UPDATE_TOAST";
+      toast: Partial<ToasterToast> & Pick<ToasterToast, "id">;
+    }
   | { type: "DISMISS_TOAST"; toastId?: string }
   | { type: "REMOVE_TOAST"; toastId?: string };
 
@@ -71,7 +78,8 @@ export const reducer = (state: ToastState, action: ToastAction): ToastState => {
       return {
         ...state,
         toasts: state.toasts.map((t) =>
-          t.id === action.toast.id ? { ...t, ...action.toast } : t),
+          t.id === action.toast.id ? { ...t, ...action.toast } : t,
+        ),
       };
 
     case "DISMISS_TOAST": {
@@ -95,7 +103,8 @@ export const reducer = (state: ToastState, action: ToastAction): ToastState => {
                 ...t,
                 open: false,
               }
-            : t),
+            : t,
+        ),
       };
     }
     case "REMOVE_TOAST":

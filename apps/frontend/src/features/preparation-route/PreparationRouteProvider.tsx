@@ -13,10 +13,8 @@ import type {
   PreparationRouteProjection,
   PreparationRouteRepository,
 } from "../../contracts/preparation";
-import { sharedMockPreparationRouteRepository } from "../../adapters/mock/preparationRouteRepository";
 import {
   cookHandoffSearchParams,
-  derivePreparationRouteProjection,
   toCookHandoff,
 } from "./derivePreparationRoute";
 
@@ -30,12 +28,13 @@ interface PreparationRouteContextValue {
   buildCookPath: (target: CookReadyTarget) => string;
 }
 
-const PreparationRouteContext = createContext<PreparationRouteContextValue | null>(null);
+const PreparationRouteContext =
+  createContext<PreparationRouteContextValue | null>(null);
 
 export interface PreparationRouteProviderProps {
   children: ReactNode;
-  /** Override repository for tests. Defaults to the shared mock singleton. */
-  repository?: PreparationRouteRepository;
+  /** Required repository from the composition root — no silent mock default. */
+  repository: PreparationRouteRepository;
 }
 
 /**
@@ -43,14 +42,14 @@ export interface PreparationRouteProviderProps {
  */
 export function PreparationRouteProvider({
   children,
-  repository = sharedMockPreparationRouteRepository,
+  repository,
 }: PreparationRouteProviderProps) {
   const subscribe = useCallback(
     (onStoreChange: () => void) => repository.subscribe(onStoreChange),
     [repository],
   );
   const getSnapshot = useCallback(
-    () => derivePreparationRouteProjection(repository),
+    () => repository.getProjectionSnapshot(),
     [repository],
   );
   const projection = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
@@ -60,7 +59,8 @@ export function PreparationRouteProvider({
       projection,
       markDone: (taskId: string) => repository.markDone(taskId),
       startNow: (taskId: string) => repository.markInProgress(taskId),
-      dismissCookCta: (targetRecipeId: string) => repository.dismissCookCta(targetRecipeId),
+      dismissCookCta: (targetRecipeId: string) =>
+        repository.dismissCookCta(targetRecipeId),
       getActiveCookTarget: () =>
         projection.readyTargets.find((t) => !t.dismissed) ?? null,
       buildCookHandoff: toCookHandoff,
@@ -82,7 +82,9 @@ export function PreparationRouteProvider({
 export function usePreparationRoute(): PreparationRouteContextValue {
   const ctx = useContext(PreparationRouteContext);
   if (!ctx) {
-    throw new Error("usePreparationRoute must be used within PreparationRouteProvider");
+    throw new Error(
+      "usePreparationRoute must be used within PreparationRouteProvider",
+    );
   }
   return ctx;
 }

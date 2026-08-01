@@ -2,5 +2,5 @@
 // in ./auth.ts (keys camelCase, values kebab-case `<feature>-<element>`).
 
 export const HOME = {
-	emergentLink: 'home-emergent-link',
+  emergentLink: "home-emergent-link",
 } as const;

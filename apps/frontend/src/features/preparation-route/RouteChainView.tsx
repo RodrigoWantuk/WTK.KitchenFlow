@@ -27,7 +27,10 @@ const CHAIN_STATE: Record<
   next: { icon: Timer, cls: "border-border bg-card" },
   canStart: { icon: ArrowRight, cls: "border-primary/50 bg-primary/5" },
   inProgress: { icon: ArrowRight, cls: "border-accent/50 bg-accent/10" },
-  overdue: { icon: AlertTriangle, cls: "border-destructive/50 bg-destructive/10" },
+  overdue: {
+    icon: AlertTriangle,
+    cls: "border-destructive/50 bg-destructive/10",
+  },
   done: { icon: Check, cls: "border-primary bg-primary/15" },
   blocked: { icon: AlertTriangle, cls: "border-warning/40 bg-warning/10" },
 };
@@ -182,7 +185,7 @@ export function RouteChainView({
                             onClick={() => {
                               if (!marked && canToggle) markDone(it.id);
                             }}
-                            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] transition-colors ${
+                            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
                               marked
                                 ? "border-primary bg-primary text-primary-foreground"
                                 : canToggle
@@ -222,16 +225,13 @@ export function RouteChainView({
                         it.requiredForTarget &&
                         it.targetRecipeId === activeCook.targetRecipeId &&
                         it.id === lastRequiredId ? (
-                          <div className="mt-2">
-                            <Button
-                              size="sm"
-                              data-testid={`chain-item-cook-${activeCook.targetRecipeId}`}
-                              onClick={() => startCook(activeCook)}
-                            >
-                              <ChefHat className="mr-1 h-3.5 w-3.5" />
-                              {tr("plan.route.cookNow")}
-                            </Button>
-                          </div>
+                          <p
+                            className="mt-2 text-[11px] text-primary"
+                            data-testid={`chain-item-unlocked-${activeCook.targetRecipeId}`}
+                          >
+                            {activeCook.forTitle} —{" "}
+                            {tr("plan.route.readyToCook")}
+                          </p>
                         ) : null}
                       </div>
                     </li>

@@ -72,7 +72,9 @@ export interface CookHandoffPayload {
 }
 
 /**
- * Synthetic repository boundary for preparation-route progress during the mock phase.
+ * Repository boundary for preparation-route progress.
+ * Implementations must keep {@link getProjectionSnapshot} referentially stable
+ * between notifications so React `useSyncExternalStore` can cache correctly.
  */
 export interface PreparationRouteRepository {
   getRouteId(): string;
@@ -80,6 +82,10 @@ export interface PreparationRouteRepository {
   getCompletedIds(): ReadonlySet<string>;
   getInProgressIds(): ReadonlySet<string>;
   getDismissedTargetIds(): ReadonlySet<string>;
+  /**
+   * Referentially stable projection until the next mutation notifies subscribers.
+   */
+  getProjectionSnapshot(): PreparationRouteProjection;
   markDone(taskId: string): void;
   markInProgress(taskId: string): void;
   dismissCookCta(targetRecipeId: string): void;

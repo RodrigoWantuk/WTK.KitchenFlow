@@ -1,16 +1,13 @@
 import type { KeyboardEvent, ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  AlertTriangle,
-  Check,
-  ChefHat,
-  Clock,
-  Play,
-  X,
-} from "lucide-react";
+import { AlertTriangle, Check, ChefHat, Clock, Play, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePreparationRoute } from "./PreparationRouteProvider";
-import type { PreparationRouteTaskView, PreparationTaskState } from "@/contracts/preparation";
+import type {
+  PreparationRouteTaskView,
+  PreparationTaskState,
+} from "@/contracts/preparation";
+import { isCookTargetReady } from "./cookTargetReady";
 
 const ROUTE_STATE: Record<
   PreparationTaskState,
@@ -19,7 +16,10 @@ const ROUTE_STATE: Record<
   next: { icon: Clock, cls: "border-border bg-card" },
   canStart: { icon: Play, cls: "border-primary/40 bg-primary/5" },
   inProgress: { icon: Play, cls: "border-accent/50 bg-accent/10" },
-  overdue: { icon: AlertTriangle, cls: "border-destructive/50 bg-destructive/10" },
+  overdue: {
+    icon: AlertTriangle,
+    cls: "border-destructive/50 bg-destructive/10",
+  },
   done: { icon: Check, cls: "border-primary bg-primary/15" },
   blocked: { icon: X, cls: "border-warning/40 bg-warning/10" },
 };
@@ -55,9 +55,10 @@ export function HomeRouteCarousel({
   if (!enabled || projection.tasks.length === 0) return null;
 
   const cookTarget = getActiveCookTarget();
-  const showInlineCook =
+  /** Persistent Home banner — only tasks for this targetRecipeId count. */
+  const showBannerCook =
     !!cookTarget &&
-    projection.tasks.every((t) => !t.requiredForTarget || t.state === "done");
+    isCookTargetReady(projection.tasks, cookTarget.targetRecipeId);
 
   const lastRequiredId = cookTarget
     ? [...projection.tasks]
@@ -82,7 +83,7 @@ export function HomeRouteCarousel({
           {tr("plan.route.openFull")}
         </button>
       </div>
-      {showInlineCook && cookTarget ? (
+      {showBannerCook && cookTarget ? (
         <div
           data-testid={`home-route-cook-ready-${cookTarget.targetRecipeId}`}
           className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-primary/40 bg-primary/10 p-3"
@@ -115,17 +116,22 @@ export function HomeRouteCarousel({
         data-testid="home-route-carousel"
       >
         <ol
-          className="flex snap-x snap-mandatory gap-3 pb-1"
+          data-testid="home-route-carousel-list"
+          className="flex snap-x snap-mandatory gap-3 pb-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           tabIndex={0}
           onKeyDown={(event: KeyboardEvent<HTMLOListElement>) => {
             const scroller = event.currentTarget.parentElement;
             if (!scroller) return;
+            const reduce =
+              typeof window !== "undefined" &&
+              window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            const behavior = reduce ? "auto" : "smooth";
             if (event.key === "ArrowRight") {
-              scroller.scrollBy({ left: 240, behavior: "smooth" });
+              scroller.scrollBy({ left: 240, behavior });
               event.preventDefault();
             }
             if (event.key === "ArrowLeft") {
-              scroller.scrollBy({ left: -240, behavior: "smooth" });
+              scroller.scrollBy({ left: -240, behavior });
               event.preventDefault();
             }
           }}
@@ -137,15 +143,10 @@ export function HomeRouteCarousel({
               tr={tr}
               onDone={() => markDone(task.id)}
               onStart={() => startNow(task.id)}
-              cookTarget={
-                showInlineCook &&
-                cookTarget &&
-                task.id === lastRequiredId
-                  ? cookTarget
+              unlockHint={
+                showBannerCook && cookTarget && task.id === lastRequiredId
+                  ? cookTarget.forTitle
                   : null
-              }
-              onCook={
-                cookTarget ? () => nav(buildCookPath(cookTarget)) : undefined
               }
             />
           ))}
@@ -160,17 +161,16 @@ function HomeRouteCard({
   tr,
   onDone,
   onStart,
-  cookTarget,
-  onCook,
+  unlockHint,
 }: {
   task: PreparationRouteTaskView;
   tr: (key: string) => string;
   onDone: () => void;
   onStart: () => void;
-  cookTarget: { targetRecipeId: string; forTitle: string } | null;
-  onCook?: () => void;
+  unlockHint: string | null;
 }) {
-  const isFocus = task.isHighlighted && task.state !== "blocked" && task.state !== "done";
+  const isFocus =
+    task.isHighlighted && task.state !== "blocked" && task.state !== "done";
   const meta = ROUTE_STATE[task.state] || ROUTE_STATE.next;
   const Icon = meta.icon;
   const cardCls =
@@ -212,7 +212,9 @@ function HomeRouteCard({
       </div>
       <p
         className={`mt-2 line-clamp-2 text-sm ${
-          task.state === "done" ? "line-through text-muted-foreground" : "font-medium"
+          task.state === "done"
+            ? "line-through text-muted-foreground"
+            : "font-medium"
         }`}
       >
         {task.task}
@@ -222,7 +224,11 @@ function HomeRouteCard({
       </p>
       {isFocus ? (
         <div className="mt-2.5 flex flex-wrap gap-1.5">
-          <Button size="sm" data-testid={`home-route-start-${task.id}`} onClick={onStart}>
+          <Button
+            size="sm"
+            data-testid={`home-route-start-${task.id}`}
+            onClick={onStart}
+          >
             {tr("plan.route.startNow")}
           </Button>
           <Button
@@ -236,17 +242,13 @@ function HomeRouteCard({
           </Button>
         </div>
       ) : null}
-      {cookTarget && onCook ? (
-        <div className="mt-2">
-          <Button
-            size="sm"
-            data-testid={`home-route-card-cook-${cookTarget.targetRecipeId}`}
-            onClick={onCook}
-          >
-            <ChefHat className="mr-1 h-3.5 w-3.5" />
-            {tr("plan.route.cookNow")}
-          </Button>
-        </div>
+      {unlockHint ? (
+        <p
+          data-testid={`home-route-card-unlocked-${task.targetRecipeId ?? "none"}`}
+          className="mt-2 text-[11px] text-primary"
+        >
+          {unlockHint} — {tr("plan.route.readyToCook")}
+        </p>
       ) : null}
     </li>
   );

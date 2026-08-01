@@ -4,7 +4,7 @@ import type {
   CookHandoffPayload,
   CookReadyTarget,
 } from "../../contracts/preparation";
-import { projectPreparationRoute } from "../../adapters/mock/projectPreparationRoute";
+import { projectPreparationRoute } from "./projectPreparationRoute";
 
 /**
  * Derives presentation state for each task from shared completion/progress sets.

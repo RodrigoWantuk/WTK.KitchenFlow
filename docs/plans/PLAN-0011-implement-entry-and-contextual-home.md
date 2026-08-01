@@ -1,17 +1,17 @@
 # PLAN-0011: Implement the Public Entry and Contextual Home Experience
 
-- **Status:** Ready
+- **Status:** Blocked
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Unassigned frontend/product implementation agent
 - **Created:** 2026-07-30
-- **Last updated:** 2026-07-31T22:21:00Z
+- **Last updated:** 2026-07-31T22:47:18Z
 - **Branch:** `agent/plan-0011-contextual-home`
 - **Pull request:** Not opened
 - **Related documentation plan:** PLAN-0010
-- **Related frontend plan:** PLAN-0014 (PLAN-0004 superseded)
+- **Related frontend plan:** PLAN-0014 (on main); remediation [PLAN-0015](PLAN-0015-remediate-frontend-baseline.md)
 - **Related product document:** `docs/product/entry-and-contextual-home.md`
-- **Dependencies:** PLAN-0014 frontend baseline integrated and validated in `apps/frontend`; stable menu, profile, inventory-attention, and recommendation contracts for live phases
+- **Dependencies:** PLAN-0015 owner approval of the remediated frontend baseline; stable menu, profile, inventory-attention, and recommendation contracts for live phases
 
 ## Objective
 
@@ -26,9 +26,9 @@ The implementation must preserve the accepted source priority:
 
 ## Blocking state
 
-The product behavior is fully specified, but implementation must not begin in the official monorepo until PLAN-0014 completes the Emergent frontend baseline in `apps/frontend` and its build, test, dependency, asset-portability, and prototype-isolation state are known.
+PLAN-0014 imported the Emergent frontend onto `main`, but remediation and independent validation remain open under PLAN-0015. Implementation of this plan must **not** begin until the owner approves PLAN-0015.
 
-The public landing page and mock-backed home can begin after that baseline is integrated. Live source adapters remain blocked until their backend contracts are accepted and published. This plan stays **Blocked** until PLAN-0014 acceptance criteria for the official frontend baseline are met.
+The public landing page and mock-backed home can begin after that approval. Live source adapters remain blocked until their backend contracts are accepted and published. This plan stays **Blocked** until PLAN-0015 is approved.
 
 ## Scope
 
@@ -247,17 +247,23 @@ Automated coverage must include:
 - **Documentation delivered:** This future implementation plan.
 - **Validation performed:** Plan cross-checked against the canonical entry/home specification and existing frontend/backend boundaries.
 - **Known failures or limitations:** Live contract shapes do not yet exist for every tier.
-- **Blockers:** PLAN-0014 frontend baseline not yet completed; live menu/profile/recommendation contracts.
+- **Blockers:** PLAN-0015 remediation not owner-approved; live menu/profile/recommendation contracts.
 - **Partially modified areas:** None.
-- **Exact next action:** After PLAN-0014 integrates and validates the Emergent baseline in `apps/frontend`, claim this plan and implement Phase 1 plus the mock-backed Phase 2 before designing live contracts.
+- **Exact next action:** After the owner approves PLAN-0015, claim this plan and implement Phase 1 plus the mock-backed Phase 2 before designing live contracts.
 - **Working tree state:** No implementation branch exists.
 
 ## Progress log
 
+### 2026-07-31T22:47:18Z — Cursor agent (PLAN-0015)
+
+- **Checkpoint:** Re-blocked pending PLAN-0015 owner approval; PLAN-0014 code remains on main but is not a sufficient unblock alone.
+- **Next action:** Do not claim until PLAN-0015 is approved.
+- **Blockers or handoff notes:** Preserve PLAN-0014 UX surface; do not start competing frontend redesigns.
+
 ### 2026-07-31T22:21:00Z — Cursor agent
 
-- **Checkpoint:** Unblocked for frontend baseline: PLAN-0014 merged to main via PR #14.
-- **Next action:** Claim branch and implement Phase 1 plus mock-backed Phase 2.
+- **Checkpoint:** Temporarily marked Ready after PLAN-0014 merge (superseded by PLAN-0015 re-block).
+- **Next action:** Superseded — wait for PLAN-0015 approval.
 - **Blockers or handoff notes:** Live menu/profile/inventory-attention/recommendation contracts still required for live phases.
 
 

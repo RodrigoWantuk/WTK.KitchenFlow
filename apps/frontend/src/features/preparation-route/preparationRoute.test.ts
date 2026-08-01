@@ -5,18 +5,23 @@ import {
 import {
   collectReadyTargets,
   projectPreparationRoute,
-} from "../../adapters/mock/projectPreparationRoute";
+} from "./projectPreparationRoute";
 import { selectShoppingShortfalls } from "../../adapters/mock/shoppingRequirementFixtures";
 import { MOCK_SHOPPING_REQUIREMENTS } from "../../adapters/mock/shoppingRequirementFixtures";
 import {
   MOCK_PREPARED_COMPONENT_SHORTFALL,
   projectPreparedComponentFromPantryItem,
 } from "../../adapters/mock/preparedComponentFixtures";
-import { cookHandoffSearchParams, toCookHandoff } from "../../features/preparation-route/derivePreparationRoute";
+import {
+  cookHandoffSearchParams,
+  toCookHandoff,
+} from "../../features/preparation-route/derivePreparationRoute";
 
 describe("projectPreparationRoute", () => {
   it("shares unlock state from a single completion set", () => {
-    const repo = new MockPreparationRouteRepository(MOCK_PREPARATION_ROUTE_TASKS);
+    const repo = new MockPreparationRouteRepository(
+      MOCK_PREPARATION_ROUTE_TASKS,
+    );
     let projection = projectPreparationRoute(repo);
     expect(projection.highlightedTaskId).toBe("n2");
     expect(projection.tasks.find((t) => t.id === "n3")?.state).toBe("blocked");
@@ -29,14 +34,18 @@ describe("projectPreparationRoute", () => {
   });
 
   it("does not highlight blocked tasks", () => {
-    const repo = new MockPreparationRouteRepository(MOCK_PREPARATION_ROUTE_TASKS);
+    const repo = new MockPreparationRouteRepository(
+      MOCK_PREPARATION_ROUTE_TASKS,
+    );
     const projection = projectPreparationRoute(repo);
     const blocked = projection.tasks.filter((t) => t.state === "blocked");
     expect(blocked.every((t) => !t.isHighlighted)).toBe(true);
   });
 
   it("marks cook ready when required tasks complete; optional tasks do not block", () => {
-    const repo = new MockPreparationRouteRepository(MOCK_PREPARATION_ROUTE_TASKS);
+    const repo = new MockPreparationRouteRepository(
+      MOCK_PREPARATION_ROUTE_TASKS,
+    );
     repo.markDone("n2");
     repo.markDone("n3");
     // n4/n5 are optional (requiredForTarget=false)
@@ -47,7 +56,9 @@ describe("projectPreparationRoute", () => {
   });
 
   it("preserves completion when cook CTA is dismissed (Later)", () => {
-    const repo = new MockPreparationRouteRepository(MOCK_PREPARATION_ROUTE_TASKS);
+    const repo = new MockPreparationRouteRepository(
+      MOCK_PREPARATION_ROUTE_TASKS,
+    );
     repo.markDone("n2");
     repo.markDone("n3");
     repo.dismissCookCta("r3");
@@ -92,7 +103,9 @@ describe("cook handoff", () => {
 describe("PreparedComponentAvailability fixtures", () => {
   it("exposes shortfall without requiring UI arithmetic", () => {
     expect(MOCK_PREPARED_COMPONENT_SHORTFALL.status).toBe("shortfall");
-    expect(MOCK_PREPARED_COMPONENT_SHORTFALL.shortfallQuantity?.value).toBe(200);
+    expect(MOCK_PREPARED_COMPONENT_SHORTFALL.shortfallQuantity?.value).toBe(
+      200,
+    );
   });
 
   it("projects pantry mock items into presentation model", () => {
@@ -119,6 +132,8 @@ describe("selectShoppingShortfalls", () => {
       "req-broth-shortfall",
       "req-onion-missing",
     ]);
-    expect(shortfalls.find((s) => s.requirementId === "req-beans-covered")).toBeUndefined();
+    expect(
+      shortfalls.find((s) => s.requirementId === "req-beans-covered"),
+    ).toBeUndefined();
   });
 });

@@ -1,0 +1,936 @@
+#!/usr/bin/env node
+/**
+ * Automated Playwright browser smoke matrix (prototype mode).
+ * Not a manual validation — CI and local `yarn smoke:browser`.
+ *
+ * Prerequisites:
+ *   yarn install --frozen-lockfile
+ *   yarn smoke:browser:install
+ *   yarn start   # separate terminal, or SMOKE_MANAGE_SERVER=1
+ *   yarn smoke:browser
+ */
+const { chromium, devices } = require("playwright");
+const { spawn, execSync } = require("child_process");
+const fs = require("fs");
+const http = require("http");
+const path = require("path");
+const os = require("os");
+const {
+  hasPerceptibleFocusIndicator,
+  evaluateReducedMotionDurations,
+  parseCssTimeSeconds,
+  motionRelevantSelectors,
+} = require("./browser-smoke-assertions");
+
+const BASE = process.env.SMOKE_BASE_URL || "http://127.0.0.1:3000";
+const PRODUCTION_BASE =
+  process.env.SMOKE_PRODUCTION_URL || "http://127.0.0.1:3001";
+const HEADLESS = process.env.SMOKE_HEADED !== "1";
+const OUT_DIR =
+  process.env.SMOKE_OUT_DIR ||
+  path.join(__dirname, "..", "docs", "browser-smoke");
+const results = [];
+let failedArtifacts = [];
+
+/**
+ * Minimal static SPA server for the production CRA build.
+ * @returns {import('http').Server}
+ */
+function startStaticSpa(rootDir, port) {
+  const root = path.resolve(rootDir);
+  const server = http.createServer((req, res) => {
+    try {
+      const url = new URL(req.url || "/", `http://127.0.0.1:${port}`);
+      let rel = decodeURIComponent(url.pathname);
+      if (rel === "/") rel = "/index.html";
+      let filePath = path.join(root, rel);
+      if (!filePath.startsWith(root)) {
+        res.writeHead(403);
+        res.end("Forbidden");
+        return;
+      }
+      if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+        filePath = path.join(root, "index.html");
+      }
+      const data = fs.readFileSync(filePath);
+      const ext = path.extname(filePath).toLowerCase();
+      const types = {
+        ".html": "text/html; charset=utf-8",
+        ".js": "application/javascript; charset=utf-8",
+        ".css": "text/css; charset=utf-8",
+        ".json": "application/json",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".svg": "image/svg+xml",
+        ".ico": "image/x-icon",
+        ".map": "application/json",
+        ".txt": "text/plain; charset=utf-8",
+      };
+      res.writeHead(200, {
+        "Content-Type": types[ext] || "application/octet-stream",
+      });
+      res.end(data);
+    } catch {
+      res.writeHead(500);
+      res.end("error");
+    }
+  });
+  server.listen(port, "127.0.0.1");
+  return server;
+}
+
+function record(check, result, notes = "") {
+  results.push({ check, result, notes });
+  console.log(`[${result}] ${check}${notes ? ` — ${notes}` : ""}`);
+}
+
+function fail(check, notes) {
+  record(check, "Failed", notes);
+  throw new Error(`${check}: ${notes}`);
+}
+
+async function captureFailure(page, name) {
+  try {
+    fs.mkdirSync(path.join(OUT_DIR, "failures"), { recursive: true });
+    const shot = path.join(OUT_DIR, "failures", `${name}.png`);
+    await page.screenshot({ path: shot, fullPage: true });
+    failedArtifacts.push(shot);
+  } catch {
+    // ignore screenshot errors
+  }
+}
+
+function meta() {
+  let gitHead = "";
+  try {
+    gitHead = execSync("git rev-parse HEAD", {
+      cwd: path.join(__dirname, "..", "..", ".."),
+      encoding: "utf8",
+    }).trim();
+  } catch {
+    gitHead = "unknown";
+  }
+  const eventName = process.env.GITHUB_EVENT_NAME || "local";
+  const githubSha = process.env.GITHUB_SHA || "";
+  const prHeadSha = process.env.SMOKE_PR_HEAD_SHA || "";
+  const syntheticMergeSha =
+    eventName === "pull_request" ? githubSha || "" : "";
+  const testedCodeSha =
+    process.env.SMOKE_TESTED_CODE_SHA ||
+    prHeadSha ||
+    githubSha ||
+    gitHead ||
+    "unknown";
+
+  let yarnVersion = "unknown";
+  let nodeVersion = process.version;
+  let playwrightVersion = "unknown";
+  try {
+    yarnVersion = execSync("yarn --version", { encoding: "utf8" }).trim();
+  } catch {
+    /* ignore */
+  }
+  try {
+    playwrightVersion = require("playwright/package.json").version;
+  } catch {
+    /* ignore */
+  }
+  return {
+    kind: "automated-browser-smoke",
+    evidenceNote:
+      "CI artifact only — not a versioned source-of-truth report in git",
+    testedCodeSha,
+    prHeadSha: prHeadSha || null,
+    syntheticMergeSha: syntheticMergeSha || null,
+    gitHeadSha: gitHead || null,
+    githubRunId: process.env.GITHUB_RUN_ID || null,
+    githubRunAttempt: process.env.GITHUB_RUN_ATTEMPT || null,
+    githubEventName: eventName,
+    workflowName: process.env.GITHUB_WORKFLOW || "local",
+    prototypeBaseUrl: BASE,
+    productionBaseUrl: PRODUCTION_BASE,
+    testedModes: ["prototype", "production"],
+    nodeVersion,
+    yarnVersion,
+    playwrightVersion,
+    chromiumVersion: "resolved-by-playwright",
+    frontendMode: "prototype+production-static",
+    timestamp: new Date().toISOString(),
+    headless: HEADLESS,
+    operatingSystem: `${os.platform()} ${os.release()} ${os.arch()}`,
+  };
+}
+
+async function waitForServer(url, timeoutMs = 120000) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    try {
+      const res = await fetch(url, { method: "GET" });
+      if (res.ok || res.status === 200) return;
+    } catch {
+      /* retry */
+    }
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  throw new Error(`Server not ready at ${url} within ${timeoutMs}ms`);
+}
+
+async function run() {
+  fs.mkdirSync(OUT_DIR, { recursive: true });
+  const reportMeta = meta();
+
+  let serverProc = null;
+  let productionServer = null;
+  if (process.env.SMOKE_MANAGE_SERVER === "1") {
+    serverProc = spawn("yarn", ["start"], {
+      cwd: path.join(__dirname, ".."),
+      env: {
+        ...process.env,
+        BROWSER: "none",
+        CI: "true",
+        HOST: process.env.HOST || "127.0.0.1",
+        PORT: process.env.PORT || "3000",
+        REACT_APP_FRONTEND_MODE: "prototype",
+        // Prevent CRA interactive prompt when port is busy.
+        WDS_SOCKET_PORT: "0",
+      },
+      // Do not pipe stdio — CRA can deadlock when stdout buffers fill.
+      stdio: "ignore",
+      detached: false,
+    });
+    await waitForServer(BASE, 180000);
+
+    const frontendRoot = path.join(__dirname, "..");
+    const buildDir = path.join(frontendRoot, "build");
+    console.log("Building production bundle for mobile locale smoke...");
+    execSync("yarn build:production", {
+      cwd: frontendRoot,
+      stdio: "inherit",
+      env: { ...process.env, CI: "true" },
+    });
+    const prodPort = Number(new URL(PRODUCTION_BASE).port || 3001);
+    productionServer = startStaticSpa(buildDir, prodPort);
+    await waitForServer(PRODUCTION_BASE, 30000);
+  } else {
+    await waitForServer(BASE, 30000).catch((err) => {
+      throw new Error(
+        `${err.message}. Start the app with \`yarn start\` or set SMOKE_MANAGE_SERVER=1.`,
+      );
+    });
+    await waitForServer(PRODUCTION_BASE, 15000).catch((err) => {
+      throw new Error(
+        `${err.message}. Serve production build at SMOKE_PRODUCTION_URL (${PRODUCTION_BASE}) or set SMOKE_MANAGE_SERVER=1.`,
+      );
+    });
+  }
+
+  const browser = await chromium.launch({
+    headless: HEADLESS,
+    args: ["--no-sandbox", "--disable-dev-shm-usage"],
+  });
+  const browserVersion = browser.version();
+  reportMeta.chromiumVersion = browserVersion;
+
+  async function withPage(opts, name, fn) {
+    const context = await browser.newContext({
+      ...opts,
+      recordVideo: process.env.SMOKE_VIDEO
+        ? { dir: path.join(OUT_DIR, "videos") }
+        : undefined,
+    });
+    if (process.env.SMOKE_TRACE === "1") {
+      await context.tracing.start({ screenshots: true, snapshots: true });
+    }
+    const page = await context.newPage();
+    page.setDefaultTimeout(15000);
+    try {
+      await fn(page, context);
+      if (process.env.SMOKE_TRACE === "1") {
+        await context.tracing.stop({
+          path: path.join(OUT_DIR, "traces", `${name}.zip`),
+        });
+      }
+    } catch (err) {
+      await captureFailure(page, name.replace(/\W+/g, "_"));
+      if (process.env.SMOKE_TRACE === "1") {
+        fs.mkdirSync(path.join(OUT_DIR, "traces"), { recursive: true });
+        await context.tracing
+          .stop({ path: path.join(OUT_DIR, "traces", `${name}-failed.zip`) })
+          .catch(() => {});
+      }
+      throw err;
+    } finally {
+      await context.close();
+    }
+  }
+
+  async function captureElementStyles(page, testId) {
+    return page.evaluate((id) => {
+      const el = document.querySelector(`[data-testid="${id}"]`);
+      if (!el) return null;
+      const s = getComputedStyle(el);
+      return {
+        outlineStyle: s.outlineStyle,
+        outlineWidth: s.outlineWidth,
+        outlineColor: s.outlineColor,
+        boxShadow: s.boxShadow,
+        borderColor: s.borderColor,
+        borderWidth: s.borderWidth,
+        backgroundColor: s.backgroundColor,
+        isActive: document.activeElement === el,
+      };
+    }, testId);
+  }
+
+  /**
+   * Capture baseline styles while unfocused, Tab to the control, then compare.
+   */
+  async function assertKeyboardFocusVisible(page, label, candidateIds) {
+    let testId = null;
+    for (const id of candidateIds) {
+      const locator = page.locator(`[data-testid="${id}"]`);
+      if ((await locator.count()) > 0) {
+        await locator.first().waitFor({ state: "attached", timeout: 10000 });
+        testId = id;
+        break;
+      }
+    }
+    if (!testId) {
+      // One more pass after a short settle — SPA route content may still mount.
+      await page.waitForTimeout(250);
+      for (const id of candidateIds) {
+        if ((await page.locator(`[data-testid="${id}"]`).count()) > 0) {
+          testId = id;
+          break;
+        }
+      }
+    }
+    if (!testId) {
+      fail(
+        `keyboard focus-visible (${label})`,
+        `control missing (${candidateIds.join(", ")})`,
+      );
+    }
+
+    await page.evaluate(() => {
+      const active = document.activeElement;
+      if (active && typeof active.blur === "function") active.blur();
+    });
+    let baseline = await captureElementStyles(page, testId);
+    if (!baseline) {
+      fail(`keyboard focus-visible (${label})`, `element ${testId} not found`);
+    }
+    if (baseline.isActive) {
+      await page.evaluate(() => {
+        if (document.activeElement && document.activeElement !== document.body) {
+          document.activeElement.blur();
+        }
+      });
+      baseline = await captureElementStyles(page, testId);
+    }
+    const focusedId = await tabUntilTestId(page, [testId], 100);
+    if (!focusedId) {
+      fail(
+        `keyboard focus-visible (${label})`,
+        `${testId} not reachable by Tab`,
+      );
+    }
+
+    const focused = await page.evaluate(() => {
+      const el = document.activeElement;
+      if (!el || el === document.body) {
+        return { ok: false, reason: "no activeElement" };
+      }
+      const s = getComputedStyle(el);
+      return {
+        ok: true,
+        testId: el.getAttribute("data-testid") || "",
+        tag: el.tagName.toLowerCase(),
+        matchesFocusVisible: el.matches(":focus-visible"),
+        outlineStyle: s.outlineStyle,
+        outlineWidth: s.outlineWidth,
+        outlineColor: s.outlineColor,
+        boxShadow: s.boxShadow,
+        borderColor: s.borderColor,
+        borderWidth: s.borderWidth,
+        backgroundColor: s.backgroundColor,
+      };
+    });
+    if (!focused.ok) {
+      fail(`keyboard focus-visible (${label})`, focused.reason);
+    }
+    if (!focused.matchesFocusVisible) {
+      fail(
+        `keyboard focus-visible (${label})`,
+        `activeElement is not :focus-visible (testid=${focused.testId} tag=${focused.tag})`,
+      );
+    }
+    if (
+      !hasPerceptibleFocusIndicator({
+        matchesFocusVisible: focused.matchesFocusVisible,
+        baseline,
+        focused,
+      })
+    ) {
+      fail(
+        `keyboard focus-visible (${label})`,
+        `no material focus indicator vs baseline (shadow baseline=${baseline.boxShadow} focused=${focused.boxShadow})`,
+      );
+    }
+  }
+
+  async function tabUntilTestId(page, ids, maxTabs = 60) {
+    const wanted = new Set(ids);
+    for (let i = 0; i < maxTabs; i++) {
+      await page.keyboard.press("Tab");
+      const id = await page.evaluate(
+        () => document.activeElement?.getAttribute("data-testid") || "",
+      );
+      if (wanted.has(id)) return id;
+    }
+    return null;
+  }
+
+  async function navTo(page, key) {
+    const side = page.getByTestId(`sidenav-${key}`);
+    if (
+      (await side.count()) > 0 &&
+      (await side.isVisible().catch(() => false))
+    ) {
+      await side.click();
+      return;
+    }
+    await page.getByTestId(`bottomnav-${key}`).click();
+  }
+
+  async function selectScenario(page, id) {
+    await page.evaluate((scenarioId) => {
+      const key = "cocinaris_state_v1";
+      let state = {};
+      try {
+        state = JSON.parse(localStorage.getItem(key) || "{}") || {};
+      } catch {
+        state = {};
+      }
+      state.scenario = scenarioId;
+      state.authed = true;
+      localStorage.setItem(key, JSON.stringify(state));
+    }, id);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForURL(/\/app\//, { timeout: 15000 }).catch(() => {});
+  }
+
+  async function enterHome(page, { scenario } = {}) {
+    await page.goto(BASE + "/", {
+      waitUntil: "domcontentloaded",
+      timeout: 30000,
+    });
+    await page.getByTestId("landing-enter").click();
+    await page.getByTestId("access-demo").click();
+    await page.waitForURL(/\/app\/hoje/, { timeout: 20000 });
+    if (scenario) {
+      await selectScenario(page, scenario);
+      await page.goto(BASE + "/app/hoje", { waitUntil: "domcontentloaded" });
+    }
+    await page.getByTestId("home-route-block").waitFor({ timeout: 15000 });
+  }
+
+  const localeExpectations = {
+    "pt-BR": {
+      a: "O cozinhar do dia a dia, sem stress.",
+      b: "Entrar no Cocinaris",
+      c: "Entrar em modo demo",
+    },
+    en: {
+      a: "Everyday cooking, without the stress.",
+      b: "Enter Cocinaris",
+      c: "Enter demo mode",
+    },
+    es: {
+      a: "Cocinar cada día, sin estrés.",
+      b: "Entrar en Cocinaris",
+      c: "Entrar en modo demo",
+    },
+  };
+
+  try {
+    await withPage(
+      { viewport: { width: 360, height: 740 } },
+      "360",
+      async (page) => {
+        await enterHome(page, { scenario: "routeWithDeps" });
+        await navTo(page, "pantry");
+        await page.waitForURL(/\/app\/despensa/);
+        await navTo(page, "plan");
+        await page.waitForURL(/\/app\/planejamento/);
+        await page.getByTestId("route-chain").waitFor();
+        record("360px: Landing→Access→Home→Pantry→Plan", "Passed");
+        await navTo(page, "today");
+        await page.waitForURL(/\/app\/hoje/);
+        record("360px touch/mobile nav", "Passed", "bottomnav");
+      },
+    );
+
+    await withPage(
+      { viewport: { width: 768, height: 1024 } },
+      "768",
+      async (page) => {
+        await enterHome(page, { scenario: "routeWithDeps" });
+        await navTo(page, "plan");
+        await page.getByTestId("route-chain").waitFor();
+        record("768px journey", "Passed");
+      },
+    );
+
+    await withPage(
+      { viewport: { width: 1280, height: 800 } },
+      "1280",
+      async (page) => {
+        await enterHome(page, { scenario: "routeWithDeps" });
+        await navTo(page, "plan");
+        await page.getByTestId("route-chain").waitFor();
+        record("1280px journey", "Passed");
+      },
+    );
+
+    // Keyboard-only journey (no mouse clicks) with baseline vs focused :focus-visible
+    await withPage(
+      { viewport: { width: 1280, height: 800 } },
+      "keyboard",
+      async (page) => {
+        await page.goto(BASE + "/", { waitUntil: "domcontentloaded" });
+        await assertKeyboardFocusVisible(page, "landing CTA", [
+          "landing-enter",
+          "hero-enter",
+        ]);
+        await page.keyboard.press("Enter");
+        await page.waitForURL(/\/acesso/);
+        await page
+          .locator('[data-testid="access-demo"], [data-testid="access-enter"]')
+          .first()
+          .waitFor({ state: "visible", timeout: 15000 });
+
+        await assertKeyboardFocusVisible(page, "acesso/demo CTA", [
+          "access-demo",
+          "access-enter",
+        ]);
+        await page.keyboard.press("Enter");
+        await page.waitForURL(/\/app\/hoje/);
+        await page.evaluate(() => {
+          const key = "cocinaris_state_v1";
+          let state = {};
+          try {
+            state = JSON.parse(localStorage.getItem(key) || "{}") || {};
+          } catch {
+            state = {};
+          }
+          state.scenario = "routeWithDeps";
+          state.authed = true;
+          localStorage.setItem(key, JSON.stringify(state));
+        });
+        await page.reload({ waitUntil: "domcontentloaded" });
+        await page.waitForURL(/\/app\/hoje/);
+        await page.getByTestId("home-route-block").waitFor({ timeout: 20000 });
+
+        await assertKeyboardFocusVisible(page, "carousel action", [
+          "home-route-carousel-list",
+          "home-route-open",
+        ]);
+        const carouselFocused = await page.evaluate(
+          () => document.activeElement?.getAttribute("data-testid") || "",
+        );
+        if (carouselFocused === "home-route-carousel-list") {
+          await page.keyboard.press("ArrowRight");
+          await page.keyboard.press("ArrowLeft");
+        }
+
+        await assertKeyboardFocusVisible(page, "authenticated asChild CTA", [
+          "today-open-plan",
+          "planned-open",
+          "planned-view",
+          "nav-settings",
+        ]);
+
+        await assertKeyboardFocusVisible(page, "main navigation", [
+          "sidenav-plan",
+          "bottomnav-plan",
+        ]);
+        await page.keyboard.press("Enter");
+        await page.waitForURL(/\/app\/planejamento/);
+        await page.getByTestId("route-chain").waitFor();
+
+        await assertKeyboardFocusVisible(page, "route action", [
+          "chain-toggle-n2",
+          "chain-toggle-n3",
+        ]);
+
+        await assertKeyboardFocusVisible(page, "settings", ["nav-settings"]);
+        await page.keyboard.press("Enter");
+        await page.waitForURL(/\/app\/ajustes/);
+
+        record(
+          "keyboard-only Landing→Access→Home→carousel→Plan→Settings",
+          "Passed",
+          "Tab/Enter/Arrow only; baseline vs focused :focus-visible",
+        );
+      },
+    );
+
+    // CSS zoom approximation (not real browser zoom) — classified separately
+    await withPage(
+      { viewport: { width: 1280, height: 800 } },
+      "css-zoom",
+      async (page) => {
+        await enterHome(page, { scenario: "routeWithDeps" });
+        await page.evaluate(() => {
+          document.documentElement.style.zoom = "2";
+        });
+        const overflowX = await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth >
+            document.documentElement.clientWidth + 40,
+        );
+        await page.getByTestId("home-route-block").waitFor();
+        await navTo(page, "pantry");
+        await page.waitForURL(/despensa/);
+        await navTo(page, "plan");
+        await page.waitForURL(/planejamento/);
+        await navTo(page, "shopping");
+        await page.waitForURL(/compras/);
+        if (overflowX) {
+          fail(
+            "CSS zoom approximation (not browser zoom)",
+            "excessive horizontal overflow at CSS zoom=2",
+          );
+        }
+        record(
+          "CSS zoom approximation (not browser zoom)",
+          "Passed",
+          "documentElement.style.zoom=2; Home/Despensa/Plan/Compras ok",
+        );
+      },
+    );
+
+    await withPage(
+      { ...devices["iPhone 12"], hasTouch: true, isMobile: true },
+      "touch",
+      async (page) => {
+        await enterHome(page, { scenario: "routeWithDeps" });
+        await page.getByTestId("bottomnav-pantry").click();
+        await page.waitForURL(/despensa/);
+        await selectScenario(page, "componentShared");
+        await page.goto(BASE + "/app/despensa", {
+          waitUntil: "domcontentloaded",
+        });
+        const debt = page.locator(
+          '[data-testid="pantry-reserved-debt-cp_broth"]',
+        );
+        await debt.waitFor({ timeout: 10000 });
+        await debt.click();
+        await page.waitForURL(/review=shortfall/);
+        await selectScenario(page, "routeWithDeps");
+        await page.goto(BASE + "/app/hoje", { waitUntil: "domcontentloaded" });
+        await page.getByTestId("home-route-carousel").waitFor();
+        await page.getByTestId("bottomnav-plan").click();
+        await page.getByTestId("route-chain").waitFor();
+        for (const id of ["n2", "n3"]) {
+          const toggle = page.getByTestId(`chain-toggle-${id}`);
+          await toggle.click();
+          await page.waitForTimeout(150);
+        }
+        const cook = page.locator('[data-testid^="chain-cook-start-"]');
+        await cook.first().click();
+        await page.waitForURL(/\/app\/cozinhar\//);
+        record(
+          "touch/mobile viewport flows",
+          "Passed",
+          "bottomnav, pantry debt, route, cook CTA",
+        );
+      },
+    );
+
+    await withPage(
+      { viewport: { width: 1280, height: 800 }, reducedMotion: "reduce" },
+      "reduced-motion",
+      async (page) => {
+        await page.emulateMedia({ reducedMotion: "reduce" });
+        const matches = await page.evaluate(
+          () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+        );
+        if (!matches) {
+          fail(
+            "prefers-reduced-motion",
+            "matchMedia(prefers-reduced-motion: reduce) was false",
+          );
+        }
+        await enterHome(page, { scenario: "routeWithDeps" });
+        const carousel = page.getByTestId("home-route-carousel").locator("ol");
+        await carousel.focus();
+        await page.keyboard.press("ArrowRight");
+        await page.getByTestId("home-route-block").waitFor();
+
+        // Open a real overlay (scenario Sheet) so reduced-motion covers an open panel.
+        let overlayOpened = false;
+        if ((await page.getByTestId("scenario-open").count()) > 0) {
+          await page.getByTestId("scenario-open").click();
+          await page.getByRole("dialog").waitFor({ timeout: 5000 });
+          overlayOpened = true;
+        }
+
+        const selectors = motionRelevantSelectors();
+        const samples = await page.evaluate((selectorList) => {
+          function parseCssTimeSeconds(value) {
+            if (!value || value === "none") return 0;
+            return String(value)
+              .split(",")
+              .map((part) => {
+                const t = part.trim().toLowerCase();
+                if (!t || t === "none") return 0;
+                if (t.endsWith("ms")) return (parseFloat(t) || 0) / 1000;
+                if (t.endsWith("s")) return parseFloat(t) || 0;
+                return parseFloat(t) || 0;
+              })
+              .reduce((max, n) => Math.max(max, n), 0);
+          }
+          const seen = new Set();
+          const out = [];
+          for (const sel of selectorList) {
+            let nodes = [];
+            try {
+              nodes = [...document.querySelectorAll(sel)];
+            } catch {
+              nodes = [];
+            }
+            for (const el of nodes) {
+              if (seen.has(el)) continue;
+              seen.add(el);
+              const s = getComputedStyle(el);
+              const transitionDuration = parseCssTimeSeconds(
+                s.transitionDuration,
+              );
+              const animationDuration = parseCssTimeSeconds(s.animationDuration);
+              if (transitionDuration === 0 && animationDuration === 0) continue;
+              out.push({
+                id:
+                  el.getAttribute("data-testid") ||
+                  (el.className && el.className.toString
+                    ? el.className.toString().slice(0, 80)
+                    : el.tagName),
+                transitionDuration,
+                animationDuration,
+              });
+            }
+          }
+          return out;
+        }, selectors);
+
+        const verdict = evaluateReducedMotionDurations(samples, {
+          maxSeconds: 0.5,
+        });
+        if (!verdict.ok) {
+          fail(
+            "prefers-reduced-motion",
+            `long motion remains under reduce: ${JSON.stringify(verdict.violations.slice(0, 5))}`,
+          );
+        }
+        record(
+          "prefers-reduced-motion",
+          "Passed",
+          `matchMedia true; carousel operable; scenarioSheet=${overlayOpened}; motion samples=${samples.length}; no long durations on rendered nodes`,
+        );
+      },
+    );
+
+    await withPage(
+      { viewport: { width: 360, height: 740 } },
+      "production-locale-360",
+      async (page) => {
+        await page.goto(PRODUCTION_BASE + "/", {
+          waitUntil: "domcontentloaded",
+          timeout: 30000,
+        });
+        await page.getByTestId("production-landing").waitFor();
+        const select = page.getByTestId("production-lang-select");
+        if (!(await select.isVisible())) {
+          fail(
+            "production locale mobile 360",
+            "production-lang-select not visible at 360px",
+          );
+        }
+        await select.selectOption("en");
+        const lang = await page.evaluate(() => document.documentElement.lang);
+        if (lang !== "en") {
+          fail(
+            "production locale mobile 360",
+            `documentElement.lang expected en, got ${lang}`,
+          );
+        }
+        const stored = await page.evaluate(
+          () => localStorage.getItem("kitchenflow_production_locale"),
+        );
+        if (stored !== "en") {
+          fail(
+            "production locale mobile 360",
+            `expected kitchenflow_production_locale=en, got ${stored}`,
+          );
+        }
+        const tagline = await page
+          .getByTestId("production-landing-tagline")
+          .innerText();
+        if (!/KitchenFlow helps transform/i.test(tagline)) {
+          fail(
+            "production locale mobile 360",
+            `EN tagline missing: ${tagline}`,
+          );
+        }
+        const mockKey = await page.evaluate(() =>
+          localStorage.getItem("cocinaris_state_v1"),
+        );
+        if (mockKey) {
+          fail(
+            "production locale mobile 360",
+            "prototype store key was written",
+          );
+        }
+        record(
+          "production locale mobile 360",
+          "Passed",
+          "select visible; en persisted; lang updated",
+        );
+      },
+    );
+
+    for (const lang of ["pt-BR", "en", "es"]) {
+      await withPage(
+        { viewport: { width: 1280, height: 800 } },
+        `locale-${lang}`,
+        async (page) => {
+          await page.goto(BASE + "/", { waitUntil: "domcontentloaded" });
+          const langBtn = page.getByTestId(`landing-lang-${lang}`);
+          if ((await langBtn.count()) === 0) {
+            fail(`locale ${lang}`, "language selector missing");
+          }
+          await langBtn.click();
+          const selected = await langBtn.evaluate((el) =>
+            el.className.includes("bg-secondary"),
+          );
+          if (!selected) {
+            fail(`locale ${lang}`, "selector did not appear selected");
+          }
+          const expected = localeExpectations[lang];
+          const tagline = await page
+            .locator("h1")
+            .first()
+            .innerText()
+            .catch(() => "");
+          const body = await page.locator("body").innerText();
+          const needed = [expected.a, expected.b, expected.c];
+          const hits = needed.filter((s) => body.includes(s));
+          if (hits.length < 3) {
+            fail(
+              `locale ${lang}`,
+              `expected translated strings missing (found ${hits.length}/3). sample=${body.slice(0, 240)} taglineSeen=${tagline}`,
+            );
+          }
+          // Confirm language actually changed away from another locale's tagline
+          const otherTaglines = Object.entries(localeExpectations)
+            .filter(([code]) => code !== lang)
+            .map(([, v]) => v.a);
+          if (otherTaglines.some((t) => body.includes(t) && t !== expected.a)) {
+            // Allow shared fragments only if exact other tagline present incorrectly
+            const wrong = otherTaglines.find((t) => body.includes(t));
+            if (wrong && wrong !== expected.a) {
+              fail(
+                `locale ${lang}`,
+                `page still contains other locale tagline: ${wrong}`,
+              );
+            }
+          }
+          record(`locale ${lang}`, "Passed", "selector + 3 distinct strings");
+        },
+      );
+    }
+
+    await withPage(
+      { viewport: { width: 1280, height: 800 } },
+      "shortfall-cook",
+      async (page) => {
+        await enterHome(page, { scenario: "componentShared" });
+        await page.goto(BASE + "/app/despensa", {
+          waitUntil: "domcontentloaded",
+        });
+        const debt = page.locator(
+          '[data-testid="pantry-reserved-debt-cp_broth"]',
+        );
+        await debt.click();
+        await page.waitForURL(/review=shortfall/);
+        record("Despensa déficit → compras review", "Passed");
+
+        await selectScenario(page, "routeWithDeps");
+        await page.goto(BASE + "/app/planejamento", {
+          waitUntil: "domcontentloaded",
+        });
+        await page.getByTestId("route-chain").waitFor();
+        for (const id of ["n2", "n3"]) {
+          await page.getByTestId(`chain-toggle-${id}`).click();
+          await page.waitForTimeout(150);
+        }
+        await page
+          .locator('[data-testid^="chain-cook-start-"]')
+          .first()
+          .click();
+        await page.waitForURL(/\/app\/cozinhar\//);
+        record("CTA Cozinhar navegação", "Passed", page.url());
+      },
+    );
+  } catch (err) {
+    if (!results.some((r) => r.result === "Failed")) {
+      record(
+        "smoke-runner",
+        "Failed",
+        String(err && err.message ? err.message : err),
+      );
+    }
+  } finally {
+    await browser.close();
+    if (serverProc) {
+      serverProc.kill("SIGTERM");
+    }
+    if (productionServer) {
+      productionServer.close();
+    }
+  }
+
+  const report = {
+    kind: "automated-browser-smoke",
+    ...reportMeta,
+    results,
+    failedArtifacts,
+  };
+  const jsonPath = path.join(OUT_DIR, "browser-smoke-report.json");
+  fs.writeFileSync(jsonPath, JSON.stringify(report, null, 2));
+  const htmlPath = path.join(OUT_DIR, "browser-smoke-report.html");
+  fs.writeFileSync(
+    htmlPath,
+    `<!doctype html><meta charset="utf-8"/><title>Browser smoke</title><pre>${JSON.stringify(report, null, 2)}</pre>`,
+  );
+  console.log("Wrote", jsonPath);
+
+  const blocking = results.filter((r) =>
+    ["Failed", "Blocked", "Not executed"].includes(r.result),
+  );
+  if (blocking.length) {
+    console.error(
+      "Browser smoke failed mandatory checks:\n" +
+        blocking
+          .map((r) => ` - [${r.result}] ${r.check}: ${r.notes}`)
+          .join("\n"),
+    );
+    process.exit(1);
+  }
+}
+
+run().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
