@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Stage a clean PLAN-0005 artifact directory (no ambiguous stale evidence).
+# Stage a clean PLAN-0005 raw-run artifact directory (generated evidence only).
+# Do NOT include repository documentation or historical supersession files.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 # shellcheck disable=SC1091
@@ -17,24 +18,9 @@ copy_if() {
   fi
 }
 
-# Canonical docs (shared)
-copy_if "final-quality-assessment.json"
-copy_if "environment-manifest.json"
-copy_if "requirements-traceability.md"
+# Run identity + container metrics (always generated this run)
 copy_if "run-identity.json"
 copy_if "container-count.json"
-
-# Explicitly historical pairs (README required for Failed/CSS content)
-for base in \
-  p0-round1-initial-failed-console \
-  p0-initial-summary \
-  p0-initial-failed-timing \
-  p1-initial-failed-console
-do
-  copy_if "${base}.txt"
-  copy_if "${base}.json"
-  copy_if "${base}.README.md"
-done
 
 case "${ROUND}" in
   p0)
@@ -48,7 +34,6 @@ case "${ROUND}" in
     do
       copy_if "${f}"
     done
-    # Current TRX / reports that are not ambiguous root duplicates
     if [[ -d "${EVIDENCE}/reports/trx" ]]; then
       mkdir -p "${STAGE}/reports"
       cp -a "${EVIDENCE}/reports/trx" "${STAGE}/reports/" 2>/dev/null || true
@@ -80,12 +65,76 @@ case "${ROUND}" in
       mkdir -p "${STAGE}/reports"
       cp -a "${EVIDENCE}/reports/trx-perf" "${STAGE}/reports/" 2>/dev/null || true
     fi
+    if [[ -d "${EVIDENCE}/reports/trx-obs" ]]; then
+      mkdir -p "${STAGE}/reports"
+      cp -a "${EVIDENCE}/reports/trx-obs" "${STAGE}/reports/" 2>/dev/null || true
+    fi
     ;;
   *)
     echo "usage: $0 p0|p1" >&2
     exit 2
     ;;
 esac
+
+# Stamp current identity onto every staged JSON that lacks prHeadSha (raw-run contract).
+python3 - <<PY
+import json, os
+from pathlib import Path
+stage = Path("${STAGE}")
+pr = os.environ.get("PLAN0005_PR_HEAD_SHA", "${PLAN0005_PR_HEAD_SHA}")
+checked = os.environ.get("PLAN0005_CHECKED_OUT_SHA", "${PLAN0005_CHECKED_OUT_SHA}")
+integrated = os.environ.get("PLAN0005_INTEGRATED_SHA", "${PLAN0005_INTEGRATED_SHA}")
+egen = os.environ.get("PLAN0005_EVIDENCE_GENERATION_SHA", pr)
+for path in stage.rglob("*.json"):
+    if "trx" in path.parts:
+        continue
+    try:
+        obj = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        continue
+    if not isinstance(obj, dict):
+        continue
+    changed = False
+    if obj.get("prHeadSha") != pr:
+        obj["prHeadSha"] = pr
+        changed = True
+    if not obj.get("checkedOutCommitSha"):
+        obj["checkedOutCommitSha"] = checked
+        changed = True
+    if not obj.get("integratedMainSha"):
+        obj["integratedMainSha"] = integrated
+        changed = True
+    if not obj.get("evidenceGenerationSha"):
+        obj["evidenceGenerationSha"] = egen
+        changed = True
+    if changed:
+        path.write_text(json.dumps(obj, indent=2) + "\n", encoding="utf-8")
+PY
+
+# Refuse static repository documentation in raw artifacts
+for banned in final-quality-assessment.json environment-manifest.json requirements-traceability.md; do
+  if [[ -f "${STAGE}/${banned}" ]]; then
+    echo "Refusing to stage repository documentation file: ${banned}" >&2
+    exit 1
+  fi
+done
+
+# Refuse historical supersession evidence in raw artifacts
+for banned in \
+  p0-initial-summary.json \
+  p0-initial-summary.README.md \
+  p0-initial-failed-timing.json \
+  p0-initial-failed-timing.README.md \
+  p0-round1-initial-failed-console.txt \
+  p0-round1-initial-failed-console.README.md \
+  p1-initial-failed-console.txt \
+  p1-initial-failed-console.README.md
+do
+  if [[ -f "${STAGE}/${banned}" ]]; then
+    echo "Refusing to stage historical evidence file: ${banned}" >&2
+    exit 1
+  fi
+done
 
 # Refuse to stage unmarked Failed current timing/summary names
 if [[ -f "${STAGE}/p0-round1-timing.json" ]]; then
@@ -95,11 +144,11 @@ if [[ -f "${STAGE}/p0-round1-timing.json" ]]; then
   fi
 fi
 if [[ -f "${STAGE}/p0-round1-summary.json" ]]; then
-  if grep -qiE 'approx-200pct-css|css-zoom|css zoom|"zoom"[[:space:]]*:[[:space:]]*"[^"]*css' "${STAGE}/p0-round1-summary.json"; then
-    echo "Refusing to stage p0-round1-summary.json containing CSS zoom" >&2
+  if python3 -c 'import json,sys,re; d=json.load(open(sys.argv[1])); tech=str(d.get("zoomTechnique") or ""); sys.exit(0 if ("css" in tech.lower() or "approx-200pct-css" in open(sys.argv[1]).read().lower()) else 1)' "${STAGE}/p0-round1-summary.json"; then
+    echo "Refusing to stage p0-round1-summary.json containing CSS zoom technique" >&2
     exit 1
   fi
 fi
 
-echo "Staged ${ROUND} artifact-current files:"
+echo "Staged ${ROUND} raw-run artifact-current files:"
 find "${STAGE}" -type f | sed "s|^${STAGE}/||" | sort

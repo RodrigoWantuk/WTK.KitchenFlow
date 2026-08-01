@@ -1,8 +1,8 @@
 {
   "plan": "PLAN-0005",
   "round": "evidence-integrity-final",
-  "status": "Completed",
-  "outcome": "Conditional Pass",
+  "status": "Validating",
+  "outcome": "Provisional Conditional Pass",
   "countingUnit": {
     "requirements": "one row per VS-REQ-* in requirements-traceability.md",
     "testIds": "one result per TEST-0005-* (TEST-0005-109 Failed aggregate when any pointer sub-scenario Failed)",
@@ -14,7 +14,7 @@
     "assessmentDocumentCommitSource": "git HEAD of this PR after docs commit",
     "currentPrTipSource": "PR metadata",
     "checkedOutCommitShaExample": "46f31af8feafccb3eb29756c918da416088a3990",
-    "note": "evidenceGenerationHead 4d07afa is canonical. currentPrTipSource=PR metadata (docs tip 19dc9c9 and later remain non-evidence commits unless re-pinned)."
+    "note": "Awaiting clean raw-only artifact CI tip to become evidenceGenerationHead. currentPrTipSource=PR metadata."
   },
   "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
   "evidenceGenerationSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",

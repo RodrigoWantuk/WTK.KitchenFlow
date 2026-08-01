@@ -1,20 +1,20 @@
 # PLAN-0005: Independently Validate the Authenticated Inventory Slice
 
-- **Status:** Completed
+- **Status:** Validating
 - **Type:** Testing
 - **Priority:** Critical
 - **Owner:** independent-agent:composer-plan-0005
 - **Created:** 2026-07-29
-- **Last updated:** 2026-08-01T20:05:00Z
+- **Last updated:** 2026-08-01T20:25:00Z
 - **Branch:** `agent/plan-0005-test-inventory-slice`
 - **Pull request:** [Draft PR #19](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/19)
-- **Delivery:** Draft PR — awaiting owner review; agent must not merge
+- **Delivery:** Draft PR — separating raw-run artifacts from repository documentation
 - **System under test:** Integrated `main` after PR #18 merge (`b94abd9a83fe29d88b095e3e9a42f10d01c05414`)
 - **Related implementation plans:** PLAN-0003, PLAN-0014 (on main), PLAN-0015 (Completed via PR #18)
 - **Related issues:** #20 (High), #21 (Medium), #22 (Medium), #24 (coverage Blocked)
 - **Related ADRs:** ADR-0001 (historical), ADR-0007, ADR-0002 through ADR-0006
 - **Dependencies:** PLAN-0002 merged; PR #18 merged by owner; independent agent claim required
-- **Final outcome:** Conditional Pass
+- **Final outcome:** Provisional Conditional Pass (awaiting clean raw-artifact CI)
 
 ## Objective
 
@@ -510,15 +510,17 @@ Do not fix implementation in the independent test branch unless explicitly reass
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0005 **Completed** / **Conditional Pass**. Evidence-generation head `4d07afa066fd7994bbc36473242ee7a2d764ea70`. Docs tip `19dc9c9` CI green with staged `artifact-current/` uploads.
-- **Last completed step:** Archived CSS-zoom summary and Failed timing; regenerated current P0 summary/timing; staged clean artifacts; consistency fixtures; promoted `4d07afa` as canonical evidence head.
-- **Exact next action:** Owner re-reviews Draft PR #19. Do not agent-merge. Do not start PLAN-0011 until owner go/no-go.
-- **Blockers:** None for the independent test plan. Residual High #20 blocks unconditional production inventory UX readiness.
-- **Defects found:** Critical 0; High 1 (#20); Medium 2 (#21, #22); coverage Blocked #24.
+- **Current checkpoint:** PLAN-0005 **Validating** — raw P0/P1 artifacts must exclude static docs and historical files; staging corrected.
+- **Exact next action:** Push staging fix; wait CI; documentation-only pin of the clean evidence-generation head; Completed Conditional Pass.
 - **PLAN-0011:** Not started (Blocked).
 
 
 ## Progress log
+
+### 2026-08-01T20:25:00Z — independent-agent:composer-plan-0005
+
+- **Checkpoint:** Validating — remove static docs and historical evidence from `stage-artifact-current.sh`; strengthen consistency for raw-only artifacts.
+- **Next action:** Clean CI tip → docs pin as evidenceGenerationHead → Completed.
 
 ### 2026-08-01T20:05:00Z — independent-agent:composer-plan-0005
 

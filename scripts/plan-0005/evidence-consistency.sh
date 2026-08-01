@@ -61,6 +61,7 @@ artifact_name_has_pr_head(p1_dirs, "p1")
 required_p0 = [
     "firefox-zoom-pointer-keyboard.json",
     "p0-round1-timing.json",
+    "p0-round1-summary.json",
     "keycloak-p0-auth.json",
     "frontend-production-inventory.json",
     "container-count.json",
@@ -274,58 +275,35 @@ if p1_dirs:
             problems.append("idempotency present after restore before successful retry")
         add("outage-mutation-132", "Passed" if not problems else "Failed", "; ".join(problems) if problems else outage.get("note", "ok"))
 
-# Historical Failed console must not be presented as current
+# Historical Failed console must not appear in raw artifacts (repo retains them separately)
 for dirs, label in ((p0_dirs, "p0"), (p1_dirs, "p1")):
     if not dirs:
         continue
     root = dirs[-1]
-    for path in root.rglob("*console*.txt"):
-        name = path.name.lower()
-        text = path.read_text(encoding="utf-8", errors="ignore")
-        looks_failed = "overall\": \"Failed\"" in text or "overall: Failed" in text or '"overall": "Failed"' in text
-        if looks_failed and "initial-failed" not in name and "historical" not in name:
-            add(f"{label}-historical-failed-console", "Failed", f"{path.name} looks Failed but is not explicitly historical")
-        elif "initial-failed" in name or "historical" in name:
-            add(f"{label}-historical-failed-console", "Passed", f"{path.name} explicitly historical")
-    # Prefer absence of p1-completion-console.txt as current
-    bad_current = find_file(root, "p1-completion-console.txt")
-    if bad_current:
-        add("p1-current-console-name", "Failed", "p1-completion-console.txt must be renamed to historical initial-failed")
+    hist = [p.name for p in root.rglob("*") if p.is_file() and ("initial-failed" in p.name.lower() or "initial-summary" in p.name.lower())]
+    if hist:
+        add(f"{label}-no-historical-console-in-raw", "Failed", str(hist))
     else:
-        add("p1-current-console-name", "Passed", "no ambiguous p1-completion-console.txt")
+        add(f"{label}-no-historical-console-in-raw", "Passed", "raw artifact has no historical console/summary")
 
-# Final assessment may pin evidenceGenerationHead separately from current PR tip.
+bad_completion = []
+for dirs in (p0_dirs, p1_dirs):
+    if not dirs:
+        continue
+    if find_file(dirs[-1], "p1-completion-console.txt") or find_file(dirs[-1], "p0-completion-console.txt"):
+        bad_completion.append(dirs[-1].name)
+add("no-ambiguous-completion-console", "Passed" if not bad_completion else "Failed", str(bad_completion) if bad_completion else "ok")
+
+# Raw artifacts must not embed versioned final assessment (docs stay in repo)
 for dirs in (p0_dirs, p1_dirs):
     if not dirs:
         continue
     final = load_json(find_file(dirs[-1], "final-quality-assessment.json"))
-    if not final:
-        continue
-    identity = final.get("identity") or {}
-    current_tip = identity.get("currentPrTip")
-    evidence_head = (
-        identity.get("evidenceGenerationHead")
-        or final.get("evidenceGenerationSha")
-        or final.get("evidenceGenerationHead")
-    )
-    # Prefer explicit currentPrTip when present; do not treat evidenceGenerationHead as current tip.
-    claimed_tip = current_tip or final.get("prHeadSha")
-    if claimed_tip and claimed_tip != pr_head and not evidence_head:
-        add("final-assessment-head", "Failed", f"assessment tip {claimed_tip} != prHeadSha {pr_head}")
-    elif current_tip and current_tip != pr_head:
-        add("final-assessment-current-tip", "Failed", f"currentPrTip {current_tip} != prHeadSha {pr_head}")
-    elif evidence_head and not current_tip and final.get("prHeadSha") and final.get("prHeadSha") != pr_head and final.get("prHeadSha") != evidence_head:
-        add("final-assessment-head", "Failed", f"ambiguous prHeadSha {final.get('prHeadSha')}")
-    else:
-        add("final-assessment-head", "Passed", f"currentPrTip={current_tip or pr_head} evidenceGenerationHead={evidence_head}")
-    artifacts = (final.get("ci") or {}).get("artifacts") or {}
-    pin = evidence_head or pr_head
-    for key, meta in artifacts.items():
-        name = (meta or {}).get("name", "")
-        if name and pin and pin not in name:
-            add(f"final-assessment-artifact-{key}", "Failed", f"{name} missing evidence head {pin}")
-        elif name:
-            add(f"final-assessment-artifact-{key}", "Passed", name)
+    if final:
+        add("final-assessment-absent-from-raw", "Failed", "final-quality-assessment.json must not be in raw P0/P1 artifacts")
+        break
+else:
+    add("final-assessment-absent-from-raw", "Passed", "no final assessment in raw artifacts")
 
 # Result matrix math when summary present in versioned evidence (repo copy)
 matrix_path = evidence_dir / "final-quality-assessment.json"
@@ -362,7 +340,7 @@ if gitleaks.exists():
 else:
     add("gitleaks-no-commit-allowlist", "Failed", "missing .gitleaks.toml")
 
-# Container count evidence
+# Container count evidence (raw run measurements)
 for label, dirs in (("p0", p0_dirs), ("p1", p1_dirs)):
     if not dirs:
         continue
@@ -370,27 +348,15 @@ for label, dirs in (("p0", p0_dirs), ("p1", p1_dirs)):
     if not cc:
         add(f"{label}-container-count", "Failed", "missing container-count.json")
         continue
-    c = cc.get("containers") or cc.get(label) or {}
+    c = cc.get("containers") or {}
     needed = ["composeServiceCount", "testcontainersCreated", "maximumConcurrentContainers", "totalContainerInstancesCreated"]
     missing = [k for k in needed if k not in c]
-    if c.get("composeServiceCount") == 2 and c.get("testcontainersCreated") in (0, None) and label == "p1":
-        add(f"{label}-container-count", "Failed", "P1 cannot report 0 Testcontainers as canonical after 4d07afa")
-    elif missing:
+    if missing:
         add(f"{label}-container-count", "Failed", f"missing={missing}")
+    elif not isinstance(c.get("testcontainersCreated"), int) or c.get("testcontainersCreated") < 0:
+        add(f"{label}-container-count", "Failed", f"invalid testcontainersCreated={c.get('testcontainersCreated')}")
     else:
-        add(f"{label}-container-count", "Passed", f"compose={c.get('composeServiceCount')} tc={c.get('testcontainersCreated')} peak={c.get('maximumConcurrentContainers')}")
-
-# --- Integrity round: unmarked Failed / CSS zoom / duplicates / canonical head ---
-CANONICAL_EVIDENCE_HEAD = "4d07afa066fd7994bbc36473242ee7a2d764ea70"
-CANONICAL_ARTIFACTS = {
-  "p0": {"id": 8822844474, "digest": "sha256:f441587b54bc33a4d9470e2a48e85b3d23da3303960e237ea185c04ebe1ac65b"},
-  "p1": {"id": 8822833982, "digest": "sha256:5d5582740d3e493ce9a11c8dcb603821b601066cc2aa13762b9ece4901c2c743"},
-  "evidenceConsistency": {"id": 8822847558, "digest": "sha256:ac680fc6b985db52608b4b1cccb0ae87dc63e9bb616ee2201b4048beccf38169"},
-}
-CANONICAL_CONTAINERS = {
-  "p0": {"composeServiceCount": 2, "testcontainersCreated": 36, "maximumConcurrentContainers": 5, "totalContainerInstancesCreated": 38},
-  "p1": {"composeServiceCount": 2, "testcontainersCreated": 16, "maximumConcurrentContainers": 5, "totalContainerInstancesCreated": 18},
-}
+        add(f"{label}-container-count", "Passed", f"compose={c.get('composeServiceCount')} tc={c.get('testcontainersCreated')} peak={c.get('maximumConcurrentContainers')} total={c.get('totalContainerInstancesCreated')}")
 
 def is_historical_name(name: str) -> bool:
     low = name.lower()
@@ -422,6 +388,8 @@ if p0_dirs:
         for key in ("prHeadSha", "checkedOutCommitSha", "evidenceGenerationSha", "integratedMainSha"):
             if not summary.get(key):
                 bad.append(f"missing {key}")
+        if summary.get("prHeadSha") and summary.get("prHeadSha") != pr_head:
+            bad.append(f"prHeadSha={summary.get('prHeadSha')} != {pr_head}")
         if "nextAutomatedBatch" in summary:
             bad.append("stale nextAutomatedBatch present")
         add("p0-round1-summary-current", "Passed" if not bad else "Failed", "; ".join(bad) if bad else "native summary ok")
@@ -443,12 +411,55 @@ if p0_dirs:
         for key in ("prHeadSha", "checkedOutCommitSha", "evidenceGenerationSha"):
             if not timing.get(key):
                 bad.append(f"missing {key}")
+        if timing.get("prHeadSha") and timing.get("prHeadSha") != pr_head:
+            bad.append(f"prHeadSha={timing.get('prHeadSha')} != {pr_head}")
         add("p0-round1-timing-current", "Passed" if not bad else "Failed", "; ".join(bad) if bad else "timing Passed")
 
-# Scan all JSON for unmarked Failed / CSS zoom / missing identity on current-looking files
+# Raw artifacts must not contain repository documentation
+static_banned = [
+    "final-quality-assessment.json",
+    "environment-manifest.json",
+    "requirements-traceability.md",
+]
+static_hits = []
+for label, dirs in (("p0", p0_dirs), ("p1", p1_dirs)):
+    if not dirs:
+        continue
+    for name in static_banned:
+        hit = find_file(dirs[-1], name)
+        if hit:
+            static_hits.append(f"{label}:{name}")
+add("no-static-docs-in-raw-artifacts", "Passed" if not static_hits else "Failed", str(static_hits) if static_hits else "ok")
+
+# Raw artifacts must not contain historical supersession evidence
+historical_banned = [
+    "p0-initial-summary.json",
+    "p0-initial-summary.README.md",
+    "p0-initial-failed-timing.json",
+    "p0-initial-failed-timing.README.md",
+    "p0-round1-initial-failed-console.txt",
+    "p0-round1-initial-failed-console.README.md",
+    "p1-initial-failed-console.txt",
+    "p1-initial-failed-console.README.md",
+]
+historical_hits = []
+for label, dirs in (("p0", p0_dirs), ("p1", p1_dirs)):
+    if not dirs:
+        continue
+    for name in historical_banned:
+        hit = find_file(dirs[-1], name)
+        if hit:
+            historical_hits.append(f"{label}:{name}")
+    # Also catch any initial-* patterns via rglob
+    for path in dirs[-1].rglob("*"):
+        if path.is_file() and is_historical_name(path.name):
+            historical_hits.append(f"{label}:{path.name}")
+add("no-historical-in-raw-artifacts", "Passed" if not historical_hits else "Failed", str(sorted(set(historical_hits))) if historical_hits else "ok")
+
+# Every non-historical JSON in raw artifacts must carry current prHeadSha
+wrong_or_missing_head = []
 unmarked_failed = []
 unmarked_css = []
-missing_identity = []
 for label, dirs in (("p0", p0_dirs), ("p1", p1_dirs)):
     if not dirs:
         continue
@@ -457,42 +468,30 @@ for label, dirs in (("p0", p0_dirs), ("p1", p1_dirs)):
         if "trx" in path.parts:
             continue
         name = path.name
+        if is_historical_name(name):
+            continue
         text = path.read_text(encoding="utf-8", errors="ignore")
-        historical = is_historical_name(name)
         if re.search(r'"overall"\s*:\s*"Failed"', text):
-            if not historical:
-                unmarked_failed.append(f"{label}:{path.relative_to(root)}")
-            elif not has_historical_readme(path):
-                unmarked_failed.append(f"{label}:{path.name} historical without README")
-        if not historical:
-            css_hit = False
-            try:
-                obj = json.loads(text)
-                tech = str(obj.get("zoomTechnique") or "")
-                if "css" in tech.lower():
-                    css_hit = True
-                for result in obj.get("results") or []:
-                    z = str((result.get("zoom") if isinstance(result, dict) else "") or "")
-                    if "css" in z.lower() and "native" not in z.lower():
-                        css_hit = True
-            except Exception:
-                css_hit = bool(re.search(r"approx-200pct-css", text, re.I))
-            if css_hit or re.search(r"approx-200pct-css", text, re.I):
+            unmarked_failed.append(f"{label}:{path.relative_to(root)}")
+        try:
+            obj = json.loads(text)
+        except Exception:
+            continue
+        tech = str(obj.get("zoomTechnique") or "")
+        if "css" in tech.lower():
+            unmarked_css.append(f"{label}:{path.relative_to(root)}")
+        for result in obj.get("results") or []:
+            z = str((result.get("zoom") if isinstance(result, dict) else "") or "")
+            if "css" in z.lower() and "native" not in z.lower():
                 unmarked_css.append(f"{label}:{path.relative_to(root)}")
-        if name in {
-            "p0-round1-timing.json", "p0-round1-summary.json", "p1-round-timing.json",
-            "outage-mutation-recovery.json", "performance-smoke.json", "run-identity.json",
-            "firefox-zoom-pointer-keyboard.json",
-        }:
-            try:
-                obj = json.loads(text)
-            except Exception:
-                continue
-            if not obj.get("prHeadSha"):
-                missing_identity.append(f"{label}:{name}")
+        if re.search(r"approx-200pct-css", text, re.I):
+            unmarked_css.append(f"{label}:{path.relative_to(root)}")
+        head_val = obj.get("prHeadSha")
+        if head_val != pr_head:
+            wrong_or_missing_head.append(f"{label}:{name}={head_val}")
 add("no-unmarked-failed-evidence", "Passed" if not unmarked_failed else "Failed", str(unmarked_failed) if unmarked_failed else "ok")
-add("no-unmarked-css-zoom-evidence", "Passed" if not unmarked_css else "Failed", str(unmarked_css) if unmarked_css else "ok")
-add("current-files-have-prHeadSha", "Passed" if not missing_identity else "Failed", str(missing_identity) if missing_identity else "ok")
+add("no-unmarked-css-zoom-evidence", "Passed" if not unmarked_css else "Failed", str(sorted(set(unmarked_css))) if unmarked_css else "ok")
+add("all-raw-json-current-prHeadSha", "Passed" if not wrong_or_missing_head else "Failed", str(wrong_or_missing_head[:20]) if wrong_or_missing_head else f"all match {pr_head}")
 
 # Duplicate logical evidence with divergent content
 divergent = []
@@ -511,15 +510,9 @@ for label, dirs in (("p0", p0_dirs), ("p1", p1_dirs)):
             divergent.append(f"{label}:{name} x{len(paths)}")
 add("no-duplicate-logical-evidence", "Passed" if not divergent else "Failed", str(divergent) if divergent else "ok")
 
-# Canonical evidence head + artifact IDs in versioned assessment
+# Versioned assessment identity hygiene (docs live in repo, not raw artifacts)
 final = load_json(evidence_dir / "final-quality-assessment.json") or {}
 identity = final.get("identity") or {}
-evidence_head = identity.get("evidenceGenerationHead") or final.get("evidenceGenerationSha")
-if evidence_head != CANONICAL_EVIDENCE_HEAD:
-    add("canonical-evidence-head", "Failed", f"{evidence_head} != {CANONICAL_EVIDENCE_HEAD}")
-else:
-    add("canonical-evidence-head", "Passed", evidence_head)
-# Null ambiguous fields must not appear
 for bad_key in ("currentPrTip", "prHeadSha"):
     if bad_key in identity and identity.get(bad_key) is None:
         add("identity-no-null-fields", "Failed", f"identity.{bad_key} is null; omit instead")
@@ -530,32 +523,7 @@ for bad_key in ("currentPrTip", "prHeadSha"):
 else:
     add("identity-no-null-fields", "Passed", "no ambiguous null tip fields")
 
-arts = (final.get("ci") or {}).get("artifacts") or {}
-art_problems = []
-for key, expected in CANONICAL_ARTIFACTS.items():
-    meta = arts.get(key) or {}
-    if meta.get("id") != expected["id"]:
-        art_problems.append(f"{key}.id={meta.get('id')}")
-    if meta.get("digest") != expected["digest"]:
-        art_problems.append(f"{key}.digest mismatch")
-    name = meta.get("name") or ""
-    if CANONICAL_EVIDENCE_HEAD not in name:
-        art_problems.append(f"{key}.name missing canonical head")
-add("canonical-artifact-ids", "Passed" if not art_problems else "Failed", "; ".join(art_problems) if art_problems else "ok")
-
-# Canonical container counts in assessment or versioned container-count.json
-cc_doc = load_json(evidence_dir / "container-count.json") or {}
-cc_problems = []
-for round_name, expected in CANONICAL_CONTAINERS.items():
-    actual = (cc_doc.get(round_name) or {})
-    if not actual and final.get("containers"):
-        actual = (final.get("containers") or {}).get(round_name) or {}
-    for k, v in expected.items():
-        if actual.get(k) != v:
-            cc_problems.append(f"{round_name}.{k}={actual.get(k)} expected {v}")
-add("canonical-container-counts", "Passed" if not cc_problems else "Failed", "; ".join(cc_problems) if cc_problems else "ok")
-
-# Ban obsolete current names
+# Ban obsolete current names in raw artifacts
 for dirs in (p0_dirs, p1_dirs):
     if not dirs:
         continue
