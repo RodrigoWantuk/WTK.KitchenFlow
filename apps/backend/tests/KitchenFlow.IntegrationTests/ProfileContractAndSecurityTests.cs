@@ -248,6 +248,7 @@ public sealed class ProfileContractAndSecurityTests : IAsyncLifetime
         Assert.Equal(before.GetProperty("version").GetString(), after.GetProperty("version").GetString());
     }
 
+    [Fact]
     public void GetProfileRecordsReadMetricNotMutationMetric()
     {
         var observed = new List<(string Instrument, string Operation)>();

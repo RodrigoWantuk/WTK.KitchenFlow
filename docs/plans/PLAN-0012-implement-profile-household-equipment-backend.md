@@ -80,6 +80,11 @@ Implement a production-shaped backend slice for progressive profile, single-hous
 
 ## Progress log
 
+### 2026-08-01T06:40:00Z — CI format fix
+
+- Restored missing `[Fact]` on `GetProfileRecordsReadMetricNotMutationMetric` after format analyzer failure on head `1e9e9d0`.
+- **Next:** Re-run Backend CI; keep Validating.
+
 ### 2026-08-01T06:36:00Z — OpenAPI, runtime, and security remediation
 
 - Merged `origin/main` into `cursor/plan-0012-profile-backend-1672` and reconciled `docs/plan-status.md`.
