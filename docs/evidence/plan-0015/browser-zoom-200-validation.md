@@ -108,10 +108,7 @@ None for this gate.
 
 ## Screenshots / artifacts
 
-PNG captures (not required for disposition; retained as visual evidence):
-
-- `docs/evidence/plan-0015/artifacts/chrome/**`
-- `docs/evidence/plan-0015/artifacts/firefox/**`
+PNG captures were produced under `docs/evidence/plan-0015/artifacts/{chrome,firefox}/` during the headed run (gitignored binary artifacts; not versioned here). Paths are recorded per surface in [`browser-zoom-200-validation.json`](./browser-zoom-200-validation.json). Screenshots may be attached to the documentation PR or published as a CI/workflow artifact if the owner requests visual review.
 
 No personal data, cookies, tokens, or credentials are included.
 
