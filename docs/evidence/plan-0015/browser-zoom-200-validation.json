@@ -3,7 +3,7 @@
   "classification": "automated headed native-browser-zoom smoke",
   "check": "Automated headed native-browser-zoom smoke",
   "testedMainSha": "da295932cd678eef5b8559c39217e19f101d7a80",
-  "evidenceBranchHead": "PLACEHOLDER",
+  "evidenceBranchHead": "25aa10c39dff3fbdc6ab978a64adc941b3246040",
   "frontendImplementationSha": "e248126346d60c99df82e9c1e9f1954a07e68da2",
   "startedAt": "2026-08-01T15:08:33.390Z",
   "finishedAt": "2026-08-01T15:09:37.388Z",
