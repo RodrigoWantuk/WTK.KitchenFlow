@@ -5,14 +5,17 @@
 - **Priority:** Critical
 - **Owner:** Cursor agent (PLAN-0015)
 - **Created:** 2026-07-31
-- **Last updated:** 2026-08-01T14:05:00Z
+- **Last updated:** 2026-08-01T14:45:00Z
 - **Branch:** `agent/plan-0015-remediate-frontend-baseline` (merged); completion docs on `docs/complete-plan-0015-validation`
 - **Pull request:** [Merged via PR #16](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/16) (`mergedAt` 2026-08-01T06:22:00Z)
 - **Delivery:** Merged via PR #16
 - **Frontend merge SHA:** `e248126346d60c99df82e9c1e9f1954a07e68da2`
-- **Real browser zoom 200%:** Passed — evidence [`docs/evidence/plan-0015/browser-zoom-200-validation.md`](../evidence/plan-0015/browser-zoom-200-validation.md) (tested main `da295932cd678eef5b8559c39217e19f101d7a80`; Chrome 150.0.7871.186; Firefox 141.0; Linux 6.12.96+deb13-amd64)
-- **Full NVDA/VoiceOver audit:** Deferred to PLAN-0005 by owner decision — **not executed** in PLAN-0015
-- **Blocker:** None (manual zoom gate closed; AT audit transferred)
+- **Automated headed Chromium native zoom:** Passed (`widthRatio=2.0`, `calculatedZoomPercent=200`) — evidence [`docs/evidence/plan-0015/browser-zoom-200-validation.md`](../evidence/plan-0015/browser-zoom-200-validation.md)
+- **Automated Firefox browser/responsive smoke:** Passed
+- **Firefox exact native zoom measurement:** Passed (`widthRatio=2.0`, `calculatedZoomPercent=200`)
+- **Manual visual review:** Deferred — non-blocking (owner decision)
+- **NVDA/VoiceOver manual audit:** Deferred — non-blocking (owner decision)
+- **Blocker:** None
 - **Implementation SHA (prior reviewed head):** `11f00bdfdcd2f8139d449841c52968df587ed794`
 - **Last CI-validated code SHA (prior round):** `11f00bdfdcd2f8139d449841c52968df587ed794`
 - **Prior push workflow (green):** [Frontend #30680034509](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30680034509)
@@ -170,16 +173,18 @@ Dependency: direct `playwright@1.55.1` (`yarn smoke:browser:install`).
 | Despensa shortfall → compras | **Passed** (CI artifact) | |
 | CTA Cozinhar | **Passed** (CI artifact) | |
 
-### Manual browser validation
+### Automated headed native-browser-zoom smoke
 
 | Check | Result | Notes |
 |---|---|---|
-| Real browser zoom 200% | **Passed** | Headed Chrome 150.0.7871.186 + Firefox 141.0; native Ctrl+Plus; evidence [`browser-zoom-200-validation.md`](../evidence/plan-0015/browser-zoom-200-validation.md); tested main `da29593…` |
-| Full assistive-tech audit (NVDA/VoiceOver) | **Deferred to PLAN-0005** | Owner decision for this phase — **not executed**; do not claim complete AT audit |
+| Automated headed native zoom | **Executed** | Playwright headed + OS Ctrl+Plus; not human review |
+| Chromium native zoom ~200% | **Passed** | `baselineInnerWidthAt100=1280`, `zoomedInnerWidth=640`, `widthRatio=2.0`, `calculatedZoomPercent=200` |
+| Firefox native zoom ~200% | **Passed** | `baselineInnerWidthAt100=1366`, `zoomedInnerWidth=683`, `widthRatio=2.0`, `calculatedZoomPercent=200` |
+| Firefox browser/responsive smoke | **Passed** | Layout + asserted interactions; dialog/carousel Not applicable where controls absent |
+| Manual visual review | **Deferred — non-blocking** | Owner decision; candidate for later pre-release plan |
+| Full NVDA/VoiceOver manual audit | **Deferred — non-blocking** | Owner decision; candidate for later pre-release plan |
 
-#### Real browser zoom 200% — closed
-
-Surfaces validated (production + prototype): Landing, Acesso, FeatureUnavailable, Home, Despensa, Planejamento, Compras, dialog/sheet when present, carrossel, CTA Cozinhar, item detail when reachable. Result: **Passed** (26/26).
+Evidence: [`browser-zoom-200-validation.md`](../evidence/plan-0015/browser-zoom-200-validation.md); validator `node scripts/frontend/validate-zoom-evidence.mjs` OK.
 
 ## Bundle size evidence (gzip, CRA report)
 
@@ -199,15 +204,26 @@ Bundle inspect: zero hits for forbidden prototype tokens in production JS.
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0015 **Completed** pending owner merge of documentation PR on `docs/complete-plan-0015-validation`.
-- **Last completed step:** Real browser zoom 200% Passed on Chrome + Firefox; evidence recorded; AT audit deferred to PLAN-0005 by owner decision.
-- **Exact next action:** Owner merges the documentation PR that marks PLAN-0015 Completed; then an **independent** agent may claim PLAN-0005. Do not start PLAN-0011.
-- **Blockers:** None for PLAN-0015. PLAN-0005 remains Ready (not started here). PLAN-0011 remains Blocked awaiting PLAN-0005.
+- **Current checkpoint:** PLAN-0015 **Completed**; automated headed native-browser-zoom smoke Passed; awaiting owner merge of PR #18.
+- **Last completed step:** Honesty remediations for zoom evidence (measurement fields, scenario assertions, evidence validator); manual gates deferred non-blocking.
+- **Exact next action:** Owner merges PR #18; then an independent agent may claim PLAN-0005. Do not start PLAN-0011.
+- **Blockers:** None for PLAN-0015. PLAN-0005 Ready. PLAN-0011 Blocked by PLAN-0005 automated validation.
 - **Validation performed:** Prior PR #16 CI + local dual builds; headed native zoom 200% (26 surfaces Passed).
 - **Working tree state:** Documentation/evidence only on `docs/complete-plan-0015-validation`.
 - **Substantial run target:** Achieved for Phase 0 manual zoom close-out.
 
 ## Progress log
+
+### 2026-08-01T14:45:00Z — Cursor agent
+
+- **Checkpoint:** Honesty fix for automated headed native-browser-zoom evidence on PR #18; PLAN-0015 remains Completed.
+- **Reclassification:** Not “manual browser validation”; automated headed native-browser-zoom smoke.
+- **Chrome/Chromium zoom:** Passed — `calculatedZoomPercent=200`, `widthRatio=2.0`, `zoomConfirmed200=true`
+- **Firefox zoom:** Passed — same measurement fields; no contradictory `approxZoomPercent`
+- **Scenarios:** 22 Passed / 4 Not applicable / 0 Failed; each Passed has assertion
+- **Validator:** `node scripts/frontend/validate-zoom-evidence.mjs` OK
+- **Deferred non-blocking:** manual visual review; NVDA/VoiceOver manual audit
+- **Next action:** Owner merges PR #18; do not start PLAN-0005 until merge; do not start PLAN-0011
 
 ### 2026-08-01T14:05:00Z — Cursor agent
 

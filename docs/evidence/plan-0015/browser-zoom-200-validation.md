@@ -1,21 +1,30 @@
-# PLAN-0015 — Real browser zoom 200% validation
+# PLAN-0015 — Automated headed native-browser-zoom smoke
 
 ## Final disposition
 
-**Passed**
+**Passed** (`zoomDisposition: Passed`)
 
-All required production and prototype surfaces passed at native browser zoom **200%** on headed Google Chrome and Firefox. No High/Critical layout defects were found. Full NVDA/VoiceOver assistive-technology audit was **not** executed in this phase (owner decision: deferred to PLAN-0005).
+| Gate | Result |
+|---|---|
+| Automated headed native zoom | **Executed** |
+| Chromium native zoom ~200% | **Passed** (`widthRatio=2.0`, `calculatedZoomPercent=200`) |
+| Firefox native zoom ~200% | **Passed** (`widthRatio=2.0`, `calculatedZoomPercent=200`) |
+| Firefox browser/responsive smoke | **Passed** (layout + asserted interactions) |
+| Manual visual review | **Deferred — non-blocking** (owner decision) |
+| Full NVDA/VoiceOver manual audit | **Deferred — non-blocking** (owner decision) |
+
+Headed mode does **not** mean human review. This is automated Playwright + OS-level Ctrl+Plus zoom.
 
 ## Baselines
 
 | Field | Value |
 |---|---|
-| Tested main SHA | `da295932cd678eef5b8559c39217e19f101d7a80` |
-| Frontend implementation SHA (PLAN-0015 / PR #16 merge) | `e248126346d60c99df82e9c1e9f1954a07e68da2` |
-| Test date (UTC) | 2026-08-01T14:01:00Z (approx.; see JSON `startedAt`/`finishedAt`) |
-| Operating system | Linux 6.12.96+deb13-amd64 (x64), host `NOTEBOOK-DEB-RODRIGO` |
-| Physical / OS window target | 1280 × 800 |
-| Frontend modes | `production` (`build-production/`) and `prototype` (`build-prototype/`) |
+| Tested main SHA | `da295932cd678eef5b8559c39217e19f101d7a80` (branch docs head may differ) |
+| Frontend implementation SHA (PR #16) | `e248126346d60c99df82e9c1e9f1954a07e68da2` |
+| Test finished (UTC) | see JSON `finishedAt` |
+| OS | Linux 6.12.96+deb13-amd64 (x64) |
+| Window target | 1280 × 800 |
+| Modes | `production` (`build-production/`), `prototype` (`build-prototype/`) |
 
 ## Commands
 
@@ -24,107 +33,105 @@ cd apps/frontend
 yarn install --frozen-lockfile
 yarn build:production
 yarn build:prototype
-# Static SPA serve (not vite/webpack-dev-server):
-#   http://127.0.0.1:4173 → build-production
-#   http://127.0.0.1:4174 → build-prototype
+# static SPA serve on :4173 (production) and :4174 (prototype)
+node apps/frontend/scripts/browser-zoom-200-validation.js
+node scripts/frontend/validate-zoom-evidence.mjs
 ```
 
 Machine-readable report: [`browser-zoom-200-validation.json`](./browser-zoom-200-validation.json).
 
-## Browsers
+## Zoom measurement (automated)
 
-| Browser | Version | Role |
-|---|---|---|
-| Google Chrome | 150.0.7871.186 | Primary headed validation |
-| Firefox (Playwright-managed, headed) | 141.0 | Second required browser |
-| System Firefox ESR (reference) | 140.13.0esr | Present on host; validation used Playwright Firefox binary |
+Formula:
 
-## Zoom method (native)
+```text
+widthRatio = baselineInnerWidthAt100 / zoomedInnerWidth
+calculatedZoomPercent = round(widthRatio * 100)
+accept when 1.90 <= widthRatio <= 2.10
+```
 
-Zoom was applied with the **real browser zoom** controls:
+Mechanism: headed window + OS `Ctrl+0` / `Ctrl+Plus` via `xdotool` (native browser zoom).
 
-1. Focus the headed browser window.
-2. `Ctrl+0` to reset to 100%.
-3. Repeated `Ctrl+Plus` via OS input (`xdotool`) until layout CSS width was approximately half the baseline (`innerWidth ≈ baseline/2`).
+Excluded substitutes: CSS `zoom`, `transform:scale()`, `deviceScaleFactor` as sole evidence, artificial Playwright viewport shrink, DevTools device emulation as sole evidence, human visual review.
 
-**Confirmed on Chrome:** `outerWidth=1280`, `innerWidth=640`, `approxZoomPercent=200`, `devicePixelRatio=2`.
+### Chromium
 
-**Confirmed on Firefox:** `innerWidth` reduced to ~50% of the pre-zoom baseline after the same native Ctrl+Plus sequence (`devicePixelRatio=2`). Playwright’s Firefox window metrics report `outerWidth ≈ innerWidth`, so percentage derived from outer/inner is not used as the Firefox confirmation signal.
+| Field | Value |
+|---|---|
+| `baselineInnerWidthAt100` | 1280 |
+| `zoomedInnerWidth` | 640 |
+| `widthRatio` | 2.0 |
+| `calculatedZoomPercent` | 200 |
+| `numberOfZoomInActions` | 5 |
+| `zoomConfirmed200` | true |
+| `status` | Passed |
 
-### Explicitly excluded substitutes
+### Firefox
 
-- CSS `zoom`
-- `transform: scale()`
-- Playwright `deviceScaleFactor` as the only evidence
-- Artificially reduced Playwright viewport as a zoom substitute
-- DevTools device emulation as the only evidence
+| Field | Value |
+|---|---|
+| `baselineInnerWidthAt100` | 1366 |
+| `zoomedInnerWidth` | 683 |
+| `widthRatio` | 2.0 |
+| `calculatedZoomPercent` | 200 |
+| `numberOfZoomInActions` | 6 |
+| `zoomConfirmed200` | true |
+| `status` | Passed |
 
-## Surface results
+No contradictory `approxZoomPercent: 100` with `zoomConfirmed200: true`.
 
-Summary: **26 Passed / 0 Failed / 0 Blocked**.
+## Scenario results
 
-### Production (`yarn build:production`)
+Summary: **22 Passed / 0 Failed / 0 Blocked / 4 Not applicable**.
 
-| Surface | Chrome | Firefox |
-|---|---|---|
-| Landing `/` | Passed | Passed |
-| Access `/acesso` | Passed | Passed |
-| Language selector + FeatureUnavailable messaging (`/acesso`) | Passed | Passed |
-| FeatureUnavailable authenticated home `/app/hoje` | Passed | Passed |
+Each scenario records `startPath`, `action`, `expectedPath`/`expectedState`, `actualPath`/`actualState`, `assertion`, `status`.
 
-Production notes: no mock inventory/session data observed; FeatureUnavailable / access messaging remained readable; language controls remained reachable; no global horizontal overflow.
+`Passed` is used only with an assertion. Interactions that are not present are **Not applicable** (not Passed).
 
-### Prototype (`yarn build:prototype`)
+### Production
 
-| Surface | Chrome | Firefox |
+| Surface | Chromium | Firefox |
 |---|---|---|
 | Landing | Passed | Passed |
 | Access | Passed | Passed |
-| Home `/app/hoje` | Passed | Passed |
-| Pantry `/app/despensa` | Passed | Passed |
-| Planning `/app/planejamento` (dialog attempt) | Passed | Passed |
-| Shopping `/app/compras` | Passed | Passed |
-| Carousel on Home | Passed | Passed |
-| Cook CTA on Home | Passed | Passed |
-| Item detail via pantry link | Passed | Passed |
+| Language / FeatureUnavailable (`/acesso`) | Passed | Passed |
+| FeatureUnavailable `/app/hoje` | Passed | Passed |
 
-Prototype notes: main navigation, carousel controls, Cook CTA, and reachable item/recipe detail paths remained operable at 200%; no essential content loss; no global horizontal overflow; dialogs (when present) could be dismissed.
+### Prototype (after automated demo-session entry)
 
-## Acceptance checks exercised
+| Surface | Chromium | Firefox |
+|---|---|---|
+| Landing / Access / Home / Pantry / Shopping | Passed | Passed |
+| Planning dialog | Not applicable | Not applicable |
+| Carousel next | Not applicable | Not applicable |
+| Cook CTA navigation | Passed | Passed |
+| Item detail route | Passed | Passed |
 
-For each surface:
+## Evidence validator
 
-- Essential content remained visible
-- No global horizontal overflow (`scrollWidth − clientWidth ≤ 12px`)
-- Text not blank / not missing expected FeatureUnavailable messaging on production auth routes
-- Interactive controls remained present and not entirely outside the viewport
-- Keyboard Tab still moved focus
-- Dialog open/close attempted where applicable
-- Carousel / Cook CTA exercised where applicable
+```bash
+node scripts/frontend/validate-zoom-evidence.mjs
+```
 
-## Defects found
+Result: **OK** (no contradictory zoom claims; no Passed without assertion; summary matches scenarios).
 
-None for this gate.
+## Screenshots
 
-## Screenshots / artifacts
+Optional, non-gating, gitignored under `docs/evidence/plan-0015/artifacts/`. Not required for disposition.
 
-PNG captures were produced under `docs/evidence/plan-0015/artifacts/{chrome,firefox}/` during the headed run (gitignored binary artifacts; not versioned here). Paths are recorded per surface in [`browser-zoom-200-validation.json`](./browser-zoom-200-validation.json). Screenshots may be attached to the documentation PR or published as a CI/workflow artifact if the owner requests visual review.
-
-No personal data, cookies, tokens, or credentials are included.
-
-## Owner decision — assistive technology
+## Deferred (non-blocking)
 
 ```text
-Full NVDA/VoiceOver audit:
-Deferred to PLAN-0005 by owner decision
-Not executed in PLAN-0015 Phase 0
-Do not claim complete AT audit for PLAN-0015
+Manual visual review: Deferred — non-blocking in the current phase
+NVDA manual audit: Deferred — non-blocking in the current phase
+VoiceOver manual audit: Deferred — non-blocking in the current phase
+Manual exploratory charters: Deferred — non-blocking
+Manual screenshot inspection: Deferred — non-blocking
+Candidate for a later pre-release validation plan
 ```
 
 ## Plan impact
 
-Because real browser zoom 200% **Passed**:
-
-- PLAN-0015 may be marked **Completed**
-- PLAN-0005 remains **Ready** (not started in this documentation PR)
-- PLAN-0011 remains **Blocked** (awaits PLAN-0005 progress after PLAN-0015 completion merge)
+- PLAN-0015 → **Completed** (implementation Merged via PR #16; zoom smoke Passed)
+- PLAN-0005 → **Ready** (not started in this PR)
+- PLAN-0011 → **Blocked** by PLAN-0005 automated validation

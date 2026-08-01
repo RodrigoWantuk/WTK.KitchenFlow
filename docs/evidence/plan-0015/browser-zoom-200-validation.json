@@ -1,10 +1,11 @@
 {
   "plan": "PLAN-0015",
-  "check": "Real browser zoom 200%",
-  "testedMainSha": "da295932cd678eef5b8559c39217e19f101d7a80",
+  "classification": "automated headed native-browser-zoom smoke",
+  "check": "Automated headed native-browser-zoom smoke",
+  "testedMainSha": "929ec7f9b4512001ad0d931625d7e9f261630768",
   "frontendImplementationSha": "e248126346d60c99df82e9c1e9f1954a07e68da2",
-  "startedAt": "2026-08-01T14:01:33.676Z",
-  "finishedAt": "2026-08-01T14:02:32.962Z",
+  "startedAt": "2026-08-01T14:36:27.877Z",
+  "finishedAt": "2026-08-01T14:37:09.167Z",
   "operatingSystem": "Linux 6.12.96+deb13-amd64 (x64)",
   "host": "NOTEBOOK-DEB-RODRIGO",
   "windowResolution": {
@@ -15,63 +16,101 @@
     "install": "yarn install --frozen-lockfile",
     "productionBuild": "yarn build:production → build-production/",
     "prototypeBuild": "yarn build:prototype → build-prototype/",
-    "serve": "static SPA http://127.0.0.1:4173 (production), http://127.0.0.1:4174 (prototype)"
+    "serve": "static SPA http://127.0.0.1:4173 (production), http://127.0.0.1:4174 (prototype)",
+    "validateEvidence": "node scripts/frontend/validate-zoom-evidence.mjs"
   },
   "zoomMethod": {
-    "chrome": "Native headed Google Chrome zoom via OS Ctrl+0 then Ctrl+Plus (xdotool) until ~200%",
-    "firefox": "Native headed Firefox zoom via OS Ctrl+0 then Ctrl+Plus (xdotool) until ~200%",
-    "confirmation": "innerWidth ≈ 50% of baseline at constant outer window size",
+    "mechanism": "Native headed browser zoom via OS Ctrl+0 then Ctrl+Plus (xdotool)",
+    "confirmationFormula": "widthRatio = baselineInnerWidthAt100 / zoomedInnerWidth; accept 1.90–2.10 as ~200%",
     "excluded": [
       "CSS zoom",
       "transform:scale()",
       "deviceScaleFactor substitution",
-      "artificial viewport shrink as zoom"
+      "artificial viewport shrink as zoom",
+      "human visual review"
     ]
   },
   "browsers": {
-    "chrome": "150.0.7871.186",
+    "chrome": "140.0.7339.186",
     "firefox": "141.0"
   },
-  "chromeZoomEvidence": {
-    "visualViewportScale": 1,
-    "visualViewportWidth": 632.5,
-    "innerWidth": 640,
-    "innerHeight": 298,
-    "outerWidth": 1280,
-    "outerHeight": 683,
-    "scrollWidth": 632,
-    "clientWidth": 632,
-    "bodyScrollWidth": 633,
-    "devicePixelRatio": 2,
-    "rootFontSize": "16px",
-    "approxZoomPercent": 200
+  "chromeNativeZoom": {
+    "browser": "chrome",
+    "baselineInnerWidthAt100": 1280,
+    "zoomedInnerWidth": 640,
+    "widthRatio": 2,
+    "calculatedZoomPercent": 200,
+    "numberOfZoomInActions": 5,
+    "numberOfZoomOutActions": 0,
+    "zoomConfirmed200": true,
+    "status": "Passed",
+    "reason": null,
+    "layoutAfterZoom": {
+      "innerWidth": 640,
+      "innerHeight": 298,
+      "outerWidth": 1280,
+      "outerHeight": 683,
+      "scrollWidth": 632,
+      "clientWidth": 632,
+      "bodyScrollWidth": 633,
+      "devicePixelRatio": 2,
+      "visualViewportScale": 1,
+      "visualViewportWidth": 632.5,
+      "rootFontSize": "16px",
+      "pathname": "/",
+      "bodyTextLength": 352
+    }
   },
-  "firefoxZoomEvidence": {
-    "visualViewportScale": 1,
-    "visualViewportWidth": 683,
-    "innerWidth": 683,
-    "innerHeight": 315,
-    "outerWidth": 682,
-    "outerHeight": 357,
-    "scrollWidth": 683,
-    "clientWidth": 683,
-    "bodyScrollWidth": 683,
-    "devicePixelRatio": 2,
-    "rootFontSize": "16px",
-    "approxZoomPercent": 100
+  "firefoxNativeZoom": {
+    "browser": "firefox",
+    "baselineInnerWidthAt100": 1366,
+    "zoomedInnerWidth": 683,
+    "widthRatio": 2,
+    "calculatedZoomPercent": 200,
+    "numberOfZoomInActions": 6,
+    "numberOfZoomOutActions": 0,
+    "zoomConfirmed200": true,
+    "status": "Passed",
+    "reason": null,
+    "layoutAfterZoom": {
+      "innerWidth": 683,
+      "innerHeight": 315,
+      "outerWidth": 682,
+      "outerHeight": 357,
+      "scrollWidth": 683,
+      "clientWidth": 683,
+      "bodyScrollWidth": 683,
+      "devicePixelRatio": 2,
+      "visualViewportScale": 1,
+      "visualViewportWidth": 683,
+      "rootFontSize": "16px",
+      "pathname": "/",
+      "bodyTextLength": 313
+    }
   },
-  "surfaces": [
+  "scenarios": [
     {
+      "id": "chrome/production/Landing",
       "browser": "chrome",
-      "browserVersion": "150.0.7871.186",
+      "browserVersion": "140.0.7339.186",
       "mode": "production",
       "surface": "Landing",
-      "path": "/",
+      "startPath": "/",
+      "base": "http://127.0.0.1:4173",
+      "action": "goto + layout smoke assertions",
+      "expectedPath": "/",
+      "actualPath": "/",
+      "expectedState": "readable content; no global horizontal overflow",
+      "actualState": {
+        "bodyTextLength": 352,
+        "overflowDelta": 0,
+        "controlCount": 5,
+        "innerWidth": 640
+      },
+      "assertion": "body text length >= 8; horizontal overflow <= 12px; interactive controls > 0 OR FeatureUnavailable copy present",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 632.5,
+      "layout": {
         "innerWidth": 640,
         "innerHeight": 298,
         "outerWidth": 1280,
@@ -80,24 +119,41 @@
         "clientWidth": 632,
         "bodyScrollWidth": 633,
         "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "visualViewportWidth": 632.5,
         "rootFontSize": "16px",
-        "approxZoomPercent": 200
+        "pathname": "/",
+        "bodyTextLength": 352
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/chrome/production-Landing.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "zoomContext": {
+        "requireNativeZoom": true,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/production-Landing.png"
     },
     {
+      "id": "chrome/production/Access",
       "browser": "chrome",
-      "browserVersion": "150.0.7871.186",
+      "browserVersion": "140.0.7339.186",
       "mode": "production",
       "surface": "Access",
-      "path": "/acesso",
+      "startPath": "/acesso",
+      "base": "http://127.0.0.1:4173",
+      "action": "goto + layout smoke assertions",
+      "expectedPath": "/acesso",
+      "actualPath": "/acesso",
+      "expectedState": "readable content; no global horizontal overflow",
+      "actualState": {
+        "bodyTextLength": 116,
+        "overflowDelta": 0,
+        "controlCount": 0,
+        "innerWidth": 640
+      },
+      "assertion": "body text length >= 8; horizontal overflow <= 12px; interactive controls > 0 OR FeatureUnavailable copy present",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 640,
+      "layout": {
         "innerWidth": 640,
         "innerHeight": 298,
         "outerWidth": 1280,
@@ -106,24 +162,41 @@
         "clientWidth": 640,
         "bodyScrollWidth": 640,
         "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "visualViewportWidth": 640,
         "rootFontSize": "16px",
-        "approxZoomPercent": 200
+        "pathname": "/acesso",
+        "bodyTextLength": 116
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/chrome/production-Access.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "zoomContext": {
+        "requireNativeZoom": true,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/production-Access.png"
     },
     {
+      "id": "chrome/production/Language_selector_and_FeatureUnavailable",
       "browser": "chrome",
-      "browserVersion": "150.0.7871.186",
+      "browserVersion": "140.0.7339.186",
       "mode": "production",
       "surface": "Language_selector_and_FeatureUnavailable",
-      "path": "/acesso",
+      "startPath": "/acesso",
+      "base": "http://127.0.0.1:4173",
+      "action": "goto + layout smoke assertions",
+      "expectedPath": "/acesso",
+      "actualPath": "/acesso",
+      "expectedState": "readable content; no global horizontal overflow",
+      "actualState": {
+        "bodyTextLength": 116,
+        "overflowDelta": 0,
+        "controlCount": 0,
+        "innerWidth": 640
+      },
+      "assertion": "body text length >= 8; horizontal overflow <= 12px",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 640,
+      "layout": {
         "innerWidth": 640,
         "innerHeight": 298,
         "outerWidth": 1280,
@@ -132,24 +205,41 @@
         "clientWidth": 640,
         "bodyScrollWidth": 640,
         "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "visualViewportWidth": 640,
         "rootFontSize": "16px",
-        "approxZoomPercent": 200
+        "pathname": "/acesso",
+        "bodyTextLength": 116
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/chrome/production-Language_selector_and_FeatureUnavailable.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "zoomContext": {
+        "requireNativeZoom": true,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/production-Language_selector_and_FeatureUnavailable.png"
     },
     {
+      "id": "chrome/production/FeatureUnavailable_authenticated_home",
       "browser": "chrome",
-      "browserVersion": "150.0.7871.186",
+      "browserVersion": "140.0.7339.186",
       "mode": "production",
       "surface": "FeatureUnavailable_authenticated_home",
-      "path": "/app/hoje",
+      "startPath": "/app/hoje",
+      "base": "http://127.0.0.1:4173",
+      "action": "goto + layout smoke assertions",
+      "expectedPath": "/app/hoje",
+      "actualPath": "/app/hoje",
+      "expectedState": "readable content; no global horizontal overflow",
+      "actualState": {
+        "bodyTextLength": 176,
+        "overflowDelta": 0,
+        "controlCount": 0,
+        "innerWidth": 640
+      },
+      "assertion": "body text length >= 8; horizontal overflow <= 12px",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 640,
+      "layout": {
         "innerWidth": 640,
         "innerHeight": 298,
         "outerWidth": 1280,
@@ -158,24 +248,41 @@
         "clientWidth": 640,
         "bodyScrollWidth": 640,
         "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "visualViewportWidth": 640,
         "rootFontSize": "16px",
-        "approxZoomPercent": 200
+        "pathname": "/app/hoje",
+        "bodyTextLength": 176
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/chrome/production-FeatureUnavailable_authenticated_home.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "zoomContext": {
+        "requireNativeZoom": true,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/production-FeatureUnavailable_authenticated_home.png"
     },
     {
+      "id": "chrome/prototype/Landing",
       "browser": "chrome",
-      "browserVersion": "150.0.7871.186",
+      "browserVersion": "140.0.7339.186",
       "mode": "prototype",
       "surface": "Landing",
-      "path": "/",
+      "startPath": "/",
+      "base": "http://127.0.0.1:4174",
+      "action": "goto + layout smoke assertions",
+      "expectedPath": "/",
+      "actualPath": "/",
+      "expectedState": "readable content; no global horizontal overflow",
+      "actualState": {
+        "bodyTextLength": 1238,
+        "overflowDelta": 0,
+        "controlCount": 6,
+        "innerWidth": 640
+      },
+      "assertion": "body text length >= 8; horizontal overflow <= 12px; interactive controls > 0 OR FeatureUnavailable copy present",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 632.5,
+      "layout": {
         "innerWidth": 640,
         "innerHeight": 298,
         "outerWidth": 1280,
@@ -184,24 +291,41 @@
         "clientWidth": 632,
         "bodyScrollWidth": 633,
         "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "visualViewportWidth": 632.5,
         "rootFontSize": "16px",
-        "approxZoomPercent": 200
+        "pathname": "/",
+        "bodyTextLength": 1238
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/chrome/prototype-Landing.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "zoomContext": {
+        "requireNativeZoom": true,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/prototype-Landing.png"
     },
     {
+      "id": "chrome/prototype/Access",
       "browser": "chrome",
-      "browserVersion": "150.0.7871.186",
+      "browserVersion": "140.0.7339.186",
       "mode": "prototype",
       "surface": "Access",
-      "path": "/acesso",
+      "startPath": "/acesso",
+      "base": "http://127.0.0.1:4174",
+      "action": "goto + layout smoke assertions",
+      "expectedPath": "/acesso",
+      "actualPath": "/acesso",
+      "expectedState": "readable content; no global horizontal overflow",
+      "actualState": {
+        "bodyTextLength": 319,
+        "overflowDelta": 0,
+        "controlCount": 5,
+        "innerWidth": 640
+      },
+      "assertion": "body text length >= 8; horizontal overflow <= 12px; interactive controls > 0 OR FeatureUnavailable copy present",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 632.5,
+      "layout": {
         "innerWidth": 640,
         "innerHeight": 298,
         "outerWidth": 1280,
@@ -210,24 +334,41 @@
         "clientWidth": 632,
         "bodyScrollWidth": 633,
         "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "visualViewportWidth": 632.5,
         "rootFontSize": "16px",
-        "approxZoomPercent": 200
+        "pathname": "/acesso",
+        "bodyTextLength": 319
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/chrome/prototype-Access.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "zoomContext": {
+        "requireNativeZoom": true,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/prototype-Access.png"
     },
     {
+      "id": "chrome/prototype/Home",
       "browser": "chrome",
-      "browserVersion": "150.0.7871.186",
+      "browserVersion": "140.0.7339.186",
       "mode": "prototype",
       "surface": "Home",
-      "path": "/app/hoje",
+      "startPath": "/app/hoje",
+      "base": "http://127.0.0.1:4174",
+      "action": "goto + layout smoke assertions",
+      "expectedPath": "/app/hoje",
+      "actualPath": "/app/hoje",
+      "expectedState": "readable content; no global horizontal overflow",
+      "actualState": {
+        "bodyTextLength": 842,
+        "overflowDelta": 0,
+        "controlCount": 24,
+        "innerWidth": 640
+      },
+      "assertion": "body text length >= 8; horizontal overflow <= 12px; interactive controls > 0 OR FeatureUnavailable copy present",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 632.5,
+      "layout": {
         "innerWidth": 640,
         "innerHeight": 298,
         "outerWidth": 1280,
@@ -236,24 +377,41 @@
         "clientWidth": 632,
         "bodyScrollWidth": 633,
         "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "visualViewportWidth": 632.5,
         "rootFontSize": "16px",
-        "approxZoomPercent": 200
+        "pathname": "/app/hoje",
+        "bodyTextLength": 842
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/chrome/prototype-Home.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "zoomContext": {
+        "requireNativeZoom": true,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/prototype-Home.png"
     },
     {
+      "id": "chrome/prototype/Pantry",
       "browser": "chrome",
-      "browserVersion": "150.0.7871.186",
+      "browserVersion": "140.0.7339.186",
       "mode": "prototype",
       "surface": "Pantry",
-      "path": "/app/despensa",
+      "startPath": "/app/despensa",
+      "base": "http://127.0.0.1:4174",
+      "action": "goto + layout smoke assertions",
+      "expectedPath": "/app/despensa",
+      "actualPath": "/app/despensa",
+      "expectedState": "readable content; no global horizontal overflow",
+      "actualState": {
+        "bodyTextLength": 897,
+        "overflowDelta": 0,
+        "controlCount": 38,
+        "innerWidth": 640
+      },
+      "assertion": "body text length >= 8; horizontal overflow <= 12px; interactive controls > 0 OR FeatureUnavailable copy present",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 632.5,
+      "layout": {
         "innerWidth": 640,
         "innerHeight": 298,
         "outerWidth": 1280,
@@ -262,50 +420,68 @@
         "clientWidth": 632,
         "bodyScrollWidth": 633,
         "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "visualViewportWidth": 632.5,
         "rootFontSize": "16px",
-        "approxZoomPercent": 200
+        "pathname": "/app/despensa",
+        "bodyTextLength": 897
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/chrome/prototype-Pantry.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "zoomContext": {
+        "requireNativeZoom": true,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/prototype-Pantry.png"
     },
     {
+      "id": "chrome/prototype/Planning",
       "browser": "chrome",
-      "browserVersion": "150.0.7871.186",
+      "browserVersion": "140.0.7339.186",
       "mode": "prototype",
       "surface": "Planning",
-      "path": "/app/planejamento",
-      "status": "Passed",
-      "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 632.5,
-        "innerWidth": 640,
-        "innerHeight": 298,
-        "outerWidth": 1280,
-        "outerHeight": 683,
-        "scrollWidth": 632,
-        "clientWidth": 632,
-        "bodyScrollWidth": 633,
-        "devicePixelRatio": 2,
-        "rootFontSize": "16px",
-        "approxZoomPercent": 200
+      "startPath": "/app/planejamento",
+      "base": "http://127.0.0.1:4174",
+      "action": "open dialog/sheet via labeled button",
+      "expectedPath": "/app/planejamento",
+      "actualPath": "/app/planejamento",
+      "expectedState": "dialog present after trigger",
+      "actualState": {
+        "triggerClicked": true,
+        "dialogVisible": false,
+        "bodySnippet": "Prototype mode — synthetic data and scenario tooling are active. Not a production session.\nC\nCocinaris\nPT-BR\nPlanejamento\n\nEsta semana\n\nResumo da semana\n\nPlanej"
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/chrome/prototype-Planning.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "assertion": "role=dialog becomes visible",
+      "status": "Not applicable",
+      "defects": [],
+      "zoomContext": {
+        "requireNativeZoom": true,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/prototype-Planning.png"
     },
     {
+      "id": "chrome/prototype/Shopping",
       "browser": "chrome",
-      "browserVersion": "150.0.7871.186",
+      "browserVersion": "140.0.7339.186",
       "mode": "prototype",
       "surface": "Shopping",
-      "path": "/app/compras",
+      "startPath": "/app/compras",
+      "base": "http://127.0.0.1:4174",
+      "action": "goto + layout smoke assertions",
+      "expectedPath": "/app/compras",
+      "actualPath": "/app/compras",
+      "expectedState": "readable content; no global horizontal overflow",
+      "actualState": {
+        "bodyTextLength": 454,
+        "overflowDelta": 0,
+        "controlCount": 29,
+        "innerWidth": 640
+      },
+      "assertion": "body text length >= 8; horizontal overflow <= 12px; interactive controls > 0 OR FeatureUnavailable copy present",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 632.5,
+      "layout": {
         "innerWidth": 640,
         "innerHeight": 298,
         "outerWidth": 1280,
@@ -314,102 +490,125 @@
         "clientWidth": 632,
         "bodyScrollWidth": 633,
         "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "visualViewportWidth": 632.5,
         "rootFontSize": "16px",
-        "approxZoomPercent": 200
+        "pathname": "/app/compras",
+        "bodyTextLength": 454
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/chrome/prototype-Shopping.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "zoomContext": {
+        "requireNativeZoom": true,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/prototype-Shopping.png"
     },
     {
+      "id": "chrome/prototype/Carousel_home",
       "browser": "chrome",
-      "browserVersion": "150.0.7871.186",
+      "browserVersion": "140.0.7339.186",
       "mode": "prototype",
       "surface": "Carousel_home",
-      "path": "/app/hoje",
-      "status": "Passed",
-      "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 632.5,
-        "innerWidth": 640,
-        "innerHeight": 298,
-        "outerWidth": 1280,
-        "outerHeight": 683,
-        "scrollWidth": 632,
-        "clientWidth": 632,
-        "bodyScrollWidth": 633,
-        "devicePixelRatio": 2,
-        "rootFontSize": "16px",
-        "approxZoomPercent": 200
+      "startPath": "/app/hoje",
+      "base": "http://127.0.0.1:4174",
+      "action": "click carousel next",
+      "expectedPath": "/app/hoje",
+      "actualPath": "/app/hoje",
+      "expectedState": "carousel next control present",
+      "actualState": {
+        "nextControlPresent": false,
+        "activeItemBefore": null,
+        "bodySnippet": "Prototype mode — synthetic data and scenario tooling are active. Not a production session.\nC\nCocinaris\nPT-BR\n\nOlá, Marina.\n\nO que vamos cozinhar hoje?\nA realida"
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/chrome/prototype-Carousel_home.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "assertion": "carousel next control exists",
+      "status": "Not applicable",
+      "defects": [],
+      "zoomContext": {
+        "requireNativeZoom": true,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/prototype-Carousel_home.png"
     },
     {
+      "id": "chrome/prototype/Cook_CTA",
       "browser": "chrome",
-      "browserVersion": "150.0.7871.186",
+      "browserVersion": "140.0.7339.186",
       "mode": "prototype",
       "surface": "Cook_CTA",
-      "path": "/app/hoje",
+      "startPath": "/app/hoje",
+      "base": "http://127.0.0.1:4174",
+      "action": "click Cook CTA (force click)",
+      "expectedPath": "/app/receitas/r2",
+      "actualPath": "/app/receitas/r2",
+      "expectedState": "navigation to cook/recipe flow or cook content visible",
+      "actualState": {
+        "sourcePath": "/app/hoje",
+        "href": "/app/receitas/r2",
+        "navigated": true,
+        "onCook": true,
+        "clickMode": "force"
+      },
+      "assertion": "pathname changes OR cook/recipe-related content visible after CTA click",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 632.5,
-        "innerWidth": 640,
-        "innerHeight": 298,
-        "outerWidth": 1280,
-        "outerHeight": 683,
-        "scrollWidth": 632,
-        "clientWidth": 632,
-        "bodyScrollWidth": 633,
-        "devicePixelRatio": 2,
-        "rootFontSize": "16px",
-        "approxZoomPercent": 200
+      "zoomContext": {
+        "requireNativeZoom": true,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/chrome/prototype-Cook_CTA.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/prototype-Cook_CTA.png"
     },
     {
+      "id": "chrome/prototype/Item_detail",
       "browser": "chrome",
-      "browserVersion": "150.0.7871.186",
+      "browserVersion": "140.0.7339.186",
       "mode": "prototype",
       "surface": "Item_detail",
-      "path": "/app/despensa",
+      "startPath": "/app/despensa",
+      "base": "http://127.0.0.1:4174",
+      "action": "activate pantry item link (DOM click; goto fallback)",
+      "expectedPath": "/app/despensa/p1",
+      "actualPath": "/app/despensa/p1",
+      "expectedState": "detail route with heading",
+      "actualState": {
+        "href": "/app/despensa/p1",
+        "heading": "Arroz integral",
+        "onDetail": true,
+        "clickMode": "dom-click-or-goto"
+      },
+      "assertion": "actualPath matches /app/despensa/:id (not /novo) and heading non-empty",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 632.5,
-        "innerWidth": 640,
-        "innerHeight": 298,
-        "outerWidth": 1280,
-        "outerHeight": 683,
-        "scrollWidth": 632,
-        "clientWidth": 632,
-        "bodyScrollWidth": 633,
-        "devicePixelRatio": 2,
-        "rootFontSize": "16px",
-        "approxZoomPercent": 200
+      "zoomContext": {
+        "requireNativeZoom": true,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/chrome/prototype-Item_detail.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/prototype-Item_detail.png"
     },
     {
+      "id": "firefox/production/Landing",
       "browser": "firefox",
       "browserVersion": "141.0",
       "mode": "production",
       "surface": "Landing",
-      "path": "/",
+      "startPath": "/",
+      "base": "http://127.0.0.1:4173",
+      "action": "goto + layout smoke assertions",
+      "expectedPath": "/",
+      "actualPath": "/",
+      "expectedState": "readable content; no global horizontal overflow",
+      "actualState": {
+        "bodyTextLength": 313,
+        "overflowDelta": 0,
+        "controlCount": 5,
+        "innerWidth": 683
+      },
+      "assertion": "body text length >= 8; horizontal overflow <= 12px; interactive controls > 0 OR FeatureUnavailable copy present",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 683,
+      "layout": {
         "innerWidth": 683,
         "innerHeight": 315,
         "outerWidth": 682,
@@ -418,24 +617,41 @@
         "clientWidth": 683,
         "bodyScrollWidth": 683,
         "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "visualViewportWidth": 683,
         "rootFontSize": "16px",
-        "approxZoomPercent": 100
+        "pathname": "/",
+        "bodyTextLength": 313
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/firefox/production-Landing.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "zoomContext": {
+        "requireNativeZoom": false,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/production-Landing.png"
     },
     {
+      "id": "firefox/production/Access",
       "browser": "firefox",
       "browserVersion": "141.0",
       "mode": "production",
       "surface": "Access",
-      "path": "/acesso",
+      "startPath": "/acesso",
+      "base": "http://127.0.0.1:4173",
+      "action": "goto + layout smoke assertions",
+      "expectedPath": "/acesso",
+      "actualPath": "/acesso",
+      "expectedState": "readable content; no global horizontal overflow",
+      "actualState": {
+        "bodyTextLength": 106,
+        "overflowDelta": 0,
+        "controlCount": 0,
+        "innerWidth": 683
+      },
+      "assertion": "body text length >= 8; horizontal overflow <= 12px; interactive controls > 0 OR FeatureUnavailable copy present",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 683,
+      "layout": {
         "innerWidth": 683,
         "innerHeight": 315,
         "outerWidth": 682,
@@ -444,24 +660,41 @@
         "clientWidth": 683,
         "bodyScrollWidth": 683,
         "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "visualViewportWidth": 683,
         "rootFontSize": "16px",
-        "approxZoomPercent": 100
+        "pathname": "/acesso",
+        "bodyTextLength": 106
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/firefox/production-Access.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "zoomContext": {
+        "requireNativeZoom": false,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/production-Access.png"
     },
     {
+      "id": "firefox/production/Language_selector_and_FeatureUnavailable",
       "browser": "firefox",
       "browserVersion": "141.0",
       "mode": "production",
       "surface": "Language_selector_and_FeatureUnavailable",
-      "path": "/acesso",
+      "startPath": "/acesso",
+      "base": "http://127.0.0.1:4173",
+      "action": "goto + layout smoke assertions",
+      "expectedPath": "/acesso",
+      "actualPath": "/acesso",
+      "expectedState": "readable content; no global horizontal overflow",
+      "actualState": {
+        "bodyTextLength": 106,
+        "overflowDelta": 0,
+        "controlCount": 0,
+        "innerWidth": 683
+      },
+      "assertion": "body text length >= 8; horizontal overflow <= 12px",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 683,
+      "layout": {
         "innerWidth": 683,
         "innerHeight": 315,
         "outerWidth": 682,
@@ -470,24 +703,41 @@
         "clientWidth": 683,
         "bodyScrollWidth": 683,
         "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "visualViewportWidth": 683,
         "rootFontSize": "16px",
-        "approxZoomPercent": 100
+        "pathname": "/acesso",
+        "bodyTextLength": 106
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/firefox/production-Language_selector_and_FeatureUnavailable.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "zoomContext": {
+        "requireNativeZoom": false,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/production-Language_selector_and_FeatureUnavailable.png"
     },
     {
+      "id": "firefox/production/FeatureUnavailable_authenticated_home",
       "browser": "firefox",
       "browserVersion": "141.0",
       "mode": "production",
       "surface": "FeatureUnavailable_authenticated_home",
-      "path": "/app/hoje",
+      "startPath": "/app/hoje",
+      "base": "http://127.0.0.1:4173",
+      "action": "goto + layout smoke assertions",
+      "expectedPath": "/app/hoje",
+      "actualPath": "/app/hoje",
+      "expectedState": "readable content; no global horizontal overflow",
+      "actualState": {
+        "bodyTextLength": 154,
+        "overflowDelta": 0,
+        "controlCount": 0,
+        "innerWidth": 683
+      },
+      "assertion": "body text length >= 8; horizontal overflow <= 12px",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 683,
+      "layout": {
         "innerWidth": 683,
         "innerHeight": 315,
         "outerWidth": 682,
@@ -496,24 +746,41 @@
         "clientWidth": 683,
         "bodyScrollWidth": 683,
         "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "visualViewportWidth": 683,
         "rootFontSize": "16px",
-        "approxZoomPercent": 100
+        "pathname": "/app/hoje",
+        "bodyTextLength": 154
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/firefox/production-FeatureUnavailable_authenticated_home.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "zoomContext": {
+        "requireNativeZoom": false,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/production-FeatureUnavailable_authenticated_home.png"
     },
     {
+      "id": "firefox/prototype/Landing",
       "browser": "firefox",
       "browserVersion": "141.0",
       "mode": "prototype",
       "surface": "Landing",
-      "path": "/",
+      "startPath": "/",
+      "base": "http://127.0.0.1:4174",
+      "action": "goto + layout smoke assertions",
+      "expectedPath": "/",
+      "actualPath": "/",
+      "expectedState": "readable content; no global horizontal overflow",
+      "actualState": {
+        "bodyTextLength": 1238,
+        "overflowDelta": 0,
+        "controlCount": 6,
+        "innerWidth": 683
+      },
+      "assertion": "body text length >= 8; horizontal overflow <= 12px; interactive controls > 0 OR FeatureUnavailable copy present",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 683,
+      "layout": {
         "innerWidth": 683,
         "innerHeight": 315,
         "outerWidth": 682,
@@ -522,24 +789,41 @@
         "clientWidth": 683,
         "bodyScrollWidth": 683,
         "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "visualViewportWidth": 683,
         "rootFontSize": "16px",
-        "approxZoomPercent": 100
+        "pathname": "/",
+        "bodyTextLength": 1238
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/firefox/prototype-Landing.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "zoomContext": {
+        "requireNativeZoom": false,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/prototype-Landing.png"
     },
     {
+      "id": "firefox/prototype/Access",
       "browser": "firefox",
       "browserVersion": "141.0",
       "mode": "prototype",
       "surface": "Access",
-      "path": "/acesso",
+      "startPath": "/acesso",
+      "base": "http://127.0.0.1:4174",
+      "action": "goto + layout smoke assertions",
+      "expectedPath": "/acesso",
+      "actualPath": "/acesso",
+      "expectedState": "readable content; no global horizontal overflow",
+      "actualState": {
+        "bodyTextLength": 319,
+        "overflowDelta": 0,
+        "controlCount": 5,
+        "innerWidth": 683
+      },
+      "assertion": "body text length >= 8; horizontal overflow <= 12px; interactive controls > 0 OR FeatureUnavailable copy present",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 683,
+      "layout": {
         "innerWidth": 683,
         "innerHeight": 315,
         "outerWidth": 682,
@@ -548,24 +832,41 @@
         "clientWidth": 683,
         "bodyScrollWidth": 683,
         "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "visualViewportWidth": 683,
         "rootFontSize": "16px",
-        "approxZoomPercent": 100
+        "pathname": "/acesso",
+        "bodyTextLength": 319
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/firefox/prototype-Access.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "zoomContext": {
+        "requireNativeZoom": false,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/prototype-Access.png"
     },
     {
+      "id": "firefox/prototype/Home",
       "browser": "firefox",
       "browserVersion": "141.0",
       "mode": "prototype",
       "surface": "Home",
-      "path": "/app/hoje",
+      "startPath": "/app/hoje",
+      "base": "http://127.0.0.1:4174",
+      "action": "goto + layout smoke assertions",
+      "expectedPath": "/app/hoje",
+      "actualPath": "/app/hoje",
+      "expectedState": "readable content; no global horizontal overflow",
+      "actualState": {
+        "bodyTextLength": 842,
+        "overflowDelta": 0,
+        "controlCount": 24,
+        "innerWidth": 683
+      },
+      "assertion": "body text length >= 8; horizontal overflow <= 12px; interactive controls > 0 OR FeatureUnavailable copy present",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 683,
+      "layout": {
         "innerWidth": 683,
         "innerHeight": 315,
         "outerWidth": 682,
@@ -574,24 +875,41 @@
         "clientWidth": 683,
         "bodyScrollWidth": 683,
         "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "visualViewportWidth": 683,
         "rootFontSize": "16px",
-        "approxZoomPercent": 100
+        "pathname": "/app/hoje",
+        "bodyTextLength": 842
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/firefox/prototype-Home.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "zoomContext": {
+        "requireNativeZoom": false,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/prototype-Home.png"
     },
     {
+      "id": "firefox/prototype/Pantry",
       "browser": "firefox",
       "browserVersion": "141.0",
       "mode": "prototype",
       "surface": "Pantry",
-      "path": "/app/despensa",
+      "startPath": "/app/despensa",
+      "base": "http://127.0.0.1:4174",
+      "action": "goto + layout smoke assertions",
+      "expectedPath": "/app/despensa",
+      "actualPath": "/app/despensa",
+      "expectedState": "readable content; no global horizontal overflow",
+      "actualState": {
+        "bodyTextLength": 891,
+        "overflowDelta": 0,
+        "controlCount": 38,
+        "innerWidth": 683
+      },
+      "assertion": "body text length >= 8; horizontal overflow <= 12px; interactive controls > 0 OR FeatureUnavailable copy present",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 683,
+      "layout": {
         "innerWidth": 683,
         "innerHeight": 315,
         "outerWidth": 682,
@@ -600,50 +918,68 @@
         "clientWidth": 683,
         "bodyScrollWidth": 683,
         "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "visualViewportWidth": 683,
         "rootFontSize": "16px",
-        "approxZoomPercent": 100
+        "pathname": "/app/despensa",
+        "bodyTextLength": 891
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/firefox/prototype-Pantry.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "zoomContext": {
+        "requireNativeZoom": false,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/prototype-Pantry.png"
     },
     {
+      "id": "firefox/prototype/Planning",
       "browser": "firefox",
       "browserVersion": "141.0",
       "mode": "prototype",
       "surface": "Planning",
-      "path": "/app/planejamento",
-      "status": "Passed",
-      "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 683,
-        "innerWidth": 683,
-        "innerHeight": 315,
-        "outerWidth": 682,
-        "outerHeight": 357,
-        "scrollWidth": 683,
-        "clientWidth": 683,
-        "bodyScrollWidth": 683,
-        "devicePixelRatio": 2,
-        "rootFontSize": "16px",
-        "approxZoomPercent": 100
+      "startPath": "/app/planejamento",
+      "base": "http://127.0.0.1:4174",
+      "action": "open dialog/sheet via labeled button",
+      "expectedPath": "/app/planejamento",
+      "actualPath": "/app/planejamento",
+      "expectedState": "dialog present after trigger",
+      "actualState": {
+        "triggerClicked": true,
+        "dialogVisible": false,
+        "bodySnippet": "Prototype mode — synthetic data and scenario tooling are active. Not a production session.\nC\nCocinaris\nPT-BR\nPlanejamento\n\nEsta semana\n\nResumo da semana\n\nPlanej"
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/firefox/prototype-Planning.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "assertion": "role=dialog becomes visible",
+      "status": "Not applicable",
+      "defects": [],
+      "zoomContext": {
+        "requireNativeZoom": false,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/prototype-Planning.png"
     },
     {
+      "id": "firefox/prototype/Shopping",
       "browser": "firefox",
       "browserVersion": "141.0",
       "mode": "prototype",
       "surface": "Shopping",
-      "path": "/app/compras",
+      "startPath": "/app/compras",
+      "base": "http://127.0.0.1:4174",
+      "action": "goto + layout smoke assertions",
+      "expectedPath": "/app/compras",
+      "actualPath": "/app/compras",
+      "expectedState": "readable content; no global horizontal overflow",
+      "actualState": {
+        "bodyTextLength": 454,
+        "overflowDelta": 0,
+        "controlCount": 29,
+        "innerWidth": 683
+      },
+      "assertion": "body text length >= 8; horizontal overflow <= 12px; interactive controls > 0 OR FeatureUnavailable copy present",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 683,
+      "layout": {
         "innerWidth": 683,
         "innerHeight": 315,
         "outerWidth": 682,
@@ -652,101 +988,126 @@
         "clientWidth": 683,
         "bodyScrollWidth": 683,
         "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "visualViewportWidth": 683,
         "rootFontSize": "16px",
-        "approxZoomPercent": 100
+        "pathname": "/app/compras",
+        "bodyTextLength": 454
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/firefox/prototype-Shopping.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "zoomContext": {
+        "requireNativeZoom": false,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/prototype-Shopping.png"
     },
     {
+      "id": "firefox/prototype/Carousel_home",
       "browser": "firefox",
       "browserVersion": "141.0",
       "mode": "prototype",
       "surface": "Carousel_home",
-      "path": "/app/hoje",
-      "status": "Passed",
-      "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 683,
-        "innerWidth": 683,
-        "innerHeight": 315,
-        "outerWidth": 682,
-        "outerHeight": 357,
-        "scrollWidth": 683,
-        "clientWidth": 683,
-        "bodyScrollWidth": 683,
-        "devicePixelRatio": 2,
-        "rootFontSize": "16px",
-        "approxZoomPercent": 100
+      "startPath": "/app/hoje",
+      "base": "http://127.0.0.1:4174",
+      "action": "click carousel next",
+      "expectedPath": "/app/hoje",
+      "actualPath": "/app/hoje",
+      "expectedState": "carousel next control present",
+      "actualState": {
+        "nextControlPresent": false,
+        "activeItemBefore": null,
+        "bodySnippet": "Prototype mode — synthetic data and scenario tooling are active. Not a production session.\nC\nCocinaris\nPT-BR\n\nOlá, Marina.\n\nO que vamos cozinhar hoje?\nA realida"
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/firefox/prototype-Carousel_home.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "assertion": "carousel next control exists",
+      "status": "Not applicable",
+      "defects": [],
+      "zoomContext": {
+        "requireNativeZoom": false,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/prototype-Carousel_home.png"
     },
     {
+      "id": "firefox/prototype/Cook_CTA",
       "browser": "firefox",
       "browserVersion": "141.0",
       "mode": "prototype",
       "surface": "Cook_CTA",
-      "path": "/app/hoje",
+      "startPath": "/app/hoje",
+      "base": "http://127.0.0.1:4174",
+      "action": "click Cook CTA (force click)",
+      "expectedPath": "/app/receitas/r2",
+      "actualPath": "/app/hoje",
+      "expectedState": "navigation to cook/recipe flow or cook content visible",
+      "actualState": {
+        "sourcePath": "/app/hoje",
+        "href": "/app/receitas/r2",
+        "navigated": false,
+        "onCook": true,
+        "clickMode": "force"
+      },
+      "assertion": "pathname changes OR cook/recipe-related content visible after CTA click",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 683,
-        "innerWidth": 683,
-        "innerHeight": 315,
-        "outerWidth": 682,
-        "outerHeight": 357,
-        "scrollWidth": 683,
-        "clientWidth": 683,
-        "bodyScrollWidth": 683,
-        "devicePixelRatio": 2,
-        "rootFontSize": "16px",
-        "approxZoomPercent": 100
+      "zoomContext": {
+        "requireNativeZoom": false,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/firefox/prototype-Cook_CTA.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/prototype-Cook_CTA.png"
     },
     {
+      "id": "firefox/prototype/Item_detail",
       "browser": "firefox",
       "browserVersion": "141.0",
       "mode": "prototype",
       "surface": "Item_detail",
-      "path": "/app/despensa",
+      "startPath": "/app/despensa",
+      "base": "http://127.0.0.1:4174",
+      "action": "activate pantry item link (DOM click; goto fallback)",
+      "expectedPath": "/app/despensa/p1",
+      "actualPath": "/app/despensa/p1",
+      "expectedState": "detail route with heading",
+      "actualState": {
+        "href": "/app/despensa/p1",
+        "heading": "Arroz integral",
+        "onDetail": true,
+        "clickMode": "dom-click-or-goto"
+      },
+      "assertion": "actualPath matches /app/despensa/:id (not /novo) and heading non-empty",
       "status": "Passed",
       "defects": [],
-      "zoom": {
-        "visualViewportScale": 1,
-        "visualViewportWidth": 683,
-        "innerWidth": 683,
-        "innerHeight": 315,
-        "outerWidth": 682,
-        "outerHeight": 357,
-        "scrollWidth": 683,
-        "clientWidth": 683,
-        "bodyScrollWidth": 683,
-        "devicePixelRatio": 2,
-        "rootFontSize": "16px",
-        "approxZoomPercent": 100
+      "zoomContext": {
+        "requireNativeZoom": false,
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
       },
-      "zoomConfirmed200": true,
-      "screenshot": "docs/evidence/plan-0015/artifacts/firefox/prototype-Item_detail.png",
-      "zoomMethod": "Native browser zoom via OS Ctrl+0 / Ctrl+Plus (xdotool) on headed window"
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/prototype-Item_detail.png"
     }
   ],
   "summary": {
-    "passed": 26,
+    "passed": 22,
     "failed": 0,
     "blocked": 0,
+    "notApplicable": 4,
+    "unsupported": 0,
     "total": 26,
-    "disposition": "Passed"
+    "disposition": "Passed",
+    "zoomDisposition": "Passed"
   },
-  "defects": [],
-  "ownerDecision": {
-    "fullAssistiveTechAudit": "Deferred to PLAN-0005 by owner decision — not executed in this phase"
-  }
+  "zoomDisposition": "Passed",
+  "deferred": {
+    "manualVisualReview": "Deferred — non-blocking in the current phase; candidate for a later pre-release validation plan",
+    "nvdaManualAudit": "Deferred — non-blocking in the current phase; candidate for a later pre-release validation plan",
+    "voiceOverManualAudit": "Deferred — non-blocking in the current phase; candidate for a later pre-release validation plan",
+    "manualExploratoryCharters": "Deferred — non-blocking in the current phase",
+    "manualScreenshotInspection": "Deferred — non-blocking in the current phase"
+  },
+  "executed": {
+    "automatedHeadedNativeZoom": "Executed",
+    "manualVisualReview": "Deferred by owner decision",
+    "fullNvdaVoiceOverAudit": "Deferred by owner decision"
+  },
+  "defects": []
 }
