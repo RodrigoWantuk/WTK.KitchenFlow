@@ -1,0 +1,77 @@
+{
+  "plan": "PLAN-0005",
+  "group": "real-keycloak-oidc-p0",
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+  "apiUrl": "https://localhost:7443",
+  "allowUntrustedLocalCertificate": false,
+  "startedAtUtc": "2026-08-01T16:03:28.673Z",
+  "endedAtUtc": "2026-08-01T16:03:33.232Z",
+  "summary": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0,
+    "blocked": 0
+  },
+  "results": [
+    {
+      "testId": "TEST-0005-008",
+      "status": "Passed",
+      "note": "Post-login navigation host remained non-evil (127.0.0.1:8080)."
+    },
+    {
+      "testId": "TEST-0005-002",
+      "status": "Passed",
+      "note": "Authorization Code login returned to API origin with session."
+    },
+    {
+      "testId": "TEST-0005-009",
+      "status": "Passed",
+      "note": "Synthetic users mapped to distinct internal UUIDs."
+    },
+    {
+      "testId": "TEST-0005-004",
+      "status": "Passed",
+      "note": "Cookie attrs httpOnly=true secure=true sameSite=Strict path=/"
+    },
+    {
+      "testId": "TEST-0005-003",
+      "status": "Passed",
+      "note": "storage/local=0 session=0 idb=0 globals=0"
+    },
+    {
+      "testId": "TEST-0005-005",
+      "status": "Passed",
+      "note": "missing CSRF status=400"
+    },
+    {
+      "testId": "TEST-0005-006",
+      "status": "Passed",
+      "note": "invalid CSRF status=400"
+    },
+    {
+      "testId": "TEST-0005-006B",
+      "status": "Passed",
+      "note": "foreign CSRF status=400"
+    },
+    {
+      "testId": "TEST-0005-CREATE",
+      "status": "Passed",
+      "note": "valid CSRF create status=201"
+    },
+    {
+      "testId": "TEST-0005-011",
+      "status": "Passed",
+      "note": "owner/other detail 200/404"
+    },
+    {
+      "testId": "TEST-0005-007",
+      "status": "Passed",
+      "note": "logoutStatus=0 sessionAfter=401"
+    },
+    {
+      "testId": "TEST-0005-007B",
+      "status": "Passed",
+      "note": "post-logout CSRF mutation status=401"
+    }
+  ]
+}

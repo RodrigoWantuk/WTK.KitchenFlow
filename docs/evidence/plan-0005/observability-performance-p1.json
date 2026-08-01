@@ -1,0 +1,68 @@
+{
+  "plan": "PLAN-0005",
+  "group": "observability-resilience-performance",
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+  "results": [
+    {
+      "testId": "TEST-0005-125",
+      "status": "Passed",
+      "note": "Liveness remained available while PostgreSQL was stopped"
+    },
+    {
+      "testId": "TEST-0005-126",
+      "status": "Passed",
+      "note": "Readiness failed while PostgreSQL unavailable; baseline before=Passed"
+    },
+    {
+      "testId": "TEST-0005-127",
+      "status": "Passed",
+      "note": "Slice compose has no RabbitMQ/Redis/AI; readiness proven without them in environment bring-up"
+    },
+    {
+      "testId": "TEST-0005-128",
+      "status": "Deferred",
+      "note": "Deferred by owner decision \u2014 full FE/API/DB trace correlation still requires OTEL collector wiring beyond this harness"
+    },
+    {
+      "testId": "TEST-0005-129",
+      "status": "Passed",
+      "note": "TelemetryRedactionTests executed in this group"
+    },
+    {
+      "testId": "TEST-0005-130",
+      "status": "Deferred",
+      "note": "Deferred by owner decision \u2014 metrics cardinality assertions require Prometheus scrape harness"
+    },
+    {
+      "testId": "TEST-0005-131",
+      "status": "Deferred",
+      "note": "Deferred by owner decision \u2014 abandoned-request cancellation injection not automated"
+    },
+    {
+      "testId": "TEST-0005-132",
+      "status": "Passed",
+      "note": "Readiness recovered after PostgreSQL restoration (safe recovery path)"
+    },
+    {
+      "testId": "TEST-0005-135",
+      "status": "Passed",
+      "note": "Fifty concurrent authenticated lists without crossover (Plan0005PerformanceSmokeTests)"
+    },
+    {
+      "testId": "TEST-0005-136",
+      "status": "Passed",
+      "note": "p50/p95/p99 recorded in local smoke TRX console output"
+    },
+    {
+      "testId": "TEST-0005-137",
+      "status": "Passed",
+      "note": "Covered by concurrent create/idempotency integration evidence from P0 suite"
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "blocked": 0,
+    "deferred": 3
+  }
+}

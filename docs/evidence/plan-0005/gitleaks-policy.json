@@ -1,0 +1,23 @@
+{
+  "plan": "PLAN-0005",
+  "group": "gitleaks-policy",
+  "gitleaksBinary": "gitleaks",
+  "results": [
+    {
+      "testId": "TEST-0005-GITLEAKS-LEGIT-SHA",
+      "status": "Passed",
+      "exitCode": 0,
+      "note": "Known Git object ID pin field must not trip generic-api-key"
+    },
+    {
+      "testId": "TEST-0005-GITLEAKS-FAKE-SECRET",
+      "status": "Passed",
+      "exitCode": 1,
+      "note": "Fake access token inside evidence-shaped JSON must still be detected"
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 0
+  }
+}

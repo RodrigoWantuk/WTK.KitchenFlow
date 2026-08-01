@@ -1,0 +1,316 @@
+==> PLAN-0005 P1 group: environment
+[plan-0005-env] Validating Compose config
+[plan-0005-env] Starting shared postgres + keycloak
+ Container compose-postgres-1 Running 
+ Container compose-keycloak-1 Running 
+ Container compose-postgres-1 Waiting 
+ Container compose-postgres-1 Healthy 
+[plan-0005-env] Waiting for PostgreSQL readiness
+[plan-0005-env] Waiting for Keycloak readiness
+[plan-0005-env] Restoring tools and applying migrations
+  Determinando os projetos a serem restaurados...
+  Todos os projetos estão atualizados para restauração.
+  KitchenFlow.SharedKernel -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.SharedKernel/bin/Release/net10.0/KitchenFlow.SharedKernel.dll
+  KitchenFlow.Modules.Identity -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Modules.Identity/bin/Release/net10.0/KitchenFlow.Modules.Identity.dll
+  KitchenFlow.Modules.Inventory -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Modules.Inventory/bin/Release/net10.0/KitchenFlow.Modules.Inventory.dll
+  KitchenFlow.Modules.Profiles -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Modules.Profiles/bin/Release/net10.0/KitchenFlow.Modules.Profiles.dll
+  KitchenFlow.UnitTests -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.UnitTests/bin/Release/net10.0/KitchenFlow.UnitTests.dll
+  KitchenFlow.Infrastructure -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Infrastructure/bin/Release/net10.0/KitchenFlow.Infrastructure.dll
+  KitchenFlow.Api -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Api/bin/Release/net10.0/KitchenFlow.Api.dll
+  KitchenFlow.ArchitectureTests -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.ArchitectureTests/bin/Release/net10.0/KitchenFlow.ArchitectureTests.dll
+  KitchenFlow.IntegrationTests -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/bin/Release/net10.0/KitchenFlow.IntegrationTests.dll
+
+Compilação com êxito.
+    0 Aviso(s)
+    0 Erro(s)
+
+Tempo Decorrido 00:00:03.54
+Acquiring an exclusive lock for migration application. See https://aka.ms/efcore-docs-migrations-lock for more information if this takes too long.
+No migrations were applied. The database is already up to date.
+Done.
+[plan-0005-env] Starting backend Release on HTTPS :7443
+[plan-0005-env] Health and readiness OK
+[plan-0005-env] Building frontend production
+yarn install v1.22.22
+[1/4] Resolving packages...
+warning Resolution field "underscore@1.13.8" is incompatible with requested version "underscore@1.13.6"
+(node:2927018) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+warning Resolution field "uuid@11.1.1" is incompatible with requested version "uuid@^8.3.2"
+warning Resolution field "resolve-url-loader@5.0.0" is incompatible with requested version "resolve-url-loader@^4.0.0"
+warning Resolution field "webpack-dev-server@5.2.6" is incompatible with requested version "webpack-dev-server@^4.6.0"
+warning Resolution field "serialize-javascript@7.0.5" is incompatible with requested version "serialize-javascript@^6.0.0"
+warning Resolution field "svgo@2.8.3" is incompatible with requested version "svgo@^1.2.2"
+warning Resolution field "serialize-javascript@7.0.5" is incompatible with requested version "serialize-javascript@^4.0.0"
+warning Resolution field "@tootallnate/once@2.0.1" is incompatible with requested version "@tootallnate/once@1"
+warning Resolution field "@eslint/plugin-kit@0.3.4" is incompatible with requested version "@eslint/plugin-kit@^0.2.7"
+[2/4] Fetching packages...
+[3/4] Linking dependencies...
+warning " > @babel/plugin-transform-modules-systemjs@7.29.8" has unmet peer dependency "@babel/core@^7.0.0-0".
+warning "@babel/plugin-transform-modules-systemjs > @babel/helper-module-transforms@7.29.7" has unmet peer dependency "@babel/core@^7.0.0".
+warning "webpack-dev-server > webpack-dev-middleware > memfs@4.64.0" has unmet peer dependency "tslib@2".
+warning " > react-day-picker@8.10.1" has incorrect peer dependency "date-fns@^2.28.0 || ^3.0.0".
+warning " > react-day-picker@8.10.1" has incorrect peer dependency "react@^16.8.0 || ^17.0.0 || ^18.0.0".
+warning " > @babel/plugin-proposal-private-property-in-object@7.21.11" has unmet peer dependency "@babel/core@^7.0.0-0".
+warning "react-scripts > eslint-config-react-app > eslint-plugin-flowtype@8.0.3" has unmet peer dependency "@babel/plugin-syntax-flow@^7.14.5".
+warning "react-scripts > eslint-config-react-app > eslint-plugin-flowtype@8.0.3" has unmet peer dependency "@babel/plugin-transform-react-jsx@^7.14.9".
+warning " > recharts@3.6.0" has unmet peer dependency "react-is@^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0".
+warning "@craco/craco > cosmiconfig-typescript-loader@1.0.9" has unmet peer dependency "@types/node@*".
+warning "@craco/craco > cosmiconfig-typescript-loader > ts-node@10.9.2" has unmet peer dependency "@types/node@*".
+warning Workspaces can only be enabled in private projects.
+warning Workspaces can only be enabled in private projects.
+[4/4] Building fresh packages...
+Done in 3.50s.
+yarn run v1.22.22
+$ REACT_APP_FRONTEND_MODE=production GENERATE_SOURCEMAP=false craco build
+(node:2927069) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Creating an optimized production build...
+Compiled successfully.
+
+File sizes after gzip:
+
+  94.92 kB  build-production/static/js/main.e8f1b5d0.js
+  11.75 kB  build-production/static/css/main.12e86644.css
+
+The project was built assuming it is hosted at /.
+You can control this with the homepage field in your package.json.
+
+The build-production folder is ready to be deployed.
+You may serve it with a static server:
+
+  yarn global add serve
+  serve -s build-production
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+
+Done in 6.26s.
+[plan-0005-env] Frontend production served on :4173
+{
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+  "actualHead": "7c9f73e5ed6cad8ec8e97f2e6eed8fa5d9c78cd7",
+  "startedAtUtc": "2026-08-01T16:09:01Z",
+  "endedAtUtc": "2026-08-01T16:09:29Z",
+  "containerCount": 2,
+  "services": [
+    "postgres",
+    "keycloak"
+  ],
+  "apiReused": false,
+  "frontendReused": false,
+  "frontendPort": 4173,
+  "durationsSeconds": {
+    "composeUp": 1,
+    "migrations": 8,
+    "apiReady": 3,
+    "frontendProductionBuild": 10,
+    "totalEnvironment": 27
+  },
+  "checks": {
+    "composeConfig": "Passed",
+    "postgresReady": "Passed",
+    "keycloakReady": "Passed",
+    "migrationsApplied": "Passed",
+    "backendReleaseHealth": "Passed",
+    "backendReleaseReady": "Passed",
+    "frontendProductionBuild": "Passed",
+    "frontendProductionServed": "Passed"
+  }
+}
+[plan-0005-env] Environment proof complete → /home/rodrigo/Repos/GIT/WTK.KitchenFlow/docs/evidence/plan-0005/reports/environment-timing.json
+==> PLAN-0005 P1 group: pagination-http
+Execução de teste para /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.UnitTests/bin/Release/net10.0/KitchenFlow.UnitTests.dll (.NETCoreApp,Version=v10.0)
+Execução de teste para /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/bin/Release/net10.0/KitchenFlow.IntegrationTests.dll (.NETCoreApp,Version=v10.0)
+Execução de teste para /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.ArchitectureTests/bin/Release/net10.0/KitchenFlow.ArchitectureTests.dll (.NETCoreApp,Version=v10.0)
+1 arquivos de teste no total corresponderam ao padrão especificado.
+1 arquivos de teste no total corresponderam ao padrão especificado.
+1 arquivos de teste no total corresponderam ao padrão especificado.
+Nenhum teste corresponde ao filtro de testcase `FullyQualifiedName~Plan0005P1PaginationTests` determinado no /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.UnitTests/bin/Release/net10.0/KitchenFlow.UnitTests.dll
+Arquivo de resultados: /home/rodrigo/Repos/GIT/WTK.KitchenFlow/docs/evidence/plan-0005/reports/trx-p1/plan0005-p1-page-_net10.0_20260801130931.trx
+
+Nenhum teste corresponde ao filtro de testcase `FullyQualifiedName~Plan0005P1PaginationTests` determinado no /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.ArchitectureTests/bin/Release/net10.0/KitchenFlow.ArchitectureTests.dll
+Arquivo de resultados: /home/rodrigo/Repos/GIT/WTK.KitchenFlow/docs/evidence/plan-0005/reports/trx-p1/plan0005-p1-page-_net10.0_20260801130932.trx
+
+[xUnit.net 00:00:08.83]     KitchenFlow.IntegrationTests.Plan0005P1PaginationTests.DefaultActiveFilterSearchAndTamperedCursorBehaveAsSpecified [FAIL]
+  Com falha KitchenFlow.IntegrationTests.Plan0005P1PaginationTests.DefaultActiveFilterSearchAndTamperedCursorBehaveAsSpecified [346 ms]
+  Mensagem de erro:
+   Assert.False() Failure
+Expected: False
+Actual:   True
+  Rastreamento de pilha:
+     at KitchenFlow.IntegrationTests.Plan0005P1PaginationTests.DefaultActiveFilterSearchAndTamperedCursorBehaveAsSpecified() in /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/Plan0005P1PaginationTests.cs:line 104
+   at KitchenFlow.IntegrationTests.Plan0005P1PaginationTests.DefaultActiveFilterSearchAndTamperedCursorBehaveAsSpecified() in /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/Plan0005P1PaginationTests.cs:line 108
+--- End of stack trace from previous location ---
+Arquivo de resultados: /home/rodrigo/Repos/GIT/WTK.KitchenFlow/docs/evidence/plan-0005/reports/trx-p1/plan0005-p1-page-_net10.0_20260801130940.trx
+
+Com falha! – Com falha:     1, Aprovado:     1, Ignorado:     0, Total:     2, Duração: 3 s - KitchenFlow.IntegrationTests.dll (net10.0)
+==> PLAN-0005 P1 group: openapi
+openapi 3.1.1 paths 13
+
+    ╔═══════════════════════════════════════════════════════╗
+    ║                                                       ║
+    ║  A new version of Redocly CLI (2.43.2) is available.  ║
+    ║  Update now: `npm i -g @redocly/cli@latest`.          ║
+    ║  Changelog: https://redocly.com/docs/cli/changelog/   ║
+    ║                                                       ║
+    ╚═══════════════════════════════════════════════════════╝
+
+validating packages/contracts/openapi/kitchenflow-v1.json...
+packages/contracts/openapi/kitchenflow-v1.json: validated in 115ms
+
+Woohoo! Your API description is valid. 🎉
+
+{
+  "passed": 6,
+  "failed": 0,
+  "blocked": 1
+}
+==> PLAN-0005 P1 group: i18n
+{
+  "passed": 4,
+  "failed": 0,
+  "blocked": 1
+}
+==> PLAN-0005 P1 group: axe
+{
+  "passed": 2,
+  "failed": 0,
+  "blocked": 1
+}
+==> PLAN-0005 P1 group: observability-performance
+  Determinando os projetos a serem restaurados...
+  /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.SharedKernel/KitchenFlow.SharedKernel.csproj restaurado (em 147 ms).
+  /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Modules.Inventory/KitchenFlow.Modules.Inventory.csproj restaurado (em 154 ms).
+  /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Modules.Identity/KitchenFlow.Modules.Identity.csproj restaurado (em 154 ms).
+  /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Modules.Profiles/KitchenFlow.Modules.Profiles.csproj restaurado (em 154 ms).
+  /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.UnitTests/KitchenFlow.UnitTests.csproj restaurado (em 300 ms).
+  /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.ArchitectureTests/KitchenFlow.ArchitectureTests.csproj restaurado (em 300 ms).
+  /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj restaurado (em 312 ms).
+  /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Api/KitchenFlow.Api.csproj restaurado (em 364 ms).
+  /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Infrastructure/KitchenFlow.Infrastructure.csproj restaurado (em 168 ms).
+  KitchenFlow.SharedKernel -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.SharedKernel/bin/Release/net10.0/KitchenFlow.SharedKernel.dll
+  KitchenFlow.Modules.Identity -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Modules.Identity/bin/Release/net10.0/KitchenFlow.Modules.Identity.dll
+  KitchenFlow.Modules.Inventory -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Modules.Inventory/bin/Release/net10.0/KitchenFlow.Modules.Inventory.dll
+  KitchenFlow.Modules.Profiles -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Modules.Profiles/bin/Release/net10.0/KitchenFlow.Modules.Profiles.dll
+  KitchenFlow.Infrastructure -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Infrastructure/bin/Release/net10.0/KitchenFlow.Infrastructure.dll
+  KitchenFlow.UnitTests -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.UnitTests/bin/Release/net10.0/KitchenFlow.UnitTests.dll
+  KitchenFlow.Api -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Api/bin/Release/net10.0/KitchenFlow.Api.dll
+  KitchenFlow.ArchitectureTests -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.ArchitectureTests/bin/Release/net10.0/KitchenFlow.ArchitectureTests.dll
+  KitchenFlow.IntegrationTests -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/bin/Release/net10.0/KitchenFlow.IntegrationTests.dll
+
+Compilação com êxito.
+    0 Aviso(s)
+    0 Erro(s)
+
+Tempo Decorrido 00:00:03.44
+==> Telemetry redaction + migration integration suite
+Execução de teste para /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.UnitTests/bin/Release/net10.0/KitchenFlow.UnitTests.dll (.NETCoreApp,Version=v10.0)
+Execução de teste para /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/bin/Release/net10.0/KitchenFlow.IntegrationTests.dll (.NETCoreApp,Version=v10.0)
+Execução de teste para /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.ArchitectureTests/bin/Release/net10.0/KitchenFlow.ArchitectureTests.dll (.NETCoreApp,Version=v10.0)
+1 arquivos de teste no total corresponderam ao padrão especificado.
+1 arquivos de teste no total corresponderam ao padrão especificado.
+1 arquivos de teste no total corresponderam ao padrão especificado.
+Nenhum teste corresponde ao filtro de testcase `FullyQualifiedName~TelemetryRedactionTests|FullyQualifiedName~PostgreSqlMigrationTests` determinado no /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.UnitTests/bin/Release/net10.0/KitchenFlow.UnitTests.dll
+Arquivo de resultados: /home/rodrigo/Repos/GIT/WTK.KitchenFlow/docs/evidence/plan-0005/reports/trx-obs/plan0005-obs-_net10.0_20260801130956.trx
+
+Nenhum teste corresponde ao filtro de testcase `FullyQualifiedName~TelemetryRedactionTests|FullyQualifiedName~PostgreSqlMigrationTests` determinado no /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.ArchitectureTests/bin/Release/net10.0/KitchenFlow.ArchitectureTests.dll
+Arquivo de resultados: /home/rodrigo/Repos/GIT/WTK.KitchenFlow/docs/evidence/plan-0005/reports/trx-obs/plan0005-obs-_net10.0_20260801130957.trx
+
+Arquivo de resultados: /home/rodrigo/Repos/GIT/WTK.KitchenFlow/docs/evidence/plan-0005/reports/trx-obs/plan0005-obs-_net10.0_20260801131022.trx
+
+Aprovado!  – Com falha:     0, Aprovado:    39, Ignorado:     0, Total:    39, Duração: 26 s - KitchenFlow.IntegrationTests.dll (net10.0)
+{
+  "passed": 5,
+  "failed": 0,
+  "blocked": 0,
+  "deferred": 6
+}
+==> PLAN-0005 P1 group: frontend-unit
+yarn run v1.22.22
+$ REACT_APP_FRONTEND_MODE=test craco test --watchAll=false --watchAll=false '--testPathPattern=i18n|productionIsolation|productionCatalog' --passWithNoTests
+PASS src/app/i18n/productionI18n.test.tsx
+PASS src/scenarios/productionIsolation.test.ts
+
+Test Suites: 2 passed, 2 total
+Tests:       12 passed, 12 total
+Snapshots:   0 total
+Time:        0.987 s, estimated 1 s
+Ran all test suites matching /i18n|productionIsolation|productionCatalog/i.
+Done in 1.93s.
+{
+  "plan": "PLAN-0005",
+  "round": "P1-completion-round",
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+  "startedAtUtc": "2026-08-01T16:09:01Z",
+  "endedAtUtc": "2026-08-01T16:10:25Z",
+  "totalSeconds": 84,
+  "containerCount": 2,
+  "groups": [
+    {
+      "name": "environment",
+      "exitCode": 0,
+      "durationSeconds": 28,
+      "status": "Passed"
+    },
+    {
+      "name": "pagination-http",
+      "exitCode": 1,
+      "durationSeconds": 11,
+      "status": "Failed"
+    },
+    {
+      "name": "openapi",
+      "exitCode": 0,
+      "durationSeconds": 3,
+      "status": "Passed"
+    },
+    {
+      "name": "i18n",
+      "exitCode": 0,
+      "durationSeconds": 0,
+      "status": "Passed"
+    },
+    {
+      "name": "axe",
+      "exitCode": 0,
+      "durationSeconds": 5,
+      "status": "Passed"
+    },
+    {
+      "name": "observability-performance",
+      "exitCode": 0,
+      "durationSeconds": 35,
+      "status": "Passed"
+    },
+    {
+      "name": "frontend-unit",
+      "exitCode": 0,
+      "durationSeconds": 2,
+      "status": "Passed"
+    }
+  ],
+  "overall": "Failed",
+  "openapi": {
+    "passed": 6,
+    "failed": 0,
+    "blocked": 1
+  },
+  "i18n": {
+    "passed": 4,
+    "failed": 0,
+    "blocked": 1
+  },
+  "axe": {
+    "passed": 2,
+    "failed": 0,
+    "blocked": 1
+  },
+  "observability": {
+    "passed": 5,
+    "failed": 0,
+    "blocked": 0,
+    "deferred": 6
+  }
+}

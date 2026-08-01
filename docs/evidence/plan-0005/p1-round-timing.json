@@ -1,0 +1,92 @@
+{
+  "plan": "PLAN-0005",
+  "round": "P1-completion-round",
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+  "prHeadSha": "cabd2c23addd3c8ab741b5075ec6d33f37f9e359",
+  "checkedOutCommitSha": "6ad36ba3fa0ab9c1ad2460004798662d3780b446",
+  "evidenceGenerationSha": "cabd2c23addd3c8ab741b5075ec6d33f37f9e359",
+  "startedAtUtc": "2026-08-01T20:17:49Z",
+  "endedAtUtc": "2026-08-01T20:22:18Z",
+  "totalSeconds": 269,
+  "containers": {
+    "composeServiceCount": 2,
+    "composeServices": [
+      "keycloak",
+      "postgres"
+    ],
+    "testcontainersCreated": 16,
+    "testcontainerImages": [
+      "postgres:18.4",
+      "testcontainers/ryuk:0.14.0"
+    ],
+    "maximumConcurrentContainers": 5,
+    "totalContainerInstancesCreated": 18
+  },
+  "composeServiceCount": 2,
+  "groups": [
+    {
+      "name": "environment",
+      "exitCode": 0,
+      "durationSeconds": 115,
+      "status": "Passed"
+    },
+    {
+      "name": "pagination-http",
+      "exitCode": 0,
+      "durationSeconds": 11,
+      "status": "Passed"
+    },
+    {
+      "name": "openapi",
+      "exitCode": 0,
+      "durationSeconds": 3,
+      "status": "Passed"
+    },
+    {
+      "name": "i18n",
+      "exitCode": 0,
+      "durationSeconds": 0,
+      "status": "Passed"
+    },
+    {
+      "name": "axe",
+      "exitCode": 0,
+      "durationSeconds": 2,
+      "status": "Passed"
+    },
+    {
+      "name": "observability-performance",
+      "exitCode": 0,
+      "durationSeconds": 136,
+      "status": "Passed"
+    },
+    {
+      "name": "frontend-unit",
+      "exitCode": 0,
+      "durationSeconds": 2,
+      "status": "Passed"
+    }
+  ],
+  "overall": "Passed",
+  "openapi": {
+    "passed": 6,
+    "failed": 0,
+    "blocked": 1
+  },
+  "i18n": {
+    "passed": 4,
+    "failed": 0,
+    "blocked": 1
+  },
+  "axe": {
+    "passed": 2,
+    "failed": 0,
+    "blocked": 1
+  },
+  "observability": {
+    "passed": 8,
+    "failed": 0,
+    "blocked": 0,
+    "deferred": 3
+  }
+}

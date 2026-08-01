@@ -1,0 +1,365 @@
+{
+  "plan": "PLAN-0005",
+  "group": "evidence-consistency",
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+  "prHeadSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
+  "checkedOutCommitSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
+  "evidenceGenerationSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
+  "workflowStartedAtUtc": null,
+  "checks": [
+    {
+      "name": "p0-artifact-present",
+      "status": "Passed",
+      "note": "plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "p0-artifact-name-pr-head",
+      "status": "Passed",
+      "note": "contains prHeadSha 4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "p1-artifact-present",
+      "status": "Passed",
+      "note": "plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "p1-artifact-name-pr-head",
+      "status": "Passed",
+      "note": "contains prHeadSha 4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "p0:firefox-zoom-pointer-keyboard.json",
+      "status": "Passed",
+      "note": "/tmp/p5-check/plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/firefox-zoom-pointer-keyboard.json"
+    },
+    {
+      "name": "p0:p0-round1-timing.json",
+      "status": "Passed",
+      "note": "/tmp/p5-check/plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/p0-round1-timing.json"
+    },
+    {
+      "name": "p0:keycloak-p0-auth.json",
+      "status": "Passed",
+      "note": "/tmp/p5-check/plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/keycloak-p0-auth.json"
+    },
+    {
+      "name": "p0:frontend-production-inventory.json",
+      "status": "Passed",
+      "note": "/tmp/p5-check/plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/frontend-production-inventory.json"
+    },
+    {
+      "name": "p0:container-count.json",
+      "status": "Passed",
+      "note": "/tmp/p5-check/plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/container-count.json"
+    },
+    {
+      "name": "p0:run-identity.json",
+      "status": "Passed",
+      "note": "/tmp/p5-check/plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/run-identity.json"
+    },
+    {
+      "name": "p1:observability-performance-p1.json",
+      "status": "Passed",
+      "note": "/tmp/p5-check/plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/observability-performance-p1.json"
+    },
+    {
+      "name": "p1:performance-smoke.json",
+      "status": "Passed",
+      "note": "/tmp/p5-check/plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/performance-smoke.json"
+    },
+    {
+      "name": "p1:performance-concurrent-creates.json",
+      "status": "Passed",
+      "note": "/tmp/p5-check/plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/performance-concurrent-creates.json"
+    },
+    {
+      "name": "p1:openapi-p1.json",
+      "status": "Passed",
+      "note": "/tmp/p5-check/plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/openapi-p1.json"
+    },
+    {
+      "name": "p1:readiness-postgres-outage.json",
+      "status": "Passed",
+      "note": "/tmp/p5-check/plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/readiness-postgres-outage.json"
+    },
+    {
+      "name": "p1:outage-mutation-recovery.json",
+      "status": "Passed",
+      "note": "/tmp/p5-check/plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/outage-mutation-recovery.json"
+    },
+    {
+      "name": "p1:container-count.json",
+      "status": "Passed",
+      "note": "/tmp/p5-check/plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/container-count.json"
+    },
+    {
+      "name": "p1:run-identity.json",
+      "status": "Passed",
+      "note": "/tmp/p5-check/plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/run-identity.json"
+    },
+    {
+      "name": "firefox-zoom:identity",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "native-zoom-technique",
+      "status": "Passed",
+      "note": "native-ctrl-plus-xdotool"
+    },
+    {
+      "name": "native-zoom-ratio",
+      "status": "Passed",
+      "note": "ratios=[2, 2, 2]"
+    },
+    {
+      "name": "p0-timing-overall",
+      "status": "Passed",
+      "note": "overall=Passed"
+    },
+    {
+      "name": "p0-container-honesty",
+      "status": "Passed",
+      "note": "{\"composeServiceCount\": 2, \"composeServices\": [\"keycloak\", \"postgres\"], \"testcontainersCreated\": 36, \"testcontainerImages\": [\"postgres:18.4\", \"testcontainers/ryuk:0.14.0\"], \"maximumConcurrentContainers\": 5, \"totalContainerInstancesCreated\": 38}"
+    },
+    {
+      "name": "p0-run:identity",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "p1-timing-overall",
+      "status": "Passed",
+      "note": "overall=Passed"
+    },
+    {
+      "name": "p1-container-honesty",
+      "status": "Passed",
+      "note": "{\"composeServiceCount\": 2, \"composeServices\": [\"keycloak\", \"postgres\"], \"testcontainersCreated\": 16, \"testcontainerImages\": [\"postgres:18.4\", \"testcontainers/ryuk:0.14.0\"], \"maximumConcurrentContainers\": 5, \"totalContainerInstancesCreated\": 18}"
+    },
+    {
+      "name": "p1-run:identity",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "performance-smoke:identity",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "performance-smoke:freshness",
+      "status": "Passed",
+      "note": "2026-08-01T19:12:28Z"
+    },
+    {
+      "name": "performance-metrics",
+      "status": "Passed",
+      "note": "missing=[]"
+    },
+    {
+      "name": "performance-status",
+      "status": "Passed",
+      "note": "Passed"
+    },
+    {
+      "name": "performance-creates:freshness",
+      "status": "Passed",
+      "note": "2026-08-01T19:12:28Z"
+    },
+    {
+      "name": "concurrent-creates-137",
+      "status": "Passed",
+      "note": "{'status': 'Passed', 'lots': 10, 'duplicates': 0}"
+    },
+    {
+      "name": "outage-132:identity",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "outage-132:freshness",
+      "status": "Passed",
+      "note": "2026-08-01T19:12:18Z"
+    },
+    {
+      "name": "outage-mutation-132",
+      "status": "Passed",
+      "note": "Authenticated read and mutation during PostgreSQL pause returned safe errors; lot intact after restore; idempotency absent until successful retry; replay produced no additional effect."
+    },
+    {
+      "name": "p0-historical-failed-console",
+      "status": "Passed",
+      "note": "p1-initial-failed-console.txt explicitly historical"
+    },
+    {
+      "name": "p0-historical-failed-console",
+      "status": "Passed",
+      "note": "p0-round1-initial-failed-console.txt explicitly historical"
+    },
+    {
+      "name": "p1-current-console-name",
+      "status": "Passed",
+      "note": "no ambiguous p1-completion-console.txt"
+    },
+    {
+      "name": "p1-historical-failed-console",
+      "status": "Passed",
+      "note": "p1-initial-failed-console.txt explicitly historical"
+    },
+    {
+      "name": "p1-historical-failed-console",
+      "status": "Passed",
+      "note": "p0-round1-initial-failed-console.txt explicitly historical"
+    },
+    {
+      "name": "p1-current-console-name",
+      "status": "Passed",
+      "note": "no ambiguous p1-completion-console.txt"
+    },
+    {
+      "name": "final-assessment-head",
+      "status": "Passed",
+      "note": "currentPrTip=4d07afa066fd7994bbc36473242ee7a2d764ea70 evidenceGenerationHead=4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "final-assessment-artifact-p0",
+      "status": "Passed",
+      "note": "plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "final-assessment-artifact-p1",
+      "status": "Passed",
+      "note": "plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "final-assessment-artifact-evidenceConsistency",
+      "status": "Passed",
+      "note": "plan-0005-evidence-consistency-4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "final-assessment-head",
+      "status": "Passed",
+      "note": "currentPrTip=4d07afa066fd7994bbc36473242ee7a2d764ea70 evidenceGenerationHead=4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "final-assessment-artifact-p0",
+      "status": "Passed",
+      "note": "plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "final-assessment-artifact-p1",
+      "status": "Passed",
+      "note": "plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "final-assessment-artifact-evidenceConsistency",
+      "status": "Passed",
+      "note": "plan-0005-evidence-consistency-4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "result-matrix-math",
+      "status": "Passed",
+      "note": "sum=104"
+    },
+    {
+      "name": "subscenario-matrix",
+      "status": "Passed",
+      "note": "subScenarioSum=4 detail={'TEST-0005-109': {'Cook_pointer': 'Failed', 'Cook_keyboard': 'Passed', 'Pantry_pointer': 'Failed', 'Pantry_keyboard': 'Passed'}, 'Passed': 2, 'Failed': 2}"
+    },
+    {
+      "name": "gitleaks-no-commit-allowlist",
+      "status": "Passed",
+      "note": "no whole-commit allowlist"
+    },
+    {
+      "name": "gitleaks-commits-key-absent",
+      "status": "Passed",
+      "note": "commits key absent"
+    },
+    {
+      "name": "p0-container-count",
+      "status": "Passed",
+      "note": "compose=2 tc=36 peak=5"
+    },
+    {
+      "name": "p1-container-count",
+      "status": "Passed",
+      "note": "compose=2 tc=16 peak=5"
+    },
+    {
+      "name": "p0-round1-summary-current",
+      "status": "Passed",
+      "note": "native summary ok"
+    },
+    {
+      "name": "p0-round1-timing-current",
+      "status": "Passed",
+      "note": "timing Passed"
+    },
+    {
+      "name": "no-unmarked-failed-evidence",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "no-unmarked-css-zoom-evidence",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "current-files-have-prHeadSha",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "no-duplicate-logical-evidence",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "canonical-evidence-head",
+      "status": "Passed",
+      "note": "4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "identity-no-null-fields",
+      "status": "Passed",
+      "note": "no ambiguous null tip fields"
+    },
+    {
+      "name": "canonical-artifact-ids",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "canonical-container-counts",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "no-obsolete-completion-console",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "pr-head-sha-recorded",
+      "status": "Passed",
+      "note": "4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "checked-out-sha-recorded",
+      "status": "Passed",
+      "note": "4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "integrated-sha-pin",
+      "status": "Passed",
+      "note": "b94abd9a83fe29d88b095e3e9a42f10d01c05414"
+    }
+  ],
+  "summary": {
+    "passed": 70,
+    "failed": 0
+  }
+}

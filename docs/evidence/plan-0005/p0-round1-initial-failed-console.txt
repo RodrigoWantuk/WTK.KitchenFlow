@@ -1,0 +1,378 @@
+==> PLAN-0005 group: environment
+[plan-0005-env] Validating Compose config
+[plan-0005-env] Starting shared postgres + keycloak
+ Container compose-keycloak-1 Running 
+ Container compose-postgres-1 Running 
+ Container compose-postgres-1 Waiting 
+ Container compose-postgres-1 Healthy 
+[plan-0005-env] Waiting for PostgreSQL readiness
+[plan-0005-env] Waiting for Keycloak readiness
+[plan-0005-env] Restoring tools and applying migrations
+  Determinando os projetos a serem restaurados...
+  /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.SharedKernel/KitchenFlow.SharedKernel.csproj restaurado (em 410 ms).
+  /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Modules.Profiles/KitchenFlow.Modules.Profiles.csproj restaurado (em 433 ms).
+  /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Modules.Identity/KitchenFlow.Modules.Identity.csproj restaurado (em 428 ms).
+  /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Modules.Inventory/KitchenFlow.Modules.Inventory.csproj restaurado (em 425 ms).
+  /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.UnitTests/KitchenFlow.UnitTests.csproj restaurado (em 744 ms).
+  /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.ArchitectureTests/KitchenFlow.ArchitectureTests.csproj restaurado (em 744 ms).
+  /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj restaurado (em 321 ms).
+  /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Infrastructure/KitchenFlow.Infrastructure.csproj restaurado (em 922 ms).
+  /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Api/KitchenFlow.Api.csproj restaurado (em 921 ms).
+  KitchenFlow.SharedKernel -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.SharedKernel/bin/Release/net10.0/KitchenFlow.SharedKernel.dll
+  KitchenFlow.Modules.Identity -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Modules.Identity/bin/Release/net10.0/KitchenFlow.Modules.Identity.dll
+  KitchenFlow.Modules.Inventory -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Modules.Inventory/bin/Release/net10.0/KitchenFlow.Modules.Inventory.dll
+  KitchenFlow.Modules.Profiles -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Modules.Profiles/bin/Release/net10.0/KitchenFlow.Modules.Profiles.dll
+  KitchenFlow.UnitTests -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.UnitTests/bin/Release/net10.0/KitchenFlow.UnitTests.dll
+  KitchenFlow.Infrastructure -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Infrastructure/bin/Release/net10.0/KitchenFlow.Infrastructure.dll
+  KitchenFlow.Api -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/src/KitchenFlow.Api/bin/Release/net10.0/KitchenFlow.Api.dll
+  KitchenFlow.ArchitectureTests -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.ArchitectureTests/bin/Release/net10.0/KitchenFlow.ArchitectureTests.dll
+  KitchenFlow.IntegrationTests -> /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/bin/Release/net10.0/KitchenFlow.IntegrationTests.dll
+
+Compilação com êxito.
+    0 Aviso(s)
+    0 Erro(s)
+
+Tempo Decorrido 00:00:06.10
+An error occurred using the connection to database '' on server 'tcp://127.0.0.1:5432'.
+Npgsql.NpgsqlException (0x80004005): No password has been provided but the backend requires one (in SASL/SCRAM-SHA-256)
+   at Npgsql.Internal.NpgsqlConnector.AuthenticateSASL(List`1 mechanisms, String username, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.Authenticate(String username, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.Open()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenDbConnection(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternal(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.Open(Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReader(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.Migrations.HistoryRepository.GetAppliedMigrations()
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlHistoryRepository.GetAppliedMigrations()
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlMigrator.Migrate(String targetMigration)
+   at Microsoft.EntityFrameworkCore.Design.Internal.MigrationsOperations.UpdateDatabase(String targetMigration, String connectionString, String contextType)
+   at Microsoft.EntityFrameworkCore.Design.OperationExecutor.UpdateDatabaseImpl(String targetMigration, String connectionString, String contextType)
+   at Microsoft.EntityFrameworkCore.Design.OperationExecutor.UpdateDatabase.<>c__DisplayClass0_0.<.ctor>b__0()
+   at Microsoft.EntityFrameworkCore.Design.OperationExecutor.OperationBase.Execute(Action action)
+No password has been provided but the backend requires one (in SASL/SCRAM-SHA-256)
+==> PLAN-0005 group: backend-domain-and-http
+Execução de teste para /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.UnitTests/bin/Release/net10.0/KitchenFlow.UnitTests.dll (.NETCoreApp,Version=v10.0)
+Execução de teste para /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.ArchitectureTests/bin/Release/net10.0/KitchenFlow.ArchitectureTests.dll (.NETCoreApp,Version=v10.0)
+1 arquivos de teste no total corresponderam ao padrão especificado.
+Execução de teste para /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/bin/Release/net10.0/KitchenFlow.IntegrationTests.dll (.NETCoreApp,Version=v10.0)
+1 arquivos de teste no total corresponderam ao padrão especificado.
+1 arquivos de teste no total corresponderam ao padrão especificado.
+Arquivo de resultados: /home/rodrigo/Repos/GIT/WTK.KitchenFlow/docs/evidence/plan-0005/reports/trx/plan0005-p0-_net10.0_20260801125848.trx
+
+Aprovado!  – Com falha:     0, Aprovado:    46, Ignorado:     0, Total:    46, Duração: 207 ms - KitchenFlow.UnitTests.dll (net10.0)
+Arquivo de resultados: /home/rodrigo/Repos/GIT/WTK.KitchenFlow/docs/evidence/plan-0005/reports/trx/plan0005-p0-_net10.0_20260801125849.trx
+
+Aprovado!  – Com falha:     0, Aprovado:    14, Ignorado:     0, Total:    14, Duração: 134 ms - KitchenFlow.ArchitectureTests.dll (net10.0)
+Arquivo de resultados: /home/rodrigo/Repos/GIT/WTK.KitchenFlow/docs/evidence/plan-0005/reports/trx/plan0005-p0-_net10.0_20260801130056.trx
+
+Aprovado!  – Com falha:     0, Aprovado:    55, Ignorado:     0, Total:    55, Duração: 2 m 7 s - KitchenFlow.IntegrationTests.dll (net10.0)
+==> PLAN-0005 group: real-keycloak-oidc
+file:///home/rodrigo/Repos/GIT/WTK.KitchenFlow/scripts/plan-0005/keycloak-p0-auth.mjs:48
+  throw new Error(`Timed out waiting for ${description}${lastError ? `: ${lastError.message}` : ""}.`);
+        ^
+
+Error: Timed out waiting for KitchenFlow HTTPS endpoint.
+    at waitFor (file:///home/rodrigo/Repos/GIT/WTK.KitchenFlow/scripts/plan-0005/keycloak-p0-auth.mjs:48:9)
+    at async startBrowser (file:///home/rodrigo/Repos/GIT/WTK.KitchenFlow/scripts/plan-0005/keycloak-p0-auth.mjs:148:5)
+    at async file:///home/rodrigo/Repos/GIT/WTK.KitchenFlow/scripts/plan-0005/keycloak-p0-auth.mjs:293:17
+
+Node.js v24.18.0
+==> PLAN-0005 group: migrations
+A ferramenta 'dotnet-ef' (versão '10.0.4') foi restaurada. Comandos disponíveis: dotnet-ef
+
+A restauração foi bem-sucedida.
+DROP DATABASE
+NOTICE:  database "kitchenflow_plan0005_idempotent" does not exist, skipping
+CREATE DATABASE
+CREATE TABLE
+START TRANSACTION
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+COMMIT
+START TRANSACTION
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+COMMIT
+START TRANSACTION
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+COMMIT
+START TRANSACTION
+DO
+DO
+COMMIT
+START TRANSACTION
+DO
+DO
+DO
+COMMIT
+START TRANSACTION
+DO
+DO
+DO
+COMMIT
+START TRANSACTION
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+COMMIT
+START TRANSACTION
+DO
+DO
+DO
+COMMIT
+CREATE TABLE
+NOTICE:  relation "__EFMigrationsHistory" already exists, skipping
+START TRANSACTION
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+COMMIT
+START TRANSACTION
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+COMMIT
+START TRANSACTION
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+COMMIT
+START TRANSACTION
+DO
+DO
+COMMIT
+START TRANSACTION
+DO
+DO
+DO
+COMMIT
+START TRANSACTION
+DO
+DO
+DO
+COMMIT
+START TRANSACTION
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+DO
+COMMIT
+START TRANSACTION
+DO
+DO
+DO
+COMMIT
+==> PLAN-0005 group: browser-e2e-frontend-production
+{
+  "testId": "TEST-0005-FRONTEND-PRODUCTION-INVENTORY",
+  "status": "Blocked",
+  "reason": "Production inventory adapter/session projection not implemented",
+  "markers": {
+    "FeatureUnavailable": false,
+    "unavailableSession": true,
+    "liveInventoryClient": false
+  },
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414"
+}
+yarn run v1.22.22
+$ REACT_APP_FRONTEND_MODE=prototype craco build
+(node:2920154) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Creating an optimized production build...
+Compiled successfully.
+
+File sizes after gzip:
+
+  213.8 kB  build/static/js/main.c3e94243.js
+  11.79 kB  build/static/css/main.f67cd1e9.css
+
+The project was built assuming it is hosted at /.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+You may serve it with a static server:
+
+  yarn global add serve
+  serve -s build
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+
+Done in 10.14s.
+file:///home/rodrigo/Repos/GIT/WTK.KitchenFlow/scripts/plan-0005/firefox-zoom-pointer-keyboard.mjs:7
+const { firefox } = require("../../apps/frontend/node_modules/playwright");
+                    ^
+
+ReferenceError: require is not defined in ES module scope, you can use import instead
+    at file:///home/rodrigo/Repos/GIT/WTK.KitchenFlow/scripts/plan-0005/firefox-zoom-pointer-keyboard.mjs:7:21
+    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+    at async node:internal/modules/esm/loader:643:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.18.0
+==> PLAN-0005 group: security-automation
+yarn run v1.22.22
+$ node scripts/audit-policy.js
+Audit advisories considered: 1
+Allowlisted exceptions: 1
+Dependency audit policy passed (allowlist-aware).
+Done in 1.65s.
+{
+  "plan": "PLAN-0005",
+  "round": "P0-round-1",
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+  "startedAtUtc": "2026-08-01T15:58:31Z",
+  "endedAtUtc": "2026-08-01T16:01:57Z",
+  "containerCount": 2,
+  "startupAndTotal": {
+    "totalSeconds": 206,
+    "teardownSeconds": 0
+  },
+  "groups": [
+    {
+      "name": "environment",
+      "exitCode": 1,
+      "durationSeconds": 13,
+      "status": "Failed"
+    },
+    {
+      "name": "backend-domain-and-http",
+      "exitCode": 0,
+      "durationSeconds": 132,
+      "status": "Passed"
+    },
+    {
+      "name": "real-keycloak-oidc",
+      "exitCode": 1,
+      "durationSeconds": 31,
+      "status": "Failed"
+    },
+    {
+      "name": "migrations",
+      "exitCode": 0,
+      "durationSeconds": 4,
+      "status": "Passed"
+    },
+    {
+      "name": "browser-e2e-frontend-production",
+      "exitCode": 1,
+      "durationSeconds": 10,
+      "status": "Failed"
+    },
+    {
+      "name": "security-automation",
+      "exitCode": 0,
+      "durationSeconds": 16,
+      "status": "Passed"
+    }
+  ],
+  "overall": "Failed",
+  "frontendProductionInventory": {
+    "testId": "TEST-0005-FRONTEND-PRODUCTION-INVENTORY",
+    "status": "Blocked",
+    "reason": "Production inventory adapter/session projection not implemented",
+    "markers": {
+      "FeatureUnavailable": false,
+      "unavailableSession": true,
+      "liveInventoryClient": false
+    },
+    "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414"
+  },
+  "keycloakSummary": null
+}

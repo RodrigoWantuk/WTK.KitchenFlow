@@ -1,0 +1,48 @@
+{
+  "plan": "PLAN-0005",
+  "group": "openapi-p1",
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+  "openapiContractGitObjectId": "0cc5050ced6c43daf69538ad1af3fee135871e58",
+  "results": [
+    {
+      "testId": "TEST-0005-081",
+      "status": "Passed",
+      "note": "Committed OpenAPI parses as 3.1 with paths"
+    },
+    {
+      "testId": "TEST-0005-082",
+      "status": "Passed",
+      "note": "Intentional temporary contract change is detectable by diff"
+    },
+    {
+      "testId": "TEST-0005-082-RUNTIME",
+      "status": "Passed",
+      "note": "Runtime export matches committed snapshot"
+    },
+    {
+      "testId": "TEST-0005-083",
+      "status": "Blocked",
+      "note": "No generated TypeScript OpenAPI client package exists yet under packages/ or apps/frontend (adapters/live documents future consumption)."
+    },
+    {
+      "testId": "TEST-0005-084",
+      "status": "Passed",
+      "note": "Covered by existing integration assertions that success bodies omit localized prose (suite evidence)"
+    },
+    {
+      "testId": "TEST-0005-085",
+      "status": "Passed",
+      "note": "Covered by ApiAuthenticationTests Problem Details assertions"
+    },
+    {
+      "testId": "TEST-0005-LINT",
+      "status": "Passed",
+      "note": "redocly/openapi lint via scripts/backend/lint-openapi.sh"
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "blocked": 1
+  }
+}

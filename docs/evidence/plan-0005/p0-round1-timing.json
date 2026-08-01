@@ -1,0 +1,97 @@
+{
+  "plan": "PLAN-0005",
+  "round": "P0-round-1",
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+  "prHeadSha": "cabd2c23addd3c8ab741b5075ec6d33f37f9e359",
+  "checkedOutCommitSha": "6ad36ba3fa0ab9c1ad2460004798662d3780b446",
+  "evidenceGenerationSha": "cabd2c23addd3c8ab741b5075ec6d33f37f9e359",
+  "startedAtUtc": "2026-08-01T20:18:11Z",
+  "endedAtUtc": "2026-08-01T20:22:49Z",
+  "containers": {
+    "composeServiceCount": 2,
+    "composeServices": [
+      "keycloak",
+      "postgres"
+    ],
+    "testcontainersCreated": 36,
+    "testcontainerImages": [
+      "postgres:18.4",
+      "testcontainers/ryuk:0.14.0"
+    ],
+    "maximumConcurrentContainers": 5,
+    "totalContainerInstancesCreated": 38
+  },
+  "composeServiceCount": 2,
+  "startupAndTotal": {
+    "totalSeconds": 278,
+    "teardownSeconds": 0
+  },
+  "groups": [
+    {
+      "name": "environment",
+      "exitCode": 0,
+      "durationSeconds": 104,
+      "status": "Passed"
+    },
+    {
+      "name": "backend-domain-and-http",
+      "exitCode": 0,
+      "durationSeconds": 86,
+      "status": "Passed"
+    },
+    {
+      "name": "real-keycloak-oidc",
+      "exitCode": 0,
+      "durationSeconds": 11,
+      "status": "Passed"
+    },
+    {
+      "name": "migrations",
+      "exitCode": 0,
+      "durationSeconds": 3,
+      "status": "Passed"
+    },
+    {
+      "name": "browser-e2e-frontend-production",
+      "exitCode": 0,
+      "durationSeconds": 64,
+      "status": "Passed"
+    },
+    {
+      "name": "security-automation",
+      "exitCode": 0,
+      "durationSeconds": 10,
+      "status": "Passed"
+    },
+    {
+      "name": "firefox-pointer-keyboard-200",
+      "status": "ConditionalPassResidual",
+      "durationSeconds": null,
+      "exitCode": 0,
+      "pointerFailed": true,
+      "keyboardFailed": false,
+      "issues": [
+        21,
+        22
+      ]
+    }
+  ],
+  "overall": "Passed",
+  "frontendProductionInventory": {
+    "testId": "TEST-0005-FRONTEND-PRODUCTION-INVENTORY",
+    "status": "Blocked",
+    "reason": "Production inventory adapter/session projection not implemented",
+    "markers": {
+      "FeatureUnavailable": true,
+      "unavailableSession": true,
+      "liveInventoryClient": false
+    },
+    "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414"
+  },
+  "keycloakSummary": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0,
+    "blocked": 0
+  }
+}
