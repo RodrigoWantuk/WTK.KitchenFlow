@@ -61,15 +61,28 @@ function ReservedBar({ item, tr }: { item: any; tr: (k: string) => string }) {
   );
 }
 
-function PantryItem({ item, tr }: { item: any; tr: (k: string) => string }) {
+/**
+ * Pantry list card: detail navigation and shortfall action are sibling controls
+ * (no interactive nesting).
+ */
+export function PantryItemCard({
+  item,
+  tr,
+}: {
+  item: any;
+  tr: (k: string) => string;
+}) {
   const Icon = locIcon[item.location] || PackageIcon;
   return (
-    <Link
-      to={`/app/despensa/${item.id}`}
+    <Card
       data-testid={`pantry-item-${item.id}`}
-      className="block"
+      className="p-4 card-hover space-y-2"
     >
-      <Card className="p-4 card-hover">
+      <Link
+        to={`/app/despensa/${item.id}`}
+        data-testid={`pantry-item-link-${item.id}`}
+        className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
         <div className="flex items-start gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary/70 text-foreground/80">
             <Icon className="h-4 w-4" />
@@ -93,7 +106,6 @@ function PantryItem({ item, tr }: { item: any; tr: (k: string) => string }) {
                 <ApproxBlob v={item.availability} />
               )}
             </div>
-            <ReservedBar item={item} tr={tr} />
             <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
               <span>{tr(`pantry.locations.${item.location}`)}</span>
               {item.expiry && (
@@ -105,8 +117,9 @@ function PantryItem({ item, tr }: { item: any; tr: (k: string) => string }) {
             </div>
           </div>
         </div>
-      </Card>
-    </Link>
+      </Link>
+      <ReservedBar item={item} tr={tr} />
+    </Card>
   );
 }
 
@@ -181,7 +194,7 @@ export default function Pantry() {
           ) : (
             <div className="grid gap-3 md:grid-cols-2">
               {filtered.map((i) => (
-                <PantryItem key={i.id} item={i} tr={tr} />
+                <PantryItemCard key={i.id} item={i} tr={tr} />
               ))}
             </div>
           )}

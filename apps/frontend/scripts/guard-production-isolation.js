@@ -23,6 +23,20 @@ function assertNotIncludes(rel, patterns, label) {
 }
 
 assertNotIncludes(
+  "src/app/ProductionApp.tsx",
+  [
+    'from "@/lib/store"',
+    'from "@/lib/mockData"',
+    "adapters/mock",
+    'from "@/components/ScenarioBar"',
+    "SEED_PANTRY",
+    "cocinaris_state_v1",
+    "sharedMockPreparationRouteRepository",
+  ],
+  "production app",
+);
+
+assertNotIncludes(
   "src/app/runtime/createProductionRuntime.ts",
   [
     "adapters/mock",
@@ -41,7 +55,9 @@ assertNotIncludes(
   "preparation provider",
 );
 
-const provider = read("src/features/preparation-route/PreparationRouteProvider.tsx");
+const provider = read(
+  "src/features/preparation-route/PreparationRouteProvider.tsx",
+);
 if (!provider.includes("repository: PreparationRouteRepository")) {
   failures.push("PreparationRouteProvider must require an injected repository");
 }
@@ -52,7 +68,10 @@ if (!appShell.includes("enableScenarioBar")) {
 }
 
 if (failures.length) {
-  console.error("Production isolation guard failed:\n" + failures.map((f) => ` - ${f}`).join("\n"));
+  console.error(
+    "Production isolation guard failed:\n" +
+      failures.map((f) => ` - ${f}`).join("\n"),
+  );
   process.exit(1);
 }
 

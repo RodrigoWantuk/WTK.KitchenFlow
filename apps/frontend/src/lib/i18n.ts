@@ -1247,15 +1247,18 @@ export const languages = [
 
 export type LangCode = (typeof languages)[number]["code"];
 
-/** Resolves a dotted message key; returns the key when missing. */
-export function t(lang: string, key: string): string {
+/**
+ * Resolves a dotted message key.
+ * Leaves may be strings or nested arrays/objects used by prototype pages
+ * (e.g. `landing.steps`). Returns the key when the path is missing.
+ */
+export function t(lang: string, key: string): any {
   const parts = key.split(".");
   let node: any = dict[lang] ?? dict["pt-BR"];
   for (const p of parts) {
-    if (node == null || typeof node === "string") return key;
-    if (Array.isArray(node)) return key;
+    if (node == null || typeof node !== "object") return key;
     node = node[p];
   }
-  if (typeof node === "string") return node;
-  return key;
+  if (node === undefined) return key;
+  return node;
 }

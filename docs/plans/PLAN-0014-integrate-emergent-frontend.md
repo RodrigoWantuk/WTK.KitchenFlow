@@ -246,7 +246,7 @@ Convert and type, in dependency order:
 - [x] Reserved/free/shortfall bar complete from projections.
 - [x] Shopping review represents availability and reservations; only shortfall is sent.
 - [x] No authoritative reservation/inventory arithmetic in presentation components.
-- [x] Mock and production isolated; Emergent deps removed.
+- [x] Mock and production isolated; Emergent deps removed. **Historical claim superseded by PLAN-0015** — PLAN-0014 isolation was incomplete (shared store/fixtures still reachable); true PrototypeApp/ProductionApp separation and bundle inspection are owned by PLAN-0015.
 - [x] Build, lint, typecheck, and tests green (pre–Phase 8 baseline).
 - [x] Assets audited; CI active; docs complete.
 - [x] Draft PR open against `main`; no unrelated changes; no merge.

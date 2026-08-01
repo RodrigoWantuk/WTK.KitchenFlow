@@ -8,13 +8,26 @@ const config = {
   enableHealthCheck: process.env.ENABLE_HEALTH_CHECK === "true",
 };
 
-const frontendMode = (process.env.REACT_APP_FRONTEND_MODE || "prototype")
+const frontendModeRaw = (process.env.REACT_APP_FRONTEND_MODE || "")
   .trim()
   .toLowerCase();
+let frontendMode = frontendModeRaw;
+if (!frontendMode) {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      'REACT_APP_FRONTEND_MODE is required for production builds. Use yarn build / yarn build:production (production) or yarn build:prototype.',
+    );
+  }
+  frontendMode = process.env.NODE_ENV === "test" ? "test" : "prototype";
+}
 if (!["prototype", "production", "test"].includes(frontendMode)) {
   throw new Error(
     `Invalid REACT_APP_FRONTEND_MODE="${process.env.REACT_APP_FRONTEND_MODE}". Expected prototype|production|test.`,
   );
+}
+
+if (frontendMode === "production") {
+  process.env.GENERATE_SOURCEMAP = process.env.GENERATE_SOURCEMAP || "false";
 }
 
 function makeDevServerV5Compatible(devServerConfig) {
@@ -91,6 +104,7 @@ let webpackConfig = {
         ...jestConfig.moduleNameMapper,
         "^@/(.*)$": "<rootDir>/src/$1",
         "^react-router-dom$": "<rootDir>/node_modules/react-router-dom/dist/index.js",
+        "^react-router/dom$": "<rootDir>/node_modules/react-router/dist/development/dom-export.js",
         "^react-router$": "<rootDir>/node_modules/react-router/dist/development/index.js",
       };
       jestConfig.transformIgnorePatterns = [
@@ -130,6 +144,10 @@ let webpackConfig = {
               __dirname,
               "src/app/runtime/createPrototypeRuntime.production.ts",
             ),
+          ),
+          new webpack.NormalModuleReplacementPlugin(
+            /[\\/]app[\\/]PrototypeApp$/,
+            path.resolve(__dirname, "src/app/PrototypeApp.production.ts"),
           ),
         );
       }

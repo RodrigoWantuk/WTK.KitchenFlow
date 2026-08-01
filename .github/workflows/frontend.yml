@@ -36,11 +36,19 @@ jobs:
         run: yarn test
       - name: TypeScript-only source guard
         run: yarn guard:ts-only
+      - name: Build mode guard
+        run: yarn guard:build-mode
       - name: Production isolation (static)
         run: yarn guard:production-isolation
+      - name: Build (production default)
+        run: yarn build
+      - name: Inspect production bundle
+        run: yarn inspect:production-bundle
       - name: Build prototype
         run: yarn build:prototype
-      - name: Build production
+      - name: Build production (explicit)
         run: yarn build:production
+      - name: Inspect production bundle (explicit)
+        run: yarn inspect:production-bundle
       - name: Dependency audit (allowlist-aware)
         run: yarn audit:policy

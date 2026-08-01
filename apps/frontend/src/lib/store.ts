@@ -147,7 +147,8 @@ export interface StoreContextValue extends StoreState, StoreActions {
   smartAvailable: boolean;
   scenarioError: string | null;
   recipes: RecipeWithMatch[];
-  tr: (key: string) => string;
+  /** Resolves i18n keys; may return nested arrays/objects for prototype pages. */
+  tr: (key: string) => any;
 }
 
 const StoreCtx = createContext<StoreContextValue | null>(null);

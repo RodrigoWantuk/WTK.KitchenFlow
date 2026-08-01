@@ -225,16 +225,13 @@ export function RouteChainView({
                         it.requiredForTarget &&
                         it.targetRecipeId === activeCook.targetRecipeId &&
                         it.id === lastRequiredId ? (
-                          <div className="mt-2">
-                            <Button
-                              size="sm"
-                              data-testid={`chain-item-cook-${activeCook.targetRecipeId}`}
-                              onClick={() => startCook(activeCook)}
-                            >
-                              <ChefHat className="mr-1 h-3.5 w-3.5" />
-                              {tr("plan.route.cookNow")}
-                            </Button>
-                          </div>
+                          <p
+                            className="mt-2 text-[11px] text-primary"
+                            data-testid={`chain-item-unlocked-${activeCook.targetRecipeId}`}
+                          >
+                            {activeCook.forTitle} —{" "}
+                            {tr("plan.route.readyToCook")}
+                          </p>
                         ) : null}
                       </div>
                     </li>

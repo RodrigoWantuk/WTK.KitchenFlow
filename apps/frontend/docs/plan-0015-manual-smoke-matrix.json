@@ -1,0 +1,72 @@
+{
+  "generatedAt": "2026-08-01T00:52:19.686Z",
+  "baseUrl": "http://localhost:3000",
+  "mode": "prototype",
+  "results": [
+    {
+      "check": "360px: Landing→Access→Home→Pantry→Plan",
+      "result": "Passed",
+      "notes": ""
+    },
+    {
+      "check": "360px touch/mobile nav",
+      "result": "Passed",
+      "notes": "bottomnav click"
+    },
+    {
+      "check": "768px: Landing→Access→Home→Pantry→Plan",
+      "result": "Passed",
+      "notes": ""
+    },
+    {
+      "check": "1280px: Landing→Access→Home→Pantry→Plan",
+      "result": "Passed",
+      "notes": ""
+    },
+    {
+      "check": "1280px keyboard carousel focus",
+      "result": "Passed",
+      "notes": ""
+    },
+    {
+      "check": "200% zoom Landing→Home",
+      "result": "Passed",
+      "notes": "CSS zoom=2 after home"
+    },
+    {
+      "check": "touch/mobile viewport: Landing→Access→Home→Pantry→Plan",
+      "result": "Passed",
+      "notes": ""
+    },
+    {
+      "check": "prefers-reduced-motion: Landing→Access→Home→Pantry→Plan",
+      "result": "Passed",
+      "notes": ""
+    },
+    {
+      "check": "locale pt-BR",
+      "result": "Passed",
+      "notes": "landing + shell switch when present"
+    },
+    {
+      "check": "locale en",
+      "result": "Passed",
+      "notes": "landing + shell switch when present"
+    },
+    {
+      "check": "locale es",
+      "result": "Passed",
+      "notes": "landing + shell switch when present"
+    },
+    {
+      "check": "Despensa déficit → compras review",
+      "result": "Passed",
+      "notes": ""
+    },
+    {
+      "check": "CTA Cozinhar navegação",
+      "result": "Passed",
+      "notes": "via chain: http://localhost:3000/app/cozinhar/r3?sourcePreparationRouteId=prep-route-bean-soup&relatedPlanEntryId=pl-route-r3"
+    }
+  ]
+}

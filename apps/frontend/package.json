@@ -62,15 +62,17 @@
   },
   "scripts": {
     "start": "REACT_APP_FRONTEND_MODE=prototype craco start",
-    "build": "REACT_APP_FRONTEND_MODE=prototype craco build",
+    "build": "REACT_APP_FRONTEND_MODE=production GENERATE_SOURCEMAP=false craco build",
     "build:prototype": "REACT_APP_FRONTEND_MODE=prototype craco build",
-    "build:production": "REACT_APP_FRONTEND_MODE=production craco build",
+    "build:production": "REACT_APP_FRONTEND_MODE=production GENERATE_SOURCEMAP=false craco build",
     "test": "REACT_APP_FRONTEND_MODE=test craco test --watchAll=false",
     "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,css,md}\"",
     "guard:ts-only": "node scripts/guard-ts-only.js",
     "guard:production-isolation": "node scripts/guard-production-isolation.js",
+    "guard:build-mode": "node scripts/guard-build-mode.js",
+    "inspect:production-bundle": "node scripts/inspect-production-bundle.js",
     "audit:policy": "node scripts/audit-policy.js"
   },
   "browserslist": {

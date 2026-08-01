@@ -12,18 +12,30 @@ const ALLOWED: ReadonlySet<string> = new Set([
 
 /**
  * Resolves and validates `REACT_APP_FRONTEND_MODE`.
- * Defaults to `prototype` for local UX continuity; production builds must set the env explicitly in CI.
+ *
+ * - Development / test may omit the var and default to `prototype` / `test`.
+ * - Production builds (`NODE_ENV=production`) **must** set the mode explicitly;
+ *   missing mode never silently becomes prototype.
  */
 export function resolveFrontendMode(
   raw: string | undefined = process.env.REACT_APP_FRONTEND_MODE,
+  nodeEnv: string | undefined = process.env.NODE_ENV,
 ): FrontendMode {
-  const value = (raw ?? "prototype").trim().toLowerCase();
-  if (!ALLOWED.has(value)) {
+  const trimmed = (raw ?? "").trim().toLowerCase();
+  if (!trimmed) {
+    if (nodeEnv === "test") return "test";
+    if (nodeEnv === "development") return "prototype";
     throw new Error(
-      `Invalid REACT_APP_FRONTEND_MODE="${raw ?? ""}". Expected prototype|production|test.`,
+      'REACT_APP_FRONTEND_MODE is required when NODE_ENV is not "development" or "test". ' +
+        "Refusing to default to prototype for production builds.",
     );
   }
-  return value as FrontendMode;
+  if (!ALLOWED.has(trimmed)) {
+    throw new Error(
+      `Invalid REACT_APP_FRONTEND_MODE="${raw}". Expected prototype|production|test.`,
+    );
+  }
+  return trimmed as FrontendMode;
 }
 
 /** Validated mode for the current bundle. */

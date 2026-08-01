@@ -43,6 +43,29 @@ describe("production isolation", () => {
     expect(() => resolveFrontendMode("live")).toThrow(
       /Invalid REACT_APP_FRONTEND_MODE/,
     );
+    expect(() => resolveFrontendMode("", "production")).toThrow(
+      /required when NODE_ENV/,
+    );
+    expect(resolveFrontendMode("", "development")).toBe("prototype");
+  });
+
+  it("production app module does not import store or mockData", () => {
+    const source = readSrc("app/ProductionApp.tsx");
+    expect(source).not.toMatch(/from ["']@\/lib\/store["']/);
+    expect(source).not.toMatch(/from ["']@\/lib\/mockData["']/);
+    expect(source).not.toMatch(/adapters\/mock/);
+    expect(source).not.toMatch(/from ["']@\/components\/ScenarioBar["']/);
+    expect(source).not.toMatch(/SEED_PANTRY|SEED_PLAN|SEED_SHOPPING/);
+  });
+
+  it("default yarn build script is production fail-closed", () => {
+    const scripts = (
+      JSON.parse(readFileSync(join(frontendRoot, "package.json"), "utf8")) as {
+        scripts: Record<string, string>;
+      }
+    ).scripts;
+    expect(scripts.build).toMatch(/FRONTEND_MODE=production/);
+    expect(scripts.build).not.toMatch(/FRONTEND_MODE=prototype/);
   });
 
   it("production composition root does not use mock preparation repository", () => {
