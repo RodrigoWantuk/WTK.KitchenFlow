@@ -1,0 +1,857 @@
+{
+  "plan": "PLAN-0015",
+  "classification": "automated headed native-browser-zoom smoke",
+  "check": "Automated headed native-browser-zoom smoke",
+  "testedMainSha": "da295932cd678eef5b8559c39217e19f101d7a80",
+  "evidenceBranchHead": "25aa10c39dff3fbdc6ab978a64adc941b3246040",
+  "frontendImplementationSha": "e248126346d60c99df82e9c1e9f1954a07e68da2",
+  "startedAt": "2026-08-01T15:08:33.390Z",
+  "finishedAt": "2026-08-01T15:09:37.388Z",
+  "operatingSystem": "Linux 6.12.96+deb13-amd64 (x64)",
+  "host": "NOTEBOOK-DEB-RODRIGO",
+  "windowResolution": {
+    "width": 1280,
+    "height": 720
+  },
+  "requiredScenarioIds": [
+    "chrome/production/Landing",
+    "chrome/production/Access",
+    "chrome/production/FeatureUnavailable",
+    "chrome/production/Language_selector",
+    "chrome/prototype/Home",
+    "chrome/prototype/Pantry",
+    "chrome/prototype/Planning_dialog",
+    "chrome/prototype/Shopping",
+    "chrome/prototype/Carousel_home",
+    "chrome/prototype/Cook_CTA",
+    "chrome/prototype/Item_detail_navigation",
+    "firefox/production/Landing",
+    "firefox/production/Access",
+    "firefox/production/FeatureUnavailable",
+    "firefox/production/Language_selector",
+    "firefox/prototype/Home",
+    "firefox/prototype/Pantry",
+    "firefox/prototype/Planning_dialog",
+    "firefox/prototype/Shopping",
+    "firefox/prototype/Carousel_home",
+    "firefox/prototype/Cook_CTA",
+    "firefox/prototype/Item_detail_navigation"
+  ],
+  "commands": {
+    "install": "yarn install --frozen-lockfile",
+    "productionBuild": "yarn build:production",
+    "prototypeBuild": "yarn build:prototype",
+    "validateEvidence": "node scripts/frontend/validate-zoom-evidence.mjs"
+  },
+  "browsers": {
+    "chrome": "140.0.7339.186",
+    "firefox": "141.0"
+  },
+  "chromeNativeZoom": {
+    "browser": "chrome",
+    "baselineInnerWidthAt100": 1280,
+    "zoomedInnerWidth": 640,
+    "widthRatio": 2,
+    "calculatedZoomPercent": 200,
+    "numberOfZoomInActions": 5,
+    "numberOfZoomOutActions": 0,
+    "zoomConfirmed200": true,
+    "status": "Passed",
+    "reason": null
+  },
+  "firefoxNativeZoom": {
+    "browser": "firefox",
+    "baselineInnerWidthAt100": 1366,
+    "zoomedInnerWidth": 683,
+    "widthRatio": 2,
+    "calculatedZoomPercent": 200,
+    "numberOfZoomInActions": 6,
+    "numberOfZoomOutActions": 0,
+    "zoomConfirmed200": true,
+    "status": "Passed",
+    "reason": null
+  },
+  "scenarios": [
+    {
+      "defects": [],
+      "browser": "chrome",
+      "browserVersion": "140.0.7339.186",
+      "mode": "production",
+      "surface": "Landing",
+      "startPath": "/",
+      "action": "goto + layout assertions",
+      "expectedPath": "/",
+      "actualPath": "/",
+      "expectedState": "readable; no overflow",
+      "actualState": {
+        "bodyTextLength": 352,
+        "overflowDelta": 0,
+        "snippet": "C\nCocinaris\nPT-BR\nEN\nES\nEntrar\nCocinaris\n\nO KitchenFlow ajuda a transformar alimentos dispon\u00edveis em refei\u00e7\u00f5es \u00fateis.\n\nA"
+      },
+      "assertion": "landing readable with controls; no overflow",
+      "status": "Passed",
+      "layout": {
+        "innerWidth": 640,
+        "innerHeight": 298,
+        "outerWidth": 1280,
+        "outerHeight": 683,
+        "scrollWidth": 632,
+        "clientWidth": 632,
+        "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "pathname": "/",
+        "bodyTextLength": 352
+      },
+      "id": "chrome/production/Landing",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/production_Landing_png"
+    },
+    {
+      "defects": [],
+      "browser": "chrome",
+      "browserVersion": "140.0.7339.186",
+      "mode": "production",
+      "surface": "Access",
+      "startPath": "/acesso",
+      "action": "goto + layout assertions",
+      "expectedPath": "/acesso",
+      "actualPath": "/acesso",
+      "expectedState": "readable; no overflow",
+      "actualState": {
+        "bodyTextLength": 116,
+        "overflowDelta": 0,
+        "snippet": "Servi\u00e7o indispon\u00edvel\n\nBuilds de produ\u00e7\u00e3o n\u00e3o aceitam credenciais locais. \u00c9 necess\u00e1rio login gerenciado pelo backend."
+      },
+      "assertion": "access FeatureUnavailable messaging present; no overflow",
+      "status": "Passed",
+      "layout": {
+        "innerWidth": 640,
+        "innerHeight": 298,
+        "outerWidth": 1280,
+        "outerHeight": 683,
+        "scrollWidth": 640,
+        "clientWidth": 640,
+        "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "pathname": "/acesso",
+        "bodyTextLength": 116
+      },
+      "id": "chrome/production/Access",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/production_Access_png"
+    },
+    {
+      "defects": [],
+      "browser": "chrome",
+      "browserVersion": "140.0.7339.186",
+      "mode": "production",
+      "surface": "FeatureUnavailable",
+      "startPath": "/app/hoje",
+      "action": "goto + layout assertions",
+      "expectedPath": "/app/hoje",
+      "actualPath": "/app/hoje",
+      "expectedState": "readable; no overflow",
+      "actualState": {
+        "bodyTextLength": 176,
+        "overflowDelta": 0,
+        "snippet": "Cocinaris\n\nFuncionalidade indispon\u00edvel\n\nAdapters live n\u00e3o est\u00e3o integrados. A produ\u00e7\u00e3o n\u00e3o faz fallback para dados mock "
+      },
+      "assertion": "FeatureUnavailable messaging; no mock demo CTA; no overflow",
+      "status": "Passed",
+      "layout": {
+        "innerWidth": 640,
+        "innerHeight": 298,
+        "outerWidth": 1280,
+        "outerHeight": 683,
+        "scrollWidth": 640,
+        "clientWidth": 640,
+        "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "pathname": "/app/hoje",
+        "bodyTextLength": 176
+      },
+      "id": "chrome/production/FeatureUnavailable",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/production_FeatureUnavailable_png"
+    },
+    {
+      "defects": [],
+      "browser": "chrome",
+      "browserVersion": "140.0.7339.186",
+      "mode": "production",
+      "surface": "Language_selector",
+      "startPath": "/",
+      "action": "change production locale via desktop buttons",
+      "expectedPath": "/",
+      "actualPath": "/",
+      "expectedState": "tagline changes with locale and restores",
+      "actualState": {
+        "triggerSelector": "[data-testid=production-lang-en]",
+        "accessibleNamePresent": true,
+        "bodyTextBefore": "O KitchenFlow ajuda a transformar alimentos dispon\u00edveis em refei\u00e7\u00f5es \u00fateis.",
+        "bodyTextAfter": "KitchenFlow helps transform available food into useful meals.",
+        "restored": "O KitchenFlow ajuda a transformar alimentos dispon\u00edveis em refei\u00e7\u00f5es \u00fateis.",
+        "overflowDelta": 0,
+        "stringChanged": true
+      },
+      "assertion": "locale buttons change known tagline; no overflow; restore works",
+      "status": "Passed",
+      "id": "chrome/production/Language_selector",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/production_Language_selector_png"
+    },
+    {
+      "defects": [],
+      "browser": "chrome",
+      "browserVersion": "140.0.7339.186",
+      "mode": "prototype",
+      "surface": "Home",
+      "startPath": "/app/hoje",
+      "action": "goto + layout assertions",
+      "expectedPath": "/app/hoje",
+      "actualPath": "/app/hoje",
+      "expectedState": "readable; no overflow",
+      "actualState": {
+        "bodyTextLength": 842,
+        "overflowDelta": 0,
+        "snippet": "Prototype mode \u2014 synthetic data and scenario tooling are active. Not a production session.\nC\nCocinaris\nPT-BR\n\nOl\u00e1, Marin"
+      },
+      "assertion": "prototype home readable with controls",
+      "status": "Passed",
+      "layout": {
+        "innerWidth": 640,
+        "innerHeight": 298,
+        "outerWidth": 1280,
+        "outerHeight": 683,
+        "scrollWidth": 632,
+        "clientWidth": 632,
+        "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "pathname": "/app/hoje",
+        "bodyTextLength": 842
+      },
+      "id": "chrome/prototype/Home",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/prototype_Home_png"
+    },
+    {
+      "defects": [],
+      "browser": "chrome",
+      "browserVersion": "140.0.7339.186",
+      "mode": "prototype",
+      "surface": "Pantry",
+      "startPath": "/app/despensa",
+      "action": "goto + layout assertions",
+      "expectedPath": "/app/despensa",
+      "actualPath": "/app/despensa",
+      "expectedState": "readable; no overflow",
+      "actualState": {
+        "bodyTextLength": 897,
+        "overflowDelta": 0,
+        "snippet": "Prototype mode \u2014 synthetic data and scenario tooling are active. Not a production session.\nC\nCocinaris\nPT-BR\nDespensa\n\n1"
+      },
+      "assertion": "prototype pantry readable with controls",
+      "status": "Passed",
+      "layout": {
+        "innerWidth": 640,
+        "innerHeight": 298,
+        "outerWidth": 1280,
+        "outerHeight": 683,
+        "scrollWidth": 632,
+        "clientWidth": 632,
+        "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "pathname": "/app/despensa",
+        "bodyTextLength": 897
+      },
+      "id": "chrome/prototype/Pantry",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/prototype_Pantry_png"
+    },
+    {
+      "defects": [],
+      "browser": "chrome",
+      "browserVersion": "140.0.7339.186",
+      "mode": "prototype",
+      "surface": "Planning_dialog",
+      "startPath": "/app/planejamento",
+      "action": "open dialog via open-reality-changed; Escape close",
+      "expectedPath": "/app/planejamento",
+      "actualPath": "/app/planejamento",
+      "expectedState": "dialog opens with name, closes, focus returns",
+      "actualState": {
+        "triggerSelector": "[data-testid=open-reality-changed]",
+        "dialogSelector": "[role=dialog]",
+        "dialogName": "A realidade mudou",
+        "opened": true,
+        "closeMethod": "Escape",
+        "closed": true,
+        "focusReturned": true
+      },
+      "assertion": "trigger click; role=dialog visible with name; Escape hides; focus returns to trigger",
+      "status": "Passed",
+      "id": "chrome/prototype/Planning_dialog",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/prototype_Planning_dialog_png"
+    },
+    {
+      "defects": [],
+      "browser": "chrome",
+      "browserVersion": "140.0.7339.186",
+      "mode": "prototype",
+      "surface": "Shopping",
+      "startPath": "/app/compras",
+      "action": "goto + layout assertions",
+      "expectedPath": "/app/compras",
+      "actualPath": "/app/compras",
+      "expectedState": "readable; no overflow",
+      "actualState": {
+        "bodyTextLength": 454,
+        "overflowDelta": 0,
+        "snippet": "Prototype mode \u2014 synthetic data and scenario tooling are active. Not a production session.\nC\nCocinaris\nPT-BR\nCompras\n\n1/"
+      },
+      "assertion": "prototype shopping readable with controls",
+      "status": "Passed",
+      "layout": {
+        "innerWidth": 640,
+        "innerHeight": 298,
+        "outerWidth": 1280,
+        "outerHeight": 683,
+        "scrollWidth": 632,
+        "clientWidth": 632,
+        "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "pathname": "/app/compras",
+        "bodyTextLength": 454
+      },
+      "id": "chrome/prototype/Shopping",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/prototype_Shopping_png"
+    },
+    {
+      "defects": [],
+      "browser": "chrome",
+      "browserVersion": "140.0.7339.186",
+      "mode": "prototype",
+      "surface": "Carousel_home",
+      "startPath": "/app/hoje",
+      "action": "focus carousel list; ArrowRight",
+      "expectedPath": "/app/hoje",
+      "actualPath": "/app/hoje",
+      "expectedState": "scroll position or active/visible item changes",
+      "actualState": {
+        "before": {
+          "scrollLeft": 0,
+          "activeItemId": "home-route-card-n2",
+          "activeItemText": "08:00Pr\u00f3xima a\u00e7\u00e3oCozinhar o feij\u00e3oPara: Sopa de feij\u00e3oCome\u00e7ar agoraConclu\u00edda",
+          "cardCount": 5
+        },
+        "after": {
+          "scrollLeft": 240,
+          "activeItemId": "home-route-card-n2",
+          "activeItemText": "08:00Pr\u00f3xima a\u00e7\u00e3oCozinhar o feij\u00e3oPara: Sopa de feij\u00e3oCome\u00e7ar agoraConclu\u00edda",
+          "visibleItemId": "home-route-card-n2"
+        },
+        "changed": true
+      },
+      "assertion": "activeItem/scrollLeft/visible indicator changes after ArrowRight",
+      "status": "Passed",
+      "id": "chrome/prototype/Carousel_home",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/prototype_Carousel_home_png"
+    },
+    {
+      "defects": [],
+      "browser": "chrome",
+      "browserVersion": "140.0.7339.186",
+      "mode": "prototype",
+      "surface": "Cook_CTA",
+      "startPath": "/app/hoje",
+      "action": "activate Cook CTA sugg-open-r2",
+      "expectedPath": "/app/receitas/r2",
+      "actualPath": "/app/receitas/r2",
+      "expectedState": "navigate to recipe/cook destination",
+      "actualState": {
+        "sourcePath": "/app/hoje",
+        "href": "/app/receitas/r2",
+        "bodyTextBefore": "Prototype mode \u2014 synthetic data and scenario tooling are active. Not a production session.\nC\nCocinaris\nPT-BR\n\nOl\u00e1, Marina.\n\nO que vamos cozinhar hoje?\nPlanejado para agora\nRequer prepara\u00e7\u00e3o\n1 faltante",
+        "bodyTextAfter": "Prototype mode \u2014 synthetic data and scenario tooling are active. Not a production session.\nC\nCocinaris\nPT-BR\nVoltar\nOmelete verde de espinafre\n\nR\u00e1pido, leve e resolve o espinafre que est\u00e1 pedindo aten",
+        "visibleDestinationStateBefore": 0,
+        "visibleDestinationStateAfter": 0,
+        "navigated": true,
+        "pathOk": true,
+        "dialogAppeared": false,
+        "clickMode": "click"
+      },
+      "assertion": "actualPath === href OR cook destination dialog/panel newly visible (not body keyword alone)",
+      "status": "Passed",
+      "id": "chrome/prototype/Cook_CTA",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/prototype_Cook_CTA_png"
+    },
+    {
+      "defects": [],
+      "browser": "chrome",
+      "browserVersion": "140.0.7339.186",
+      "mode": "prototype",
+      "surface": "Item_detail_navigation",
+      "startPath": "/app/despensa",
+      "action": "activate pantry item link",
+      "expectedPath": "/app/despensa/p1",
+      "actualPath": "/app/despensa/p1",
+      "expectedState": "actualPath becomes href; detail heading present",
+      "actualState": {
+        "href": "/app/despensa/p1",
+        "itemId": "p1",
+        "sourcePath": "/app/despensa",
+        "heading": "Arroz integral",
+        "linkClickNavigation": true,
+        "directRouteReachability": "not_used",
+        "clickMode": "click",
+        "clickError": null
+      },
+      "assertion": "click or Enter activation; actualPath === href; heading non-empty; no page.goto fallback",
+      "status": "Passed",
+      "id": "chrome/prototype/Item_detail_navigation",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/chrome/prototype_Item_detail_navigation_png"
+    },
+    {
+      "defects": [],
+      "browser": "firefox",
+      "browserVersion": "141.0",
+      "mode": "production",
+      "surface": "Landing",
+      "startPath": "/",
+      "action": "goto + layout assertions",
+      "expectedPath": "/",
+      "actualPath": "/",
+      "expectedState": "readable; no overflow",
+      "actualState": {
+        "bodyTextLength": 313,
+        "overflowDelta": 0,
+        "snippet": "C\nCocinaris\nPT-BR\nEN\nES\nEnter\nCocinaris\n\nKitchenFlow helps transform available food into useful meals.\n\nAuthenticated pr"
+      },
+      "assertion": "landing readable with controls; no overflow",
+      "status": "Passed",
+      "layout": {
+        "innerWidth": 683,
+        "innerHeight": 315,
+        "outerWidth": 682,
+        "outerHeight": 357,
+        "scrollWidth": 683,
+        "clientWidth": 683,
+        "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "pathname": "/",
+        "bodyTextLength": 313
+      },
+      "id": "firefox/production/Landing",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/production_Landing_png"
+    },
+    {
+      "defects": [],
+      "browser": "firefox",
+      "browserVersion": "141.0",
+      "mode": "production",
+      "surface": "Access",
+      "startPath": "/acesso",
+      "action": "goto + layout assertions",
+      "expectedPath": "/acesso",
+      "actualPath": "/acesso",
+      "expectedState": "readable; no overflow",
+      "actualState": {
+        "bodyTextLength": 106,
+        "overflowDelta": 0,
+        "snippet": "Service unavailable\n\nProduction builds do not accept local credentials. Backend-managed login is required."
+      },
+      "assertion": "access FeatureUnavailable messaging present; no overflow",
+      "status": "Passed",
+      "layout": {
+        "innerWidth": 683,
+        "innerHeight": 315,
+        "outerWidth": 682,
+        "outerHeight": 357,
+        "scrollWidth": 683,
+        "clientWidth": 683,
+        "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "pathname": "/acesso",
+        "bodyTextLength": 106
+      },
+      "id": "firefox/production/Access",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/production_Access_png"
+    },
+    {
+      "defects": [],
+      "browser": "firefox",
+      "browserVersion": "141.0",
+      "mode": "production",
+      "surface": "FeatureUnavailable",
+      "startPath": "/app/hoje",
+      "action": "goto + layout assertions",
+      "expectedPath": "/app/hoje",
+      "actualPath": "/app/hoje",
+      "expectedState": "readable; no overflow",
+      "actualState": {
+        "bodyTextLength": 154,
+        "overflowDelta": 0,
+        "snippet": "Cocinaris\n\nFeature unavailable\n\nLive adapters are not integrated. Production does not fall back to mock pantry, recipes,"
+      },
+      "assertion": "FeatureUnavailable messaging; no mock demo CTA; no overflow",
+      "status": "Passed",
+      "layout": {
+        "innerWidth": 683,
+        "innerHeight": 315,
+        "outerWidth": 682,
+        "outerHeight": 357,
+        "scrollWidth": 683,
+        "clientWidth": 683,
+        "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "pathname": "/app/hoje",
+        "bodyTextLength": 154
+      },
+      "id": "firefox/production/FeatureUnavailable",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/production_FeatureUnavailable_png"
+    },
+    {
+      "defects": [],
+      "browser": "firefox",
+      "browserVersion": "141.0",
+      "mode": "production",
+      "surface": "Language_selector",
+      "startPath": "/",
+      "action": "change production locale via desktop buttons",
+      "expectedPath": "/",
+      "actualPath": "/",
+      "expectedState": "tagline changes with locale and restores",
+      "actualState": {
+        "triggerSelector": "[data-testid=production-lang-en]",
+        "accessibleNamePresent": true,
+        "bodyTextBefore": "KitchenFlow helps transform available food into useful meals.",
+        "bodyTextAfter": "KitchenFlow helps transform available food into useful meals.",
+        "restored": "O KitchenFlow ajuda a transformar alimentos dispon\u00edveis em refei\u00e7\u00f5es \u00fateis.",
+        "overflowDelta": 0,
+        "stringChanged": true
+      },
+      "assertion": "locale buttons change known tagline; no overflow; restore works",
+      "status": "Passed",
+      "id": "firefox/production/Language_selector",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/production_Language_selector_png"
+    },
+    {
+      "defects": [],
+      "browser": "firefox",
+      "browserVersion": "141.0",
+      "mode": "prototype",
+      "surface": "Home",
+      "startPath": "/app/hoje",
+      "action": "goto + layout assertions",
+      "expectedPath": "/app/hoje",
+      "actualPath": "/app/hoje",
+      "expectedState": "readable; no overflow",
+      "actualState": {
+        "bodyTextLength": 842,
+        "overflowDelta": 0,
+        "snippet": "Prototype mode \u2014 synthetic data and scenario tooling are active. Not a production session.\nC\nCocinaris\nPT-BR\n\nOl\u00e1, Marin"
+      },
+      "assertion": "prototype home readable with controls",
+      "status": "Passed",
+      "layout": {
+        "innerWidth": 683,
+        "innerHeight": 315,
+        "outerWidth": 682,
+        "outerHeight": 357,
+        "scrollWidth": 683,
+        "clientWidth": 683,
+        "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "pathname": "/app/hoje",
+        "bodyTextLength": 842
+      },
+      "id": "firefox/prototype/Home",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/prototype_Home_png"
+    },
+    {
+      "defects": [],
+      "browser": "firefox",
+      "browserVersion": "141.0",
+      "mode": "prototype",
+      "surface": "Pantry",
+      "startPath": "/app/despensa",
+      "action": "goto + layout assertions",
+      "expectedPath": "/app/despensa",
+      "actualPath": "/app/despensa",
+      "expectedState": "readable; no overflow",
+      "actualState": {
+        "bodyTextLength": 891,
+        "overflowDelta": 0,
+        "snippet": "Prototype mode \u2014 synthetic data and scenario tooling are active. Not a production session.\nC\nCocinaris\nPT-BR\nDespensa\n\n1"
+      },
+      "assertion": "prototype pantry readable with controls",
+      "status": "Passed",
+      "layout": {
+        "innerWidth": 683,
+        "innerHeight": 315,
+        "outerWidth": 682,
+        "outerHeight": 357,
+        "scrollWidth": 683,
+        "clientWidth": 683,
+        "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "pathname": "/app/despensa",
+        "bodyTextLength": 891
+      },
+      "id": "firefox/prototype/Pantry",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/prototype_Pantry_png"
+    },
+    {
+      "defects": [],
+      "browser": "firefox",
+      "browserVersion": "141.0",
+      "mode": "prototype",
+      "surface": "Planning_dialog",
+      "startPath": "/app/planejamento",
+      "action": "open dialog via open-reality-changed; Escape close",
+      "expectedPath": "/app/planejamento",
+      "actualPath": "/app/planejamento",
+      "expectedState": "dialog opens with name, closes, focus returns",
+      "actualState": {
+        "triggerSelector": "[data-testid=open-reality-changed]",
+        "dialogSelector": "[role=dialog]",
+        "dialogName": "A realidade mudou",
+        "opened": true,
+        "closeMethod": "Escape",
+        "closed": true,
+        "focusReturned": true
+      },
+      "assertion": "trigger click; role=dialog visible with name; Escape hides; focus returns to trigger",
+      "status": "Passed",
+      "id": "firefox/prototype/Planning_dialog",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/prototype_Planning_dialog_png"
+    },
+    {
+      "defects": [],
+      "browser": "firefox",
+      "browserVersion": "141.0",
+      "mode": "prototype",
+      "surface": "Shopping",
+      "startPath": "/app/compras",
+      "action": "goto + layout assertions",
+      "expectedPath": "/app/compras",
+      "actualPath": "/app/compras",
+      "expectedState": "readable; no overflow",
+      "actualState": {
+        "bodyTextLength": 454,
+        "overflowDelta": 0,
+        "snippet": "Prototype mode \u2014 synthetic data and scenario tooling are active. Not a production session.\nC\nCocinaris\nPT-BR\nCompras\n\n1/"
+      },
+      "assertion": "prototype shopping readable with controls",
+      "status": "Passed",
+      "layout": {
+        "innerWidth": 683,
+        "innerHeight": 315,
+        "outerWidth": 682,
+        "outerHeight": 357,
+        "scrollWidth": 683,
+        "clientWidth": 683,
+        "devicePixelRatio": 2,
+        "visualViewportScale": 1,
+        "pathname": "/app/compras",
+        "bodyTextLength": 454
+      },
+      "id": "firefox/prototype/Shopping",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/prototype_Shopping_png"
+    },
+    {
+      "defects": [],
+      "browser": "firefox",
+      "browserVersion": "141.0",
+      "mode": "prototype",
+      "surface": "Carousel_home",
+      "startPath": "/app/hoje",
+      "action": "focus carousel list; ArrowRight",
+      "expectedPath": "/app/hoje",
+      "actualPath": "/app/hoje",
+      "expectedState": "scroll position or active/visible item changes",
+      "actualState": {
+        "before": {
+          "scrollLeft": 0,
+          "activeItemId": "home-route-card-n2",
+          "activeItemText": "08:00Pr\u00f3xima a\u00e7\u00e3oCozinhar o feij\u00e3oPara: Sopa de feij\u00e3oCome\u00e7ar agoraConclu\u00edda",
+          "cardCount": 5
+        },
+        "after": {
+          "scrollLeft": 239,
+          "activeItemId": "home-route-card-n2",
+          "activeItemText": "08:00Pr\u00f3xima a\u00e7\u00e3oCozinhar o feij\u00e3oPara: Sopa de feij\u00e3oCome\u00e7ar agoraConclu\u00edda",
+          "visibleItemId": "home-route-card-n2"
+        },
+        "changed": true
+      },
+      "assertion": "activeItem/scrollLeft/visible indicator changes after ArrowRight",
+      "status": "Passed",
+      "id": "firefox/prototype/Carousel_home",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/prototype_Carousel_home_png"
+    },
+    {
+      "defects": [],
+      "browser": "firefox",
+      "browserVersion": "141.0",
+      "mode": "prototype",
+      "surface": "Cook_CTA",
+      "startPath": "/app/hoje",
+      "action": "activate Cook CTA sugg-open-r2",
+      "expectedPath": "/app/receitas/r2",
+      "actualPath": "/app/receitas/r2",
+      "expectedState": "navigate to recipe/cook destination",
+      "actualState": {
+        "sourcePath": "/app/hoje",
+        "href": "/app/receitas/r2",
+        "bodyTextBefore": "Prototype mode \u2014 synthetic data and scenario tooling are active. Not a production session.\nC\nCocinaris\nPT-BR\n\nOl\u00e1, Marina.\n\nO que vamos cozinhar hoje?\nPlanejado para agora\nRequer prepara\u00e7\u00e3o\n1 faltante",
+        "bodyTextAfter": "Prototype mode \u2014 synthetic data and scenario tooling are active. Not a production session.\nC\nCocinaris\nPT-BR\nVoltar\nOmelete verde de espinafre\n\nR\u00e1pido, leve e resolve o espinafre que est\u00e1 pedindo aten",
+        "visibleDestinationStateBefore": 0,
+        "visibleDestinationStateAfter": 0,
+        "navigated": true,
+        "pathOk": true,
+        "dialogAppeared": false,
+        "clickMode": "enter-after-click-blocked"
+      },
+      "assertion": "actualPath === href OR cook destination dialog/panel newly visible (not body keyword alone)",
+      "status": "Passed",
+      "id": "firefox/prototype/Cook_CTA",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/prototype_Cook_CTA_png"
+    },
+    {
+      "defects": [],
+      "browser": "firefox",
+      "browserVersion": "141.0",
+      "mode": "prototype",
+      "surface": "Item_detail_navigation",
+      "startPath": "/app/despensa",
+      "action": "activate pantry item link",
+      "expectedPath": "/app/despensa/p1",
+      "actualPath": "/app/despensa/p1",
+      "expectedState": "actualPath becomes href; detail heading present",
+      "actualState": {
+        "href": "/app/despensa/p1",
+        "itemId": "p1",
+        "sourcePath": "/app/despensa",
+        "heading": "Arroz integral",
+        "linkClickNavigation": true,
+        "directRouteReachability": "not_used",
+        "clickMode": "enter-after-click-blocked",
+        "clickError": null
+      },
+      "assertion": "click or Enter activation; actualPath === href; heading non-empty; no page.goto fallback",
+      "status": "Passed",
+      "id": "firefox/prototype/Item_detail_navigation",
+      "zoomContext": {
+        "zoomConfirmed200": true,
+        "zoomStatus": "Passed"
+      },
+      "screenshotArtifact": "docs/evidence/plan-0015/artifacts/firefox/prototype_Item_detail_navigation_png"
+    }
+  ],
+  "summary": {
+    "passed": 22,
+    "failed": 0,
+    "blocked": 0,
+    "notApplicable": 0,
+    "unsupported": 0,
+    "incomplete": 0,
+    "total": 22,
+    "requiredTotal": 22,
+    "requiredMissing": [],
+    "disposition": "Passed",
+    "zoomDisposition": "Passed"
+  },
+  "zoomDisposition": "Passed",
+  "deferred": {
+    "manualVisualReview": "Deferred \u2014 non-blocking in the current phase; candidate for a later pre-release validation plan",
+    "nvdaManualAudit": "Deferred \u2014 non-blocking in the current phase; candidate for a later pre-release validation plan",
+    "voiceOverManualAudit": "Deferred \u2014 non-blocking in the current phase; candidate for a later pre-release validation plan",
+    "manualExploratoryCharters": "Deferred \u2014 non-blocking in the current phase",
+    "manualScreenshotInspection": "Deferred \u2014 non-blocking in the current phase"
+  },
+  "executed": {
+    "automatedHeadedNativeZoom": "Executed",
+    "manualVisualReview": "Deferred by owner decision",
+    "fullNvdaVoiceOverAudit": "Deferred by owner decision"
+  },
+  "defects": []
+}

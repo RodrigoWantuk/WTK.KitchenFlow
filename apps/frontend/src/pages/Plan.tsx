@@ -872,6 +872,7 @@ export default function Plan() {
       <RealityChangedDialog
         open={realityOpen}
         onOpenChange={setRealityOpen}
+        returnFocusSelector="[data-testid=open-reality-changed]"
         onApply={() => toast.success("Recuperação localizada aplicada")}
       />
       <ScheduleComponentDialog

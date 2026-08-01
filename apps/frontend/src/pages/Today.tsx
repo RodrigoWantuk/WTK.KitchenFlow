@@ -439,6 +439,7 @@ export default function Today() {
       <RealityChangedDialog
         open={realityOpen}
         onOpenChange={setRealityOpen}
+        returnFocusSelector="[data-testid=today-open-reality]"
         onApply={() => toast.success("Recuperação localizada aplicada")}
       />
 
