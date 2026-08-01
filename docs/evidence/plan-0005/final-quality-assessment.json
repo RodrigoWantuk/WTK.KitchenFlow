@@ -6,17 +6,17 @@
   "countingUnit": {
     "requirements": "one row per VS-REQ-* in requirements-traceability.md",
     "testIds": "one result per TEST-0005-* identifier (TEST-0005-109 is one Failed aggregate when any pointer sub-scenario Failed)",
-    "subScenarios": "independent surface×modality results under a test ID; TEST-0005-109 expands to four: Cook_pointer, Cook_keyboard, Pantry_pointer, Pantry_keyboard"
+    "subScenarios": "independent surface\u00d7modality results under a test ID; TEST-0005-109 expands to four: Cook_pointer, Cook_keyboard, Pantry_pointer, Pantry_keyboard"
   },
   "identity": {
     "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
-    "currentPrTip": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885",
+    "currentPrTip": "89fd0a9ecb57a2aa13d1b61f05af097ffbd47768",
     "evidenceGenerationHead": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885",
     "checkedOutCommitShaExample": "5680f9dff8c3a593ea57fad5a508de27349a6a7f",
-    "note": "checkedOutCommitSha may be the temporary GitHub merge ref; prHeadSha is the real branch tip."
+    "note": "currentPrTip is the PR branch tip after the completion docs commit; evidenceGenerationHead is the tip that produced P0/P1/consistency artifacts. Do not call a prior tip current exact head."
   },
   "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
-  "prHeadSha": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885",
+  "prHeadSha": "89fd0a9ecb57a2aa13d1b61f05af097ffbd47768",
   "evidenceGenerationSha": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885",
   "openapiContractGitObjectId": "0cc5050ced6c43daf69538ad1af3fee135871e58",
   "generatedAtUtc": "2026-08-01T19:05:00Z",
@@ -58,8 +58,14 @@
     "Critical": 0,
     "High": 1,
     "Medium": 2,
-    "issues": [20, 21, 22],
-    "coverageBlockedIssues": [24]
+    "issues": [
+      20,
+      21,
+      22
+    ],
+    "coverageBlockedIssues": [
+      24
+    ]
   },
   "requirementResults": {
     "Passed": 46,
@@ -104,7 +110,7 @@
     "pantryPointer": "Failed",
     "pantryKeyboard": "Passed",
     "productionIntegratedClaim": false,
-    "issuesDisposition": "Kept open Medium — native zoom reproduces pointer failure; retest after frontend fix"
+    "issuesDisposition": "Kept open Medium \u2014 native zoom reproduces pointer failure; retest after frontend fix"
   },
   "transactionRollback046": {
     "mechanism": "PostgreSQL BEFORE INSERT trigger on inventory.transactions for marker product",
@@ -122,8 +128,17 @@
       "idempotencyCount": 0
     },
     "duringOutage": {
-      "read": { "resultType": "timeout", "statusCode": null, "safeBodyValidated": true },
-      "mutation": { "resultType": "timeout", "statusCode": null, "safeBodyValidated": true, "idempotencyKey": "mutation-key-present" }
+      "read": {
+        "resultType": "timeout",
+        "statusCode": null,
+        "safeBodyValidated": true
+      },
+      "mutation": {
+        "resultType": "timeout",
+        "statusCode": null,
+        "safeBodyValidated": true,
+        "idempotencyKey": "mutation-key-present"
+      }
     },
     "afterRestore": {
       "quantity": 12.0,
@@ -162,16 +177,24 @@
   "containers": {
     "p0": {
       "composeServiceCount": 2,
-      "composeServices": ["keycloak", "postgres"],
+      "composeServices": [
+        "keycloak",
+        "postgres"
+      ],
       "testcontainersCreated": 0,
       "maximumConcurrentContainers": 2,
       "totalContainerInstancesCreated": 2
     },
     "p1": {
       "composeServiceCount": 2,
-      "composeServices": ["keycloak", "postgres"],
+      "composeServices": [
+        "keycloak",
+        "postgres"
+      ],
       "testcontainersCreated": 1,
-      "testcontainerImages": ["testcontainers/ryuk:0.14.0"],
+      "testcontainerImages": [
+        "testcontainers/ryuk:0.14.0"
+      ],
       "maximumConcurrentContainers": 3,
       "totalContainerInstancesCreated": 3,
       "note": "Measured peak via docker ps sampling. Label-based Testcontainers detection improved after this evidence head for future runs; short-lived Postgres Testcontainers may appear only as peak concurrency above Compose+Ryuk."
