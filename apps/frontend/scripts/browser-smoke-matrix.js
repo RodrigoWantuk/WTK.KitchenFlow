@@ -101,17 +101,27 @@ async function captureFailure(page, name) {
 }
 
 function meta() {
-  let commit = process.env.GITHUB_SHA || "";
+  let gitHead = "";
   try {
-    commit =
-      commit ||
-      execSync("git rev-parse HEAD", {
-        cwd: path.join(__dirname, "..", "..", ".."),
-        encoding: "utf8",
-      }).trim();
+    gitHead = execSync("git rev-parse HEAD", {
+      cwd: path.join(__dirname, "..", "..", ".."),
+      encoding: "utf8",
+    }).trim();
   } catch {
-    commit = commit || "unknown";
+    gitHead = "unknown";
   }
+  const eventName = process.env.GITHUB_EVENT_NAME || "local";
+  const githubSha = process.env.GITHUB_SHA || "";
+  const prHeadSha = process.env.SMOKE_PR_HEAD_SHA || "";
+  const syntheticMergeSha =
+    eventName === "pull_request" ? githubSha || "" : "";
+  const testedCodeSha =
+    process.env.SMOKE_TESTED_CODE_SHA ||
+    prHeadSha ||
+    githubSha ||
+    gitHead ||
+    "unknown";
+
   let yarnVersion = "unknown";
   let nodeVersion = process.version;
   let playwrightVersion = "unknown";
@@ -126,13 +136,25 @@ function meta() {
     /* ignore */
   }
   return {
-    commitSha: commit,
+    kind: "automated-browser-smoke",
+    evidenceNote:
+      "CI artifact only — not a versioned source-of-truth report in git",
+    testedCodeSha,
+    prHeadSha: prHeadSha || null,
+    syntheticMergeSha: syntheticMergeSha || null,
+    gitHeadSha: gitHead || null,
+    githubRunId: process.env.GITHUB_RUN_ID || null,
+    githubRunAttempt: process.env.GITHUB_RUN_ATTEMPT || null,
+    githubEventName: eventName,
+    workflowName: process.env.GITHUB_WORKFLOW || "local",
+    prototypeBaseUrl: BASE,
+    productionBaseUrl: PRODUCTION_BASE,
+    testedModes: ["prototype", "production"],
     nodeVersion,
     yarnVersion,
     playwrightVersion,
     chromiumVersion: "resolved-by-playwright",
-    frontendMode: "prototype",
-    baseUrl: BASE,
+    frontendMode: "prototype+production-static",
     timestamp: new Date().toISOString(),
     headless: HEADLESS,
     operatingSystem: `${os.platform()} ${os.release()} ${os.arch()}`,
@@ -242,8 +264,67 @@ async function run() {
     }
   }
 
-  async function assertKeyboardFocusVisible(page, label) {
-    const sample = await page.evaluate(() => {
+  async function captureElementStyles(page, testId) {
+    return page.evaluate((id) => {
+      const el = document.querySelector(`[data-testid="${id}"]`);
+      if (!el) return null;
+      const s = getComputedStyle(el);
+      return {
+        outlineStyle: s.outlineStyle,
+        outlineWidth: s.outlineWidth,
+        outlineColor: s.outlineColor,
+        boxShadow: s.boxShadow,
+        borderColor: s.borderColor,
+        borderWidth: s.borderWidth,
+        backgroundColor: s.backgroundColor,
+        isActive: document.activeElement === el,
+      };
+    }, testId);
+  }
+
+  /**
+   * Capture baseline styles while unfocused, Tab to the control, then compare.
+   */
+  async function assertKeyboardFocusVisible(page, label, candidateIds) {
+    let testId = null;
+    for (const id of candidateIds) {
+      if ((await page.locator(`[data-testid="${id}"]`).count()) > 0) {
+        testId = id;
+        break;
+      }
+    }
+    if (!testId) {
+      fail(
+        `keyboard focus-visible (${label})`,
+        `control missing (${candidateIds.join(", ")})`,
+      );
+    }
+
+    await page.evaluate(() => {
+      const active = document.activeElement;
+      if (active && typeof active.blur === "function") active.blur();
+    });
+    let baseline = await captureElementStyles(page, testId);
+    if (!baseline) {
+      fail(`keyboard focus-visible (${label})`, `element ${testId} not found`);
+    }
+    if (baseline.isActive) {
+      await page.evaluate(() => {
+        if (document.activeElement && document.activeElement !== document.body) {
+          document.activeElement.blur();
+        }
+      });
+      baseline = await captureElementStyles(page, testId);
+    }
+    const focusedId = await tabUntilTestId(page, [testId], 100);
+    if (!focusedId) {
+      fail(
+        `keyboard focus-visible (${label})`,
+        `${testId} not reachable by Tab`,
+      );
+    }
+
+    const focused = await page.evaluate(() => {
       const el = document.activeElement;
       if (!el || el === document.body) {
         return { ok: false, reason: "no activeElement" };
@@ -256,24 +337,32 @@ async function run() {
         matchesFocusVisible: el.matches(":focus-visible"),
         outlineStyle: s.outlineStyle,
         outlineWidth: s.outlineWidth,
+        outlineColor: s.outlineColor,
         boxShadow: s.boxShadow,
         borderColor: s.borderColor,
         borderWidth: s.borderWidth,
+        backgroundColor: s.backgroundColor,
       };
     });
-    if (!sample.ok) {
-      fail(`keyboard focus-visible (${label})`, sample.reason);
+    if (!focused.ok) {
+      fail(`keyboard focus-visible (${label})`, focused.reason);
     }
-    if (!sample.matchesFocusVisible) {
+    if (!focused.matchesFocusVisible) {
       fail(
         `keyboard focus-visible (${label})`,
-        `activeElement is not :focus-visible (testid=${sample.testId} tag=${sample.tag})`,
+        `activeElement is not :focus-visible (testid=${focused.testId} tag=${focused.tag})`,
       );
     }
-    if (!hasPerceptibleFocusIndicator(sample)) {
+    if (
+      !hasPerceptibleFocusIndicator({
+        matchesFocusVisible: focused.matchesFocusVisible,
+        baseline,
+        focused,
+      })
+    ) {
       fail(
         `keyboard focus-visible (${label})`,
-        `focused without perceptible indicator (outline=${sample.outlineStyle}/${sample.outlineWidth} shadow=${sample.boxShadow})`,
+        `no material focus indicator vs baseline (shadow baseline=${baseline.boxShadow} focused=${focused.boxShadow})`,
       );
     }
   }
@@ -392,32 +481,25 @@ async function run() {
       },
     );
 
-    // Keyboard-only journey (no mouse clicks) with real :focus-visible checks
+    // Keyboard-only journey (no mouse clicks) with baseline vs focused :focus-visible
     await withPage(
       { viewport: { width: 1280, height: 800 } },
       "keyboard",
       async (page) => {
         await page.goto(BASE + "/", { waitUntil: "domcontentloaded" });
-        const focusedEnter = await tabUntilTestId(page, [
+        await assertKeyboardFocusVisible(page, "landing CTA", [
           "landing-enter",
           "hero-enter",
         ]);
-        if (!focusedEnter) {
-          fail("keyboard-only", "landing enter control not reachable by Tab");
-        }
-        await assertKeyboardFocusVisible(page, "landing CTA");
         await page.keyboard.press("Enter");
         await page.waitForURL(/\/acesso/);
 
-        const focusedDemo = await tabUntilTestId(page, [
+        await assertKeyboardFocusVisible(page, "acesso/demo CTA", [
           "access-demo",
           "access-enter",
         ]);
-        if (!focusedDemo) fail("keyboard-only", "access demo not reachable");
-        await assertKeyboardFocusVisible(page, "acesso/demo CTA");
         await page.keyboard.press("Enter");
         await page.waitForURL(/\/app\/hoje/);
-        // Fresh CI localStorage defaults to filledPantry without route block — seed scenario.
         await page.evaluate(() => {
           const key = "cocinaris_state_v1";
           let state = {};
@@ -433,41 +515,50 @@ async function run() {
         await page.reload({ waitUntil: "domcontentloaded" });
         await page.waitForURL(/\/app\/hoje/);
         await page.getByTestId("home-route-block").waitFor({ timeout: 20000 });
-        const focusedCarousel = await tabUntilTestId(
-          page,
-          ["home-route-carousel-list", "home-route-open"],
-          80,
+
+        await assertKeyboardFocusVisible(page, "carousel action", [
+          "home-route-carousel-list",
+          "home-route-open",
+        ]);
+        const carouselFocused = await page.evaluate(
+          () => document.activeElement?.getAttribute("data-testid") || "",
         );
-        if (!focusedCarousel) {
-          fail("keyboard-only", "carousel control not reachable by Tab");
-        }
-        await assertKeyboardFocusVisible(page, "carousel action");
-        if (focusedCarousel === "home-route-carousel-list") {
+        if (carouselFocused === "home-route-carousel-list") {
           await page.keyboard.press("ArrowRight");
           await page.keyboard.press("ArrowLeft");
         }
-        const focusedPlan = await tabUntilTestId(page, [
+
+        await assertKeyboardFocusVisible(page, "main navigation", [
           "sidenav-plan",
           "bottomnav-plan",
         ]);
-        if (!focusedPlan) fail("keyboard-only", "plan nav not reachable");
-        await assertKeyboardFocusVisible(page, "main navigation");
         await page.keyboard.press("Enter");
         await page.waitForURL(/\/app\/planejamento/);
         await page.getByTestId("route-chain").waitFor();
-        const focusedRoute = await tabUntilTestId(
-          page,
-          ["chain-toggle-n2", "chain-toggle-n3"],
-          80,
-        );
-        if (!focusedRoute) {
-          fail("keyboard-only", "route action not reachable by Tab");
-        }
-        await assertKeyboardFocusVisible(page, "route action");
+
+        await assertKeyboardFocusVisible(page, "route action", [
+          "chain-toggle-n2",
+          "chain-toggle-n3",
+        ]);
+
+        await assertKeyboardFocusVisible(page, "settings", ["nav-settings"]);
+        await page.keyboard.press("Enter");
+        await page.waitForURL(/\/app\/ajustes/);
+
+        await assertKeyboardFocusVisible(page, "authenticated asChild CTA", [
+          "sidenav-pantry",
+          "bottomnav-pantry",
+        ]);
+        await page.keyboard.press("Enter");
+        await page.waitForURL(/\/app\/despensa/);
+        await assertKeyboardFocusVisible(page, "pantry asChild CTA", [
+          "pantry-add",
+        ]);
+
         record(
-          "keyboard-only Landing→Access→Home→carousel→Plan",
+          "keyboard-only Landing→Access→Home→carousel→Plan→Settings→Pantry",
           "Passed",
-          "Tab/Enter/Arrow only; real :focus-visible indicators",
+          "Tab/Enter/Arrow only; baseline vs focused :focus-visible",
         );
       },
     );
@@ -565,6 +656,14 @@ async function run() {
         await page.keyboard.press("ArrowRight");
         await page.getByTestId("home-route-block").waitFor();
 
+        // Open a real overlay (scenario Sheet) so reduced-motion covers an open panel.
+        let overlayOpened = false;
+        if ((await page.getByTestId("scenario-open").count()) > 0) {
+          await page.getByTestId("scenario-open").click();
+          await page.getByRole("dialog").waitFor({ timeout: 5000 });
+          overlayOpened = true;
+        }
+
         const selectors = motionRelevantSelectors();
         const samples = await page.evaluate((selectorList) => {
           function parseCssTimeSeconds(value) {
@@ -593,7 +692,9 @@ async function run() {
               if (seen.has(el)) continue;
               seen.add(el);
               const s = getComputedStyle(el);
-              const transitionDuration = parseCssTimeSeconds(s.transitionDuration);
+              const transitionDuration = parseCssTimeSeconds(
+                s.transitionDuration,
+              );
               const animationDuration = parseCssTimeSeconds(s.animationDuration);
               if (transitionDuration === 0 && animationDuration === 0) continue;
               out.push({
@@ -622,7 +723,7 @@ async function run() {
         record(
           "prefers-reduced-motion",
           "Passed",
-          `matchMedia true; carousel operable; motion samples=${samples.length}; no long durations`,
+          `matchMedia true; carousel operable; scenarioSheet=${overlayOpened}; motion samples=${samples.length}; no long durations on rendered nodes`,
         );
       },
     );

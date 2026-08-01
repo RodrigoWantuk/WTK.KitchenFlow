@@ -146,12 +146,12 @@ export default function Pantry() {
             {pantry.length} {pantry.length === 1 ? "item" : "itens"}
           </p>
         </div>
-        <Link to="/app/despensa/novo">
-          <Button data-testid="pantry-add" className="rounded-full">
+        <Button asChild data-testid="pantry-add" className="rounded-full">
+          <Link to="/app/despensa/novo">
             <Plus className="mr-1 h-4 w-4" />
             {tr("pantry.add")}
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
 
       <div className="relative">
@@ -187,9 +187,11 @@ export default function Pantry() {
           {filtered.length === 0 ? (
             <Card data-testid="pantry-empty" className="p-10 text-center">
               <p className="font-display text-xl">{tr("pantry.empty")}</p>
-              <Link to="/app/despensa/novo" className="mt-4 inline-block">
-                <Button>{tr("pantry.addFirst")}</Button>
-              </Link>
+              <Button asChild>
+                <Link to="/app/despensa/novo" className="mt-4 inline-block">
+                  {tr("pantry.addFirst")}
+                </Link>
+              </Button>
             </Card>
           ) : (
             <div className="grid gap-3 md:grid-cols-2">

@@ -105,53 +105,57 @@ export default function Recipes() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {list.map((r) => (
-          <Link
-            key={r.id}
-            to={`/app/receitas/${r.id}`}
-            data-testid={`rec-card-${r.id}`}
-            className="block"
-          >
-            <Card className="overflow-hidden card-hover">
-              <div className="relative">
-                <img
-                  src={r.image}
-                  alt={r.title}
-                  className="h-40 w-full object-cover"
-                />
-                <button
-                  data-testid={`rec-fav-${r.id}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleFavorite(r.id);
-                  }}
-                  className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-background/85 backdrop-blur"
-                >
-                  <Star
-                    className={`h-4 w-4 ${favorites.includes(r.id) ? "fill-accent text-accent" : "text-muted-foreground"}`}
+          <div key={r.id} className="relative">
+            <Link
+              to={`/app/receitas/${r.id}`}
+              data-testid={`rec-card-${r.id}`}
+              className="block"
+            >
+              <Card className="overflow-hidden card-hover">
+                <div className="relative">
+                  <img
+                    src={r.image}
+                    alt={r.title}
+                    className="h-40 w-full object-cover"
                   />
-                </button>
-                <span
-                  className={`pill absolute bottom-3 left-3 ${r.missing.length === 0 ? "bg-primary text-primary-foreground" : "bg-background/90 text-foreground"}`}
-                >
-                  {r.missing.length === 0
-                    ? tr("recipes.available")
-                    : `${tr("recipes.missing")}: ${r.missing.length}`}
-                </span>
-              </div>
-              <div className="p-4">
-                <h3 className="font-display text-lg">{r.title}</h3>
-                <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {r.totalTime} min
+                  <span
+                    className={`pill absolute bottom-3 left-3 ${r.missing.length === 0 ? "bg-primary text-primary-foreground" : "bg-background/90 text-foreground"}`}
+                  >
+                    {r.missing.length === 0
+                      ? tr("recipes.available")
+                      : `${tr("recipes.missing")}: ${r.missing.length}`}
                   </span>
-                  <span>{r.servings} porções</span>
-                  <span>{["", "Fácil", "Média", "Difícil"][r.difficulty]}</span>
                 </div>
-              </div>
-            </Card>
-          </Link>
+                <div className="p-4">
+                  <h3 className="font-display text-lg">{r.title}</h3>
+                  <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {r.totalTime} min
+                    </span>
+                    <span>{r.servings} porções</span>
+                    <span>
+                      {["", "Fácil", "Média", "Difícil"][r.difficulty]}
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            </Link>
+            <button
+              type="button"
+              data-testid={`rec-fav-${r.id}`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleFavorite(r.id);
+              }}
+              className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-background/85 backdrop-blur focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <Star
+                className={`h-4 w-4 ${favorites.includes(r.id) ? "fill-accent text-accent" : "text-muted-foreground"}`}
+              />
+            </button>
+          </div>
         ))}
       </div>
       {list.length === 0 && (

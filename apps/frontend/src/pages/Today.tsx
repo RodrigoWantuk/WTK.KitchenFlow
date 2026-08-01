@@ -49,6 +49,7 @@ function SuggestionCard({ r, tr }: { r: any; tr: (k: string) => string }) {
           alt={r.title}
           className="h-full w-full object-cover"
         />
+
         <div className="p-4">
           <span className="pill bg-secondary/70 text-foreground/80">
             <Sparkles className="h-3 w-3 text-accent" />
@@ -66,12 +67,12 @@ function SuggestionCard({ r, tr }: { r: any; tr: (k: string) => string }) {
             <span>{["", "Fácil", "Média", "Difícil"][r.difficulty]}</span>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
-            <Link to={`/app/receitas/${r.id}`}>
-              <Button size="sm" data-testid={`sugg-open-${r.id}`}>
+            <Button asChild size="sm" data-testid={`sugg-open-${r.id}`}>
+              <Link to={`/app/receitas/${r.id}`}>
                 {tr("today.startCook")}{" "}
                 <ArrowRight className="ml-1 h-3.5 w-3.5" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -196,9 +197,9 @@ export default function Today() {
                 continuar o preparo com calma.
               </p>
             </div>
-            <Link to={`/app/cozinhar/${activity.recipeId}`}>
-              <Button data-testid="activity-resume">Continuar</Button>
-            </Link>
+            <Button asChild data-testid="activity-resume">
+              <Link to={`/app/cozinhar/${activity.recipeId}`}>Continuar</Link>
+            </Button>
           </div>
         </Card>
       )}
@@ -219,6 +220,7 @@ export default function Today() {
                 alt={plannedRecipe.title}
                 className={`h-40 w-full object-cover md:h-full ${isSkipped ? "opacity-60 grayscale" : ""}`}
               />
+
               <div className="p-5">
                 <div className="flex flex-wrap items-center gap-2">
                   <span
@@ -317,43 +319,58 @@ export default function Today() {
                       >
                         {tr("today.reviewRecord")}
                       </Button>
-                      <Link to={`/app/receitas/${plannedRecipe.id}`}>
-                        <Button variant="ghost" data-testid="planned-view">
+                      <Button
+                        asChild
+                        variant="ghost"
+                        data-testid="planned-view"
+                      >
+                        <Link to={`/app/receitas/${plannedRecipe.id}`}>
                           {tr("today.viewRecipe")}
-                        </Button>
-                      </Link>
+                        </Link>
+                      </Button>
                     </>
                   ) : isSkipped ? (
                     <>
-                      <Link to={`/app/receitas/${plannedRecipe.id}`}>
-                        <Button variant="outline" data-testid="planned-view">
+                      <Button
+                        asChild
+                        variant="outline"
+                        data-testid="planned-view"
+                      >
+                        <Link to={`/app/receitas/${plannedRecipe.id}`}>
                           {tr("today.viewRecipe")}
-                        </Button>
-                      </Link>
-                      <Link to="/app/planejamento">
-                        <Button
-                          variant="ghost"
-                          data-testid="planned-replace-skipped"
-                        >
+                        </Link>
+                      </Button>
+
+                      <Button
+                        asChild
+                        variant="ghost"
+                        data-testid="planned-replace-skipped"
+                      >
+                        <Link to="/app/planejamento">
                           {tr("today.replace")}
-                        </Button>
-                      </Link>
+                        </Link>
+                      </Button>
                     </>
                   ) : (
                     <>
-                      <Link to={`/app/receitas/${plannedRecipe.id}`}>
-                        <Button data-testid="planned-open">
+                      <Button asChild data-testid="planned-open">
+                        <Link to={`/app/receitas/${plannedRecipe.id}`}>
                           {tr("today.startCook")}
-                        </Button>
-                      </Link>
+                        </Link>
+                      </Button>
+
                       <Button variant="outline" data-testid="planned-adapt">
                         {tr("today.adapt")}
                       </Button>
-                      <Link to="/app/planejamento">
-                        <Button variant="outline" data-testid="planned-replace">
+                      <Button
+                        asChild
+                        variant="outline"
+                        data-testid="planned-replace"
+                      >
+                        <Link to="/app/planejamento">
                           {tr("today.replace")}
-                        </Button>
-                      </Link>
+                        </Link>
+                      </Button>
                     </>
                   )}
                 </div>
@@ -382,11 +399,14 @@ export default function Today() {
         >
           A realidade mudou
         </Button>
-        <Link to="/app/planejamento">
-          <Button variant="outline" size="sm" data-testid="today-open-plan">
-            Abrir planejamento
-          </Button>
-        </Link>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          data-testid="today-open-plan"
+        >
+          <Link to="/app/planejamento">Abrir planejamento</Link>
+        </Button>
       </div>
 
       {showUncertaintyQ && !uncertaintyAnswer && (
@@ -566,23 +586,23 @@ export default function Today() {
               compras.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Link to="/app/despensa">
-                <Button size="sm" variant="outline">
+              <Button asChild size="sm" variant="outline">
+                <Link to="/app/despensa">
                   <ChefHat className="mr-1 h-3.5 w-3.5" />
                   Despensa
-                </Button>
-              </Link>
-              <Link to="/app/receitas">
-                <Button size="sm" variant="outline">
-                  Receitas salvas
-                </Button>
-              </Link>
-              <Link to="/app/compras">
-                <Button size="sm" variant="outline">
+                </Link>
+              </Button>
+
+              <Button asChild size="sm" variant="outline">
+                <Link to="/app/receitas">Receitas salvas</Link>
+              </Button>
+
+              <Button asChild size="sm" variant="outline">
+                <Link to="/app/compras">
                   <ShoppingBag className="mr-1 h-3.5 w-3.5" />
                   Compras
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           </Card>
         )}

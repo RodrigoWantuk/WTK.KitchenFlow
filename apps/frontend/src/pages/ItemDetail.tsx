@@ -40,11 +40,9 @@ export default function ItemDetail() {
     return (
       <div className="mx-auto max-w-xl p-6 text-center">
         <p className="font-display text-2xl">Item não encontrado.</p>
-        <Link to="/app/despensa">
-          <Button variant="outline" className="mt-4">
-            {tr("item.backToPantry")}
-          </Button>
-        </Link>
+        <Button asChild variant="outline" className="mt-4">
+          <Link to="/app/despensa">{tr("item.backToPantry")}</Link>
+        </Button>
       </div>
     );
 
@@ -199,6 +197,7 @@ export default function ItemDetail() {
                       : "descrição"
                   }
                 />
+
                 <Button data-testid="consume-confirm" onClick={doConsume}>
                   OK
                 </Button>
@@ -213,6 +212,7 @@ export default function ItemDetail() {
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder={`nova qtd em ${item.unit || ""}`}
               />
+
               <Button
                 data-testid="correct-confirm"
                 onClick={() => {

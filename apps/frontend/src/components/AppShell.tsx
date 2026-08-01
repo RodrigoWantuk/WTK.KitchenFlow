@@ -116,11 +116,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <div className="ml-auto flex items-center gap-1">
             <LangSwitch />
             <ThemeToggle />
-            <Link to="/app/ajustes" data-testid="nav-settings">
-              <Button variant="ghost" size="icon">
+            <Button asChild variant="ghost" size="icon">
+              <Link to="/app/ajustes" data-testid="nav-settings">
                 <SettingsIcon className="h-4 w-4" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
         {!smartAvailable && (

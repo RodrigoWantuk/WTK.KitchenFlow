@@ -5,14 +5,16 @@
 - **Priority:** Critical
 - **Owner:** Cursor agent (PLAN-0015)
 - **Created:** 2026-07-31
-- **Last updated:** 2026-08-01T04:45:00Z
+- **Last updated:** 2026-08-01T05:20:00Z
 - **Branch:** `agent/plan-0015-remediate-frontend-baseline`
 - **Pull request:** [Draft PR #16](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/16)
-- **Implementation SHA:** 
-- **Last CI-validated code SHA:** `720b263f493ffa15613e132c21394662d6734a49`
+- **Implementation SHA (prior reviewed head):** `11f00bdfdcd2f8139d449841c52968df587ed794`
+- **Last CI-validated code SHA (prior round):** `11f00bdfdcd2f8139d449841c52968df587ed794`
+- **Prior push workflow (green):** [Frontend #30680034509](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30680034509)
+- **Prior PR workflow (green):** [Frontend #30680035933](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30680035933)
 - **Current PR head:** consult [PR #16](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/16) metadata (`headRefOid`)
-- **Latest exact-head CI run (prior reviewed head):** [Frontend #30679221482](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30679221482) — quality + browser-smoke success on `720b263f493ffa15613e132c21394662d6734a49`
-- **Latest exact-head CI run (this review-fix round):** _(pending push)_
+- **This residual round Implementation / Last CI-validated SHA:** recorded in PR #16 body after push+CI (no self-SHA commit loop)
+- **Latest exact-head CI (this residual round):** recorded in PR #16 body (push + PR workflows + browser-smoke artifact id)
 - **Related implementation plans:** PLAN-0014 (implemented on main; remediation pending), PLAN-0005, PLAN-0011
 - **Related ADRs:** ADR-0007
 - **Dependencies:** PLAN-0014 merged via PR #14 (`4166973`) and completion docs via PR #15 (`6256011`)
@@ -144,21 +146,22 @@ This frontend is **not** declared production-ready by PLAN-0015 until the owner 
 
 ### Automated browser smoke (Playwright)
 
-Source: `apps/frontend/docs/browser-smoke/browser-smoke-report.json`  
+**Canonical evidence:** GitHub Actions artifact `browser-smoke-report` on the exact-head workflow run (see PR #16 body). Runtime JSON/HTML under `apps/frontend/docs/browser-smoke/` are gitignored and are not durable “current” evidence. Schema example: `apps/frontend/docs/browser-smoke/browser-smoke-report.schema.example.json`.
+
 Runner: `yarn smoke:browser` / CI `yarn smoke:browser:ci`  
 Dependency: direct `playwright@1.55.1` (`yarn smoke:browser:install`).
 
 | Check | Result | Notes |
 |---|---|---|
-| 360 / 768 / 1280 journeys | **Passed** | |
-| keyboard-only + real `:focus-visible` | **Passed** | landing CTA, acesso/demo, carousel, main nav, route action |
-| CSS zoom approximation | **Passed** | Explicitly **not** browser zoom — does not satisfy manual zoom gate |
-| touch/mobile (iPhone 12 device) | **Passed** | bottomnav, shortfall, route, cook |
-| prefers-reduced-motion (fail-closed) | **Passed** | `matchMedia` true; motion-relevant duration violations fail the job |
-| production locale mobile 360 | **Passed** | compact select; `kitchenflow_production_locale` only |
-| locale pt-BR / en / es (prototype) | **Passed** | selector + 3 distinct strings each |
-| Despensa shortfall → compras | **Passed** | |
-| CTA Cozinhar | **Passed** | query params present |
+| 360 / 768 / 1280 journeys | **Passed** (CI artifact) | |
+| keyboard-only baseline vs focused `:focus-visible` | **Passed** (CI artifact) | landing, acesso/demo, carousel, main nav, route, settings, pantry asChild CTA |
+| CSS zoom approximation | **Passed** (CI artifact) | Explicitly **not** browser zoom |
+| touch/mobile (iPhone 12 device) | **Passed** (CI artifact) | |
+| prefers-reduced-motion (fail-closed) | **Passed** (CI artifact) | includes open scenario Sheet when present; claims limited to rendered nodes |
+| production locale mobile 360 | **Passed** (CI artifact) | |
+| locale pt-BR / en / es (prototype) | **Passed** (CI artifact) | |
+| Despensa shortfall → compras | **Passed** (CI artifact) | |
+| CTA Cozinhar | **Passed** (CI artifact) | |
 
 ### Manual browser validation
 
@@ -191,15 +194,24 @@ Bundle inspect: zero hits for forbidden prototype tokens in production JS.
 
 ## Execution state
 
-- **Current checkpoint:** Review-fix round (Yarn audit bitmask, asChild CTAs, real focus-visible smoke, reduced-motion fail-closed, production mobile locale) landed; status `Validating`; draft PR #16.
-- **Last completed step:** Bitmask-aware `yarn audit --json`; nested Link/Button removed via `asChild`; smoke asserts `:focus-visible` + perceptible indicator; reduced-motion rejects long durations; production locale select at 360px.
+- **Current checkpoint:** Residual nesting/focus/evidence round landed; status `Validating`; draft PR #16.
+- **Last completed step:** Full-src interactive nesting remediation + AST guard; baseline/focused focus-visible smoke; smoke evidence moved to CI artifacts; plan/registry updated.
 - **Exact next action:** Owner re-reviews draft PR #16 after quality + browser-smoke CI on the new implementation SHA; agent must not merge/approve.
 - **Blockers:** Owner review required for merge and for unblocking PLAN-0011 / definitive PLAN-0005 frontend pin. Manual real zoom 200% and full AT audit remain pending.
-- **Validation performed:** typecheck, lint, format, test (78), audit:policy; CI pending after push.
-- **Working tree state:** Review-fix remediations on PLAN-0015 branch; PR remains draft.
-- **Substantial run target:** Achieved for owner re-review after review-fix fixes.
+- **Validation performed:** typecheck, lint, format, test (92), `guard:interactive-nesting`, audit:policy; CI after push.
+- **Working tree state:** Residual remediations on PLAN-0015 branch; PR remains draft.
+- **Substantial run target:** Achieved for owner re-review after residual nesting/focus/evidence fixes.
 
 ## Progress log
+
+### 2026-08-01T05:20:00Z — Cursor agent
+
+- **Checkpoint:** Residual nesting, focus-false-positive, and smoke evidence honesty; PLAN-0015 remains Validating.
+- **Prior reviewed head:** `11f00bd…` with push `30680034509` and PR `30680035933`.
+- **Changes:** AST `yarn guard:interactive-nesting` over all `src/**/*.{tsx,jsx}` (no deliberate exceptions); convert remaining Link/Button nests (AppShell, Today, Pantry, Recipes sibling fav, RecipeDetail, ItemDetail); focus helper compares baseline vs focused styles; smoke report is CI artifact-only; opens scenario Sheet under reduced-motion when present.
+- **Validation:** Local gates + 92 Jest tests; CI recorded in PR body after push.
+- **Result:** Draft PR updated for owner re-review; not Completed; not merged.
+- **Next action:** Owner review; do not merge/approve by agent.
 
 ### 2026-08-01T04:45:00Z — Cursor agent
 

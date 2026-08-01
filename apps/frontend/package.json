@@ -70,6 +70,7 @@
     "typecheck": "tsc --noEmit",
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,css,md}\"",
     "guard:ts-only": "node scripts/guard-ts-only.js",
+    "guard:interactive-nesting": "node scripts/guard-interactive-nesting.js",
     "guard:production-isolation": "node scripts/guard-production-isolation.js",
     "guard:build-mode": "node scripts/guard-build-mode.js",
     "inspect:production-bundle": "node scripts/inspect-production-bundle.js",

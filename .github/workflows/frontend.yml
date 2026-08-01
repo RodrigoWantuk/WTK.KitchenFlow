@@ -36,6 +36,8 @@ jobs:
         run: yarn test
       - name: TypeScript-only source guard
         run: yarn guard:ts-only
+      - name: Interactive nesting guard
+        run: yarn guard:interactive-nesting
       - name: Build mode guard
         run: yarn guard:build-mode
       - name: Production isolation (static)
@@ -71,6 +73,9 @@ jobs:
         run: yarn smoke:browser:ci
         env:
           SMOKE_BASE_URL: http://127.0.0.1:3000
+          SMOKE_PRODUCTION_URL: http://127.0.0.1:3001
+          SMOKE_TESTED_CODE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          SMOKE_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
       - name: Upload browser smoke artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -78,4 +83,5 @@ jobs:
           name: browser-smoke-report
           path: |
             apps/frontend/docs/browser-smoke/
-          if-no-files-found: warn
+          if-no-files-found: error
+          retention-days: 30

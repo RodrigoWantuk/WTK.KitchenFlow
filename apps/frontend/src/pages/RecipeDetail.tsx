@@ -86,12 +86,13 @@ export default function RecipeDetail() {
             </Card>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Link to={`/app/cozinhar/${r.id}`}>
-              <Button data-testid="rec-prepare">
+            <Button asChild data-testid="rec-prepare">
+              <Link to={`/app/cozinhar/${r.id}`}>
                 <ChefHat className="mr-1 h-4 w-4" />
                 {tr("recipes.startPrep")}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
+
             <Button
               data-testid="rec-add-missing"
               variant="outline"

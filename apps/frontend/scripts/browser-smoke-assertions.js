@@ -22,32 +22,104 @@ function parseCssTimeSeconds(value) {
 }
 
 /**
- * Whether focused styles include a perceptible keyboard focus indicator.
+ * @typedef {{
+ *   outlineStyle: string,
+ *   outlineWidth: string,
+ *   outlineColor: string,
+ *   boxShadow: string,
+ *   borderColor: string,
+ *   borderWidth: string,
+ *   backgroundColor: string,
+ * }} FocusStyleSample
+ */
+
+/**
+ * @param {string|null|undefined} color
+ */
+function isTransparentColor(color) {
+  const c = String(color || "")
+    .trim()
+    .toLowerCase();
+  if (!c || c === "transparent") return true;
+  const rgba = c.match(
+    /^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)$/,
+  );
+  if (rgba) {
+    const alpha = rgba[4] === undefined ? 1 : Number(rgba[4]);
+    return alpha === 0;
+  }
+  return false;
+}
+
+/**
+ * @param {FocusStyleSample} styles
+ */
+function hasVisibleOutline(styles) {
+  if (!styles) return false;
+  const width = parseFloat(styles.outlineWidth || "0");
+  return (
+    Boolean(styles.outlineStyle) &&
+    styles.outlineStyle !== "none" &&
+    width > 0 &&
+    !isTransparentColor(styles.outlineColor)
+  );
+}
+
+/**
+ * Normalize box-shadow for equality checks.
+ * @param {string|null|undefined} shadow
+ */
+function normalizeBoxShadow(shadow) {
+  const s = String(shadow || "")
+    .trim()
+    .toLowerCase();
+  if (!s || s === "none") return "none";
+  return s.replace(/\s+/g, " ");
+}
+
+/**
+ * Whether focus styles are perceptibly different from baseline.
+ * Decorative shadows present before and after focus do not count.
+ *
  * @param {{
  *   matchesFocusVisible: boolean,
- *   outlineStyle?: string,
- *   outlineWidth?: string,
- *   boxShadow?: string,
- *   borderColor?: string,
- *   borderWidth?: string,
- *   baselineBorderColor?: string,
- *   baselineBorderWidth?: string,
+ *   baseline: FocusStyleSample,
+ *   focused: FocusStyleSample,
  * }} sample
  */
 function hasPerceptibleFocusIndicator(sample) {
   if (!sample || !sample.matchesFocusVisible) return false;
-  const outlineOk =
-    Boolean(sample.outlineStyle) &&
-    sample.outlineStyle !== "none" &&
-    parseFloat(sample.outlineWidth || "0") > 0;
-  const shadow = String(sample.boxShadow || "").trim();
-  const shadowOk = Boolean(shadow) && shadow !== "none";
-  const borderChanged =
-    (sample.baselineBorderColor != null &&
-      sample.borderColor !== sample.baselineBorderColor) ||
-    (sample.baselineBorderWidth != null &&
-      sample.borderWidth !== sample.baselineBorderWidth);
-  return outlineOk || shadowOk || Boolean(borderChanged);
+  const baseline = sample.baseline;
+  const focused = sample.focused;
+  if (!baseline || !focused) return false;
+
+  const baseOutline = hasVisibleOutline(baseline);
+  const focusOutline = hasVisibleOutline(focused);
+  if (!baseOutline && focusOutline) return true;
+  if (
+    focusOutline &&
+    (focused.outlineStyle !== baseline.outlineStyle ||
+      focused.outlineWidth !== baseline.outlineWidth ||
+      focused.outlineColor !== baseline.outlineColor)
+  ) {
+    return true;
+  }
+
+  const baseShadow = normalizeBoxShadow(baseline.boxShadow);
+  const focusShadow = normalizeBoxShadow(focused.boxShadow);
+  if (baseShadow !== focusShadow && focusShadow !== "none") {
+    return true;
+  }
+
+  if (
+    focused.borderColor !== baseline.borderColor ||
+    focused.borderWidth !== baseline.borderWidth
+  ) {
+    return true;
+  }
+
+  // Background-only changes are insufficient.
+  return false;
 }
 
 /**
@@ -72,29 +144,36 @@ function evaluateReducedMotionDurations(samples, options = {}) {
 
 /**
  * CSS selectors used to collect motion-relevant nodes in the smoke page.
+ * Prefer elements actually rendered by the smoke journey.
  * @returns {string[]}
  */
 function motionRelevantSelectors() {
   return [
     "[data-testid='home-route-carousel']",
     "[data-testid='home-route-carousel'] *",
+    "[data-testid='home-route-carousel-list']",
     "[data-testid='route-chain']",
     "[data-testid='route-chain'] *",
+    "[data-testid='scenario-bar']",
+    "[data-testid='scenario-bar'] *",
+    "[data-radix-dialog-content]",
+    "[data-radix-dialog-overlay]",
+    "[role='dialog']",
+    "[data-state='open']",
     "[class*='animate-']",
     "[class*='transition']",
     "[class*='motion']",
     "[class*='duration-']",
-    "[data-state]",
-    "[role='dialog']",
-    "[data-radix-portal]",
     ".fixed",
-    ".absolute.inset-0",
   ];
 }
 
 module.exports = {
   parseCssTimeSeconds,
   hasPerceptibleFocusIndicator,
+  hasVisibleOutline,
+  isTransparentColor,
+  normalizeBoxShadow,
   evaluateReducedMotionDurations,
   motionRelevantSelectors,
 };
