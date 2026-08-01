@@ -128,6 +128,6 @@ Manual screenshot inspection: Deferred — non-blocking
 
 ## Plan impact
 
-- PLAN-0015 → **Validating** until Frontend CI is green on the evidence head; then **Completed**
+- PLAN-0015 → **Completed** (implementation Merged via PR #16; fail-closed zoom smoke Passed; Frontend CI green; PR #18 awaits owner merge)
 - PLAN-0005 → **Ready** (not started in this PR)
 - PLAN-0011 → **Blocked** by PLAN-0005

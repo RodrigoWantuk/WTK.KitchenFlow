@@ -1,22 +1,23 @@
 # PLAN-0015: Remediate and Validate the Imported Frontend Baseline
 
-- **Status:** Validating
+- **Status:** Completed
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** Cursor agent (PLAN-0015)
 - **Created:** 2026-07-31
-- **Last updated:** 2026-08-01T15:20:00Z
+- **Last updated:** 2026-08-01T15:35:00Z
 - **Branch:** `agent/plan-0015-remediate-frontend-baseline` (merged); evidence/docs on `docs/complete-plan-0015-validation` (PR #18)
 - **Pull request:** Implementation [Merged via PR #16](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/16); completion evidence [PR #18](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/18)
 - **Delivery:** PR #18 open (awaiting owner merge); implementation Merged via PR #16
 - **Frontend merge SHA:** `e248126346d60c99df82e9c1e9f1954a07e68da2`
+- **Evidence PR head:** `b7b0356409ab8bc22c1b26e1bfa0b9420d29baf6`
 - **Automated headed Chromium native zoom:** Passed (`widthRatio=2.0`, `calculatedZoomPercent=200`) — evidence [`docs/evidence/plan-0015/browser-zoom-200-validation.md`](../evidence/plan-0015/browser-zoom-200-validation.md)
 - **Automated Firefox browser/responsive smoke:** Passed
 - **Firefox exact native zoom measurement:** Passed (`widthRatio=2.0`, `calculatedZoomPercent=200`)
-- **Required zoom scenarios:** 22/22 Passed (fail-closed); validator OK locally
+- **Required zoom scenarios:** 22/22 Passed (fail-closed); validator OK; Frontend CI green
 - **Manual visual review:** Deferred — non-blocking (owner decision)
 - **NVDA/VoiceOver manual audit:** Deferred — non-blocking (owner decision)
-- **Blocker:** Awaiting Frontend CI green on PR #18 head before marking Completed
+- **Blocker:** None (owner merge of PR #18 remaining)
 - **Implementation SHA (prior reviewed head):** `11f00bdfdcd2f8139d449841c52968df587ed794`
 - **Last CI-validated code SHA (prior round):** `11f00bdfdcd2f8139d449841c52968df587ed794`
 - **Prior push workflow (green):** [Frontend #30680034509](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30680034509)
@@ -205,15 +206,23 @@ Bundle inspect: zero hits for forbidden prototype tokens in production JS.
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0015 **Validating**; fail-closed zoom evidence 22/22 Passed locally; awaiting Frontend CI green on PR #18 head.
-- **Last completed step:** Fail-closed smoke rewrite (Cook/dialog/carousel/item/language), validator + CI wiring, minimal dialog focus-restore for controlled RealityChangedDialog, local re-run Passed.
-- **Exact next action:** Confirm Frontend workflow green on exact head; then mark PLAN-0015 Completed; owner merges PR #18; do not start PLAN-0005 until merge; do not start PLAN-0011.
-- **Blockers:** Frontend CI on PR #18 head (must be green before Completed).
-- **Validation performed:** Local dual builds; headed native zoom 200% Chrome+Firefox Passed; 22 required scenarios Passed; `validate-zoom-evidence.mjs` OK; syntax check OK.
-- **Working tree state:** Evidence/scripts/docs + minimal a11y focus restore on `docs/complete-plan-0015-validation`.
-- **Substantial run target:** Fail-closed PLAN-0015 zoom gate honesty round.
+- **Current checkpoint:** PLAN-0015 **Completed**; fail-closed zoom evidence 22/22 Passed; Frontend CI green on `b7b0356`; awaiting owner merge of PR #18.
+- **Last completed step:** Fail-closed smoke + validator + CI path fix; Frontend workflow success on exact head.
+- **Exact next action:** Owner merges PR #18; then an independent agent may claim PLAN-0005. Do not start PLAN-0011. PLAN-0005 not started in this PR.
+- **Blockers:** None for PLAN-0015 completion criteria. Delivery awaits owner merge.
+- **Validation performed:** Local dual builds; headed native zoom 200% Chrome+Firefox Passed; 22 required scenarios Passed; validator OK; Frontend CI [30705436482](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30705436482) + [30705435504](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30705435504) success.
+- **Working tree state:** Evidence/scripts/docs + minimal dialog focus restore on `docs/complete-plan-0015-validation`.
+- **Substantial run target:** Achieved for fail-closed PLAN-0015 zoom gate.
 
 ## Progress log
+
+### 2026-08-01T15:35:00Z — Cursor agent
+
+- **Checkpoint:** PLAN-0015 marked **Completed** after fail-closed evidence + Frontend CI green on `b7b0356409ab8bc22c1b26e1bfa0b9420d29baf6`.
+- **CI:** PR run [30705436482](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30705436482) success; push run [30705435504](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30705435504) success (quality + browser-smoke).
+- **PLAN-0005:** Ready, not started
+- **PLAN-0011:** Blocked by PLAN-0005
+- **Next action:** Owner review/merge PR #18; no agent merge/approve
 
 ### 2026-08-01T15:25:00Z — Cursor agent
 
@@ -300,7 +309,7 @@ Bundle inspect: zero hits for forbidden prototype tokens in production JS.
 
 - [x] Acceptance criteria truthful for delivered work.
 - [x] Implementation merged via PR #16 (`e248126`); agent did not self-merge.
-- [ ] PLAN-0015 status `Completed` after fail-closed zoom evidence + Frontend CI green on PR #18 head (docs PR awaits owner merge).
+- [x] PLAN-0015 status `Completed` after fail-closed zoom evidence + Frontend CI green on PR #18 head (docs PR awaits owner merge).
 - [x] Implementation SHA vs Last CI-validated code SHA terminology documented.
 - [x] Quality + browser-smoke CI, vulns, smoke, zoom evidence, limitations listed for owner.
 - [x] AT audit explicitly deferred to PLAN-0005; PLAN-0005 Ready; PLAN-0011 Blocked.
