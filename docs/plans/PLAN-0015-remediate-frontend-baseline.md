@@ -9,9 +9,9 @@
 - **Branch:** `agent/plan-0015-remediate-frontend-baseline`
 - **Pull request:** [Draft PR #16](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/16)
 - **Implementation SHA:** `b8a3c918cb28d775ca4f64a4f8fb5169c3ce8b23`
-- **Final branch head SHA:** `2d76561a4fd90398cf160219ea386b5c5a3d2275`
-- **CI run for final head (quality):** _(filled after CI)_
-- **CI run for final head (browser-smoke):** _(filled after CI)_
+- **Final branch head SHA:** `2063802b061566bfdf62b7e5cb1d2d6f0569b896`
+- **CI run for final head (quality):** _(pending tip CI)_
+- **CI run for final head (browser-smoke):** _(pending tip CI)_
 - **Related implementation plans:** PLAN-0014 (implemented on main; remediation pending), PLAN-0005, PLAN-0011
 - **Related ADRs:** ADR-0007
 - **Dependencies:** PLAN-0014 merged via PR #14 (`4166973`) and completion docs via PR #15 (`6256011`)
