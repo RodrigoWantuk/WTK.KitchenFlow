@@ -52,3 +52,30 @@ jobs:
         run: yarn inspect:production-bundle
       - name: Dependency audit (allowlist-aware)
         run: yarn audit:policy
+
+  browser-smoke:
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: yarn
+          cache-dependency-path: apps/frontend/yarn.lock
+      - name: Install
+        run: yarn install --frozen-lockfile
+      - name: Install Playwright Chromium
+        run: yarn smoke:browser:install
+      - name: Automated browser smoke
+        run: yarn smoke:browser:ci
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+      - name: Upload browser smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-smoke-report
+          path: |
+            apps/frontend/docs/browser-smoke/
+          if-no-files-found: warn

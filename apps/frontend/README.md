@@ -32,7 +32,7 @@ Composition roots live under `src/app/runtime/`. Providers require injected adap
 
 ```bash
 cd apps/frontend
-yarn install
+yarn install --frozen-lockfile
 yarn start
 ```
 
@@ -43,12 +43,33 @@ yarn typecheck
 yarn lint
 yarn format:check
 yarn test
+yarn guard:ts-only
+yarn guard:build-mode
+yarn guard:production-isolation
+yarn build
+yarn inspect:production-bundle
 yarn build:prototype
 yarn build:production
-yarn guard:ts-only
-yarn guard:production-isolation
 yarn audit:policy
 ```
+
+### Automated browser smoke (Playwright)
+
+Playwright is a **direct** `devDependency`. Do not rely on global installs or absolute browser cache paths.
+
+```bash
+cd apps/frontend
+yarn install --frozen-lockfile
+yarn smoke:browser:install
+yarn start   # terminal 1 — prototype mode
+yarn smoke:browser   # terminal 2
+```
+
+CI uses `yarn smoke:browser:ci` (`SMOKE_MANAGE_SERVER=1`) after the quality job. Any `Failed` / `Blocked` / `Not executed` mandatory automated check exits non-zero.
+
+Reports land under `docs/browser-smoke/` (JSON + HTML; failure screenshots/traces when enabled).
+
+**Manual** browser validation (for example real browser zoom 200%) is tracked separately in PLAN-0015 and is not claimed Passed by the automated matrix.
 
 ## Mock vs live adapters
 
@@ -71,11 +92,12 @@ Presentation components consume projections. They must **not** perform authorita
 
 ## Dependency triage
 
-See [`docs/dependency-vulnerability-triage.md`](docs/dependency-vulnerability-triage.md) and `audit-allowlist.json`.
+- Vulnerabilities / allowlist: [`docs/dependency-vulnerability-triage.md`](docs/dependency-vulnerability-triage.md) and `audit-allowlist.json`
+- Incompatible Yarn resolutions (individual table): [`docs/dependency-resolution-triage.md`](docs/dependency-resolution-triage.md)
 
 ## CI
 
-GitHub Actions workflow: `.github/workflows/frontend.yml` — blocking typecheck, lint (`--max-warnings 0`), format, tests, dual builds, isolation guards, and allowlist-aware audit.
+GitHub Actions workflow: `.github/workflows/frontend.yml` — required jobs **quality** and **browser-smoke** (blocking; no `continue-on-error` / `|| true`).
 
 ## TypeScript
 

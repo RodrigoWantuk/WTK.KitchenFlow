@@ -6,13 +6,18 @@ const { validateAllowlist, parseAuditStdout, evaluateAuditPolicy } =
     validateAllowlist: (allowlist: unknown, now?: Date) => string[];
     parseAuditStdout: (stdout: string) => {
       advisories: Map<string, { module: string; severity: string }>;
+      hasSummary: boolean;
+      hasErrorEvent: boolean;
+      events: { error: unknown[]; auditSummary: unknown };
     };
     evaluateAuditPolicy: (input: {
       allowlist: unknown;
       stdout?: string;
       stderr?: string;
       status?: number | null;
-      error?: Error;
+      signal?: string | null;
+      error?: Error | null;
+      maxBufferExceeded?: boolean;
       now?: Date;
     }) => {
       ok: boolean;
@@ -49,14 +54,31 @@ function advisoryLine(overrides: Record<string, unknown> = {}): string {
   });
 }
 
+function summaryLine(
+  vulns: Partial<
+    Record<"info" | "low" | "moderate" | "high" | "critical", number>
+  > = {},
+): string {
+  return JSON.stringify({
+    type: "auditSummary",
+    data: {
+      vulnerabilities: {
+        info: 0,
+        low: 0,
+        moderate: 0,
+        high: 0,
+        critical: 0,
+        ...vulns,
+      },
+    },
+  });
+}
+
 describe("audit-policy", () => {
-  it("passes a clean audit with no advisories", () => {
+  it("passes a clean audit with summary and status 0", () => {
     const result = evaluateAuditPolicy({
       allowlist: { exceptions: [] },
-      stdout: JSON.stringify({
-        type: "auditSummary",
-        data: { vulnerabilities: {} },
-      }),
+      stdout: summaryLine(),
       status: 0,
     });
     expect(result.ok).toBe(true);
@@ -65,17 +87,17 @@ describe("audit-policy", () => {
   it("fails on unapproved advisory", () => {
     const result = evaluateAuditPolicy({
       allowlist: { exceptions: [] },
-      stdout: advisoryLine({ id: 999, module_name: "left-pad" }),
+      stdout: `${advisoryLine({ id: 999, module_name: "left-pad" })}\n${summaryLine({ high: 1 })}`,
       status: 1,
     });
     expect(result.ok).toBe(false);
     expect(result.errors.some((e) => e.includes("Unapproved"))).toBe(true);
   });
 
-  it("passes when advisory is allowlisted", () => {
+  it("passes when advisory is allowlisted with compatible summary and status", () => {
     const result = evaluateAuditPolicy({
       allowlist: { exceptions: [validException] },
-      stdout: advisoryLine(),
+      stdout: `${advisoryLine()}\n${summaryLine({ high: 1 })}`,
       status: 1,
     });
     expect(result.ok).toBe(true);
@@ -86,7 +108,7 @@ describe("audit-policy", () => {
       allowlist: {
         exceptions: [{ ...validException, remove_by: "2020-01-01" }],
       },
-      stdout: advisoryLine(),
+      stdout: `${advisoryLine()}\n${summaryLine({ high: 1 })}`,
       status: 1,
       now: new Date("2026-07-31"),
     });
@@ -99,7 +121,7 @@ describe("audit-policy", () => {
       allowlist: {
         exceptions: [{ ...validException, module: "other-package" }],
       },
-      stdout: advisoryLine(),
+      stdout: `${advisoryLine()}\n${summaryLine({ high: 1 })}`,
       status: 1,
     });
     expect(result.ok).toBe(false);
@@ -111,13 +133,27 @@ describe("audit-policy", () => {
       allowlist: {
         exceptions: [{ ...validException, severity: "moderate" }],
       },
-      stdout: advisoryLine(),
+      stdout: `${advisoryLine()}\n${summaryLine({ high: 1 })}`,
       status: 1,
     });
     expect(result.ok).toBe(false);
     expect(result.errors.some((e) => e.includes("severity mismatch"))).toBe(
       true,
     );
+  });
+
+  it("fails when allowlist patched_versions diverges", () => {
+    const result = evaluateAuditPolicy({
+      allowlist: {
+        exceptions: [{ ...validException, patched_versions: ">=9.0.0" }],
+      },
+      stdout: `${advisoryLine()}\n${summaryLine({ high: 1 })}`,
+      status: 1,
+    });
+    expect(result.ok).toBe(false);
+    expect(
+      result.errors.some((e) => e.includes("patched_versions mismatch")),
+    ).toBe(true);
   });
 
   it("fails on empty output", () => {
@@ -140,7 +176,7 @@ describe("audit-policy", () => {
     expect(result.ok).toBe(false);
     expect(
       result.errors.some(
-        (e) => e.includes("invalid JSON") || e.includes("no valid JSON"),
+        (e) => e.includes("invalid JSON") || e.includes("non-JSON"),
       ),
     ).toBe(true);
   });
@@ -167,9 +203,108 @@ describe("audit-policy", () => {
     expect(
       result.errors.some(
         (e) =>
-          e.includes("registry") || e.includes("empty") || e.includes("status"),
+          e.includes("registry") ||
+          e.includes("empty") ||
+          e.includes("missing required auditSummary") ||
+          e.includes("status"),
       ),
     ).toBe(true);
+  });
+
+  it("fails on status 1 with JSON error event", () => {
+    const result = evaluateAuditPolicy({
+      allowlist: { exceptions: [] },
+      stdout: JSON.stringify({ type: "error", data: "internal audit failure" }),
+      status: 1,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes("JSON error event"))).toBe(
+      true,
+    );
+  });
+
+  it("fails on status 0 with JSON error event", () => {
+    const result = evaluateAuditPolicy({
+      allowlist: { exceptions: [] },
+      stdout: `${JSON.stringify({ type: "error", data: "boom" })}\n${summaryLine()}`,
+      status: 0,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes("JSON error event"))).toBe(
+      true,
+    );
+  });
+
+  it("fails when advisory is present without summary", () => {
+    const result = evaluateAuditPolicy({
+      allowlist: { exceptions: [validException] },
+      stdout: advisoryLine(),
+      status: 1,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes("auditSummary"))).toBe(true);
+  });
+
+  it("fails when summary is clean but status is 1", () => {
+    const result = evaluateAuditPolicy({
+      allowlist: { exceptions: [] },
+      stdout: summaryLine(),
+      status: 1,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes("inconsistent"))).toBe(true);
+  });
+
+  it("fails when one JSON line is valid and another is invalid", () => {
+    const result = evaluateAuditPolicy({
+      allowlist: { exceptions: [] },
+      stdout: `${summaryLine()}\nnot-json`,
+      status: 0,
+    });
+    expect(result.ok).toBe(false);
+    expect(
+      result.errors.some(
+        (e) => e.includes("invalid JSON") || e.includes("non-JSON"),
+      ),
+    ).toBe(true);
+  });
+
+  it("fails when warning JSON is followed by error JSON", () => {
+    const result = evaluateAuditPolicy({
+      allowlist: { exceptions: [] },
+      stdout: [
+        JSON.stringify({ type: "warning", data: "slow" }),
+        JSON.stringify({ type: "error", data: "fatal" }),
+        summaryLine(),
+      ].join("\n"),
+      status: 1,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes("JSON error event"))).toBe(
+      true,
+    );
+  });
+
+  it("fails when process is terminated by signal", () => {
+    const result = evaluateAuditPolicy({
+      allowlist: { exceptions: [] },
+      stdout: summaryLine(),
+      status: null,
+      signal: "SIGTERM",
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes("signal"))).toBe(true);
+  });
+
+  it("fails when maxBuffer truncates output", () => {
+    const result = evaluateAuditPolicy({
+      allowlist: { exceptions: [] },
+      stdout: summaryLine(),
+      status: 0,
+      maxBufferExceeded: true,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes("maxBuffer"))).toBe(true);
   });
 
   it("validateAllowlist requires rationale and follow-up", () => {
@@ -188,8 +323,11 @@ describe("audit-policy", () => {
     expect(errors.some((e) => e.includes("remove_by"))).toBe(true);
   });
 
-  it("parseAuditStdout collects advisories", () => {
-    const { advisories } = parseAuditStdout(`${advisoryLine()}\n`);
-    expect(advisories.get("1124282")?.module).toBe("react-router");
+  it("parseAuditStdout collects advisories and summary", () => {
+    const parsed = parseAuditStdout(
+      `${advisoryLine()}\n${summaryLine({ high: 1 })}\n`,
+    );
+    expect(parsed.advisories.get("1124282")?.module).toBe("react-router");
+    expect(parsed.hasSummary).toBe(true);
   });
 });

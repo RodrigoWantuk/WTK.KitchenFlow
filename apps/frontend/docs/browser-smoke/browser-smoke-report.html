@@ -1,0 +1,81 @@
+<!doctype html><meta charset="utf-8"/><title>Browser smoke</title><pre>{
+  "kind": "automated-browser-smoke",
+  "commitSha": "6a39f5d4140d953ab4ed47e8b7573f26712d1a7e",
+  "nodeVersion": "v24.18.0",
+  "yarnVersion": "1.22.22",
+  "playwrightVersion": "1.55.1",
+  "chromiumVersion": "140.0.7339.186",
+  "frontendMode": "prototype",
+  "baseUrl": "http://127.0.0.1:3000",
+  "timestamp": "2026-08-01T01:30:25.592Z",
+  "headless": true,
+  "operatingSystem": "linux 6.12.96+deb13-amd64 x64",
+  "results": [
+    {
+      "check": "360px: Landing→Access→Home→Pantry→Plan",
+      "result": "Passed",
+      "notes": ""
+    },
+    {
+      "check": "360px touch/mobile nav",
+      "result": "Passed",
+      "notes": "bottomnav"
+    },
+    {
+      "check": "768px journey",
+      "result": "Passed",
+      "notes": ""
+    },
+    {
+      "check": "1280px journey",
+      "result": "Passed",
+      "notes": ""
+    },
+    {
+      "check": "keyboard-only Landing→Access→Home→carousel→Plan",
+      "result": "Passed",
+      "notes": "Tab/Enter/Arrow only; no mouse"
+    },
+    {
+      "check": "CSS zoom approximation (not browser zoom)",
+      "result": "Passed",
+      "notes": "documentElement.style.zoom=2; Home/Despensa/Plan/Compras ok"
+    },
+    {
+      "check": "touch/mobile viewport flows",
+      "result": "Passed",
+      "notes": "bottomnav, pantry debt, route, cook CTA"
+    },
+    {
+      "check": "prefers-reduced-motion",
+      "result": "Passed",
+      "notes": "matchMedia true; carousel operable; longTransitionsSample=false"
+    },
+    {
+      "check": "locale pt-BR",
+      "result": "Passed",
+      "notes": "selector + 3 distinct strings"
+    },
+    {
+      "check": "locale en",
+      "result": "Passed",
+      "notes": "selector + 3 distinct strings"
+    },
+    {
+      "check": "locale es",
+      "result": "Passed",
+      "notes": "selector + 3 distinct strings"
+    },
+    {
+      "check": "Despensa déficit → compras review",
+      "result": "Passed",
+      "notes": ""
+    },
+    {
+      "check": "CTA Cozinhar navegação",
+      "result": "Passed",
+      "notes": "http://127.0.0.1:3000/app/cozinhar/r3?sourcePreparationRouteId=prep-route-bean-soup&relatedPlanEntryId=pl-route-r3"
+    }
+  ],
+  "failedArtifacts": []
+}</pre>

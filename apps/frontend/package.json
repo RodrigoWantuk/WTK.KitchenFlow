@@ -73,7 +73,10 @@
     "guard:production-isolation": "node scripts/guard-production-isolation.js",
     "guard:build-mode": "node scripts/guard-build-mode.js",
     "inspect:production-bundle": "node scripts/inspect-production-bundle.js",
-    "audit:policy": "node scripts/audit-policy.js"
+    "audit:policy": "node scripts/audit-policy.js",
+    "smoke:browser": "node scripts/browser-smoke-matrix.js",
+    "smoke:browser:install": "playwright install --with-deps chromium",
+    "smoke:browser:ci": "SMOKE_MANAGE_SERVER=1 SMOKE_TRACE=1 node scripts/browser-smoke-matrix.js"
   },
   "browserslist": {
     "production": [
@@ -107,6 +110,7 @@
     "eslint-plugin-react": "7.37.4",
     "eslint-plugin-react-hooks": "5.2.0",
     "globals": "15.15.0",
+    "playwright": "1.55.1",
     "postcss": "8.5.18",
     "prettier": "3.5.3",
     "tailwindcss": "3.4.17",
@@ -134,7 +138,7 @@
     "path-to-regexp": "0.1.13",
     "rollup": "2.80.0",
     "underscore": "1.13.8",
-    "@babel/plugin-transform-modules-systemjs": "7.29.4",
+    "@babel/plugin-transform-modules-systemjs": "7.29.8",
     "@eslint/plugin-kit": "0.3.4",
     "shell-quote": "1.9.0",
     "jsonpath": "1.3.0",
