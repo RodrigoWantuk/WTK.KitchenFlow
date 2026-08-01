@@ -3,9 +3,12 @@
  * Honest dependency audit gate (allowlist-aware).
  * Parsing/policy is exported for fixture-based unit tests.
  *
- * A run may pass only with a recognized terminal result:
- * - status 0 + auditSummary + no unapproved moderate/high/critical advisories
- * - non-zero status + auditAdvisory(s) + auditSummary + all such advisories allowlisted
+ * Yarn Classic exit codes are a severity bitmask (info=1, low=2, moderate=4,
+ * high=8, critical=16). `--level` filters display only and must not be relied
+ * on for exit-code semantics — this gate runs `yarn audit --json` and interprets
+ * the bitmask against auditSummary itself.
+ *
+ * Policy blocks only unapproved moderate/high/critical advisories. info/low alone pass.
  */
 const { spawnSync } = require("child_process");
 const fs = require("fs");
@@ -20,6 +23,75 @@ const REQUIRED_EXCEPTION_FIELDS = [
 ];
 
 const ACTIONABLE_SEVERITIES = new Set(["moderate", "high", "critical"]);
+
+/** Yarn Classic `yarn audit` exit-status severity bits. */
+const AUDIT_EXIT_BITS = {
+  info: 1,
+  low: 2,
+  moderate: 4,
+  high: 8,
+  critical: 16,
+};
+
+/**
+ * Decode Yarn Classic audit exit status bitmask.
+ * @param {number|null|undefined} status
+ */
+function interpretAuditExitBitmask(status) {
+  const s = status === null || typeof status === "undefined" ? null : Number(status);
+  if (s === null || Number.isNaN(s)) {
+    return {
+      status: s,
+      info: false,
+      low: false,
+      moderate: false,
+      high: false,
+      critical: false,
+      actionable: false,
+      onlyInfoOrLow: false,
+    };
+  }
+  const info = Boolean(s & AUDIT_EXIT_BITS.info);
+  const low = Boolean(s & AUDIT_EXIT_BITS.low);
+  const moderate = Boolean(s & AUDIT_EXIT_BITS.moderate);
+  const high = Boolean(s & AUDIT_EXIT_BITS.high);
+  const critical = Boolean(s & AUDIT_EXIT_BITS.critical);
+  const actionable = moderate || high || critical;
+  return {
+    status: s,
+    info,
+    low,
+    moderate,
+    high,
+    critical,
+    actionable,
+    onlyInfoOrLow: s !== 0 && !actionable,
+  };
+}
+
+/**
+ * Build the Yarn audit exit bitmask implied by an auditSummary.
+ * Bits are set when the summary count for that severity is &gt; 0.
+ */
+function expectedBitmaskFromSummary(summary) {
+  const v = summary?.vulnerabilities || {};
+  let mask = 0;
+  if (Number(v.info || 0) > 0) mask |= AUDIT_EXIT_BITS.info;
+  if (Number(v.low || 0) > 0) mask |= AUDIT_EXIT_BITS.low;
+  if (Number(v.moderate || 0) > 0) mask |= AUDIT_EXIT_BITS.moderate;
+  if (Number(v.high || 0) > 0) mask |= AUDIT_EXIT_BITS.high;
+  if (Number(v.critical || 0) > 0) mask |= AUDIT_EXIT_BITS.critical;
+  return mask;
+}
+
+function countActionableFromSummary(summary) {
+  const vulns = summary?.vulnerabilities || {};
+  return (
+    Number(vulns.moderate || 0) +
+    Number(vulns.high || 0) +
+    Number(vulns.critical || 0)
+  );
+}
 
 function hasRationale(exception) {
   return Boolean(
@@ -75,15 +147,6 @@ function validateAllowlist(allowlist, now = new Date()) {
     }
   }
   return errors;
-}
-
-function countActionableFromSummary(summary) {
-  const vulns = summary?.vulnerabilities || {};
-  return (
-    Number(vulns.moderate || 0) +
-    Number(vulns.high || 0) +
-    Number(vulns.critical || 0)
-  );
 }
 
 /**
@@ -267,37 +330,55 @@ function evaluateAuditPolicy({
     errors.push("yarn audit registry/network failure");
   }
 
-  if (
-    status !== 0 &&
-    advisories.size === 0 &&
-    !looksLikeInfrastructureFailure(combined) &&
-    stderrText.trim() &&
-    !parsed.hasErrorEvent
-  ) {
-    errors.push(
-      `yarn audit exit status ${status} with unknown stderr and no advisories`,
-    );
-  }
-
-  // Terminal semantics
+  const bits = interpretAuditExitBitmask(status);
+  const expectedMask = parsed.hasSummary
+    ? expectedBitmaskFromSummary(events.auditSummary)
+    : null;
   const summaryCounts = parsed.hasSummary
     ? countActionableFromSummary(events.auditSummary)
     : null;
+  let actionableAdvisoryCount = 0;
+  for (const adv of advisories.values()) {
+    if (ACTIONABLE_SEVERITIES.has(adv.severity)) {
+      actionableAdvisoryCount += 1;
+    }
+  }
+
+  if (
+    status !== 0 &&
+    actionableAdvisoryCount === 0 &&
+    !looksLikeInfrastructureFailure(combined) &&
+    stderrText.trim() &&
+    !parsed.hasErrorEvent &&
+    !(
+      parsed.hasSummary &&
+      expectedMask != null &&
+      Number(status) === expectedMask &&
+      bits.onlyInfoOrLow
+    )
+  ) {
+    errors.push(
+      `yarn audit exit status ${status} with unknown stderr and no actionable advisories`,
+    );
+  }
+
+  // Terminal semantics: compare Yarn bitmask to auditSummary severity presence.
+  if (
+    parsed.hasSummary &&
+    expectedMask != null &&
+    status !== null &&
+    typeof status !== "undefined" &&
+    !Number.isNaN(Number(status)) &&
+    Number(status) !== expectedMask
+  ) {
+    errors.push(
+      `audit exit bitmask ${status} incompatible with auditSummary (expected ${expectedMask})`,
+    );
+  }
 
   if (parsed.hasSummary && status === 0 && summaryCounts > 0) {
     errors.push(
       `auditSummary reports ${summaryCounts} actionable vulnerabilities but exit status is 0`,
-    );
-  }
-
-  if (
-    parsed.hasSummary &&
-    status !== 0 &&
-    summaryCounts === 0 &&
-    advisories.size === 0
-  ) {
-    errors.push(
-      `exit status ${status} with clean auditSummary and no advisories (inconsistent terminal result)`,
     );
   }
 
@@ -308,11 +389,11 @@ function evaluateAuditPolicy({
   if (
     parsed.hasSummary &&
     summaryCounts != null &&
-    advisories.size > 0 &&
+    actionableAdvisoryCount > 0 &&
     summaryCounts === 0
   ) {
     errors.push(
-      "auditSummary reports zero actionable vulnerabilities but advisories were emitted",
+      "auditSummary reports zero actionable vulnerabilities but actionable advisories were emitted",
     );
   }
 
@@ -320,14 +401,18 @@ function evaluateAuditPolicy({
     parsed.hasSummary &&
     summaryCounts != null &&
     summaryCounts > 0 &&
-    advisories.size === 0
+    actionableAdvisoryCount === 0
   ) {
     errors.push(
-      "auditSummary reports actionable vulnerabilities but no auditAdvisory events were parsed",
+      "auditSummary reports actionable vulnerabilities but no actionable auditAdvisory events were parsed",
     );
   }
 
-  if (status !== 0 && advisories.size === 0 && parsed.hasSummary === false) {
+  if (
+    status !== 0 &&
+    actionableAdvisoryCount === 0 &&
+    parsed.hasSummary === false
+  ) {
     errors.push(
       `yarn audit exit status ${status} without advisories or auditSummary`,
     );
@@ -397,7 +482,7 @@ function main() {
     process.exit(1);
   }
 
-  const result = spawnSync("yarn", ["audit", "--json", "--level", "moderate"], {
+  const result = spawnSync("yarn", ["audit", "--json"], {
     cwd: root,
     encoding: "utf8",
     maxBuffer: 20 * 1024 * 1024,
@@ -442,6 +527,9 @@ module.exports = {
   parseAuditStdout,
   evaluateAuditPolicy,
   countActionableFromSummary,
+  interpretAuditExitBitmask,
+  expectedBitmaskFromSummary,
+  AUDIT_EXIT_BITS,
   REQUIRED_EXCEPTION_FIELDS,
 };
 

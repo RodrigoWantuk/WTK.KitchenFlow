@@ -185,7 +185,7 @@ export function RouteChainView({
                             onClick={() => {
                               if (!marked && canToggle) markDone(it.id);
                             }}
-                            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] transition-colors ${
+                            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
                               marked
                                 ? "border-primary bg-primary text-primary-foreground"
                                 : canToggle

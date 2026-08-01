@@ -5,13 +5,14 @@
 - **Priority:** Critical
 - **Owner:** Cursor agent (PLAN-0015)
 - **Created:** 2026-07-31
-- **Last updated:** 2026-08-01T01:30:57Z
+- **Last updated:** 2026-08-01T04:45:00Z
 - **Branch:** `agent/plan-0015-remediate-frontend-baseline`
 - **Pull request:** [Draft PR #16](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/16)
-- **Implementation SHA:** `b8a3c918cb28d775ca4f64a4f8fb5169c3ce8b23`
-- **Final branch head SHA:** `44e9f0fd2f67737aef58a14aa21a7a3a9b9fbbf1`
-- **CI run for final head (quality):** [Frontend #30679071438](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30679071438) — quality success on `44e9f0fd2f67737aef58a14aa21a7a3a9b9fbbf1`
-- **CI run for final head (browser-smoke):** [Frontend #30679071438](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30679071438) — browser-smoke success on `44e9f0fd2f67737aef58a14aa21a7a3a9b9fbbf1`
+- **Implementation SHA:** 
+- **Last CI-validated code SHA:** `720b263f493ffa15613e132c21394662d6734a49`
+- **Current PR head:** consult [PR #16](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/16) metadata (`headRefOid`)
+- **Latest exact-head CI run (prior reviewed head):** [Frontend #30679221482](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30679221482) — quality + browser-smoke success on `720b263f493ffa15613e132c21394662d6734a49`
+- **Latest exact-head CI run (this review-fix round):** _(pending push)_
 - **Related implementation plans:** PLAN-0014 (implemented on main; remediation pending), PLAN-0005, PLAN-0011
 - **Related ADRs:** ADR-0007
 - **Dependencies:** PLAN-0014 merged via PR #14 (`4166973`) and completion docs via PR #15 (`6256011`)
@@ -150,11 +151,12 @@ Dependency: direct `playwright@1.55.1` (`yarn smoke:browser:install`).
 | Check | Result | Notes |
 |---|---|---|
 | 360 / 768 / 1280 journeys | **Passed** | |
-| keyboard-only Landing→Access→Home→carousel→Plan | **Passed** | Tab/Enter/Arrows only |
-| CSS zoom approximation | **Passed** | Explicitly **not** browser zoom |
+| keyboard-only + real `:focus-visible` | **Passed** | landing CTA, acesso/demo, carousel, main nav, route action |
+| CSS zoom approximation | **Passed** | Explicitly **not** browser zoom — does not satisfy manual zoom gate |
 | touch/mobile (iPhone 12 device) | **Passed** | bottomnav, shortfall, route, cook |
-| prefers-reduced-motion | **Passed** | `matchMedia` asserted true |
-| locale pt-BR / en / es | **Passed** | selector + 3 distinct strings each |
+| prefers-reduced-motion (fail-closed) | **Passed** | `matchMedia` true; motion-relevant duration violations fail the job |
+| production locale mobile 360 | **Passed** | compact select; `kitchenflow_production_locale` only |
+| locale pt-BR / en / es (prototype) | **Passed** | selector + 3 distinct strings each |
 | Despensa shortfall → compras | **Passed** | |
 | CTA Cozinhar | **Passed** | query params present |
 
@@ -163,7 +165,13 @@ Dependency: direct `playwright@1.55.1` (`yarn smoke:browser:install`).
 | Check | Result | Notes |
 |---|---|---|
 | Real browser zoom 200% | **Not executed — owner/manual validation required** | CSS `zoom` approximation must not be claimed as browser zoom |
-| Full assistive-tech audit (NVDA/VoiceOver) | **Not executed — owner/manual validation required** | Keyboard-only automated coverage only |
+| Full assistive-tech audit (NVDA/VoiceOver) | **Not executed — owner/manual validation required** | Awaiting explicit owner decision on a later plan |
+
+#### Owner checklist — real browser zoom 200%
+
+Surfaces: Landing, Acesso, Home, Despensa, Planejamento, Compras, modal/dialog, carrossel, CTA Cozinhar.
+
+Verify: no content loss; no global horizontal overflow; actions reachable; text readable; dialogs usable; navigation functional.
 
 ## Bundle size evidence (gzip, CRA report)
 
@@ -183,15 +191,24 @@ Bundle inspect: zero hits for forbidden prototype tokens in production JS.
 
 ## Execution state
 
-- **Current checkpoint:** Residual round (audit semantics, reproducible Playwright smoke, resolution triage, ProductionApp i18n) landed; status `Validating`; draft PR #16.
-- **Last completed step:** Fail-closed auditSummary/error-event policy; Playwright direct dep + CI browser-smoke job; production i18n; resolution table; automated smoke Passed locally.
-- **Exact next action:** Owner reviews draft PR against final head + quality/browser-smoke CI; agent must not merge/approve.
-- **Blockers:** Owner review required for merge and for unblocking PLAN-0011 / definitive PLAN-0005 frontend pin.
-- **Validation performed:** typecheck, lint, format, test (66), guards, dual builds, inspect, audit:policy, smoke:browser (local).
-- **Working tree state:** Residual remediation on PLAN-0015 branch; PR remains draft.
-- **Substantial run target:** Achieved for owner re-review after residual fixes.
+- **Current checkpoint:** Review-fix round (Yarn audit bitmask, asChild CTAs, real focus-visible smoke, reduced-motion fail-closed, production mobile locale) landed; status `Validating`; draft PR #16.
+- **Last completed step:** Bitmask-aware `yarn audit --json`; nested Link/Button removed via `asChild`; smoke asserts `:focus-visible` + perceptible indicator; reduced-motion rejects long durations; production locale select at 360px.
+- **Exact next action:** Owner re-reviews draft PR #16 after quality + browser-smoke CI on the new implementation SHA; agent must not merge/approve.
+- **Blockers:** Owner review required for merge and for unblocking PLAN-0011 / definitive PLAN-0005 frontend pin. Manual real zoom 200% and full AT audit remain pending.
+- **Validation performed:** typecheck, lint, format, test (78), audit:policy; CI pending after push.
+- **Working tree state:** Review-fix remediations on PLAN-0015 branch; PR remains draft.
+- **Substantial run target:** Achieved for owner re-review after review-fix fixes.
 
 ## Progress log
+
+### 2026-08-01T04:45:00Z — Cursor agent
+
+- **Checkpoint:** Review-fix round for last independent-review issues; PLAN-0015 remains Validating.
+- **Changes:** Yarn Classic audit exit bitmask vs `auditSummary`; `asChild` CTAs on Landing/ProductionApp; smoke focus-visible + reduced-motion fail-closed helpers/tests; production mobile locale select; SHA field terminology corrected (no hardcoded “Final branch head SHA”).
+- **Prior CI record kept:** workflow `30679221482` green on `720b263f493ffa15613e132c21394662d6734a49` until this round’s new head is CI-validated.
+- **Validation:** Local typecheck/lint/format/test (78)/audit:policy; browser-smoke + quality CI after push.
+- **Result:** Draft PR updated for owner re-review; not Completed; not merged.
+- **Next action:** Owner review; do not merge/approve by agent.
 
 ### 2026-08-01T01:30:57Z — Cursor agent
 
@@ -223,6 +240,6 @@ Bundle inspect: zero hits for forbidden prototype tokens in production JS.
 - [x] Acceptance criteria truthful for delivered work.
 - [x] Draft PR linked; not merged/approved by agent.
 - [x] PLAN-0015 status `Validating` at handoff (not `Completed`).
-- [x] Implementation vs final head SHA distinction documented (filled after push).
+- [x] Implementation SHA vs Last CI-validated code SHA terminology documented (PR head via GitHub metadata; avoid infinite SHA-only commits).
 - [x] Quality + browser-smoke CI, vulns, smoke, limitations listed for owner.
-- [x] Exact continuation recorded for unfinished items (owner review + manual zoom).
+- [x] Exact continuation recorded for unfinished items (owner review + manual zoom checklist).

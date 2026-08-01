@@ -31,11 +31,11 @@ export default function Landing() {
               </button>
             ))}
           </div>
-          <Link to="/acesso" data-testid="landing-enter">
-            <Button size="sm" className="rounded-full">
+          <Button asChild size="sm" className="rounded-full">
+            <Link to="/acesso" data-testid="landing-enter">
               {tr("ctaEnter")} <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </header>
 
@@ -52,11 +52,11 @@ export default function Landing() {
             {tr("heroSub")}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link to="/acesso" data-testid="hero-enter">
-              <Button size="lg" className="rounded-full px-6">
+            <Button asChild size="lg" className="rounded-full px-6">
+              <Link to="/acesso" data-testid="hero-enter">
                 {tr("ctaEnter")}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <button
               data-testid="hero-demo"
               onClick={() => {

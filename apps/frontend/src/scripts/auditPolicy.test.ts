@@ -1,31 +1,47 @@
 import { createRequire } from "module";
 
 const require = createRequire(__filename);
-const { validateAllowlist, parseAuditStdout, evaluateAuditPolicy } =
-  require("../../scripts/audit-policy") as {
-    validateAllowlist: (allowlist: unknown, now?: Date) => string[];
-    parseAuditStdout: (stdout: string) => {
-      advisories: Map<string, { module: string; severity: string }>;
-      hasSummary: boolean;
-      hasErrorEvent: boolean;
-      events: { error: unknown[]; auditSummary: unknown };
-    };
-    evaluateAuditPolicy: (input: {
-      allowlist: unknown;
-      stdout?: string;
-      stderr?: string;
-      status?: number | null;
-      signal?: string | null;
-      error?: Error | null;
-      maxBufferExceeded?: boolean;
-      now?: Date;
-    }) => {
-      ok: boolean;
-      errors: string[];
-      warnings: string[];
-      advisories: Map<string, unknown>;
-    };
+const {
+  validateAllowlist,
+  parseAuditStdout,
+  evaluateAuditPolicy,
+  interpretAuditExitBitmask,
+  expectedBitmaskFromSummary,
+} = require("../../scripts/audit-policy") as {
+  validateAllowlist: (allowlist: unknown, now?: Date) => string[];
+  parseAuditStdout: (stdout: string) => {
+    advisories: Map<string, { module: string; severity: string }>;
+    hasSummary: boolean;
+    hasErrorEvent: boolean;
+    events: { error: unknown[]; auditSummary: unknown };
   };
+  evaluateAuditPolicy: (input: {
+    allowlist: unknown;
+    stdout?: string;
+    stderr?: string;
+    status?: number | null;
+    signal?: string | null;
+    error?: Error | null;
+    maxBufferExceeded?: boolean;
+    now?: Date;
+  }) => {
+    ok: boolean;
+    errors: string[];
+    warnings: string[];
+    advisories: Map<string, unknown>;
+  };
+  interpretAuditExitBitmask: (status: number | null | undefined) => {
+    status: number | null;
+    info: boolean;
+    low: boolean;
+    moderate: boolean;
+    high: boolean;
+    critical: boolean;
+    actionable: boolean;
+    onlyInfoOrLow: boolean;
+  };
+  expectedBitmaskFromSummary: (summary: unknown) => number;
+};
 
 const validException = {
   id: "1124282",
@@ -84,11 +100,94 @@ describe("audit-policy", () => {
     expect(result.ok).toBe(true);
   });
 
+  it("passes summary info=1 with status=1", () => {
+    const result = evaluateAuditPolicy({
+      allowlist: { exceptions: [] },
+      stdout: summaryLine({ info: 1 }),
+      status: 1,
+    });
+    expect(result.ok).toBe(true);
+    expect(interpretAuditExitBitmask(1).onlyInfoOrLow).toBe(true);
+    expect(expectedBitmaskFromSummary({ vulnerabilities: { info: 1 } })).toBe(
+      1,
+    );
+  });
+
+  it("passes summary low=1 with status=2", () => {
+    const result = evaluateAuditPolicy({
+      allowlist: { exceptions: [] },
+      stdout: summaryLine({ low: 1 }),
+      status: 2,
+    });
+    expect(result.ok).toBe(true);
+    expect(interpretAuditExitBitmask(2).low).toBe(true);
+  });
+
+  it("passes summary info=1 + low=1 with status=3", () => {
+    const result = evaluateAuditPolicy({
+      allowlist: { exceptions: [] },
+      stdout: summaryLine({ info: 1, low: 1 }),
+      status: 3,
+    });
+    expect(result.ok).toBe(true);
+    expect(interpretAuditExitBitmask(3).onlyInfoOrLow).toBe(true);
+  });
+
+  it("passes summary low=1 + high=1 allowlisted with status=10", () => {
+    const result = evaluateAuditPolicy({
+      allowlist: { exceptions: [validException] },
+      stdout: `${advisoryLine()}\n${summaryLine({ low: 1, high: 1 })}`,
+      status: 10,
+    });
+    expect(result.ok).toBe(true);
+    expect(interpretAuditExitBitmask(10).low).toBe(true);
+    expect(interpretAuditExitBitmask(10).high).toBe(true);
+  });
+
+  it("fails summary moderate=1 with status=4 when not allowlisted", () => {
+    const result = evaluateAuditPolicy({
+      allowlist: { exceptions: [] },
+      stdout: `${advisoryLine({
+        id: 99,
+        module_name: "left-pad",
+        severity: "moderate",
+        title: "mod",
+      })}\n${summaryLine({ moderate: 1 })}`,
+      status: 4,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes("Unapproved"))).toBe(true);
+  });
+
+  it("fails summary clean with status=2 (bitmask incompatible)", () => {
+    const result = evaluateAuditPolicy({
+      allowlist: { exceptions: [] },
+      stdout: summaryLine(),
+      status: 2,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((e) => e.includes("incompatible"))).toBe(true);
+  });
+
+  it("fails summary high=1 with status=0 (bitmask incompatible)", () => {
+    const result = evaluateAuditPolicy({
+      allowlist: { exceptions: [validException] },
+      stdout: `${advisoryLine()}\n${summaryLine({ high: 1 })}`,
+      status: 0,
+    });
+    expect(result.ok).toBe(false);
+    expect(
+      result.errors.some(
+        (e) => e.includes("incompatible") || e.includes("exit status is 0"),
+      ),
+    ).toBe(true);
+  });
+
   it("fails on unapproved advisory", () => {
     const result = evaluateAuditPolicy({
       allowlist: { exceptions: [] },
       stdout: `${advisoryLine({ id: 999, module_name: "left-pad" })}\n${summaryLine({ high: 1 })}`,
-      status: 1,
+      status: 8,
     });
     expect(result.ok).toBe(false);
     expect(result.errors.some((e) => e.includes("Unapproved"))).toBe(true);
@@ -98,7 +197,7 @@ describe("audit-policy", () => {
     const result = evaluateAuditPolicy({
       allowlist: { exceptions: [validException] },
       stdout: `${advisoryLine()}\n${summaryLine({ high: 1 })}`,
-      status: 1,
+      status: 8,
     });
     expect(result.ok).toBe(true);
   });
@@ -109,7 +208,7 @@ describe("audit-policy", () => {
         exceptions: [{ ...validException, remove_by: "2020-01-01" }],
       },
       stdout: `${advisoryLine()}\n${summaryLine({ high: 1 })}`,
-      status: 1,
+      status: 8,
       now: new Date("2026-07-31"),
     });
     expect(result.ok).toBe(false);
@@ -122,7 +221,7 @@ describe("audit-policy", () => {
         exceptions: [{ ...validException, module: "other-package" }],
       },
       stdout: `${advisoryLine()}\n${summaryLine({ high: 1 })}`,
-      status: 1,
+      status: 8,
     });
     expect(result.ok).toBe(false);
     expect(result.errors.some((e) => e.includes("module mismatch"))).toBe(true);
@@ -134,7 +233,7 @@ describe("audit-policy", () => {
         exceptions: [{ ...validException, severity: "moderate" }],
       },
       stdout: `${advisoryLine()}\n${summaryLine({ high: 1 })}`,
-      status: 1,
+      status: 8,
     });
     expect(result.ok).toBe(false);
     expect(result.errors.some((e) => e.includes("severity mismatch"))).toBe(
@@ -148,7 +247,7 @@ describe("audit-policy", () => {
         exceptions: [{ ...validException, patched_versions: ">=9.0.0" }],
       },
       stdout: `${advisoryLine()}\n${summaryLine({ high: 1 })}`,
-      status: 1,
+      status: 8,
     });
     expect(result.ok).toBe(false);
     expect(
@@ -239,20 +338,10 @@ describe("audit-policy", () => {
     const result = evaluateAuditPolicy({
       allowlist: { exceptions: [validException] },
       stdout: advisoryLine(),
-      status: 1,
+      status: 8,
     });
     expect(result.ok).toBe(false);
     expect(result.errors.some((e) => e.includes("auditSummary"))).toBe(true);
-  });
-
-  it("fails when summary is clean but status is 1", () => {
-    const result = evaluateAuditPolicy({
-      allowlist: { exceptions: [] },
-      stdout: summaryLine(),
-      status: 1,
-    });
-    expect(result.ok).toBe(false);
-    expect(result.errors.some((e) => e.includes("inconsistent"))).toBe(true);
   });
 
   it("fails when one JSON line is valid and another is invalid", () => {

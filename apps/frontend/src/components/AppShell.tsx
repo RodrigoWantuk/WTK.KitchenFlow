@@ -153,7 +153,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   to={l.to}
                   data-testid={`sidenav-${l.key}`}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${isActive ? "bg-secondary text-foreground" : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"}`
+                    `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${isActive ? "bg-secondary text-foreground" : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"}`
                   }
                 >
                   <Icon className="h-4 w-4" />
@@ -198,7 +198,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 to={l.to}
                 data-testid={`bottomnav-${l.key}`}
                 className={({ isActive }) =>
-                  `flex flex-1 flex-col items-center gap-1 rounded-xl py-1.5 text-[11px] ${isActive ? "text-primary" : "text-muted-foreground"}`
+                  `flex flex-1 flex-col items-center gap-1 rounded-xl py-1.5 text-[11px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${isActive ? "text-primary" : "text-muted-foreground"}`
                 }
               >
                 <Icon className="h-5 w-5" />

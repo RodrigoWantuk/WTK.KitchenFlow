@@ -116,17 +116,22 @@ export function HomeRouteCarousel({
         data-testid="home-route-carousel"
       >
         <ol
-          className="flex snap-x snap-mandatory gap-3 pb-1"
+          data-testid="home-route-carousel-list"
+          className="flex snap-x snap-mandatory gap-3 pb-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           tabIndex={0}
           onKeyDown={(event: KeyboardEvent<HTMLOListElement>) => {
             const scroller = event.currentTarget.parentElement;
             if (!scroller) return;
+            const reduce =
+              typeof window !== "undefined" &&
+              window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            const behavior = reduce ? "auto" : "smooth";
             if (event.key === "ArrowRight") {
-              scroller.scrollBy({ left: 240, behavior: "smooth" });
+              scroller.scrollBy({ left: 240, behavior });
               event.preventDefault();
             }
             if (event.key === "ArrowLeft") {
-              scroller.scrollBy({ left: -240, behavior: "smooth" });
+              scroller.scrollBy({ left: -240, behavior });
               event.preventDefault();
             }
           }}

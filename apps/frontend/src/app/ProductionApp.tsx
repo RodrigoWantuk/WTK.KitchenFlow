@@ -17,26 +17,46 @@ const runtime = createProductionRuntime();
 function LocaleSwitcher() {
   const { locale, locales, setLocale, t } = useProductionI18n();
   return (
-    <div
-      className="hidden gap-1 sm:flex"
-      role="group"
-      aria-label={t("lang.label")}
-    >
-      {locales.map((code) => (
-        <button
-          key={code}
-          type="button"
-          data-testid={`production-lang-${code}`}
-          aria-pressed={locale === code}
-          onClick={() => setLocale(code as ProductionLocale)}
-          className={`rounded-full px-3 py-1 text-xs ${
-            locale === code ? "bg-secondary" : "text-muted-foreground"
-          }`}
+    <>
+      <div
+        className="hidden gap-1 sm:flex"
+        role="group"
+        aria-label={t("lang.label")}
+      >
+        {locales.map((code) => (
+          <button
+            key={code}
+            type="button"
+            data-testid={`production-lang-${code}`}
+            aria-pressed={locale === code}
+            onClick={() => setLocale(code as ProductionLocale)}
+            className={`rounded-full px-3 py-1 text-xs ${
+              locale === code ? "bg-secondary" : "text-muted-foreground"
+            }`}
+          >
+            {code === "pt-BR" ? "PT-BR" : code.toUpperCase()}
+          </button>
+        ))}
+      </div>
+      <label className="sm:hidden">
+        <span className="sr-only">{t("lang.label")}</span>
+        <select
+          data-testid="production-lang-select"
+          aria-label={t("lang.label")}
+          className="max-w-[5.5rem] rounded-md border border-border bg-background px-2 py-1 text-xs"
+          value={locale}
+          onChange={(event) =>
+            setLocale(event.target.value as ProductionLocale)
+          }
         >
-          {code === "pt-BR" ? "PT-BR" : code.toUpperCase()}
-        </button>
-      ))}
-    </div>
+          {locales.map((code) => (
+            <option key={code} value={code}>
+              {code === "pt-BR" ? "PT-BR" : code.toUpperCase()}
+            </option>
+          ))}
+        </select>
+      </label>
+    </>
   );
 }
 
@@ -59,11 +79,11 @@ function ProductionLanding() {
         </div>
         <div className="flex items-center gap-2">
           <LocaleSwitcher />
-          <Link to="/acesso" data-testid="production-landing-enter">
-            <Button size="sm" className="rounded-full">
+          <Button asChild size="sm" className="rounded-full">
+            <Link to="/acesso" data-testid="production-landing-enter">
               {t("landing.enter")} <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </header>
       <main className="mx-auto max-w-3xl px-6 py-16 md:px-10">

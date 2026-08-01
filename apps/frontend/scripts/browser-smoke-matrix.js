@@ -12,16 +12,72 @@
 const { chromium, devices } = require("playwright");
 const { spawn, execSync } = require("child_process");
 const fs = require("fs");
+const http = require("http");
 const path = require("path");
 const os = require("os");
+const {
+  hasPerceptibleFocusIndicator,
+  evaluateReducedMotionDurations,
+  parseCssTimeSeconds,
+  motionRelevantSelectors,
+} = require("./browser-smoke-assertions");
 
 const BASE = process.env.SMOKE_BASE_URL || "http://127.0.0.1:3000";
+const PRODUCTION_BASE =
+  process.env.SMOKE_PRODUCTION_URL || "http://127.0.0.1:3001";
 const HEADLESS = process.env.SMOKE_HEADED !== "1";
 const OUT_DIR =
   process.env.SMOKE_OUT_DIR ||
   path.join(__dirname, "..", "docs", "browser-smoke");
 const results = [];
 let failedArtifacts = [];
+
+/**
+ * Minimal static SPA server for the production CRA build.
+ * @returns {import('http').Server}
+ */
+function startStaticSpa(rootDir, port) {
+  const root = path.resolve(rootDir);
+  const server = http.createServer((req, res) => {
+    try {
+      const url = new URL(req.url || "/", `http://127.0.0.1:${port}`);
+      let rel = decodeURIComponent(url.pathname);
+      if (rel === "/") rel = "/index.html";
+      let filePath = path.join(root, rel);
+      if (!filePath.startsWith(root)) {
+        res.writeHead(403);
+        res.end("Forbidden");
+        return;
+      }
+      if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+        filePath = path.join(root, "index.html");
+      }
+      const data = fs.readFileSync(filePath);
+      const ext = path.extname(filePath).toLowerCase();
+      const types = {
+        ".html": "text/html; charset=utf-8",
+        ".js": "application/javascript; charset=utf-8",
+        ".css": "text/css; charset=utf-8",
+        ".json": "application/json",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".svg": "image/svg+xml",
+        ".ico": "image/x-icon",
+        ".map": "application/json",
+        ".txt": "text/plain; charset=utf-8",
+      };
+      res.writeHead(200, {
+        "Content-Type": types[ext] || "application/octet-stream",
+      });
+      res.end(data);
+    } catch {
+      res.writeHead(500);
+      res.end("error");
+    }
+  });
+  server.listen(port, "127.0.0.1");
+  return server;
+}
 
 function record(check, result, notes = "") {
   results.push({ check, result, notes });
@@ -102,6 +158,7 @@ async function run() {
   const reportMeta = meta();
 
   let serverProc = null;
+  let productionServer = null;
   if (process.env.SMOKE_MANAGE_SERVER === "1") {
     serverProc = spawn("yarn", ["start"], {
       cwd: path.join(__dirname, ".."),
@@ -120,10 +177,27 @@ async function run() {
       detached: false,
     });
     await waitForServer(BASE, 180000);
+
+    const frontendRoot = path.join(__dirname, "..");
+    const buildDir = path.join(frontendRoot, "build");
+    console.log("Building production bundle for mobile locale smoke...");
+    execSync("yarn build:production", {
+      cwd: frontendRoot,
+      stdio: "inherit",
+      env: { ...process.env, CI: "true" },
+    });
+    const prodPort = Number(new URL(PRODUCTION_BASE).port || 3001);
+    productionServer = startStaticSpa(buildDir, prodPort);
+    await waitForServer(PRODUCTION_BASE, 30000);
   } else {
     await waitForServer(BASE, 30000).catch((err) => {
       throw new Error(
         `${err.message}. Start the app with \`yarn start\` or set SMOKE_MANAGE_SERVER=1.`,
+      );
+    });
+    await waitForServer(PRODUCTION_BASE, 15000).catch((err) => {
+      throw new Error(
+        `${err.message}. Serve production build at SMOKE_PRODUCTION_URL (${PRODUCTION_BASE}) or set SMOKE_MANAGE_SERVER=1.`,
       );
     });
   }
@@ -166,6 +240,54 @@ async function run() {
     } finally {
       await context.close();
     }
+  }
+
+  async function assertKeyboardFocusVisible(page, label) {
+    const sample = await page.evaluate(() => {
+      const el = document.activeElement;
+      if (!el || el === document.body) {
+        return { ok: false, reason: "no activeElement" };
+      }
+      const s = getComputedStyle(el);
+      return {
+        ok: true,
+        testId: el.getAttribute("data-testid") || "",
+        tag: el.tagName.toLowerCase(),
+        matchesFocusVisible: el.matches(":focus-visible"),
+        outlineStyle: s.outlineStyle,
+        outlineWidth: s.outlineWidth,
+        boxShadow: s.boxShadow,
+        borderColor: s.borderColor,
+        borderWidth: s.borderWidth,
+      };
+    });
+    if (!sample.ok) {
+      fail(`keyboard focus-visible (${label})`, sample.reason);
+    }
+    if (!sample.matchesFocusVisible) {
+      fail(
+        `keyboard focus-visible (${label})`,
+        `activeElement is not :focus-visible (testid=${sample.testId} tag=${sample.tag})`,
+      );
+    }
+    if (!hasPerceptibleFocusIndicator(sample)) {
+      fail(
+        `keyboard focus-visible (${label})`,
+        `focused without perceptible indicator (outline=${sample.outlineStyle}/${sample.outlineWidth} shadow=${sample.boxShadow})`,
+      );
+    }
+  }
+
+  async function tabUntilTestId(page, ids, maxTabs = 60) {
+    const wanted = new Set(ids);
+    for (let i = 0; i < maxTabs; i++) {
+      await page.keyboard.press("Tab");
+      const id = await page.evaluate(
+        () => document.activeElement?.getAttribute("data-testid") || "",
+      );
+      if (wanted.has(id)) return id;
+    }
+    return null;
   }
 
   async function navTo(page, key) {
@@ -270,61 +392,29 @@ async function run() {
       },
     );
 
-    // Keyboard-only journey (no mouse clicks)
+    // Keyboard-only journey (no mouse clicks) with real :focus-visible checks
     await withPage(
       { viewport: { width: 1280, height: 800 } },
       "keyboard",
       async (page) => {
         await page.goto(BASE + "/", { waitUntil: "domcontentloaded" });
-        // Tab to landing-enter and activate
-        let focusedEnter = false;
-        for (let i = 0; i < 40; i++) {
-          await page.keyboard.press("Tab");
-          const id = await page.evaluate(
-            () => document.activeElement?.getAttribute("data-testid") || "",
-          );
-          if (id === "landing-enter" || id === "hero-enter") {
-            focusedEnter = true;
-            break;
-          }
-        }
+        const focusedEnter = await tabUntilTestId(page, [
+          "landing-enter",
+          "hero-enter",
+        ]);
         if (!focusedEnter) {
           fail("keyboard-only", "landing enter control not reachable by Tab");
         }
-        const outline = await page.evaluate(() => {
-          const el = document.activeElement;
-          if (!el) return "";
-          const s = getComputedStyle(el);
-          return `${s.outlineStyle}|${s.boxShadow}|${s.outlineWidth}`;
-        });
-        if (!outline || outline === "none||0px") {
-          // Accept focus ring via ring utility / browser default
-          const hasFocusVisible = await page.evaluate(
-            () =>
-              document.activeElement ===
-                document.querySelector('[data-testid="landing-enter"]') ||
-              document.activeElement?.closest(
-                '[data-testid="landing-enter"]',
-              ) != null,
-          );
-          if (!hasFocusVisible) {
-            fail("keyboard-only", "no visible focus on landing enter");
-          }
-        }
+        await assertKeyboardFocusVisible(page, "landing CTA");
         await page.keyboard.press("Enter");
         await page.waitForURL(/\/acesso/);
-        let focusedDemo = false;
-        for (let i = 0; i < 40; i++) {
-          await page.keyboard.press("Tab");
-          const id = await page.evaluate(
-            () => document.activeElement?.getAttribute("data-testid") || "",
-          );
-          if (id === "access-demo" || id === "access-enter") {
-            focusedDemo = true;
-            break;
-          }
-        }
+
+        const focusedDemo = await tabUntilTestId(page, [
+          "access-demo",
+          "access-enter",
+        ]);
         if (!focusedDemo) fail("keyboard-only", "access demo not reachable");
+        await assertKeyboardFocusVisible(page, "acesso/demo CTA");
         await page.keyboard.press("Enter");
         await page.waitForURL(/\/app\/hoje/);
         // Fresh CI localStorage defaults to filledPantry without route block — seed scenario.
@@ -343,29 +433,41 @@ async function run() {
         await page.reload({ waitUntil: "domcontentloaded" });
         await page.waitForURL(/\/app\/hoje/);
         await page.getByTestId("home-route-block").waitFor({ timeout: 20000 });
-        const carousel = page.getByTestId("home-route-carousel").locator("ol");
-        await carousel.focus();
-        await page.keyboard.press("ArrowRight");
-        await page.keyboard.press("ArrowLeft");
-        // Navigate to plan via sidenav keyboard
-        let focusedPlan = false;
-        for (let i = 0; i < 60; i++) {
-          await page.keyboard.press("Tab");
-          const id = await page.evaluate(
-            () => document.activeElement?.getAttribute("data-testid") || "",
-          );
-          if (id === "sidenav-plan" || id === "bottomnav-plan") {
-            focusedPlan = true;
-            break;
-          }
+        const focusedCarousel = await tabUntilTestId(
+          page,
+          ["home-route-carousel-list", "home-route-open"],
+          80,
+        );
+        if (!focusedCarousel) {
+          fail("keyboard-only", "carousel control not reachable by Tab");
         }
+        await assertKeyboardFocusVisible(page, "carousel action");
+        if (focusedCarousel === "home-route-carousel-list") {
+          await page.keyboard.press("ArrowRight");
+          await page.keyboard.press("ArrowLeft");
+        }
+        const focusedPlan = await tabUntilTestId(page, [
+          "sidenav-plan",
+          "bottomnav-plan",
+        ]);
         if (!focusedPlan) fail("keyboard-only", "plan nav not reachable");
+        await assertKeyboardFocusVisible(page, "main navigation");
         await page.keyboard.press("Enter");
         await page.waitForURL(/\/app\/planejamento/);
+        await page.getByTestId("route-chain").waitFor();
+        const focusedRoute = await tabUntilTestId(
+          page,
+          ["chain-toggle-n2", "chain-toggle-n3"],
+          80,
+        );
+        if (!focusedRoute) {
+          fail("keyboard-only", "route action not reachable by Tab");
+        }
+        await assertKeyboardFocusVisible(page, "route action");
         record(
           "keyboard-only Landing→Access→Home→carousel→Plan",
           "Passed",
-          "Tab/Enter/Arrow only; no mouse",
+          "Tab/Enter/Arrow only; real :focus-visible indicators",
         );
       },
     );
@@ -461,21 +563,125 @@ async function run() {
         const carousel = page.getByTestId("home-route-carousel").locator("ol");
         await carousel.focus();
         await page.keyboard.press("ArrowRight");
-        // Carousel must remain operable without depending on motion
         await page.getByTestId("home-route-block").waitFor();
-        const longTransitions = await page.evaluate(() => {
-          const nodes = [...document.querySelectorAll("*")].slice(0, 200);
-          return nodes.some((el) => {
-            const s = getComputedStyle(el);
-            const dur = parseFloat(s.transitionDuration) || 0;
-            const anim = parseFloat(s.animationDuration) || 0;
-            return dur > 0.5 || anim > 0.5;
-          });
+
+        const selectors = motionRelevantSelectors();
+        const samples = await page.evaluate((selectorList) => {
+          function parseCssTimeSeconds(value) {
+            if (!value || value === "none") return 0;
+            return String(value)
+              .split(",")
+              .map((part) => {
+                const t = part.trim().toLowerCase();
+                if (!t || t === "none") return 0;
+                if (t.endsWith("ms")) return (parseFloat(t) || 0) / 1000;
+                if (t.endsWith("s")) return parseFloat(t) || 0;
+                return parseFloat(t) || 0;
+              })
+              .reduce((max, n) => Math.max(max, n), 0);
+          }
+          const seen = new Set();
+          const out = [];
+          for (const sel of selectorList) {
+            let nodes = [];
+            try {
+              nodes = [...document.querySelectorAll(sel)];
+            } catch {
+              nodes = [];
+            }
+            for (const el of nodes) {
+              if (seen.has(el)) continue;
+              seen.add(el);
+              const s = getComputedStyle(el);
+              const transitionDuration = parseCssTimeSeconds(s.transitionDuration);
+              const animationDuration = parseCssTimeSeconds(s.animationDuration);
+              if (transitionDuration === 0 && animationDuration === 0) continue;
+              out.push({
+                id:
+                  el.getAttribute("data-testid") ||
+                  (el.className && el.className.toString
+                    ? el.className.toString().slice(0, 80)
+                    : el.tagName),
+                transitionDuration,
+                animationDuration,
+              });
+            }
+          }
+          return out;
+        }, selectors);
+
+        const verdict = evaluateReducedMotionDurations(samples, {
+          maxSeconds: 0.5,
         });
+        if (!verdict.ok) {
+          fail(
+            "prefers-reduced-motion",
+            `long motion remains under reduce: ${JSON.stringify(verdict.violations.slice(0, 5))}`,
+          );
+        }
         record(
           "prefers-reduced-motion",
           "Passed",
-          `matchMedia true; carousel operable; longTransitionsSample=${longTransitions}`,
+          `matchMedia true; carousel operable; motion samples=${samples.length}; no long durations`,
+        );
+      },
+    );
+
+    await withPage(
+      { viewport: { width: 360, height: 740 } },
+      "production-locale-360",
+      async (page) => {
+        await page.goto(PRODUCTION_BASE + "/", {
+          waitUntil: "domcontentloaded",
+          timeout: 30000,
+        });
+        await page.getByTestId("production-landing").waitFor();
+        const select = page.getByTestId("production-lang-select");
+        if (!(await select.isVisible())) {
+          fail(
+            "production locale mobile 360",
+            "production-lang-select not visible at 360px",
+          );
+        }
+        await select.selectOption("en");
+        const lang = await page.evaluate(() => document.documentElement.lang);
+        if (lang !== "en") {
+          fail(
+            "production locale mobile 360",
+            `documentElement.lang expected en, got ${lang}`,
+          );
+        }
+        const stored = await page.evaluate(
+          () => localStorage.getItem("kitchenflow_production_locale"),
+        );
+        if (stored !== "en") {
+          fail(
+            "production locale mobile 360",
+            `expected kitchenflow_production_locale=en, got ${stored}`,
+          );
+        }
+        const tagline = await page
+          .getByTestId("production-landing-tagline")
+          .innerText();
+        if (!/KitchenFlow helps transform/i.test(tagline)) {
+          fail(
+            "production locale mobile 360",
+            `EN tagline missing: ${tagline}`,
+          );
+        }
+        const mockKey = await page.evaluate(() =>
+          localStorage.getItem("cocinaris_state_v1"),
+        );
+        if (mockKey) {
+          fail(
+            "production locale mobile 360",
+            "prototype store key was written",
+          );
+        }
+        record(
+          "production locale mobile 360",
+          "Passed",
+          "select visible; en persisted; lang updated",
         );
       },
     );
@@ -575,6 +781,9 @@ async function run() {
     await browser.close();
     if (serverProc) {
       serverProc.kill("SIGTERM");
+    }
+    if (productionServer) {
+      productionServer.close();
     }
   }
 
