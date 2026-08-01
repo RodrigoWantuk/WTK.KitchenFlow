@@ -1,0 +1,231 @@
+name: PLAN-0005 validation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "apps/backend/**"
+      - "apps/frontend/**"
+      - "packages/contracts/openapi/**"
+      - "infrastructure/**"
+      - "scripts/backend/**"
+      - "scripts/plan-0005/**"
+      - "docs/evidence/plan-0005/**"
+      - "docs/plans/PLAN-0005-test-authenticated-inventory-slice.md"
+      - "docs/plan-status.md"
+      - ".gitleaks.toml"
+      - ".github/workflows/plan-0005-validation.yml"
+
+env:
+  PLAN0005_INTEGRATED_SHA: b94abd9a83fe29d88b095e3e9a42f10d01c05414
+  # Real PR branch head (not the temporary merge ref that Actions may check out).
+  PLAN0005_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+  PLAN0005_EVIDENCE_DIR: ${{ github.workspace }}/docs/evidence/plan-0005
+
+jobs:
+  p0-validation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Capture checked-out SHA identity
+        run: |
+          set -euo pipefail
+          echo "PLAN0005_CHECKED_OUT_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "PLAN0005_EVIDENCE_GENERATION_SHA=${PLAN0005_PR_HEAD_SHA}" >> "$GITHUB_ENV"
+          echo "PLAN0005_WORKFLOW_STARTED_AT_UTC=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+          echo "prHeadSha=${PLAN0005_PR_HEAD_SHA}"
+          echo "checkedOutCommitSha=$(git rev-parse HEAD)"
+
+      - name: Validate integrated main ancestry
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          if ! git merge-base --is-ancestor "${PLAN0005_INTEGRATED_SHA}" HEAD; then
+            echo "HEAD does not contain integrated main SHA ${PLAN0005_INTEGRATED_SHA}"
+            exit 1
+          fi
+          echo "Integrated main SHA ancestry OK: ${PLAN0005_INTEGRATED_SHA}"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.302
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: yarn
+          cache-dependency-path: apps/frontend/yarn.lock
+
+      - name: Prepare local synthetic environment file
+        run: |
+          cp .env.example .env
+          mkdir -p "${PLAN0005_EVIDENCE_DIR}/reports" "${PLAN0005_EVIDENCE_DIR}/artifacts"
+
+      - name: Install Google Chrome, Xvfb, and xdotool for headed Firefox native zoom
+        run: |
+          set -euo pipefail
+          wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo apt-get update
+          sudo apt-get install -y /tmp/chrome.deb xvfb xdotool openbox
+          google-chrome --version
+          xdotool --version
+
+      - name: Install frontend dependencies and Playwright browsers
+        working-directory: apps/frontend
+        run: |
+          yarn install --frozen-lockfile
+          yarn playwright install --with-deps firefox chromium
+
+      - name: Run PLAN-0005 P0 round 1 (shared infrastructure)
+        env:
+          KITCHENFLOW_SMOKE_PASSWORD_A: development-only-user-a
+          KITCHENFLOW_SMOKE_PASSWORD_B: development-only-user-b
+          KITCHENFLOW_SMOKE_BROWSER: google-chrome
+          KITCHENFLOW_SMOKE_ALLOW_UNTRUSTED_LOCAL_CERTIFICATE: "1"
+          ASPNETCORE_ENVIRONMENT: Development
+          PLAYWRIGHT_HOME: /home/runner
+          HOME: /home/runner
+        run: |
+          chmod +x scripts/plan-0005/*.sh scripts/plan-0005/*.cjs scripts/plan-0005/*.mjs
+          # Headed Firefox + openbox + xdotool for TEST-0005-109 native zoom.
+          xvfb-run -a bash -lc 'openbox & sleep 1; bash scripts/plan-0005/run-p0-round1.sh'
+
+      - name: Upload PLAN-0005 P0 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plan-0005-p0-evidence-${{ env.PLAN0005_PR_HEAD_SHA }}
+          path: |
+            docs/evidence/plan-0005/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Tear down Compose stack
+        if: always()
+        run: docker compose -f infrastructure/compose/compose.dev.yml down -v --remove-orphans
+
+  p1-validation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    needs: []
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Capture checked-out SHA identity
+        run: |
+          set -euo pipefail
+          echo "PLAN0005_CHECKED_OUT_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "PLAN0005_EVIDENCE_GENERATION_SHA=${PLAN0005_PR_HEAD_SHA}" >> "$GITHUB_ENV"
+          echo "PLAN0005_WORKFLOW_STARTED_AT_UTC=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+          echo "prHeadSha=${PLAN0005_PR_HEAD_SHA}"
+          echo "checkedOutCommitSha=$(git rev-parse HEAD)"
+
+      - name: Validate integrated main ancestry
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          if ! git merge-base --is-ancestor "${PLAN0005_INTEGRATED_SHA}" HEAD; then
+            echo "HEAD does not contain integrated main SHA ${PLAN0005_INTEGRATED_SHA}"
+            exit 1
+          fi
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.302
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: yarn
+          cache-dependency-path: apps/frontend/yarn.lock
+
+      - name: Prepare local synthetic environment file
+        run: |
+          cp .env.example .env
+          mkdir -p "${PLAN0005_EVIDENCE_DIR}/reports" "${PLAN0005_EVIDENCE_DIR}/artifacts"
+
+      - name: Install Playwright browsers for axe
+        working-directory: apps/frontend
+        run: |
+          yarn install --frozen-lockfile
+          yarn playwright install --with-deps chromium
+
+      - name: Run PLAN-0005 P1 completion round
+        env:
+          KITCHENFLOW_SMOKE_PASSWORD_A: development-only-user-a
+          KITCHENFLOW_SMOKE_PASSWORD_B: development-only-user-b
+          KITCHENFLOW_SMOKE_ALLOW_UNTRUSTED_LOCAL_CERTIFICATE: "1"
+          ASPNETCORE_ENVIRONMENT: Development
+          PLAYWRIGHT_HOME: /home/runner
+          HOME: /home/runner
+        run: |
+          chmod +x scripts/plan-0005/*.sh scripts/plan-0005/*.cjs scripts/plan-0005/*.mjs
+          bash scripts/plan-0005/run-p1-completion.sh
+
+      - name: Upload PLAN-0005 P1 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plan-0005-p1-evidence-${{ env.PLAN0005_PR_HEAD_SHA }}
+          path: |
+            docs/evidence/plan-0005/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Tear down Compose stack
+        if: always()
+        run: docker compose -f infrastructure/compose/compose.dev.yml down -v --remove-orphans
+
+  evidence-consistency:
+    runs-on: ubuntu-24.04
+    needs: [p0-validation, p1-validation]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Capture checked-out SHA identity
+        run: |
+          set -euo pipefail
+          echo "PLAN0005_CHECKED_OUT_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "PLAN0005_EVIDENCE_GENERATION_SHA=${PLAN0005_PR_HEAD_SHA}" >> "$GITHUB_ENV"
+          echo "PLAN0005_WORKFLOW_STARTED_AT_UTC=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      - name: Download P0 and P1 evidence artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/plan-0005-artifacts
+
+      - name: Install gitleaks for policy check
+        run: |
+          curl -sL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz | tar -xz -C /tmp gitleaks
+          sudo mv /tmp/gitleaks /usr/local/bin/gitleaks
+
+      - name: Run gitleaks policy + evidence consistency checks
+        env:
+          GITLEAKS_BIN: gitleaks
+        run: |
+          set -euo pipefail
+          chmod +x scripts/plan-0005/gitleaks-policy.sh scripts/plan-0005/evidence-consistency.sh scripts/plan-0005/lib-identity.sh
+          bash scripts/plan-0005/gitleaks-policy.sh
+          bash scripts/plan-0005/evidence-consistency.sh /tmp/plan-0005-artifacts
+
+      - name: Upload consistency evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plan-0005-evidence-consistency-${{ env.PLAN0005_PR_HEAD_SHA }}
+          path: |
+            docs/evidence/plan-0005/gitleaks-policy.json
+            docs/evidence/plan-0005/evidence-consistency.json
+          if-no-files-found: error
+          retention-days: 30

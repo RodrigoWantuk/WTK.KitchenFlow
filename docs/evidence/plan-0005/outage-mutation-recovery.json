@@ -1,0 +1,11 @@
+{
+  "plan": "PLAN-0005",
+  "testId": "TEST-0005-132",
+  "status": "SupersededPlaceholder",
+  "note": "Versioned stub only. Current evidence must be written by Plan0005OutageMutationTests during CI into PLAN0005_EVIDENCE_DIR with named baseline/duringOutage/afterRestore/afterRetry snapshots. Do not treat this stub as current.",
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+  "baseline": null,
+  "duringOutage": null,
+  "afterRestore": null,
+  "afterRetry": null
+}

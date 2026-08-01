@@ -1,0 +1,91 @@
+{
+  "plan": "PLAN-0005",
+  "testId": "TEST-0005-109",
+  "zoomTechnique": "native-ctrl-plus-xdotool",
+  "cssZoomForbidden": true,
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+  "headSha": "45c1d40c738367807619f935ca95c847aacfbb2c",
+  "note": "Pointer and keyboard scored independently. Keyboard success does not upgrade pointer status. Native zoom only (no CSS zoom).",
+  "generatedAtUtc": "2026-08-01T17:46:49.088Z",
+  "zoomMeasurement": {
+    "method": "native-ctrl-plus",
+    "baselineInnerWidthAt100": 1280,
+    "zoomedInnerWidth": 640,
+    "widthRatio": 2,
+    "calculatedZoomPercent": 200,
+    "numberOfZoomInActions": 6,
+    "numberOfZoomOutActions": 0,
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "results": [
+    {
+      "scenario": "Cook_CTA",
+      "label": "Firefox native 200% — Cook CTA",
+      "browser": "firefox",
+      "browserVersion": "141.0",
+      "zoom": "native-approx-200pct",
+      "zoomMeasurement": {
+        "method": "native-ctrl-plus",
+        "baselineInnerWidthAt100": 1280,
+        "zoomedInnerWidth": 640,
+        "widthRatio": 2,
+        "calculatedZoomPercent": 200,
+        "numberOfZoomInActions": 6,
+        "numberOfZoomOutActions": 0,
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        }
+      },
+      "pointer": {
+        "status": "Failed",
+        "detail": "locator.click: Timeout 2500ms exceeded.\nCall log:\n  - waiting for locator('[data-testid=\"sugg-open-r2\"]').first()\n    - locator resolved to <a data-discover=\"true\" href=\"/app/receitas/r2\" data-testid=\"sugg-open-r2\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-",
+        "interceptor": "locator.click: Timeout 2500ms exceeded.\nCall log:\n  - waiting for locator('[data-testid=\"sugg-open-r2\"]').first()\n    - locator resolved to <a data-discover=\"true\" href=\"/app/receitas/r2\" data-testid=\"sugg-open-r2\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-",
+        "beforeUrl": "http://127.0.0.1:4180/app/hoje",
+        "afterUrl": "http://127.0.0.1:4180/app/hoje"
+      },
+      "keyboard": {
+        "status": "Passed",
+        "detail": "keyboard Enter succeeded",
+        "beforeUrl": "http://127.0.0.1:4180/app/hoje",
+        "afterUrl": "http://127.0.0.1:4180/app/receitas/r2"
+      }
+    },
+    {
+      "scenario": "Pantry_item",
+      "label": "Firefox native 200% — Pantry item",
+      "browser": "firefox",
+      "browserVersion": "141.0",
+      "zoom": "native-approx-200pct",
+      "zoomMeasurement": {
+        "method": "native-ctrl-plus",
+        "baselineInnerWidthAt100": 1280,
+        "zoomedInnerWidth": 640,
+        "widthRatio": 2,
+        "calculatedZoomPercent": 200,
+        "numberOfZoomInActions": 6,
+        "numberOfZoomOutActions": 0,
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        }
+      },
+      "pointer": {
+        "status": "Failed",
+        "detail": "locator.click: Timeout 2500ms exceeded.\nCall log:\n  - waiting for locator('[data-testid^=pantry-item-link-]').first()\n    - locator resolved to <a data-discover=\"true\" href=\"/app/despensa/p1\" data-testid=\"pantry-item-link-p1\" class=\"block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring\">…</a>\n  - attempting click action (trial run)\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into",
+        "interceptor": "locator.click: Timeout 2500ms exceeded.\nCall log:\n  - waiting for locator('[data-testid^=pantry-item-link-]').first()\n    - locator resolved to <a data-discover=\"true\" href=\"/app/despensa/p1\" data-testid=\"pantry-item-link-p1\" class=\"block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring\">…</a>\n  - attempting click action (trial run)\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into",
+        "beforeUrl": "http://127.0.0.1:4180/app/despensa",
+        "afterUrl": "http://127.0.0.1:4180/app/despensa"
+      },
+      "keyboard": {
+        "status": "Passed",
+        "detail": "keyboard Enter succeeded",
+        "beforeUrl": "http://127.0.0.1:4180/app/despensa",
+        "afterUrl": "http://127.0.0.1:4180/app/despensa/p1"
+      }
+    }
+  ]
+}

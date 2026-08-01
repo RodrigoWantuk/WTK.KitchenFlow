@@ -8,6 +8,7 @@ on:
       - 'packages/contracts/openapi/**'
       - 'infrastructure/**'
       - 'scripts/backend/**'
+      - '.gitleaks.toml'
       - '.github/workflows/backend.yml'
   push:
     branches:
@@ -17,6 +18,7 @@ on:
       - 'packages/contracts/openapi/**'
       - 'infrastructure/**'
       - 'scripts/backend/**'
+      - '.gitleaks.toml'
       - '.github/workflows/backend.yml'
 
 jobs:

@@ -1,0 +1,4 @@
+reports/*.log
+reports/*.pid
+reports/trx/
+artifacts/

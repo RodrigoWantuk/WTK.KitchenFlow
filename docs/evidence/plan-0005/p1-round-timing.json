@@ -1,0 +1,80 @@
+{
+  "plan": "PLAN-0005",
+  "round": "P1-completion-round",
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+  "startedAtUtc": "2026-08-01T16:09:01Z",
+  "endedAtUtc": "2026-08-01T16:10:25Z",
+  "totalSeconds": 84,
+  "containerCount": 2,
+  "groups": [
+    {
+      "name": "environment",
+      "exitCode": 0,
+      "durationSeconds": 28,
+      "status": "Passed"
+    },
+    {
+      "name": "pagination-http",
+      "exitCode": 0,
+      "durationSeconds": 11,
+      "status": "Passed",
+      "retest": "Passed after creating two active lots for cursor assertion"
+    },
+    {
+      "name": "openapi",
+      "exitCode": 0,
+      "durationSeconds": 3,
+      "status": "Passed"
+    },
+    {
+      "name": "i18n",
+      "exitCode": 0,
+      "durationSeconds": 0,
+      "status": "Passed"
+    },
+    {
+      "name": "axe",
+      "exitCode": 0,
+      "durationSeconds": 5,
+      "status": "Passed"
+    },
+    {
+      "name": "observability-performance",
+      "exitCode": 0,
+      "durationSeconds": 35,
+      "status": "Passed"
+    },
+    {
+      "name": "frontend-unit",
+      "exitCode": 0,
+      "durationSeconds": 2,
+      "status": "Passed"
+    }
+  ],
+  "overall": "Passed",
+  "openapi": {
+    "passed": 6,
+    "failed": 0,
+    "blocked": 1
+  },
+  "i18n": {
+    "passed": 4,
+    "failed": 0,
+    "blocked": 1
+  },
+  "axe": {
+    "passed": 2,
+    "failed": 0,
+    "blocked": 1
+  },
+  "observability": {
+    "passed": 5,
+    "failed": 0,
+    "blocked": 0,
+    "deferred": 6
+  },
+  "paginationRetest": {
+    "passed": 2,
+    "failed": 0
+  }
+}

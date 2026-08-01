@@ -1,0 +1,110 @@
+{
+  "plan": "PLAN-0005",
+  "round": "P0-round-1",
+  "generatedAtUtc": "2026-08-01T15:52:00Z",
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+  "pr18": {
+    "merged": true,
+    "mergedHead": "de1de624a1075a4b196a1646f7884d3855caecac",
+    "mergeCommit": "b94abd9a83fe29d88b095e3e9a42f10d01c05414"
+  },
+  "baselines": {
+    "inventory": {
+      "plan0003Merge": "f9d429346615bf5b157656822057917ca2fe4032",
+      "finalReviewedCandidate": "d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8"
+    },
+    "profiles": {
+      "plan0012Merge": "49985f94d336e6079f1979a2140555f1beab765c",
+      "finalReviewedCandidate": "3deaf5ba4837e16383bf1c3c577c014f914b5c94",
+      "validationScope": "session-internal-user-isolation-shared-contracts-migrations-coexistence-safe-session-projection-only"
+    },
+    "frontend": {
+      "plan0015Implementation": "e248126346d60c99df82e9c1e9f1954a07e68da2",
+      "plan0015EvidenceGeneration": "25aa10c39dff3fbdc6ab978a64adc941b3246040",
+      "plan0015CompletionPrHead": "de1de624a1075a4b196a1646f7884d3855caecac",
+      "plan0015CompletionMerge": "b94abd9a83fe29d88b095e3e9a42f10d01c05414"
+    },
+    "openapiContractGitObjectId": "0cc5050ced6c43daf69538ad1af3fee135871e58",
+    "openapiContractGitObjectIdNote": "Blob of packages/contracts/openapi/kitchenflow-v1.json at integrated main; includes Inventory and Profiles contracts. Do not reuse PLAN-0003-only blob 39348047801fa96422f9d88460d58917ffc26db8.",
+    "migrations": {
+      "all": [
+        "20260729013459_InitialInventorySlice",
+        "20260729123210_EnforceInventoryReferentialIntegrity",
+        "20260729193936_EnforceInventoryHistoryIntegrity",
+        "20260731021725_EnforceAppendOnlyHistory",
+        "20260731024742_TightenExpirationProvenance",
+        "20260731120209_AddInventoryLotConcurrencyToken",
+        "20260731185224_InitialProfilesSlice",
+        "20260801070903_EnforceUniqueProfileEquipmentStableCode"
+      ],
+      "latestByModule": {
+        "Inventory": "20260731120209_AddInventoryLotConcurrencyToken",
+        "Profiles": "20260801070903_EnforceUniqueProfileEquipmentStableCode"
+      }
+    }
+  },
+  "host": {
+    "os": "Debian GNU/Linux 13 (trixie)",
+    "kernel": "6.12.96+deb13-amd64",
+    "architecture": "x86_64",
+    "cpus": 8,
+    "memoryAvailableGiB": 3.1,
+    "memoryTotalGiB": 7.4,
+    "locale": "pt_BR.UTF-8",
+    "timezone": "America/Sao_Paulo",
+    "display": ":0.0",
+    "viewports": {
+      "default": "1280x720",
+      "zoom200Native": "deviceScaleFactor≈2.0 with browser native zoom"
+    }
+  },
+  "tooling": {
+    "docker": "29.6.2",
+    "dockerCompose": "v5.3.1",
+    "dotnetSdk": "10.0.302",
+    "node": "24.18.0",
+    "yarn": "1.22.22",
+    "playwrightPackage": "1.55.1",
+    "playwrightCli": "1.62.1",
+    "browsers": {
+      "chromium": "Playwright Chromium (apps/frontend Playwright 1.55.1 cache)",
+      "firefox": "Playwright Firefox (apps/frontend Playwright 1.55.1 cache)",
+      "webkit": "Deferred by owner decision — not required for P0 round 1 when unsupported locally",
+      "googleChromeHost": "/usr/bin/google-chrome (Keycloak DevTools smoke)"
+    }
+  },
+  "containers": {
+    "strategy": "Shared Compose stack (postgres + keycloak) plus Testcontainers created by integration fixtures (shared Plan0005 Postgres collection and dedicated outage Postgres). Counts are measured via Docker sampling during the run; do not equate Compose service count with total container instances.",
+    "images": {
+      "postgres": {
+        "reference": "postgres:18.4",
+        "digest": "sha256:3a82e1f56c8f0f5616a11103ac3d47e632c3938698946a7ad26da0df1334744a"
+      },
+      "keycloak": {
+        "reference": "quay.io/keycloak/keycloak:26.7.0",
+        "digest": "sha256:0f198be292568439d700cdbfb893e69a6009bb43a94a06a945b1d3d506c76b13"
+      }
+    },
+    "composeFile": "infrastructure/compose/compose.dev.yml",
+    "composeServiceCount": 2,
+    "composeServices": ["postgres", "keycloak"],
+    "testcontainersCreated": null,
+    "testcontainerImages": [],
+    "maximumConcurrentContainers": null,
+    "totalContainerInstancesCreated": null,
+    "measurement": "scripts/plan-0005/container-count.sh samples docker ps during P0/P1; see container-count.json in CI artifacts",
+    "note": "composeServiceCount=2 is Compose only; Testcontainers are recorded separately and concurrency peak is measured, not inferred."
+  },
+  "syntheticUsers": {
+    "userA": "inventory-user-a",
+    "userB": "inventory-user-b",
+    "note": "Passwords sourced from local ignored .env / realm fixture only; never written into evidence."
+  },
+  "manualValidationPolicy": {
+    "manualExploratoryCharters": "Deferred — non-blocking",
+    "manualVisualReview": "Deferred — non-blocking",
+    "manualNvdaAudit": "Deferred — non-blocking",
+    "manualVoiceOverAudit": "Deferred — non-blocking",
+    "humanScreenshotInspection": "Deferred — non-blocking"
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "plan": "PLAN-0005",
+  "round": "evidence-integrity-corrective",
+  "status": "Validating",
+  "outcome": "Provisional Conditional Pass",
+  "countingUnit": {
+    "requirements": "one row per VS-REQ-* in requirements-traceability.md",
+    "testIds": "one result per TEST-0005-* identifier (TEST-0005-109 is one Failed aggregate when any pointer sub-scenario Failed)",
+    "subScenarios": "independent surface×modality results under a test ID; TEST-0005-109 expands to four: Cook_pointer, Cook_keyboard, Pantry_pointer, Pantry_keyboard"
+  },
+  "identity": {
+    "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+    "currentPrTip": null,
+    "evidenceGenerationHead": null,
+    "note": "currentPrTip and evidenceGenerationHead are filled after history rewrite + green CI; do not call a prior tip exact head."
+  },
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+  "openapiContractGitObjectId": "0cc5050ced6c43daf69538ad1af3fee135871e58",
+  "generatedAtUtc": "2026-08-01T19:00:00Z",
+  "ci": {
+    "note": "Pending exact-tip CI after integrity rewrite",
+    "plan0005WorkflowRunId": null,
+    "backendWorkflowRunId": null,
+    "frontendWorkflowRunId": null,
+    "checks": {},
+    "artifacts": {}
+  },
+  "releaseOrMergeRecommendation": "Do not merge until integrity-round CI is green and owner re-reviews Draft PR #19. Production inventory UX is not release-ready until #20. Medium #21/#22 remain under native zoom with keyboard alternatives.",
+  "functionalFixesOnBranch": false,
+  "plan0011Started": false,
+  "defects": {
+    "Critical": 0,
+    "High": 1,
+    "Medium": 2,
+    "issues": [
+      20,
+      21,
+      22
+    ],
+    "coverageBlockedIssues": [
+      24
+    ]
+  },
+  "requirementResults": {
+    "Passed": 46,
+    "Blocked": 2,
+    "Failed": 0,
+    "total": 48
+  },
+  "testCaseResults": {
+    "Passed": 82,
+    "Failed": 1,
+    "Blocked": 17,
+    "Deferred": 4,
+    "total": 104,
+    "note": "Failed=1 is TEST-0005-109 aggregated (pointer residual). Keyboard sub-scenarios under 109 are Passed and do not cancel the Failed aggregate."
+  },
+  "testCaseTotal": 104,
+  "subScenarioResults": {
+    "TEST-0005-109": {
+      "Cook_pointer": "Failed",
+      "Cook_keyboard": "Passed",
+      "Pantry_pointer": "Failed",
+      "Pantry_keyboard": "Passed"
+    },
+    "Passed": 2,
+    "Failed": 2,
+    "note": "Sub-scenario counts for TEST-0005-109 only; two pointer failures remain visible and map to issues #21 and #22."
+  },
+  "nativeFirefoxZoom": {
+    "technique": "native-ctrl-plus-xdotool",
+    "reproduction": {
+      "browser": "Firefox headed",
+      "display": "Xvfb + openbox",
+      "input": "xdotool Ctrl+0 then Ctrl+Plus",
+      "widthRatio": 2.0,
+      "baselineInnerWidthAt100": 1280,
+      "zoomedInnerWidth": 640,
+      "zoomInActions": 6
+    },
+    "buildUnderTest": "build-prototype",
+    "cookPointer": "Failed",
+    "cookKeyboard": "Passed",
+    "pantryPointer": "Failed",
+    "pantryKeyboard": "Passed",
+    "productionIntegratedClaim": false,
+    "issuesDisposition": "Kept open Medium — native zoom reproduces pointer failure; retest after frontend fix"
+  },
+  "transactionRollback046": {
+    "mechanism": "PostgreSQL BEFORE INSERT trigger on inventory.transactions for marker product",
+    "status": "Passed"
+  },
+  "outage132": {
+    "status": "Awaiting regenerated CI evidence",
+    "note": "testhost must rewrite outage-mutation-recovery.json with named snapshots during current run"
+  },
+  "performance": {
+    "status": "Awaiting regenerated CI evidence",
+    "postgresConnectionsMetric": "peak_sampled_during_concurrent_list_workload"
+  },
+  "containers": {
+    "composeServiceCount": null,
+    "testcontainersCreated": null,
+    "maximumConcurrentContainers": null,
+    "note": "Filled from container-count.json measured during CI"
+  },
+  "gitleaksPolicy": {
+    "wholeCommitAllowlist": false,
+    "note": "History rewrite removes synthetic PAT commit; runtime fixture only"
+  }
+}

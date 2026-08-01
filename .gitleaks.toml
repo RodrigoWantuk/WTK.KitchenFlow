@@ -1,0 +1,27 @@
+# Gitleaks configuration for KitchenFlow.
+# Extend the default rule set; add narrow allowlists only for documented false positives.
+
+title = "KitchenFlow gitleaks"
+
+[extend]
+useDefault = true
+
+# Narrow exception for PLAN-0005 evidence pins of Git object IDs (40-char hex) in known JSON/MD fields.
+# Does NOT ignore the docs/evidence/plan-0005 directory as a whole — console logs, Keycloak JSON,
+# HTTP dumps, and unrelated secrets must still fail the scan.
+# Singular [allowlist] for compatibility with gitleaks-action's older bundled binary.
+# Do NOT add whole-commit allowlists; rewrite history instead of excepting leaked commits.
+[allowlist]
+description = "Allow only known Git object ID pin fields in PLAN-0005 evidence"
+regexTarget = "line"
+regexes = [
+  '''(?i)"openapi(Blob|ContractGitObjectId)"\s*:\s*"[a-f0-9]{40}"''',
+  '''(?i)"integratedMainSha"\s*:\s*"[a-f0-9]{40}"''',
+  '''(?i)"headSha"\s*:\s*"[a-f0-9]{40}"''',
+  '''(?i)"prHeadSha"\s*:\s*"[a-f0-9]{40}"''',
+  '''(?i)"checkedOutCommitSha"\s*:\s*"[a-f0-9]{40}"''',
+  '''(?i)"evidenceGenerationSha"\s*:\s*"[a-f0-9]{40}"''',
+  '''(?i)"frontendImplementationSha"\s*:\s*"[a-f0-9]{40}"''',
+  '''(?i)OpenAPI (blob|contract git object id):\s*`[a-f0-9]{40}`''',
+  '''(?i)Integrated main SHA:\s*`[a-f0-9]{40}`''',
+]
