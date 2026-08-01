@@ -1,20 +1,20 @@
 # PLAN-0005: Independently Validate the Authenticated Inventory Slice
 
-- **Status:** Validating
+- **Status:** Completed
 - **Type:** Testing
 - **Priority:** Critical
 - **Owner:** independent-agent:composer-plan-0005
 - **Created:** 2026-07-29
-- **Last updated:** 2026-08-01T20:25:00Z
+- **Last updated:** 2026-08-01T20:30:00Z
 - **Branch:** `agent/plan-0005-test-inventory-slice`
 - **Pull request:** [Draft PR #19](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/19)
-- **Delivery:** Draft PR — separating raw-run artifacts from repository documentation
+- **Delivery:** Draft PR — awaiting owner review; agent must not merge
 - **System under test:** Integrated `main` after PR #18 merge (`b94abd9a83fe29d88b095e3e9a42f10d01c05414`)
 - **Related implementation plans:** PLAN-0003, PLAN-0014 (on main), PLAN-0015 (Completed via PR #18)
 - **Related issues:** #20 (High), #21 (Medium), #22 (Medium), #24 (coverage Blocked)
 - **Related ADRs:** ADR-0001 (historical), ADR-0007, ADR-0002 through ADR-0006
 - **Dependencies:** PLAN-0002 merged; PR #18 merged by owner; independent agent claim required
-- **Final outcome:** Provisional Conditional Pass (awaiting clean raw-artifact CI)
+- **Final outcome:** Conditional Pass
 
 ## Objective
 
@@ -510,12 +510,19 @@ Do not fix implementation in the independent test branch unless explicitly reass
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0005 **Validating** — raw P0/P1 artifacts must exclude static docs and historical files; staging corrected.
-- **Exact next action:** Push staging fix; wait CI; documentation-only pin of the clean evidence-generation head; Completed Conditional Pass.
+- **Current checkpoint:** PLAN-0005 **Completed** / **Conditional Pass**. Evidence-generation head `cabd2c23addd3c8ab741b5075ec6d33f37f9e359` (clean raw-only artifacts).
+- **Last completed step:** Separated raw P0/P1 uploads from repository docs/historical files; pinned measured metrics from that tip.
+- **Exact next action:** Owner re-reviews Draft PR #19. Do not agent-merge. Do not start PLAN-0011.
+- **Defects:** Critical 0; High 1 (#20); Medium 2 (#21/#22); coverage #24.
 - **PLAN-0011:** Not started (Blocked).
 
-
 ## Progress log
+
+### 2026-08-01T20:30:00Z — independent-agent:composer-plan-0005
+
+- **Checkpoint:** Completed Conditional Pass. Evidence head `cabd2c2` — PLAN-0005 `30716628735`; P0 `8823586490`; P1 `8823580211`; consistency `8823588906` (60/0). Raw artifacts exclude static docs and historical files.
+- **Containers:** P0 compose2/TC36/peak5/total38; P1 compose2/TC16/peak5/total18.
+- **Next action:** Owner re-review (Draft; no merge).
 
 ### 2026-08-01T20:25:00Z — independent-agent:composer-plan-0005
 

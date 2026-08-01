@@ -1,10 +1,10 @@
 {
   "plan": "PLAN-0005",
   "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
-  "prHeadSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
-  "checkedOutCommitSha": "46f31af8feafccb3eb29756c918da416088a3990",
-  "evidenceGenerationSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
-  "generatedAtUtc": "2026-08-01T19:12:35Z",
+  "evidenceGenerationSha": "cabd2c23addd3c8ab741b5075ec6d33f37f9e359",
+  "prHeadSha": "cabd2c23addd3c8ab741b5075ec6d33f37f9e359",
+  "checkedOutCommitSha": "6ad36ba3fa0ab9c1ad2460004798662d3780b446",
+  "generatedAtUtc": "2026-08-01T20:17:03Z",
   "p0": {
     "composeServiceCount": 2,
     "composeServices": [
@@ -37,5 +37,5 @@
     "postgres:18.4",
     "testcontainers/ryuk:0.14.0"
   ],
-  "note": "Canonical container measurements from evidence-generation head 4d07afa P0/P1 artifacts. Do not treat Compose service count alone as total containers."
+  "note": "Canonical measured counts from evidence-generation head cabd2c2 raw P0/P1 artifacts. Repository documentation only \u2014 not uploaded in raw artifacts."
 }

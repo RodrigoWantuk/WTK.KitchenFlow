@@ -1,16 +1,18 @@
-# PLAN-0005 requirements traceability (evidence-integrity final)
+# PLAN-0005 requirements traceability (raw-artifact separation)
 
 Integrated main SHA (system under test): `b94abd9a83fe29d88b095e3e9a42f10d01c05414`
 OpenAPI contract git object id: `0cc5050ced6c43daf69538ad1af3fee135871e58`
 
-Identity vocabulary (do not conflate):
+Identity:
 
 - `integratedMainSha` — main tip under test
-- `evidenceGenerationHead` — `4d07afa066fd7994bbc36473242ee7a2d764ea70` (canonical P0/P1/consistency artifacts)
-- `checkedOutCommitSha` — may be the temporary GitHub Actions merge ref
-- `currentPrTip` — consult PR #19 metadata (may be a later docs/validator commit)
+- `evidenceGenerationHead` — `cabd2c23addd3c8ab741b5075ec6d33f37f9e359` (canonical clean raw-only P0/P1 artifacts)
+- `checkedOutCommitSha` example — `6ad36ba3fa0ab9c1ad2460004798662d3780b446` (Actions merge ref)
+- `currentPrTip` — consult PR #19 metadata (may be this documentation pin)
 
-Evidence-generation CI: workflow `30714081307`; artifacts P0 `8822844474`, P1 `8822833982`, consistency `8822847558`.
+Evidence-generation CI: workflow `30716628735`; artifacts P0 `8823586490`, P1 `8823580211`, consistency `8823588906`.
+
+Raw P0/P1 artifacts contain only run-generated evidence (no static assessment/manifest/traceability; no historical supersession files).
 
 Status vocabulary: `Passed` | `Failed` | `Blocked` | `Not executed` | `Deferred` | `Not applicable`
 

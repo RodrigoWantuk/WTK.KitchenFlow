@@ -1,29 +1,29 @@
 {
   "plan": "PLAN-0005",
-  "round": "evidence-integrity-final",
-  "status": "Validating",
-  "outcome": "Provisional Conditional Pass",
+  "round": "raw-artifact-separation",
+  "status": "Completed",
+  "outcome": "Conditional Pass",
   "countingUnit": {
-    "requirements": "one row per VS-REQ-* in requirements-traceability.md",
-    "testIds": "one result per TEST-0005-* (TEST-0005-109 Failed aggregate when any pointer sub-scenario Failed)",
-    "subScenarios": "TEST-0005-109 expands to Cook_pointer, Cook_keyboard, Pantry_pointer, Pantry_keyboard"
+    "requirements": "one row per VS-REQ-*",
+    "testIds": "one result per TEST-0005-* (TEST-0005-109 Failed aggregate when any pointer Failed)",
+    "subScenarios": "TEST-0005-109 expands to Cook/Pantry \u00d7 pointer/keyboard"
   },
   "identity": {
     "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
-    "evidenceGenerationHead": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
-    "assessmentDocumentCommitSource": "git HEAD of this PR after docs commit",
+    "evidenceGenerationHead": "cabd2c23addd3c8ab741b5075ec6d33f37f9e359",
+    "assessmentDocumentCommitSource": "git HEAD after this documentation-only pin",
     "currentPrTipSource": "PR metadata",
-    "checkedOutCommitShaExample": "46f31af8feafccb3eb29756c918da416088a3990",
-    "note": "Awaiting clean raw-only artifact CI tip to become evidenceGenerationHead. currentPrTipSource=PR metadata."
+    "checkedOutCommitShaExample": "6ad36ba3fa0ab9c1ad2460004798662d3780b446",
+    "note": "evidenceGenerationHead produced the clean raw-only P0/P1 artifacts. current PR tip may advance with this docs commit."
   },
   "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
-  "evidenceGenerationSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
+  "evidenceGenerationSha": "cabd2c23addd3c8ab741b5075ec6d33f37f9e359",
   "openapiContractGitObjectId": "0cc5050ced6c43daf69538ad1af3fee135871e58",
-  "generatedAtUtc": "2026-08-01T19:14:00Z",
+  "generatedAtUtc": "2026-08-01T20:23:48Z",
   "ci": {
-    "plan0005WorkflowRunId": 30714081307,
-    "backendWorkflowRunId": 30714081298,
-    "frontendWorkflowRunId": 30714081296,
+    "plan0005WorkflowRunId": 30716628735,
+    "backendWorkflowRunId": 30716628750,
+    "frontendWorkflowRunId": 30716628760,
     "checks": {
       "p0-validation": "success",
       "p1-validation": "success",
@@ -35,23 +35,23 @@
     },
     "artifacts": {
       "p0": {
-        "id": 8822844474,
-        "name": "plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70",
-        "digest": "sha256:f441587b54bc33a4d9470e2a48e85b3d23da3303960e237ea185c04ebe1ac65b"
+        "id": 8823586490,
+        "name": "plan-0005-p0-evidence-cabd2c23addd3c8ab741b5075ec6d33f37f9e359",
+        "digest": "sha256:809bd735b7b634ca16fa105ea46f71446dd1c6382f63e62fa734a91a25671540"
       },
       "p1": {
-        "id": 8822833982,
-        "name": "plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70",
-        "digest": "sha256:5d5582740d3e493ce9a11c8dcb603821b601066cc2aa13762b9ece4901c2c743"
+        "id": 8823580211,
+        "name": "plan-0005-p1-evidence-cabd2c23addd3c8ab741b5075ec6d33f37f9e359",
+        "digest": "sha256:503b2202deabed7239181b2d448ff4cc4f503e12a9c1cb4262a1db19e92f5691"
       },
       "evidenceConsistency": {
-        "id": 8822847558,
-        "name": "plan-0005-evidence-consistency-4d07afa066fd7994bbc36473242ee7a2d764ea70",
-        "digest": "sha256:ac680fc6b985db52608b4b1cccb0ae87dc63e9bb616ee2201b4048beccf38169"
+        "id": 8823588906,
+        "name": "plan-0005-evidence-consistency-cabd2c23addd3c8ab741b5075ec6d33f37f9e359",
+        "digest": "sha256:6d1f44226f1ac70a0a6c7f2b5c9c77d06bab2f336cd1a2bca7851de5c45ed63e"
       }
     }
   },
-  "releaseOrMergeRecommendation": "Owner may merge after review. Production inventory UX not release-ready until #20. Medium #21/#22 remain under native zoom.",
+  "releaseOrMergeRecommendation": "Owner may merge after review. Production inventory UX not release-ready until #20.",
   "functionalFixesOnBranch": false,
   "plan0011Started": false,
   "defects": {
@@ -78,8 +78,7 @@
     "Failed": 1,
     "Blocked": 17,
     "Deferred": 4,
-    "total": 104,
-    "note": "Failed=1 is TEST-0005-109 aggregate (pointer residual)."
+    "total": 104
   },
   "testCaseTotal": 104,
   "subScenarioResults": {
@@ -94,7 +93,6 @@
   },
   "nativeFirefoxZoom": {
     "technique": "native-ctrl-plus-xdotool",
-    "widthRatio": 2.0,
     "buildUnderTest": "build-prototype",
     "cookPointer": "Failed",
     "cookKeyboard": "Passed",
@@ -143,13 +141,19 @@
   },
   "performance": {
     "samples": 50,
-    "p50Ms": 205,
-    "p95Ms": 212,
-    "p99Ms": 213,
+    "p50Ms": 243,
+    "p95Ms": 249,
+    "p99Ms": 250,
     "errors": 0,
     "ownerCrossovers": 0,
     "postgresConnectionsPeak": 51,
     "postgresConnectionsMetric": "peak_sampled_during_concurrent_list_workload"
+  },
+  "concurrentCreates137": {
+    "status": "Passed",
+    "lots": 10,
+    "duplicates": 0,
+    "partialResults": 0
   },
   "containers": {
     "p0": {
@@ -184,6 +188,11 @@
       "postgres:18.4",
       "testcontainers/ryuk:0.14.0"
     ]
+  },
+  "rawArtifactPolicy": {
+    "staticDocsExcluded": true,
+    "historicalEvidenceExcluded": true,
+    "consistencyPassed": "60/0"
   },
   "gitleaksPolicy": {
     "wholeCommitAllowlist": false,
