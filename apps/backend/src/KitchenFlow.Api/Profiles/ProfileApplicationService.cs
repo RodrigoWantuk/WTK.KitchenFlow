@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using KitchenFlow.Api.Services;
+using KitchenFlow.Modules.Identity;
 using KitchenFlow.Modules.Profiles.Application;
 using Microsoft.AspNetCore.WebUtilities;
 
@@ -15,6 +16,7 @@ public sealed class ProfileApplicationService(
     IGetEquipmentUseCase getEquipment,
     IPutEquipmentUseCase putEquipment,
     IGetProfileCompletenessUseCase getCompleteness,
+    ICurrentUserAccessor currentUser,
     IProfileHttpTokenService tokens,
     ProfileMetrics metrics)
 {
@@ -24,11 +26,11 @@ public sealed class ProfileApplicationService(
 
     /// <summary>Maps the profile-replace command to a transport result.</summary>
     public async Task<IResult> PutAsync(ProfileMutationRequest request, HttpRequest requestContext, CancellationToken cancellationToken) =>
-        ToProfileResult(isMutation: true, "put", await putProfile.PutAsync(new PutProfileCommand(ToInput(request), ReadPrecondition(requestContext), requestContext.HttpContext.TraceIdentifier), cancellationToken), requestContext.HttpContext.TraceIdentifier);
+        ToProfileResult(isMutation: true, "put", await putProfile.PutAsync(new PutProfileCommand(ToInput(request), await ReadPreconditionAsync(requestContext, cancellationToken), requestContext.HttpContext.TraceIdentifier), cancellationToken), requestContext.HttpContext.TraceIdentifier);
 
     /// <summary>Maps the profile-patch command to a transport result.</summary>
     public async Task<IResult> PatchAsync(ProfileMutationRequest request, HttpRequest requestContext, CancellationToken cancellationToken) =>
-        ToProfileResult(isMutation: true, "patch", await patchProfile.PatchAsync(new PatchProfileCommand(ToInput(request), ReadPrecondition(requestContext), requestContext.HttpContext.TraceIdentifier), cancellationToken), requestContext.HttpContext.TraceIdentifier);
+        ToProfileResult(isMutation: true, "patch", await patchProfile.PatchAsync(new PatchProfileCommand(ToInput(request), await ReadPreconditionAsync(requestContext, cancellationToken), requestContext.HttpContext.TraceIdentifier), cancellationToken), requestContext.HttpContext.TraceIdentifier);
 
     /// <summary>Maps the preferences-read query to a transport result.</summary>
     public async Task<IResult> GetPreferencesAsync(HttpContext context, CancellationToken cancellationToken) =>
@@ -36,7 +38,7 @@ public sealed class ProfileApplicationService(
 
     /// <summary>Maps the preferences-replace command to a transport result.</summary>
     public async Task<IResult> PutPreferencesAsync(PreferencesRequest request, HttpRequest requestContext, CancellationToken cancellationToken) =>
-        ToCollectionResult(isMutation: true, "put_preferences", await putPreferences.PutAsync(new PutPreferencesCommand(request.Entries.Select(item => new PreferenceMutationInput(item.Action, item.Category, item.StableCode, item.Note)).ToList(), ReadPrecondition(requestContext), requestContext.HttpContext.TraceIdentifier), cancellationToken), collection => ToPreferencesResponse(collection, tokens.WriteVersion), requestContext.HttpContext);
+        ToCollectionResult(isMutation: true, "put_preferences", await putPreferences.PutAsync(new PutPreferencesCommand(request.Entries.Select(item => new PreferenceMutationInput(item.Action, item.Category, item.StableCode, item.Note)).ToList(), await ReadPreconditionAsync(requestContext, cancellationToken), requestContext.HttpContext.TraceIdentifier), cancellationToken), collection => ToPreferencesResponse(collection, tokens.WriteVersion), requestContext.HttpContext);
 
     /// <summary>Maps the equipment-read query to a transport result.</summary>
     public async Task<IResult> GetEquipmentAsync(HttpContext context, CancellationToken cancellationToken) =>
@@ -44,7 +46,7 @@ public sealed class ProfileApplicationService(
 
     /// <summary>Maps the equipment-replace command to a transport result.</summary>
     public async Task<IResult> PutEquipmentAsync(EquipmentRequest request, HttpRequest requestContext, CancellationToken cancellationToken) =>
-        ToCollectionResult(isMutation: true, "put_equipment", await putEquipment.PutAsync(new PutEquipmentCommand(request.Entries.Select(item => new EquipmentMutationInput(item.StableCode, item.CustomName, item.Capacity, item.CapacityUnit, item.ConstraintNote, item.SortOrder)).ToList(), ReadPrecondition(requestContext), requestContext.HttpContext.TraceIdentifier), cancellationToken), collection => ToEquipmentResponse(collection, tokens.WriteVersion), requestContext.HttpContext);
+        ToCollectionResult(isMutation: true, "put_equipment", await putEquipment.PutAsync(new PutEquipmentCommand(request.Entries.Select(item => new EquipmentMutationInput(item.StableCode, item.CustomName, item.Capacity, item.CapacityUnit, item.ConstraintNote)).ToList(), await ReadPreconditionAsync(requestContext, cancellationToken), requestContext.HttpContext.TraceIdentifier), cancellationToken), collection => ToEquipmentResponse(collection, tokens.WriteVersion), requestContext.HttpContext);
 
     /// <summary>Maps the completeness-read query to a transport result.</summary>
     public async Task<IResult> GetCompletenessAsync(HttpContext context, CancellationToken cancellationToken) =>
@@ -66,8 +68,14 @@ public sealed class ProfileApplicationService(
             return Problem(result.Problem.ErrorCode, result.Problem.Detail, StatusFor(result.Problem.ErrorCode), traceId, result.Problem.Errors);
         }
 
-        var version = tokens.WriteVersion(result.Value!.OwnerUserId, result.Value.ConcurrencyToken);
-        return new EtagResult<ProfileResponse>(ToResponse(result.Value, version), Quote(version), StatusFor(result.Success));
+        var view = result.Value!;
+        if (!view.ProfileExists)
+        {
+            return Results.Json(ToResponse(view, version: null));
+        }
+
+        var version = tokens.WriteVersion(view.OwnerUserId, view.ConcurrencyToken);
+        return new EtagResult<ProfileResponse>(ToResponse(view, version), Quote(version), StatusFor(result.Success));
     }
 
     private IResult ToCollectionResult<TView, TResponse>(
@@ -116,7 +124,7 @@ public sealed class ProfileApplicationService(
             ? Problem(result.Problem.ErrorCode, result.Problem.Detail, StatusFor(result.Problem.ErrorCode), traceId, result.Problem.Errors)
             : Results.Json(map(result.Value!));
 
-    private ProfileVersionPrecondition ReadPrecondition(HttpRequest request)
+    private async Task<ProfileVersionPrecondition> ReadPreconditionAsync(HttpRequest request, CancellationToken cancellationToken)
     {
         var raw = request.Headers.IfMatch.ToString();
         if (string.IsNullOrWhiteSpace(raw))
@@ -124,7 +132,8 @@ public sealed class ProfileApplicationService(
             return ProfileVersionPrecondition.Missing;
         }
 
-        return tokens.TryReadVersion(raw.Trim('"'), out var version) ? ProfileVersionPrecondition.Valid(version) : ProfileVersionPrecondition.Invalid;
+        var user = await currentUser.GetCurrentAsync(cancellationToken);
+        return tokens.TryReadVersion(user.Id, raw.Trim('"'), out var version) ? ProfileVersionPrecondition.Valid(version) : ProfileVersionPrecondition.Invalid;
     }
 
     private static ProfileMutationInput ToInput(ProfileMutationRequest request) => new(
@@ -158,7 +167,7 @@ public sealed class ProfileApplicationService(
 
     private static FieldMutation<T>? ToField<T>(FieldMutationDto<T>? field) => field is null ? null : new FieldMutation<T>(field.Action, field.Value, field.Durability);
 
-    private static ProfileResponse ToResponse(ProfileView view, string version) => new(
+    private static ProfileResponse ToResponse(ProfileView view, string? version) => new(
         view.OwnerUserId,
         ToField(view.DisplayName),
         new HouseholdDto(
@@ -189,6 +198,7 @@ public sealed class ProfileApplicationService(
         view.TechniquesToLearn,
         view.Goals,
         view.AbandonmentReasons,
+        view.ProfileExists,
         version,
         view.CreatedAt,
         view.UpdatedAt);
@@ -238,14 +248,17 @@ public sealed class ProfileApplicationService(
 /// <summary>Protects and parses profile HTTP ETags at the API transport boundary.</summary>
 public interface IProfileHttpTokenService
 {
-    /// <summary>Formats an opaque HTTP ETag from a trusted raw concurrency token.</summary>
+    /// <summary>Formats an opaque HTTP ETag from a trusted owner id and concurrency token.</summary>
     string WriteVersion(Guid ownerUserId, Guid concurrencyToken);
 
-    /// <summary>Parses an opaque owner-bound HTTP ETag into a concurrency token.</summary>
-    bool TryReadVersion(string token, out Guid concurrencyToken);
+    /// <summary>Parses an opaque owner-bound HTTP ETag and rejects tokens for any other owner.</summary>
+    /// <param name="expectedOwnerUserId">Authenticated owner id from the current session; never client-supplied.</param>
+    /// <param name="token">Opaque ETag body without surrounding HTTP quotes.</param>
+    /// <param name="concurrencyToken">Decoded concurrency token when validation succeeds.</param>
+    bool TryReadVersion(Guid expectedOwnerUserId, string token, out Guid concurrencyToken);
 }
 
-/// <summary>Stateless profile ETag encoder bound to the owner user identifier.</summary>
+/// <summary>Stateless profile ETag encoder bound to the authenticated owner user identifier.</summary>
 public sealed class ProfileHttpTokenService : IProfileHttpTokenService
 {
     /// <inheritdoc />
@@ -258,13 +271,19 @@ public sealed class ProfileHttpTokenService : IProfileHttpTokenService
     }
 
     /// <inheritdoc />
-    public bool TryReadVersion(string token, out Guid concurrencyToken)
+    public bool TryReadVersion(Guid expectedOwnerUserId, string token, out Guid concurrencyToken)
     {
         concurrencyToken = Guid.Empty;
         try
         {
             var payload = WebEncoders.Base64UrlDecode(token);
             if (payload.Length != 32)
+            {
+                return false;
+            }
+
+            var ownerUserId = new Guid(payload.AsSpan(0, 16));
+            if (ownerUserId != expectedOwnerUserId)
             {
                 return false;
             }
