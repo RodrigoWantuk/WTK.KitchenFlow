@@ -63,7 +63,7 @@ jobs:
       - name: PLAN-0015 zoom evidence syntax + fail-closed validator
         run: |
           node --check scripts/browser-zoom-200-validation.js
-          node ../scripts/frontend/validate-zoom-evidence.mjs
+          node ../../scripts/frontend/validate-zoom-evidence.mjs
       - name: Dependency audit (allowlist-aware)
         run: yarn audit:policy
 

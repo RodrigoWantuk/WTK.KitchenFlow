@@ -215,6 +215,12 @@ Bundle inspect: zero hits for forbidden prototype tokens in production JS.
 
 ## Progress log
 
+### 2026-08-01T15:25:00Z — Cursor agent
+
+- **Checkpoint:** Fix Frontend CI validator path (`apps/frontend` → `../../scripts/frontend/...`); PLAN-0015 remains Validating.
+- **Prior CI:** runs 30705355032 / 30705353196 failed on MODULE_NOT_FOUND for `../scripts/frontend`.
+- **Next action:** Await Frontend CI green on new head; then Completed; owner review; no merge by agent
+
 ### 2026-08-01T15:20:00Z — Cursor agent
 
 - **Checkpoint:** Fail-closed zoom evidence remediation on PR #18; PLAN-0015 moved back to Validating until CI green.
