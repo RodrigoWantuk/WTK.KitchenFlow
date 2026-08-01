@@ -5,27 +5,23 @@
 - **Priority:** Critical
 - **Owner:** Cursor agent (PLAN-0015)
 - **Created:** 2026-07-31
-- **Last updated:** 2026-08-01T15:35:00Z
+- **Last updated:** 2026-08-01T16:00:00Z
 - **Branch:** `agent/plan-0015-remediate-frontend-baseline` (merged); evidence/docs on `docs/complete-plan-0015-validation` (PR #18)
 - **Pull request:** Implementation [Merged via PR #16](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/16); completion evidence [PR #18](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/18)
 - **Delivery:** PR #18 open (awaiting owner merge); implementation Merged via PR #16
-- **Frontend merge SHA:** `e248126346d60c99df82e9c1e9f1954a07e68da2`
-- **Evidence PR head:** `b7b0356409ab8bc22c1b26e1bfa0b9420d29baf6`
+- **Frontend implementation SHA:** `e248126346d60c99df82e9c1e9f1954a07e68da2`
+- **Tested main SHA:** `da295932cd678eef5b8559c39217e19f101d7a80`
+- **Evidence generation head:** `25aa10c39dff3fbdc6ab978a64adc941b3246040`
+- **Current PR tip / exact-head CI:** see [PR #18](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/18) metadata/body (not self-written into this file)
+- **Reviewed PR head before this reconciliation:** `64b857002c6e3deadabdeddc9f58b73b0e96b3dc`
+- **Reviewed Frontend PR workflow before this reconciliation:** [30705607378](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30705607378)
 - **Automated headed Chromium native zoom:** Passed (`widthRatio=2.0`, `calculatedZoomPercent=200`) — evidence [`docs/evidence/plan-0015/browser-zoom-200-validation.md`](../evidence/plan-0015/browser-zoom-200-validation.md)
-- **Automated Firefox browser/responsive smoke:** Passed
-- **Firefox exact native zoom measurement:** Passed (`widthRatio=2.0`, `calculatedZoomPercent=200`)
-- **Required zoom scenarios:** 22/22 Passed (fail-closed); validator OK; Frontend CI green
+- **Automated Firefox native zoom:** Passed (`widthRatio=2.0`, `calculatedZoomPercent=200`)
+- **Required zoom scenarios:** **22 Passed / 0 Failed / 0 Blocked / 0 Not applicable / 0 Unsupported**
 - **Manual visual review:** Deferred — non-blocking (owner decision)
 - **NVDA/VoiceOver manual audit:** Deferred — non-blocking (owner decision)
 - **Blocker:** None (owner merge of PR #18 remaining)
-- **Implementation SHA (prior reviewed head):** `11f00bdfdcd2f8139d449841c52968df587ed794`
-- **Last CI-validated code SHA (prior round):** `11f00bdfdcd2f8139d449841c52968df587ed794`
-- **Prior push workflow (green):** [Frontend #30680034509](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30680034509)
-- **Prior PR workflow (green):** [Frontend #30680035933](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30680035933)
-- **Current PR head:** consult [PR #16](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/16) metadata (`headRefOid`)
-- **This residual round Implementation / Last CI-validated SHA:** recorded in PR #16 body after push+CI (no self-SHA commit loop)
-- **Latest exact-head CI (this residual round):** recorded in PR #16 body (push + PR workflows + browser-smoke artifact id)
-- **Related implementation plans:** PLAN-0014 (implemented on main; remediation pending), PLAN-0005, PLAN-0011
+- **Related implementation plans:** PLAN-0014 (implemented on main), PLAN-0005 (Ready, not started), PLAN-0011 (Blocked by PLAN-0005)
 - **Related ADRs:** ADR-0007
 - **Dependencies:** PLAN-0014 merged via PR #14 (`4166973`) and completion docs via PR #15 (`6256011`)
 
@@ -177,16 +173,25 @@ Dependency: direct `playwright@1.55.1` (`yarn smoke:browser:install`).
 
 ### Automated headed native-browser-zoom smoke
 
+Window target for the fail-closed run: **1280 × 720** (Firefox may report a different internal baseline width).
+
 | Check | Result | Notes |
 |---|---|---|
 | Automated headed native zoom | **Executed** | Playwright headed + OS Ctrl+Plus; not human review |
-| Chromium native zoom ~200% | **Passed** | `baselineInnerWidthAt100=1280`, `zoomedInnerWidth=640`, `widthRatio=2.0`, `calculatedZoomPercent=200` |
-| Firefox native zoom ~200% | **Passed** | `baselineInnerWidthAt100=1366`, `zoomedInnerWidth=683`, `widthRatio=2.0`, `calculatedZoomPercent=200` |
-| Firefox browser/responsive smoke | **Passed** | Layout + asserted interactions; dialog/carousel Not applicable where controls absent |
+| Chromium native zoom ~200% | **Passed** | `widthRatio=2.0`, `calculatedZoomPercent=200` |
+| Firefox native zoom ~200% | **Passed** | `widthRatio=2.0`, `calculatedZoomPercent=200` |
+| Required scenarios (22) | **22 Passed** | 0 Failed / 0 Blocked / 0 Not applicable / 0 Unsupported |
+| Planning_dialog | **Passed** | Chrome and Firefox (`opened`/`closed`/`focusReturned`) |
+| Carousel_home | **Passed** | Chrome and Firefox (`changed=true`) |
+| Cook_CTA | **Passed** | Chrome and Firefox (path/`href` proof) |
+| Item_detail_navigation | **Passed** | Chrome and Firefox (`linkClickNavigation=true`) |
+| Language_selector | **Passed** | Chrome and Firefox (`stringChanged=true`) |
 | Manual visual review | **Deferred — non-blocking** | Owner decision; candidate for later pre-release plan |
 | Full NVDA/VoiceOver manual audit | **Deferred — non-blocking** | Owner decision; candidate for later pre-release plan |
 
 Evidence: [`browser-zoom-200-validation.md`](../evidence/plan-0015/browser-zoom-200-validation.md); validator `node scripts/frontend/validate-zoom-evidence.mjs` OK.
+
+Firefox at ~200% zoom: Playwright pointer hit-test was blocked for Cook CTA and pantry item; keyboard Enter activation succeeded and expected routes were confirmed. **Not** a zoom-gate failure; **not** a claim that Firefox pointer activation passed. Follow-up under PLAN-0005 automated scope (separate pointer vs keyboard assertions).
 
 ## Bundle size evidence (gzip, CRA report)
 
@@ -202,24 +207,37 @@ Bundle inspect: zero hits for forbidden prototype tokens in production JS.
 - Live BFF session / live projections not wired; production shows FeatureUnavailable / empty — **no mock data**.
 - CRA/`react-scripts@5` retained; advisory **`1124282`** allowlisted through **2026-12-31**.
 - Incompatible Yarn resolution warnings remain for packages listed in `apps/frontend/docs/dependency-resolution-triage.md` (each justified individually; babel systemjs downgrade corrected to `7.29.8`).
-- Full AT audit (NVDA/VoiceOver) deferred to PLAN-0005; real browser zoom 200% closed as Passed.
+- Full AT audit (NVDA/VoiceOver) deferred — non-blocking; candidate for later plans / PLAN-0005 where applicable.
+- Firefox at native ~200% zoom: pointer hit-test blocked for Cook CTA and pantry item in Playwright; keyboard Enter succeeded. Non-blocking for PLAN-0015 zoom gate; PLAN-0005 must retest pointer vs keyboard separately. Do not open an issue unless PLAN-0005 confirms a reproducible pointer failure.
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0015 **Completed**; fail-closed zoom evidence 22/22 Passed; Frontend CI green on `b7b0356`; awaiting owner merge of PR #18.
-- **Last completed step:** Fail-closed smoke + validator + CI path fix; Frontend workflow success on exact head.
+- **Current checkpoint:** PLAN-0015 **Completed**; fail-closed zoom evidence **22/22 Passed**; documentary reconciliation of registry/evidence/plan text; awaiting owner merge of PR #18.
+- **Evidence generation head:** `25aa10c39dff3fbdc6ab978a64adc941b3246040`
+- **Reviewed PR head before this reconciliation:** `64b857002c6e3deadabdeddc9f58b73b0e96b3dc`
+- **Reviewed Frontend PR workflow before this reconciliation:** [30705607378](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30705607378)
+- **Last completed step:** Documentary reconciliation (duplicate registry header removed; scenario results honest; 1280×720; Firefox pointer/keyboard limitation; SHA source-of-truth split).
 - **Exact next action:** Owner merges PR #18; then an independent agent may claim PLAN-0005. Do not start PLAN-0011. PLAN-0005 not started in this PR.
 - **Blockers:** None for PLAN-0015 completion criteria. Delivery awaits owner merge.
-- **Validation performed:** Local dual builds; headed native zoom 200% Chrome+Firefox Passed; 22 required scenarios Passed; validator OK; Frontend CI [30705436482](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30705436482) + [30705435504](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30705435504) success.
-- **Working tree state:** Evidence/scripts/docs + minimal dialog focus restore on `docs/complete-plan-0015-validation`.
-- **Substantial run target:** Achieved for fail-closed PLAN-0015 zoom gate.
+- **Validation performed:** Fail-closed headed zoom (generation head `25aa10c`); validator OK; prior exact-head CI on `64b8570` via [30705607378](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30705607378). Latest tip CI after this reconciliation: see PR #18 body.
+- **Working tree state:** Documentation reconciliation on `docs/complete-plan-0015-validation` (`RealityChangedDialog.returnFocusSelector` preserved).
+- **Substantial run target:** Achieved for fail-closed PLAN-0015 zoom gate + documentary honesty.
 
 ## Progress log
 
+### 2026-08-01T16:00:00Z — Cursor agent
+
+- **Checkpoint:** Documentary reconciliation of PR #18; PLAN-0015 remains **Completed**.
+- **Changes:** Removed duplicate active-plans table header in `docs/plan-status.md`; PLAN-0015 delivery points at evidence generation head `25aa10c` (not tip self-SHA); corrected 1280×720; recorded 22/22 Passed for dialog/carousel/cook/item/language; honest Firefox pointer vs keyboard limitation; transferred Firefox 200% pointer retest to PLAN-0005 scope.
+- **Reviewed prior head:** `64b857002c6e3deadabdeddc9f58b73b0e96b3dc` / workflow [30705607378](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30705607378)
+- **PLAN-0005:** Ready, not started
+- **PLAN-0011:** Blocked by PLAN-0005
+- **Next action:** Push reconciliation; await Frontend CI; update PR #18 body (no further self-SHA doc commits)
+
 ### 2026-08-01T15:35:00Z — Cursor agent
 
-- **Checkpoint:** PLAN-0015 marked **Completed** after fail-closed evidence + Frontend CI green on `b7b0356409ab8bc22c1b26e1bfa0b9420d29baf6`.
-- **CI:** PR run [30705436482](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30705436482) success; push run [30705435504](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30705435504) success (quality + browser-smoke).
+- **Checkpoint (historical):** PLAN-0015 marked **Completed** after fail-closed evidence + Frontend CI green on prior tip `b7b0356409ab8bc22c1b26e1bfa0b9420d29baf6`.
+- **Prior CI (historical):** PR run [30705436482](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30705436482); push run [30705435504](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30705435504) — superseded as “current” by later tip `64b8570` / [30705607378](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30705607378).
 - **PLAN-0005:** Ready, not started
 - **PLAN-0011:** Blocked by PLAN-0005
 - **Next action:** Owner review/merge PR #18; no agent merge/approve
@@ -236,6 +254,7 @@ Bundle inspect: zero hits for forbidden prototype tokens in production JS.
 - **Fixes:** Cook CTA path proof (no body-keyword pass); Planning_dialog open/close/focus; Carousel_home item change; Item_detail link-click only; Language_selector split from FeatureUnavailable; SHA fields (`testedMainSha`/`evidenceBranchHead`/`frontendImplementationSha`); summarize fail-closed; validator strengthened; Frontend CI syntax+validator; minimal `returnFocusSelector` on RealityChangedDialog.
 - **Chrome/Firefox zoom:** Passed — `widthRatio=2.0`, `calculatedZoomPercent=200`
 - **Scenarios:** 22 Passed / 0 Failed / 0 Blocked / 0 Not applicable
+- **Evidence generation head:** `25aa10c39dff3fbdc6ab978a64adc941b3246040`
 - **Validator:** OK locally
 - **PLAN-0005:** Ready, not started
 - **Next action:** Await Frontend CI green; then Completed; owner review of PR #18; no merge by agent
@@ -246,7 +265,7 @@ Bundle inspect: zero hits for forbidden prototype tokens in production JS.
 - **Reclassification:** Not “manual browser validation”; automated headed native-browser-zoom smoke.
 - **Chrome/Chromium zoom:** Passed — `calculatedZoomPercent=200`, `widthRatio=2.0`, `zoomConfirmed200=true`
 - **Firefox zoom:** Passed — same measurement fields; no contradictory `approxZoomPercent`
-- **Scenarios:** 22 Passed / 4 Not applicable / 0 Failed; each Passed has assertion
+- **Scenarios (superseded intermediate claim):** 22 Passed / 4 Not applicable / 0 Failed — later fail-closed round replaced Not applicable dialog/carousel with Passed
 - **Validator:** `node scripts/frontend/validate-zoom-evidence.mjs` OK
 - **Deferred non-blocking:** manual visual review; NVDA/VoiceOver manual audit
 - **Next action:** Owner merges PR #18; do not start PLAN-0005 until merge; do not start PLAN-0011

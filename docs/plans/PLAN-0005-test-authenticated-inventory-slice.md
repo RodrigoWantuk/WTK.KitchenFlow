@@ -268,7 +268,7 @@ Any failure in this group is release-blocking Critical.
 - [ ] **TEST-0005-106:** Form labels, descriptions, errors, and validation summary are programmatically associated.
 - [ ] **TEST-0005-107:** Success/error/loading announcements are exposed appropriately.
 - [ ] **TEST-0005-108:** Automated accessibility scan has no serious/critical issue on required routes/states.
-- [ ] **TEST-0005-109:** 200% zoom remains operable.
+- [ ] **TEST-0005-109:** 200% zoom remains operable. Include separate automated assertions for Firefox Cook CTA and pantry item **pointer** activation vs **keyboard** activation at native ~200% zoom (PLAN-0015 recorded pointer hit-test blocked with keyboard Enter success — non-blocking for PLAN-0015; do not open an issue unless this retest confirms a reproducible pointer failure).
 - [ ] **TEST-0005-110:** Color is not sole state indicator and reduced motion is respected.
 
 ### Responsive and browser behavior — P1/P2
@@ -368,14 +368,14 @@ Do not fix implementation in the independent test branch unless explicitly reass
 
 ## Execution state
 
-- **Current checkpoint:** Backend baseline from PLAN-0003 remains pin-ready. Frontend remediation merged via PR #16; definitive frontend SHA pin still waits on remaining PLAN-0015 manual validation.
-- **Last completed step:** Registry reconciled after PR #16 merge (no longer blocked on draft/open PR #16).
-- **Exact next action:** After remaining PLAN-0015 manual validation, assign an independent testing agent, pin the approved frontend SHA and integrated environment/browser baselines, and move status to `In Progress`.
-- **Blockers:** Remaining PLAN-0015 manual validation before definitive frontend pin; integrated environment image digest remain unfilled.
+- **Current checkpoint:** Backend baseline from PLAN-0003 remains pin-ready. PLAN-0015 Completed (evidence generation head `25aa10c`; frontend implementation `e248126`); definitive pin and claim wait on owner merge of PR #18.
+- **Last completed step:** Registry/docs reconciled for PLAN-0015 completion; PLAN-0005 still Not started.
+- **Exact next action:** After PR #18 merge, an independent agent claims PLAN-0005, creates its exclusive branch and moves it to In Progress; pin approved frontend SHA and integrated environment/browser baselines.
+- **Blockers:** Wait for owner merge of PR #18 (PLAN-0015 completion docs); integrated environment image digest remain unfilled.
 - **Tests executed:** None.
 - **Defects found:** None.
 - **Evidence produced:** Immutable backend baseline pin only.
-- **Known coverage gaps:** Frontend, integrated, browser-version, and locale baselines are still required before independent execution.
+- **Known coverage gaps:** Frontend, integrated, browser-version, and locale baselines are still required before independent execution. Also: Firefox Cook CTA / pantry item pointer vs keyboard at 200% (carried from PLAN-0015).
 - **Working tree state:** Not applicable until an independent agent claims execution.
 
 ## Progress log
