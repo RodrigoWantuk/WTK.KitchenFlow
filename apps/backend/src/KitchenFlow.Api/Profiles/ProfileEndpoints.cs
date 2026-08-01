@@ -11,14 +11,60 @@ public static class ProfileEndpoints
     public static RouteGroupBuilder MapProfileEndpoints(this RouteGroupBuilder group)
     {
         group.AddEndpointFilter(ValidateCsrfAsync);
-        group.MapGet("", (ProfileApplicationService service, HttpContext context, CancellationToken cancellationToken) => service.GetAsync(context, cancellationToken)).Produces<ProfileResponse>().ProducesProblem(401);
-        group.MapPut("", (ProfileApplicationService service, ProfileMutationRequest request, HttpRequest requestContext, CancellationToken cancellationToken) => service.PutAsync(request, requestContext, cancellationToken)).RequireRateLimiting("mutation").Produces<ProfileResponse>(StatusCodes.Status200OK).Produces<ProfileResponse>(StatusCodes.Status201Created).ProducesProblem(400).ProducesProblem(412).ProducesProblem(428);
-        group.MapPatch("", (ProfileApplicationService service, ProfileMutationRequest request, HttpRequest requestContext, CancellationToken cancellationToken) => service.PatchAsync(request, requestContext, cancellationToken)).RequireRateLimiting("mutation").Produces<ProfileResponse>().ProducesProblem(400).ProducesProblem(412).ProducesProblem(428);
-        group.MapGet("/preferences", (ProfileApplicationService service, HttpContext context, CancellationToken cancellationToken) => service.GetPreferencesAsync(context, cancellationToken)).Produces<IReadOnlyList<PreferenceResponse>>().ProducesProblem(401);
-        group.MapPut("/preferences", (ProfileApplicationService service, PreferencesRequest request, HttpRequest requestContext, CancellationToken cancellationToken) => service.PutPreferencesAsync(request, requestContext, cancellationToken)).RequireRateLimiting("mutation").Produces<IReadOnlyList<PreferenceResponse>>().ProducesProblem(400).ProducesProblem(412).ProducesProblem(428);
-        group.MapGet("/equipment", (ProfileApplicationService service, HttpContext context, CancellationToken cancellationToken) => service.GetEquipmentAsync(context, cancellationToken)).Produces<IReadOnlyList<EquipmentResponse>>().ProducesProblem(401);
-        group.MapPut("/equipment", (ProfileApplicationService service, EquipmentRequest request, HttpRequest requestContext, CancellationToken cancellationToken) => service.PutEquipmentAsync(request, requestContext, cancellationToken)).RequireRateLimiting("mutation").Produces<IReadOnlyList<EquipmentResponse>>().ProducesProblem(400).ProducesProblem(412).ProducesProblem(428);
-        group.MapGet("/completeness", (ProfileApplicationService service, HttpContext context, CancellationToken cancellationToken) => service.GetCompletenessAsync(context, cancellationToken)).Produces<ProfileCompletenessResponse>().ProducesProblem(401);
+        group.MapGet("", (ProfileApplicationService service, HttpContext context, CancellationToken cancellationToken) => service.GetAsync(context, cancellationToken))
+            .Produces<ProfileResponse>()
+            .ProducesProblem(401)
+            .ProducesProblem(403);
+        group.MapPut("", (ProfileApplicationService service, ProfileMutationRequest request, HttpRequest requestContext, CancellationToken cancellationToken) => service.PutAsync(request, requestContext, cancellationToken))
+            .RequireRateLimiting("mutation")
+            .Produces<ProfileResponse>(StatusCodes.Status200OK)
+            .Produces<ProfileResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(400)
+            .ProducesProblem(401)
+            .ProducesProblem(403)
+            .ProducesProblem(409)
+            .ProducesProblem(412)
+            .ProducesProblem(428);
+        group.MapPatch("", (ProfileApplicationService service, ProfileMutationRequest request, HttpRequest requestContext, CancellationToken cancellationToken) => service.PatchAsync(request, requestContext, cancellationToken))
+            .RequireRateLimiting("mutation")
+            .Produces<ProfileResponse>(StatusCodes.Status200OK)
+            .Produces<ProfileResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(400)
+            .ProducesProblem(401)
+            .ProducesProblem(403)
+            .ProducesProblem(409)
+            .ProducesProblem(412)
+            .ProducesProblem(428);
+        group.MapGet("/preferences", (ProfileApplicationService service, HttpContext context, CancellationToken cancellationToken) => service.GetPreferencesAsync(context, cancellationToken))
+            .Produces<PreferencesCollectionResponse>()
+            .ProducesProblem(401)
+            .ProducesProblem(403);
+        group.MapPut("/preferences", (ProfileApplicationService service, PreferencesRequest request, HttpRequest requestContext, CancellationToken cancellationToken) => service.PutPreferencesAsync(request, requestContext, cancellationToken))
+            .RequireRateLimiting("mutation")
+            .Produces<PreferencesCollectionResponse>()
+            .ProducesProblem(400)
+            .ProducesProblem(401)
+            .ProducesProblem(403)
+            .ProducesProblem(409)
+            .ProducesProblem(412)
+            .ProducesProblem(428);
+        group.MapGet("/equipment", (ProfileApplicationService service, HttpContext context, CancellationToken cancellationToken) => service.GetEquipmentAsync(context, cancellationToken))
+            .Produces<EquipmentCollectionResponse>()
+            .ProducesProblem(401)
+            .ProducesProblem(403);
+        group.MapPut("/equipment", (ProfileApplicationService service, EquipmentRequest request, HttpRequest requestContext, CancellationToken cancellationToken) => service.PutEquipmentAsync(request, requestContext, cancellationToken))
+            .RequireRateLimiting("mutation")
+            .Produces<EquipmentCollectionResponse>()
+            .ProducesProblem(400)
+            .ProducesProblem(401)
+            .ProducesProblem(403)
+            .ProducesProblem(409)
+            .ProducesProblem(412)
+            .ProducesProblem(428);
+        group.MapGet("/completeness", (ProfileApplicationService service, HttpContext context, CancellationToken cancellationToken) => service.GetCompletenessAsync(context, cancellationToken))
+            .Produces<ProfileCompletenessResponse>()
+            .ProducesProblem(401)
+            .ProducesProblem(403);
         return group;
     }
 

@@ -5,9 +5,9 @@
 - **Priority:** Critical
 - **Owner:** Cursor cloud agent
 - **Created:** 2026-07-31
-- **Last updated:** 2026-07-31T22:45:00Z
+- **Last updated:** 2026-08-01T06:36:00Z
 - **Branch:** `cursor/plan-0012-profile-backend-1672`
-- **Pull request:** Open — remediation round
+- **Pull request:** Open — [PR #12](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/12) (Changes requested; OpenAPI/runtime/security remediation)
 - **Base commit:** `f9d429346615bf5b157656822057917ca2fe4032` (PLAN-0003 merged via PR #9)
 - **Related specification:** PLAN-0002, `docs/product/audience-and-profile.md`
 - **Related ADRs:** ADR-0002, ADR-0003, ADR-0004, ADR-0006
@@ -68,17 +68,27 @@ Implement a production-shaped backend slice for progressive profile, single-hous
 - [x] Privacy-minimizing audit history without sensitive payloads
 - [x] Module-owned export and deletion projection interfaces prepared for Privacy workflows
 - [x] Architecture tests enforce module boundaries
-- [x] Full test suite deterministic with zero skipped tests (140/140 local Release)
+- [x] Full test suite deterministic with zero skipped tests (150/150 local Release: 14 architecture + 29 unit + 107 integration)
 - [x] Release build zero warnings, locked restore, migrations from empty and prior main, OpenAPI truthful
 
 ## Execution state
 
-- **Current phase:** Validating — remediation complete, awaiting CI
-- **Last verified checkpoint:** Release build 0 warnings; 140/140 tests; PostgreSQL optimistic concurrency; PUT replace semantics; action/durability validation; history redaction; equipment identity reconcile; collection ETags
-- **Blockers:** Awaiting CI on remediation SHA and independent review
-- **Exact next action:** Push remediation commit, reconcile CI, request review
+- **Current phase:** Validating — OpenAPI/runtime/security remediation delivered locally; awaiting Backend CI on pushed head
+- **Last verified checkpoint:** Release build 0 warnings; 150/150 tests; OpenAPI export/check/lint green; collection wrappers + nullable version; field/preference enums wired; ETag/`If-Match`/CSRF docs; GET read metrics; isolation + CSRF tests; merged `origin/main`
+- **Blockers:** Independent owner review after green Backend CI
+- **Exact next action:** Owner re-review of PR #12 after Backend workflow succeeds on the remediation head
 
 ## Progress log
+
+### 2026-08-01T06:36:00Z — OpenAPI, runtime, and security remediation
+
+- Merged `origin/main` into `cursor/plan-0012-profile-backend-1672` and reconciled `docs/plan-status.md`.
+- OpenAPI: preferences/equipment produce `PreferencesCollectionResponse` / `EquipmentCollectionResponse`; `ProfileFieldAction` / `ProfileFieldDurability` / `PreferenceCommandAction` enums wired into DTOs; response `ETag` and request `If-Match`/`X-CSRF-TOKEN` documented; no `If-None-Match`; HTTP statuses aligned (400/401/403/409/412/428).
+- Runtime: missing-profile collections return `{ "version": null, "entries": [] }` without ETag; GET profile/preferences/equipment record `profile_reads_total` instead of mutation metrics.
+- Tests: `ProfileContractAndSecurityTests` covers OpenAPI vs runtime, empty-profile collections, precondition rules, cross-user isolation, CSRF rejection, and GET metrics regression.
+- Refreshed `packages/contracts/openapi/kitchenflow-v1.json`; `check-openapi.sh` and `lint-openapi.sh` pass.
+- **Validation:** `dotnet build/test/format -c Release` green (14/29/107); migrations up to date; OpenAPI lint valid.
+- **Next:** Push head, wait for Backend CI, request owner re-review. Keep Validating; do not merge or mark Completed.
 
 ### 2026-07-31T22:45:00Z — Review remediation delivered
 

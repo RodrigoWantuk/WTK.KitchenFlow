@@ -229,6 +229,30 @@
         ],
         "type": "object"
       },
+      "EquipmentCollectionResponse": {
+        "description": "Versioned equipment collection response DTO.",
+        "properties": {
+          "entries": {
+            "description": "Active equipment entries.",
+            "items": {
+              "$ref": "#/components/schemas/EquipmentResponse"
+            },
+            "type": "array"
+          },
+          "version": {
+            "description": "Opaque profile version matching the ETag header when a profile exists; null when no profile exists yet.",
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "version",
+          "entries"
+        ],
+        "type": "object"
+      },
       "EquipmentItemDto": {
         "description": "Equipment item request DTO.",
         "properties": {
@@ -361,11 +385,10 @@
         "description": "Field mutation transport DTO.",
         "properties": {
           "action": {
-            "type": "string"
+            "$ref": "#/components/schemas/ProfileFieldAction"
           },
           "durability": {
-            "default": "durable",
-            "type": "string"
+            "$ref": "#/components/schemas/ProfileFieldDurability"
           },
           "value": {
             "format": "int32",
@@ -387,11 +410,10 @@
         "description": "Field mutation transport DTO.",
         "properties": {
           "action": {
-            "type": "string"
+            "$ref": "#/components/schemas/ProfileFieldAction"
           },
           "durability": {
-            "default": "durable",
-            "type": "string"
+            "$ref": "#/components/schemas/ProfileFieldDurability"
           },
           "value": {
             "type": [
@@ -617,11 +639,20 @@
         ],
         "type": "object"
       },
+      "PreferenceCommandAction": {
+        "description": "Explicit preference or restriction command action.",
+        "enum": [
+          "add",
+          "remove",
+          "update"
+        ],
+        "type": "string"
+      },
       "PreferenceCommandDto": {
         "description": "Explicit preference command DTO.",
         "properties": {
           "action": {
-            "type": "string"
+            "$ref": "#/components/schemas/PreferenceCommandAction"
           },
           "category": {
             "type": "string"
@@ -682,6 +713,30 @@
           "note",
           "presence",
           "sortOrder"
+        ],
+        "type": "object"
+      },
+      "PreferencesCollectionResponse": {
+        "description": "Versioned preference collection response DTO.",
+        "properties": {
+          "entries": {
+            "description": "Preference and restriction entries.",
+            "items": {
+              "$ref": "#/components/schemas/PreferenceResponse"
+            },
+            "type": "array"
+          },
+          "version": {
+            "description": "Opaque profile version matching the ETag header when a profile exists; null when no profile exists yet.",
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "required": [
+          "version",
+          "entries"
         ],
         "type": "object"
       },
@@ -811,6 +866,15 @@
         ],
         "type": "object"
       },
+      "ProfileFieldAction": {
+        "description": "Progressive field action. absent is only valid for PUT replace semantics.",
+        "enum": [
+          "absent",
+          "confirm",
+          "remove"
+        ],
+        "type": "string"
+      },
       "ProfileFieldDtoOfint": {
         "description": "Progressive profile field transport DTO.",
         "properties": {
@@ -876,6 +940,13 @@
           "durability"
         ],
         "type": "object"
+      },
+      "ProfileFieldDurability": {
+        "description": "Only durable mutations are accepted on profile endpoints.",
+        "enum": [
+          "durable"
+        ],
+        "type": "string"
       },
       "ProfileMutationRequest": {
         "description": "Profile mutation request body.",
@@ -3021,7 +3092,15 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "OK",
+            "headers": {
+              "ETag": {
+                "description": "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "401": {
             "content": {
@@ -3045,6 +3124,16 @@
               }
             },
             "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Forbidden"
           },
           "500": {
             "content": {
@@ -3093,7 +3182,7 @@
             }
           },
           {
-            "description": "Required for updates after the first create. Use the ETag returned by GET /api/v1/profile.",
+            "description": "Required after the first create. Use the ETag from GET /api/v1/profile or a collection GET when a profile exists.",
             "in": "header",
             "name": "If-Match",
             "schema": {
@@ -3120,7 +3209,33 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "OK",
+            "headers": {
+              "ETag": {
+                "description": "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponse"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {
+              "ETag": {
+                "description": "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "400": {
             "content": {
@@ -3153,7 +3268,27 @@
                 }
               }
             },
-            "description": "Authentication is required."
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "412": {
             "content": {
@@ -3236,9 +3371,18 @@
         "operationId": "putApiV1Profile",
         "parameters": [
           {
-            "description": "Required for updates after the first create. Use the ETag returned by GET /api/v1/profile.",
+            "description": "Required after the first create. Use the ETag from GET /api/v1/profile or a collection GET when a profile exists.",
             "in": "header",
             "name": "If-Match",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Required CSRF token issued by GET /api/v1/session.",
+            "in": "header",
+            "name": "X-CSRF-TOKEN",
+            "required": true,
             "schema": {
               "type": "string"
             }
@@ -3263,7 +3407,15 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "OK",
+            "headers": {
+              "ETag": {
+                "description": "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "201": {
             "content": {
@@ -3273,7 +3425,15 @@
                 }
               }
             },
-            "description": "Created"
+            "description": "Created",
+            "headers": {
+              "ETag": {
+                "description": "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "400": {
             "content": {
@@ -3306,7 +3466,27 @@
                 }
               }
             },
-            "description": "Authentication is required."
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "412": {
             "content": {
@@ -3423,6 +3603,16 @@
             },
             "description": "Unauthorized"
           },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "500": {
             "content": {
               "application/problem+json": {
@@ -3466,14 +3656,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/EquipmentResponse"
-                  },
-                  "type": "array"
+                  "$ref": "#/components/schemas/EquipmentCollectionResponse"
                 }
               }
             },
-            "description": "OK"
+            "description": "Collection returned. version is null and ETag is omitted when no profile exists yet.",
+            "headers": {
+              "ETag": {
+                "description": "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "401": {
             "content": {
@@ -3497,6 +3692,16 @@
               }
             },
             "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Forbidden"
           },
           "500": {
             "content": {
@@ -3536,9 +3741,18 @@
         "operationId": "putApiV1ProfileEquipment",
         "parameters": [
           {
-            "description": "Required for updates after the first create. Use the ETag returned by GET /api/v1/profile.",
+            "description": "Required after the first create. Use the ETag from GET /api/v1/profile or a collection GET when a profile exists.",
             "in": "header",
             "name": "If-Match",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Required CSRF token issued by GET /api/v1/session.",
+            "in": "header",
+            "name": "X-CSRF-TOKEN",
+            "required": true,
             "schema": {
               "type": "string"
             }
@@ -3559,14 +3773,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/EquipmentResponse"
-                  },
-                  "type": "array"
+                  "$ref": "#/components/schemas/EquipmentCollectionResponse"
                 }
               }
             },
-            "description": "OK"
+            "description": "OK",
+            "headers": {
+              "ETag": {
+                "description": "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "400": {
             "content": {
@@ -3599,7 +3818,27 @@
                 }
               }
             },
-            "description": "Authentication is required."
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "412": {
             "content": {
@@ -3687,14 +3926,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/PreferenceResponse"
-                  },
-                  "type": "array"
+                  "$ref": "#/components/schemas/PreferencesCollectionResponse"
                 }
               }
             },
-            "description": "OK"
+            "description": "Collection returned. version is null and ETag is omitted when no profile exists yet.",
+            "headers": {
+              "ETag": {
+                "description": "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "401": {
             "content": {
@@ -3718,6 +3962,16 @@
               }
             },
             "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Forbidden"
           },
           "500": {
             "content": {
@@ -3757,9 +4011,18 @@
         "operationId": "putApiV1ProfilePreferences",
         "parameters": [
           {
-            "description": "Required for updates after the first create. Use the ETag returned by GET /api/v1/profile.",
+            "description": "Required after the first create. Use the ETag from GET /api/v1/profile or a collection GET when a profile exists.",
             "in": "header",
             "name": "If-Match",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Required CSRF token issued by GET /api/v1/session.",
+            "in": "header",
+            "name": "X-CSRF-TOKEN",
+            "required": true,
             "schema": {
               "type": "string"
             }
@@ -3780,14 +4043,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/PreferenceResponse"
-                  },
-                  "type": "array"
+                  "$ref": "#/components/schemas/PreferencesCollectionResponse"
                 }
               }
             },
-            "description": "OK"
+            "description": "OK",
+            "headers": {
+              "ETag": {
+                "description": "Opaque profile version token. Omitted for empty preference/equipment collections when no profile exists.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "400": {
             "content": {
@@ -3820,7 +4088,27 @@
                 }
               }
             },
-            "description": "Authentication is required."
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "412": {
             "content": {
