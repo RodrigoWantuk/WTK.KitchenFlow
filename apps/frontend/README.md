@@ -1,61 +1,104 @@
 # KitchenFlow Frontend
 
-This directory contains the independently deployable KitchenFlow responsive web frontend.
+Official KitchenFlow frontend package living at `apps/frontend`.
 
-## Accepted platform
+## Authority
 
-- React;
-- TypeScript;
-- interface design and code generation through Lovable;
-- generated backend client and types from OpenAPI contracts.
+- This directory is the **only** official frontend source for KitchenFlow.
+- Imported from Emergent snapshot `69f798f66b7987c4ed785c52c90a5539bf46f52e` (see [`docs/development/emergent-frontend-import-provenance.md`](../../docs/development/emergent-frontend-import-provenance.md)).
+- `kitchen-emergent` is a historical snapshot. There is **no** bidirectional sync.
+- Emergent and Lovable remain optional generation tools only (ADR-0007).
+- After PLAN-0014 merge, remediations land through **PLAN-0015**. This package is **not** declared production-ready until PLAN-0015 is owner-approved.
 
-React and Lovable are fixed stakeholder decisions. The exact Lovable-generated runtime, router, build system, component library, state library, localization library, and test tools are selected after the actual generated project is inspected and require a plan or ADR where they establish durable precedent.
+## Stack
 
-See [`ADR-0001`](../../docs/architecture/decisions/0001-frontend-platform-and-boundary.md).
+- React 19 + TypeScript (`allowJs: false`)
+- Create React App + CRACO
+- Yarn classic (`packageManager` field)
 
-## Responsibilities
+## Frontend modes (build-time)
 
-- responsive, multilingual, and accessible user experience;
-- account onboarding and progressive profile management;
-- inventory, attention, shopping, planning, recipe, cooking, history, notification, quota, and privacy workflows;
-- temporary UI state and optimistic presentation where safe;
-- upload initiation and job progress;
-- clear presentation of provenance, uncertainty, safety, quota, validation, and failure;
-- secure communication with backend/BFF endpoints.
+Set `REACT_APP_FRONTEND_MODE` at build/start time (validated):
 
-## Prohibited ownership
+| Mode | Script | Behavior |
+|---|---|---|
+| `prototype` | `yarn start` / `yarn build:prototype` | ScenarioBar, fixtures, mock session allowed |
+| `production` | `yarn build:production` | No scenario tooling; unavailable adapters; no local `authed` |
+| `test` | `yarn test` | Prototype-compatible composition for Jest |
 
-The frontend does not:
+Composition roots live under `src/app/runtime/`. Providers require injected adapters — no silent mock defaults in production.
 
-- access PostgreSQL directly;
-- call AI providers directly;
-- store provider credentials or long-lived access and refresh tokens;
-- calculate official quota or subscription entitlement;
-- own inventory arithmetic, shelf-life authority, authorization, privacy deletion, or food-safety enforcement;
-- bypass generated contracts with duplicated hand-maintained API models.
+## Development
 
-## Lovable workflow
+```bash
+cd apps/frontend
+yarn install --frozen-lockfile
+yarn start
+```
 
-Lovable output is reviewed as normal production code for:
+### Quality scripts
 
-- component and feature boundaries;
-- accessibility and keyboard operation;
-- localization readiness;
-- responsive behavior;
-- secure session and CSRF interaction;
-- privacy and sensitive-data exposure;
-- maintainability and testability;
-- generated contract compatibility;
-- unnecessary dependencies and duplicated backend logic.
+```bash
+yarn typecheck
+yarn lint
+yarn format:check
+yarn test
+yarn guard:ts-only
+yarn guard:build-mode
+yarn guard:production-isolation
+yarn build
+yarn inspect:production-bundle
+yarn build:prototype
+yarn build:production
+yarn audit:policy
+```
 
-The Git repository remains the source of truth. Lovable must not create a parallel backend or undocumented architecture.
+### Automated browser smoke (Playwright)
 
-## Required reading
+Playwright is a **direct** `devDependency`. Do not rely on global installs or absolute browser cache paths.
 
-- [`../../docs/README.md`](../../docs/README.md)
-- [`../../docs/product/user-journeys.md`](../../docs/product/user-journeys.md)
-- [`../../docs/product/initial-release.md`](../../docs/product/initial-release.md)
-- [`../../docs/domain/README.md`](../../docs/domain/README.md)
-- [`../../docs/architecture/overview.md`](../../docs/architecture/overview.md)
-- [`../../docs/security/privacy-and-data-protection.md`](../../docs/security/privacy-and-data-protection.md)
-- [`../../docs/testing/product-foundation-gates.md`](../../docs/testing/product-foundation-gates.md)
+```bash
+cd apps/frontend
+yarn install --frozen-lockfile
+yarn smoke:browser:install
+yarn start   # terminal 1 — prototype mode
+yarn smoke:browser   # terminal 2
+```
+
+CI uses `yarn smoke:browser:ci` (`SMOKE_MANAGE_SERVER=1`) after the quality job. Any `Failed` / `Blocked` / `Not executed` mandatory automated check exits non-zero.
+
+Reports land under `docs/browser-smoke/` (JSON + HTML; failure screenshots/traces when enabled).
+
+**Manual** browser validation (for example real browser zoom 200%) is tracked separately in PLAN-0015 and is not claimed Passed by the automated matrix.
+
+## Mock vs live adapters
+
+| Path | Role |
+|---|---|
+| `src/adapters/mock/` | Fixture-backed presentation projections for **prototype/test** only |
+| `src/adapters/live/` | Explicit unavailable / future OpenAPI adapters for **production** |
+| `src/contracts/` | Presentation models |
+| `src/features/` | Shared UI for preparation route, pantry availability bar, shopping review, cook handoff |
+| `src/app/session/` | `SessionAdapter` boundary (mock vs unavailable) |
+
+Presentation components consume projections. They must **not** perform authoritative inventory, reservation, or unit-conversion arithmetic.
+
+## Session and API seams
+
+- Browser auth remains BFF/session oriented (no token storage, no direct Keycloak admin).
+- Production mode does not treat `localStorage` `authed` as authentication.
+- AI providers are never called from the frontend.
+- Live backend wiring remains incomplete until inventory/home contracts stabilize; production shows controlled unavailable states instead of silent mocks.
+
+## Dependency triage
+
+- Vulnerabilities / allowlist: [`docs/dependency-vulnerability-triage.md`](docs/dependency-vulnerability-triage.md) and `audit-allowlist.json`
+- Incompatible Yarn resolutions (individual table): [`docs/dependency-resolution-triage.md`](docs/dependency-resolution-triage.md)
+
+## CI
+
+GitHub Actions workflow: `.github/workflows/frontend.yml` — required jobs **quality** and **browser-smoke** (blocking; no `continue-on-error` / `|| true`).
+
+## TypeScript
+
+Application sources under `src/` must be TypeScript (`.ts`/`.tsx`). Enforce with `yarn guard:ts-only`.

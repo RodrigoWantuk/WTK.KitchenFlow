@@ -5,14 +5,14 @@
 - **Priority:** Critical
 - **Owner:** Unassigned independent testing agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-31T18:35:00Z
+- **Last updated:** 2026-07-31T22:47:18Z
 - **Branch:** `agent/plan-0005-test-inventory-slice`
 - **Pull request:** Not opened
-- **System under test:** Stable PLAN-0003 and PLAN-0004 pull-request commits in an integrated test environment
-- **Related implementation plans:** PLAN-0003 and PLAN-0004
+- **System under test:** Stable PLAN-0003 backend and remediated PLAN-0014/PLAN-0015 frontend baseline commits in an integrated test environment
+- **Related implementation plans:** PLAN-0003, PLAN-0014 (on main), PLAN-0015 (remediation)
 - **Related issues:** None
-- **Related ADRs:** ADR-0001 through ADR-0006
-- **Dependencies:** PLAN-0002 merged; stable implementation baselines and deployable environment
+- **Related ADRs:** ADR-0001 (historical), ADR-0007, ADR-0002 through ADR-0006
+- **Dependencies:** PLAN-0002 merged; PLAN-0015 owner approval before treating the frontend SHA as the definitive baseline; stable implementation baselines and deployable environment
 
 ## Objective
 
@@ -27,7 +27,7 @@ A `Completed` test plan may conclude `Pass`, `Conditional Pass`, `Fail`, or `Inc
 Mandatory sources:
 
 - PLAN-0002 and every `VS-REQ-*` requirement;
-- PLAN-0003 and PLAN-0004 acceptance criteria;
+- PLAN-0003 and PLAN-0014 acceptance criteria (PLAN-0004 historical requirements remain informative where not superseded);
 - accepted inventory domain documents;
 - ADR-0001 through ADR-0006;
 - privacy/security documents;
@@ -75,7 +75,7 @@ Before execution, fill all fields and commit them:
 
 - **Repository:** `RodrigoWantuk/WTK.KitchenFlow`
 - **Backend PR and commit:** [PR #9](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/9) candidate `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`; ready for independent PLAN-0005 execution after owner merge
-- **Frontend PR and commit:** Required
+- **Frontend PR and commit:** Required — pin only after PLAN-0015 owner approval; provisional PLAN-0014 code on main (`4166973`) is not the definitive frontend baseline until then
 - **Integrated branch/commit or environment image digest:** Required
 - **OpenAPI snapshot SHA:** Git blob `39348047801fa96422f9d88460d58917ffc26db8` from backend candidate `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`
 - **Lovable source repository commit:** Required
@@ -368,10 +368,10 @@ Do not fix implementation in the independent test branch unless explicitly reass
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0005 is ready to execute against the single immutable backend baseline `d9c67e16c0b12eb3b13d581c55a677a8ff7b73a8`. PLAN-0003 implementation is complete and awaiting owner merge of PR #9.
-- **Last completed step:** Pinned backend candidate, OpenAPI blob, and migration revision from the completed PLAN-0003 delivery.
-- **Exact next action:** After PR #9 merge, assign an independent testing agent, pin PLAN-0004 frontend and integrated environment/browser baselines, and move status to `In Progress`.
-- **Blockers:** Stable PLAN-0004 frontend baseline and integrated environment image digest remain unfilled.
+- **Current checkpoint:** Backend baseline from PLAN-0003 remains pin-ready. Frontend code from PLAN-0014 is on main but is **not** the definitive frontend baseline until PLAN-0015 is owner-approved.
+- **Last completed step:** Dependency notes updated under PLAN-0015 governance.
+- **Exact next action:** After PLAN-0015 owner approval, assign an independent testing agent, pin the approved frontend SHA and integrated environment/browser baselines, and move status to `In Progress`.
+- **Blockers:** PLAN-0015 owner approval for definitive frontend baseline; integrated environment image digest remain unfilled.
 - **Tests executed:** None.
 - **Defects found:** None.
 - **Evidence produced:** Immutable backend baseline pin only.
@@ -379,6 +379,29 @@ Do not fix implementation in the independent test branch unless explicitly reass
 - **Working tree state:** Not applicable until an independent agent claims execution.
 
 ## Progress log
+
+### 2026-07-31T22:47:18Z — Cursor agent (PLAN-0015)
+
+- **Checkpoint:** Frontend on main after PR #14/#15 must not be treated as the definitive baseline until PLAN-0015 approval.
+- **Next action:** Wait for PLAN-0015 owner approval before pinning definitive frontend SHA.
+- **Blockers or handoff notes:** Independent tester must not be the PLAN-0014/PLAN-0015 implementation author.
+
+### 2026-07-31T22:21:00Z — Cursor agent
+
+- **Checkpoint:** PLAN-0014 frontend baseline merged (later qualified by PLAN-0015: not definitive until remediation approval).
+- **Next action:** Superseded — wait for PLAN-0015 approval before pinning definitive SHA.
+- **Blockers or handoff notes:** None for code availability on main; definitive baseline still pending.
+
+
+### 2026-07-31T20:15:00Z — Cursor agent (PLAN-0014)
+
+- **Checkpoint:** Frontend baseline dependency redirected from superseded PLAN-0004 to PLAN-0014.
+- **Pinned baseline:** Backend remains PLAN-0003 merged baseline; frontend pin awaits PLAN-0014.
+- **Tests executed by PLAN-0005:** None.
+- **Coverage gaps:** PLAN-0014 frontend, integrated branch/image digest, browser versions, and full independent test execution remain outstanding.
+- **Result:** PLAN-0005 will validate against PLAN-0014 `apps/frontend`, not PLAN-0004 Lovable delivery.
+- **Next action:** Wait for PLAN-0014 draft/stable frontend baseline before claiming independent execution.
+- **Blockers or handoff notes:** Independent tester must not be the PLAN-0014 implementation author.
 
 ### 2026-07-31T15:30:00Z — Backend baseline reconciled to final PLAN-0003 candidate
 

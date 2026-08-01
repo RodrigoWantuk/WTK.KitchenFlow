@@ -1,18 +1,23 @@
 # PLAN-0004: Implement Lovable Application Shell and Inventory UX
 
-- **Status:** Ready
+- **Status:** Superseded
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** Unassigned Lovable/frontend implementation agent
 - **Created:** 2026-07-29
-- **Last updated:** 2026-07-29
+- **Last updated:** 2026-07-31T20:15:00Z
 - **Branch:** `agent/plan-0004-lovable-inventory-ux`
 - **Pull request:** Not opened
+- **Superseded by:** [PLAN-0014](PLAN-0014-integrate-emergent-frontend.md)
 - **Related implementation plan:** PLAN-0002
 - **Related documentation plan:** PLAN-0006
 - **Related issues:** None
-- **Related ADRs:** ADR-0001, ADR-0004, ADR-0006
+- **Related ADRs:** ADR-0001 (historical), ADR-0007, ADR-0004, ADR-0006
 - **Dependencies:** PLAN-0002 merged; PLAN-0006 merged before execution; PLAN-0003 OpenAPI contract milestone for live integration
+
+## Supersession notice
+
+This plan is **Superseded** by [PLAN-0014](PLAN-0014-integrate-emergent-frontend.md). The authoritative frontend prototype was completed in `RodrigoWantuk/kitchen-emergent` and is imported into `apps/frontend` under PLAN-0014. Do not execute PLAN-0004 Lovable generation or dedicated-repository sync workflows. Retain this document for historical requirements that PLAN-0014 preserves where still applicable (session boundary, mock/live isolation, accessibility, localization, inventory contract readiness).
 
 ## Objective
 
@@ -858,16 +863,25 @@ Add a reproducible check proving prototype mode is disabled or inaccessible in t
 
 ## Execution state
 
-- **Current checkpoint:** The implementation plan is fully refined with general visual direction, SPA behavior, Lovable design authority, a production-aligned inventory layer, and a broad isolated mock-prototype layer.
-- **Last completed step:** Planning and design-brief refinement only.
-- **Exact next action:** After PLAN-0006 merges, the owner creates the dedicated Lovable project and repository; the frontend agent claims this plan and records the generated-runtime and source baseline.
-- **Blockers:** PLAN-0006 merge and owner-level Lovable project or repository creation. Live Layer A integration additionally waits for PLAN-0003 OpenAPI milestone.
+- **Current checkpoint:** Plan superseded by PLAN-0014; no further execution under this plan ID.
+- **Last completed step:** Planning and design-brief refinement only; implementation never claimed.
+- **Exact next action:** Follow PLAN-0014 for frontend baseline import and completion. Do not claim PLAN-0004.
+- **Blockers:** None (superseded).
 - **Partially modified areas:** None.
-- **Validation performed:** Checked the refined plan against PLAN-0002, accepted product and architecture documents, security boundaries, localization, accessibility, mock/live separation, and the stakeholder request to avoid screen sketches.
-- **Known failures or limitations:** Exact generated runtime, package manager, design-token values, page composition, navigation pattern, and final brand assets remain intentionally unresolved until Lovable project execution.
-- **Working tree state:** Not applicable until claimed.
+- **Validation performed:** Stakeholder decision recorded that Emergent snapshot `69f798f66b7987c4ed785c52c90a5539bf46f52e` replaces Lovable-first PLAN-0004 execution.
+- **Known failures or limitations:** Historical Lovable-dedicated-repository assumptions no longer apply.
+- **Working tree state:** Not applicable.
 
 ## Progress log
+
+### 2026-07-31T20:15:00Z — Cursor agent (PLAN-0014)
+
+- **Checkpoint:** PLAN-0004 marked Superseded by PLAN-0014.
+- **Changes included in the commit:** Status, supersession notice, execution state, and registry move.
+- **Validation performed:** Confirmed PLAN-0014 owns Emergent import and baseline establishment.
+- **Result:** PLAN-0004 retained for history; no further implementation under this ID.
+- **Next action:** None on this plan; continue on PLAN-0014.
+- **Blockers or handoff notes:** Preserve applicable inventory UX and isolation requirements when implementing under PLAN-0014.
 
 ### 2026-07-29T00:25:00Z — AI planning agent
 
