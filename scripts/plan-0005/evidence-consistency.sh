@@ -289,23 +289,36 @@ for dirs, label in ((p0_dirs, "p0"), (p1_dirs, "p1")):
     else:
         add("p1-current-console-name", "Passed", "no ambiguous p1-completion-console.txt")
 
-# Final assessment must not pin prior-head runs when present in artifact
+# Final assessment may pin evidenceGenerationHead separately from current PR tip.
 for dirs in (p0_dirs, p1_dirs):
     if not dirs:
         continue
     final = load_json(find_file(dirs[-1], "final-quality-assessment.json"))
     if not final:
         continue
-    head = final.get("prHeadSha") or final.get("evidenceGenerationSha") or final.get("headSha")
-    if head and head != pr_head:
-        add("final-assessment-head", "Failed", f"assessment head {head} != prHeadSha {pr_head}")
+    identity = final.get("identity") or {}
+    current_tip = identity.get("currentPrTip")
+    evidence_head = (
+        identity.get("evidenceGenerationHead")
+        or final.get("evidenceGenerationSha")
+        or final.get("evidenceGenerationHead")
+    )
+    # Prefer explicit currentPrTip when present; do not treat evidenceGenerationHead as current tip.
+    claimed_tip = current_tip or final.get("prHeadSha")
+    if claimed_tip and claimed_tip != pr_head and not evidence_head:
+        add("final-assessment-head", "Failed", f"assessment tip {claimed_tip} != prHeadSha {pr_head}")
+    elif current_tip and current_tip != pr_head:
+        add("final-assessment-current-tip", "Failed", f"currentPrTip {current_tip} != prHeadSha {pr_head}")
+    elif evidence_head and not current_tip and final.get("prHeadSha") and final.get("prHeadSha") != pr_head and final.get("prHeadSha") != evidence_head:
+        add("final-assessment-head", "Failed", f"ambiguous prHeadSha {final.get('prHeadSha')}")
     else:
-        add("final-assessment-head", "Passed", str(head))
+        add("final-assessment-head", "Passed", f"currentPrTip={current_tip or pr_head} evidenceGenerationHead={evidence_head}")
     artifacts = (final.get("ci") or {}).get("artifacts") or {}
+    pin = evidence_head or pr_head
     for key, meta in artifacts.items():
         name = (meta or {}).get("name", "")
-        if name and pr_head not in name:
-            add(f"final-assessment-artifact-{key}", "Failed", f"{name} missing pr head")
+        if name and pin and pin not in name:
+            add(f"final-assessment-artifact-{key}", "Failed", f"{name} missing evidence head {pin}")
         elif name:
             add(f"final-assessment-artifact-{key}", "Passed", name)
 

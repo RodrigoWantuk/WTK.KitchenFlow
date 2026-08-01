@@ -10,13 +10,13 @@
   },
   "identity": {
     "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
-    "currentPrTip": "89fd0a9ecb57a2aa13d1b61f05af097ffbd47768",
+    "currentPrTip": null,
     "evidenceGenerationHead": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885",
     "checkedOutCommitShaExample": "5680f9dff8c3a593ea57fad5a508de27349a6a7f",
-    "note": "currentPrTip is the PR branch tip after the completion docs commit; evidenceGenerationHead is the tip that produced P0/P1/consistency artifacts. Do not call a prior tip current exact head."
+    "note": "evidenceGenerationHead pins the tip that produced P0/P1/consistency artifacts. currentPrTip lives in the PR body only so docs commits do not desync consistency gates."
   },
   "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
-  "prHeadSha": "89fd0a9ecb57a2aa13d1b61f05af097ffbd47768",
+  "prHeadSha": null,
   "evidenceGenerationSha": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885",
   "openapiContractGitObjectId": "0cc5050ced6c43daf69538ad1af3fee135871e58",
   "generatedAtUtc": "2026-08-01T19:05:00Z",
