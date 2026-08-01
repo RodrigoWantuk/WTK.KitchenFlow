@@ -1,4 +1,7 @@
+artifacts/
+artifact-current/
 reports/*.log
 reports/*.pid
 reports/trx/
-artifacts/
+reports/trx-*/
+reports/container-samples.tsv

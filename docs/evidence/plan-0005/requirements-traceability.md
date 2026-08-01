@@ -1,11 +1,18 @@
-# PLAN-0005 requirements traceability (evidence-integrity corrective round)
+# PLAN-0005 requirements traceability (evidence-integrity final)
 
 Integrated main SHA (system under test): `b94abd9a83fe29d88b095e3e9a42f10d01c05414`
 OpenAPI contract git object id: `0cc5050ced6c43daf69538ad1af3fee135871e58`
 
-Evidence-generation head / `prHeadSha`: `a1112a221cc492d52bd08f3dc1dcff1a02ae4885`  
-Checked-out merge-ref example: `5680f9dff8c3a593ea57fad5a508de27349a6a7f`  
-Workflow run: `30713714393`
+Identity vocabulary (do not conflate):
+
+- `integratedMainSha` — main tip under test
+- `evidenceGenerationHead` — `4d07afa066fd7994bbc36473242ee7a2d764ea70` (canonical P0/P1/consistency artifacts)
+- `checkedOutCommitSha` — may be the temporary GitHub Actions merge ref
+- `currentPrTip` — consult PR #19 metadata (may be a later docs/validator commit)
+
+Evidence-generation CI: workflow `30714081307`; artifacts P0 `8822844474`, P1 `8822833982`, consistency `8822847558`.
+
+Status vocabulary: `Passed` | `Failed` | `Blocked` | `Not executed` | `Deferred` | `Not applicable`
 
 ## Counting units
 
@@ -91,7 +98,7 @@ Counting unit = **test ID** (see above).
 
 ## Workflow / group results
 
-- P0 / P1 / evidence-consistency / secret-scan: awaiting green CI on rewritten PR tip
+- P0 / P1 / evidence-consistency / secret-scan: canonical on evidence-generation head `4d07afa`
 - Evidence JSON must carry `integratedMainSha`, `prHeadSha`, `checkedOutCommitSha`, `evidenceGenerationSha`
 
 ## Defect counts (provisional until integrity CI)

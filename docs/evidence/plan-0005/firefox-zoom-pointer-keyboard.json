@@ -4,9 +4,21 @@
   "zoomTechnique": "native-ctrl-plus-xdotool",
   "cssZoomForbidden": true,
   "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
-  "headSha": "45c1d40c738367807619f935ca95c847aacfbb2c",
+  "prHeadSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
+  "checkedOutCommitSha": "46f31af8feafccb3eb29756c918da416088a3990",
+  "evidenceGenerationSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
+  "countingUnit": {
+    "testId": "TEST-0005-109",
+    "independentSubScenarios": [
+      "Cook_pointer",
+      "Cook_keyboard",
+      "Pantry_pointer",
+      "Pantry_keyboard"
+    ],
+    "note": "Each surface×modality is an independent sub-scenario; keyboard success does not upgrade pointer."
+  },
   "note": "Pointer and keyboard scored independently. Keyboard success does not upgrade pointer status. Native zoom only (no CSS zoom).",
-  "generatedAtUtc": "2026-08-01T17:46:49.088Z",
+  "generatedAtUtc": "2026-08-01T19:13:25.198Z",
   "zoomMeasurement": {
     "method": "native-ctrl-plus",
     "baselineInnerWidthAt100": 1280,

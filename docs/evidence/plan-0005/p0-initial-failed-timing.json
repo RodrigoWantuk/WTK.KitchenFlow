@@ -1,0 +1,63 @@
+{
+  "plan": "PLAN-0005",
+  "round": "P0-round-1",
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+  "startedAtUtc": "2026-08-01T15:58:31Z",
+  "endedAtUtc": "2026-08-01T16:01:57Z",
+  "containerCount": 2,
+  "startupAndTotal": {
+    "totalSeconds": 206,
+    "teardownSeconds": 0
+  },
+  "groups": [
+    {
+      "name": "environment",
+      "exitCode": 1,
+      "durationSeconds": 13,
+      "status": "Failed"
+    },
+    {
+      "name": "backend-domain-and-http",
+      "exitCode": 0,
+      "durationSeconds": 132,
+      "status": "Passed"
+    },
+    {
+      "name": "real-keycloak-oidc",
+      "exitCode": 1,
+      "durationSeconds": 31,
+      "status": "Failed"
+    },
+    {
+      "name": "migrations",
+      "exitCode": 0,
+      "durationSeconds": 4,
+      "status": "Passed"
+    },
+    {
+      "name": "browser-e2e-frontend-production",
+      "exitCode": 1,
+      "durationSeconds": 10,
+      "status": "Failed"
+    },
+    {
+      "name": "security-automation",
+      "exitCode": 0,
+      "durationSeconds": 16,
+      "status": "Passed"
+    }
+  ],
+  "overall": "Failed",
+  "frontendProductionInventory": {
+    "testId": "TEST-0005-FRONTEND-PRODUCTION-INVENTORY",
+    "status": "Blocked",
+    "reason": "Production inventory adapter/session projection not implemented",
+    "markers": {
+      "FeatureUnavailable": false,
+      "unavailableSession": true,
+      "liveInventoryClient": false
+    },
+    "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414"
+  },
+  "keycloakSummary": null
+}

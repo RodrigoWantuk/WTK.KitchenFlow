@@ -2,147 +2,36 @@
   "plan": "PLAN-0005",
   "round": "P0-round-1",
   "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
-  "openapiContractGitObjectId": "0cc5050ced6c43daf69538ad1af3fee135871e58",
-  "generatedAtUtc": "2026-08-01T16:05:47Z",
-  "containers": {
-    "count": 2,
-    "services": [
-      "postgres",
-      "keycloak"
-    ],
-    "strategy": "one shared Compose stack per run"
+  "prHeadSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
+  "checkedOutCommitSha": "46f31af8feafccb3eb29756c918da416088a3990",
+  "evidenceGenerationSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
+  "generatedAtUtc": "2026-08-01T19:13:37Z",
+  "overall": "Passed",
+  "outcome": "ConditionalPassResidual",
+  "zoomTechnique": "native-ctrl-plus-xdotool",
+  "cssZoomForbidden": true,
+  "frontendProductionInventory": {
+    "status": "Blocked",
+    "issue": 20
   },
-  "durationsSeconds": {
-    "initialOrchestratorWall": 206,
-    "backendDomainHttp": 132,
-    "keycloakRetry": null,
-    "firefoxRetry": null,
-    "note": "Initial orchestrator failed environment/keycloak/firefox due to .env semicolon sourcing and Firefox HOME/XAUTHORITY; repaired and re-ran those groups successfully."
-  },
-  "groups": [
-    {
-      "name": "environment",
-      "status": "Passed",
-      "notes": "Compose up, migrations with quoted .env, API health/ready, production build served"
-    },
-    {
-      "name": "backend-domain-and-http",
-      "status": "Passed",
-      "trx": {
-        "passed": 115,
-        "failed": 0,
-        "total": 115
-      },
-      "includes": [
-        "UnitTests",
-        "ArchitectureTests",
-        "ApiAuthenticationTests",
-        "Plan0005P0GapTests"
-      ]
-    },
-    {
-      "name": "real-keycloak-oidc",
-      "status": "Passed",
-      "summary": {
-        "total": 12,
-        "passed": 12,
-        "failed": 0,
-        "blocked": 0
-      }
-    },
-    {
-      "name": "migrations",
-      "status": "Passed",
-      "notes": "Idempotent SQL applied twice to fresh DB"
-    },
-    {
-      "name": "frontend-production-inventory",
-      "status": "Blocked",
-      "reason": "Production inventory adapter/session projection not implemented",
-      "issue": 20
-    },
-    {
-      "name": "firefox-pointer-keyboard-200",
-      "status": "Failed",
-      "results": [
-        {
-          "scenario": "Cook_CTA",
-          "browser": "firefox",
-          "zoom": "approx-200pct-css-zoom-2",
-          "viewport": "1280x720",
-          "pointer": {
-            "status": "Failed",
-            "detail": "locator.click: Timeout 2500ms exceeded.\nCall log:\n  - waiting for locator('[data-testid=\"sugg-open-r2\"]').first()\n    - locator resolved to <a data-discover=\"true\" href=\"/app/receitas/r2\" data-testid=\"sugg-open-r2\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium tr",
-            "beforeUrl": "http://127.0.0.1:4180/app/hoje",
-            "afterUrl": "http://127.0.0.1:4180/app/hoje"
-          },
-          "keyboard": {
-            "status": "Passed",
-            "detail": "keyboard Enter succeeded",
-            "beforeUrl": "http://127.0.0.1:4180/app/hoje",
-            "afterUrl": "http://127.0.0.1:4180/app/receitas/r2"
-          }
-        },
-        {
-          "scenario": "Pantry_item",
-          "browser": "firefox",
-          "zoom": "approx-200pct-css-zoom-2",
-          "viewport": "1280x720",
-          "pointer": {
-            "status": "Failed",
-            "detail": "locator.click: Timeout 2500ms exceeded.\nCall log:\n  - waiting for locator('[data-testid^=pantry-item-link-]').first()\n    - locator resolved to <a data-discover=\"true\" href=\"/app/despensa/p1\" data-testid=\"pantry-item-link-p1\" class=\"block rounded-lg focus-visible:outline-none focus-visible:ring-2 fo",
-            "beforeUrl": "http://127.0.0.1:4180/app/despensa",
-            "afterUrl": "http://127.0.0.1:4180/app/despensa"
-          },
-          "keyboard": {
-            "status": "Passed",
-            "detail": "keyboard Enter succeeded",
-            "beforeUrl": "http://127.0.0.1:4180/app/despensa",
-            "afterUrl": "http://127.0.0.1:4180/app/despensa/p1"
-          }
-        }
-      ],
-      "issues": [
-        21,
-        22
-      ]
-    },
-    {
-      "name": "security-automation",
-      "status": "Passed"
-    }
-  ],
-  "counts": {
-    "p0AutomatedExecuted": "substantial first round",
-    "backendTrxPassed": 115,
-    "backendTrxFailed": 0,
-    "keycloakPassed": 12,
-    "keycloakFailed": 0,
-    "frontendProduction": "Blocked",
-    "firefoxPointerCook": "Failed",
-    "firefoxKeyboardCook": "Passed",
-    "firefoxPointerPantry": "Failed",
-    "firefoxKeyboardPantry": "Passed"
-  },
-  "defects": {
-    "Critical": 0,
-    "High": 1,
-    "Medium": 2,
+  "pointerResiduals": {
+    "Cook_pointer": "Failed",
+    "Cook_keyboard": "Passed",
+    "Pantry_pointer": "Failed",
+    "Pantry_keyboard": "Passed",
     "issues": [
-      20,
       21,
       22
     ]
   },
-  "manualGates": "Deferred \u2014 non-blocking",
-  "functionalFixesOnBranch": false,
-  "plan0011Started": false,
-  "nextAutomatedBatch": [
-    "P1 contract/OpenAPI drift + generated client compile checks (TEST-0005-081..085)",
-    "P1 query/pagination 60+ lots (TEST-0005-075..080)",
-    "P1 localization resource completeness automation (TEST-0005-100..103)",
-    "P1 axe-core accessibility automation on available surfaces (TEST-0005-108)",
-    "P1 observability/redaction/resilience smokes (TEST-0005-125..132)",
-    "Re-run Firefox pointer cases after frontend issues #21/#22 are fixed on an implementation plan"
-  ]
+  "containers": {
+    "composeServiceCount": 2,
+    "testcontainersCreated": 36,
+    "maximumConcurrentContainers": 5,
+    "totalContainerInstancesCreated": 38,
+    "testcontainerImages": [
+      "postgres:18.4",
+      "testcontainers/ryuk:0.14.0"
+    ]
+  }
 }

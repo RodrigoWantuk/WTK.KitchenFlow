@@ -252,8 +252,50 @@ timing = {
   "keycloakSummary": None if kc is None else kc.get("summary"),
 }
 (report_dir / "p0-round1-timing.json").write_text(json.dumps(timing, indent=2) + "\n", encoding="utf-8")
+
+# Regenerated current P0 summary (never reuse CSS-zoom historical summary under this name).
+ff = json.loads(ff_path.read_text(encoding="utf-8")) if ff_path.exists() else {}
+pointer = {}
+issues = []
+for result in ff.get("results", []):
+    name = str(result.get("scenario") or result.get("name") or "")
+    key = "Cook" if ("Cook" in name or "CTA" in name or "hoje" in name.lower()) else "Pantry"
+    pointer[f"{key}_pointer"] = (result.get("pointer") or {}).get("status")
+    pointer[f"{key}_keyboard"] = (result.get("keyboard") or {}).get("status")
+if pointer.get("Cook_pointer") == "Failed":
+    issues.append(21)
+if pointer.get("Pantry_pointer") == "Failed":
+    issues.append(22)
+outcome = "ConditionalPassResidual" if any(pointer.get(k) == "Failed" for k in ("Cook_pointer", "Pantry_pointer")) else ("Pass" if overall == "Passed" else overall)
+summary = {
+  "plan": "PLAN-0005",
+  "round": "P0-round-1",
+  "integratedMainSha": "${PLAN0005_INTEGRATED_SHA}",
+  "prHeadSha": "${PLAN0005_PR_HEAD_SHA}",
+  "checkedOutCommitSha": "${PLAN0005_CHECKED_OUT_SHA}",
+  "evidenceGenerationSha": "${PLAN0005_EVIDENCE_GENERATION_SHA}",
+  "generatedAtUtc": "${RUN_END_UTC}",
+  "overall": overall,
+  "outcome": outcome,
+  "zoomTechnique": ff.get("zoomTechnique") or "native-ctrl-plus-xdotool",
+  "cssZoomForbidden": True,
+  "frontendProductionInventory": {
+    "status": None if frontend_status is None else frontend_status.get("status"),
+    "issue": 20 if frontend_status and frontend_status.get("status") == "Blocked" else None,
+  },
+  "pointerResiduals": {**pointer, "issues": issues},
+  "containers": {
+    "composeServiceCount": containers.get("composeServiceCount"),
+    "testcontainersCreated": containers.get("testcontainersCreated"),
+    "maximumConcurrentContainers": containers.get("maximumConcurrentContainers"),
+    "totalContainerInstancesCreated": containers.get("totalContainerInstancesCreated"),
+    "testcontainerImages": containers.get("testcontainerImages"),
+  },
+}
+(report_dir / "p0-round1-summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+
 # Commit-friendly copies outside ignored reports/ directories.
-for name in ("p0-round1-timing.json", "keycloak-p0-auth.json", "frontend-production-inventory.json", "firefox-zoom-pointer-keyboard.json", "environment-timing.json"):
+for name in ("p0-round1-timing.json", "p0-round1-summary.json", "keycloak-p0-auth.json", "frontend-production-inventory.json", "firefox-zoom-pointer-keyboard.json", "environment-timing.json"):
     src = report_dir / name
     if src.exists():
         (evidence_root / name).write_text(src.read_text(encoding="utf-8"), encoding="utf-8")

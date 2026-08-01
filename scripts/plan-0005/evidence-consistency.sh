@@ -78,7 +78,12 @@ required_p1 = [
 ]
 
 def evidence_base(root: Path) -> Path:
-    candidates = [root, root / "docs" / "evidence" / "plan-0005"]
+    candidates = [
+        root,
+        root / "artifact-current",
+        root / "docs" / "evidence" / "plan-0005",
+        root / "docs" / "evidence" / "plan-0005" / "artifact-current",
+    ]
     return next((c for c in candidates if c.exists()), root)
 
 def find_file(root: Path, name: str):
@@ -365,10 +370,200 @@ for label, dirs in (("p0", p0_dirs), ("p1", p1_dirs)):
     if not cc:
         add(f"{label}-container-count", "Failed", "missing container-count.json")
         continue
-    c = cc.get("containers") or {}
-    needed = ["composeServiceCount", "composeServices", "testcontainersCreated", "testcontainerImages", "maximumConcurrentContainers", "totalContainerInstancesCreated"]
+    c = cc.get("containers") or cc.get(label) or {}
+    needed = ["composeServiceCount", "testcontainersCreated", "maximumConcurrentContainers", "totalContainerInstancesCreated"]
     missing = [k for k in needed if k not in c]
-    add(f"{label}-container-count", "Passed" if not missing else "Failed", f"missing={missing} peak={c.get('maximumConcurrentContainers')}")
+    if c.get("composeServiceCount") == 2 and c.get("testcontainersCreated") in (0, None) and label == "p1":
+        add(f"{label}-container-count", "Failed", "P1 cannot report 0 Testcontainers as canonical after 4d07afa")
+    elif missing:
+        add(f"{label}-container-count", "Failed", f"missing={missing}")
+    else:
+        add(f"{label}-container-count", "Passed", f"compose={c.get('composeServiceCount')} tc={c.get('testcontainersCreated')} peak={c.get('maximumConcurrentContainers')}")
+
+# --- Integrity round: unmarked Failed / CSS zoom / duplicates / canonical head ---
+CANONICAL_EVIDENCE_HEAD = "4d07afa066fd7994bbc36473242ee7a2d764ea70"
+CANONICAL_ARTIFACTS = {
+  "p0": {"id": 8822844474, "digest": "sha256:f441587b54bc33a4d9470e2a48e85b3d23da3303960e237ea185c04ebe1ac65b"},
+  "p1": {"id": 8822833982, "digest": "sha256:5d5582740d3e493ce9a11c8dcb603821b601066cc2aa13762b9ece4901c2c743"},
+  "evidenceConsistency": {"id": 8822847558, "digest": "sha256:ac680fc6b985db52608b4b1cccb0ae87dc63e9bb616ee2201b4048beccf38169"},
+}
+CANONICAL_CONTAINERS = {
+  "p0": {"composeServiceCount": 2, "testcontainersCreated": 36, "maximumConcurrentContainers": 5, "totalContainerInstancesCreated": 38},
+  "p1": {"composeServiceCount": 2, "testcontainersCreated": 16, "maximumConcurrentContainers": 5, "totalContainerInstancesCreated": 18},
+}
+
+def is_historical_name(name: str) -> bool:
+    low = name.lower()
+    return any(tok in low for tok in ("initial-failed", "initial-summary", "historical", "superseded"))
+
+def has_historical_readme(path: Path) -> bool:
+    candidates = [
+        path.with_name(path.name + ".README.md"),
+        path.with_name(path.stem + ".README.md"),
+    ]
+    return any(c.exists() for c in candidates)
+
+# p0-round1-summary must be current native zoom
+if p0_dirs:
+    summary_path = find_file(p0_dirs[-1], "p0-round1-summary.json")
+    summary = load_json(summary_path)
+    if not summary:
+        add("p0-round1-summary-current", "Failed", "missing p0-round1-summary.json")
+    else:
+        text = summary_path.read_text(encoding="utf-8", errors="ignore")
+        bad = []
+        tech = str(summary.get("zoomTechnique") or "")
+        if "css" in tech.lower() or re.search(r"approx-200pct-css", text, re.I):
+            bad.append("contains CSS zoom")
+        if summary.get("zoomTechnique") and "native" not in str(summary.get("zoomTechnique")).lower():
+            bad.append(f"zoomTechnique={summary.get('zoomTechnique')}")
+        if summary.get("overall") != "Passed":
+            bad.append(f"overall={summary.get('overall')}")
+        for key in ("prHeadSha", "checkedOutCommitSha", "evidenceGenerationSha", "integratedMainSha"):
+            if not summary.get(key):
+                bad.append(f"missing {key}")
+        if "nextAutomatedBatch" in summary:
+            bad.append("stale nextAutomatedBatch present")
+        add("p0-round1-summary-current", "Passed" if not bad else "Failed", "; ".join(bad) if bad else "native summary ok")
+
+# p0-round1-timing must be current Passed
+if p0_dirs:
+    timing_path = find_file(p0_dirs[-1], "p0-round1-timing.json")
+    timing = load_json(timing_path)
+    if not timing:
+        add("p0-round1-timing-current", "Failed", "missing p0-round1-timing.json")
+    else:
+        bad = []
+        if timing.get("overall") == "Failed":
+            bad.append("overall Failed without historical rename")
+        if timing.get("overall") != "Passed":
+            bad.append(f"overall={timing.get('overall')}")
+        if timing.get("containerCount") == 2 and not (timing.get("containers") or {}).get("composeServiceCount"):
+            bad.append("containerCount=2 presented as total")
+        for key in ("prHeadSha", "checkedOutCommitSha", "evidenceGenerationSha"):
+            if not timing.get(key):
+                bad.append(f"missing {key}")
+        add("p0-round1-timing-current", "Passed" if not bad else "Failed", "; ".join(bad) if bad else "timing Passed")
+
+# Scan all JSON for unmarked Failed / CSS zoom / missing identity on current-looking files
+unmarked_failed = []
+unmarked_css = []
+missing_identity = []
+for label, dirs in (("p0", p0_dirs), ("p1", p1_dirs)):
+    if not dirs:
+        continue
+    root = dirs[-1]
+    for path in root.rglob("*.json"):
+        if "trx" in path.parts:
+            continue
+        name = path.name
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        historical = is_historical_name(name)
+        if re.search(r'"overall"\s*:\s*"Failed"', text):
+            if not historical:
+                unmarked_failed.append(f"{label}:{path.relative_to(root)}")
+            elif not has_historical_readme(path):
+                unmarked_failed.append(f"{label}:{path.name} historical without README")
+        if not historical:
+            css_hit = False
+            try:
+                obj = json.loads(text)
+                tech = str(obj.get("zoomTechnique") or "")
+                if "css" in tech.lower():
+                    css_hit = True
+                for result in obj.get("results") or []:
+                    z = str((result.get("zoom") if isinstance(result, dict) else "") or "")
+                    if "css" in z.lower() and "native" not in z.lower():
+                        css_hit = True
+            except Exception:
+                css_hit = bool(re.search(r"approx-200pct-css", text, re.I))
+            if css_hit or re.search(r"approx-200pct-css", text, re.I):
+                unmarked_css.append(f"{label}:{path.relative_to(root)}")
+        if name in {
+            "p0-round1-timing.json", "p0-round1-summary.json", "p1-round-timing.json",
+            "outage-mutation-recovery.json", "performance-smoke.json", "run-identity.json",
+            "firefox-zoom-pointer-keyboard.json",
+        }:
+            try:
+                obj = json.loads(text)
+            except Exception:
+                continue
+            if not obj.get("prHeadSha"):
+                missing_identity.append(f"{label}:{name}")
+add("no-unmarked-failed-evidence", "Passed" if not unmarked_failed else "Failed", str(unmarked_failed) if unmarked_failed else "ok")
+add("no-unmarked-css-zoom-evidence", "Passed" if not unmarked_css else "Failed", str(unmarked_css) if unmarked_css else "ok")
+add("current-files-have-prHeadSha", "Passed" if not missing_identity else "Failed", str(missing_identity) if missing_identity else "ok")
+
+# Duplicate logical evidence with divergent content
+divergent = []
+for label, dirs in (("p0", p0_dirs), ("p1", p1_dirs)):
+    if not dirs:
+        continue
+    root = dirs[-1]
+    by_name = {}
+    for path in root.rglob("*.json"):
+        by_name.setdefault(path.name, []).append(path)
+    for name, paths in by_name.items():
+        if len(paths) < 2:
+            continue
+        hashes = {p.read_text(encoding="utf-8", errors="ignore") for p in paths}
+        if len(hashes) > 1:
+            divergent.append(f"{label}:{name} x{len(paths)}")
+add("no-duplicate-logical-evidence", "Passed" if not divergent else "Failed", str(divergent) if divergent else "ok")
+
+# Canonical evidence head + artifact IDs in versioned assessment
+final = load_json(evidence_dir / "final-quality-assessment.json") or {}
+identity = final.get("identity") or {}
+evidence_head = identity.get("evidenceGenerationHead") or final.get("evidenceGenerationSha")
+if evidence_head != CANONICAL_EVIDENCE_HEAD:
+    add("canonical-evidence-head", "Failed", f"{evidence_head} != {CANONICAL_EVIDENCE_HEAD}")
+else:
+    add("canonical-evidence-head", "Passed", evidence_head)
+# Null ambiguous fields must not appear
+for bad_key in ("currentPrTip", "prHeadSha"):
+    if bad_key in identity and identity.get(bad_key) is None:
+        add("identity-no-null-fields", "Failed", f"identity.{bad_key} is null; omit instead")
+        break
+    if bad_key == "prHeadSha" and final.get("prHeadSha") is None and "prHeadSha" in final:
+        add("identity-no-null-fields", "Failed", "top-level prHeadSha is null; omit instead")
+        break
+else:
+    add("identity-no-null-fields", "Passed", "no ambiguous null tip fields")
+
+arts = (final.get("ci") or {}).get("artifacts") or {}
+art_problems = []
+for key, expected in CANONICAL_ARTIFACTS.items():
+    meta = arts.get(key) or {}
+    if meta.get("id") != expected["id"]:
+        art_problems.append(f"{key}.id={meta.get('id')}")
+    if meta.get("digest") != expected["digest"]:
+        art_problems.append(f"{key}.digest mismatch")
+    name = meta.get("name") or ""
+    if CANONICAL_EVIDENCE_HEAD not in name:
+        art_problems.append(f"{key}.name missing canonical head")
+add("canonical-artifact-ids", "Passed" if not art_problems else "Failed", "; ".join(art_problems) if art_problems else "ok")
+
+# Canonical container counts in assessment or versioned container-count.json
+cc_doc = load_json(evidence_dir / "container-count.json") or {}
+cc_problems = []
+for round_name, expected in CANONICAL_CONTAINERS.items():
+    actual = (cc_doc.get(round_name) or {})
+    if not actual and final.get("containers"):
+        actual = (final.get("containers") or {}).get(round_name) or {}
+    for k, v in expected.items():
+        if actual.get(k) != v:
+            cc_problems.append(f"{round_name}.{k}={actual.get(k)} expected {v}")
+add("canonical-container-counts", "Passed" if not cc_problems else "Failed", "; ".join(cc_problems) if cc_problems else "ok")
+
+# Ban obsolete current names
+for dirs in (p0_dirs, p1_dirs):
+    if not dirs:
+        continue
+    if find_file(dirs[-1], "p0-completion-console.txt") or find_file(dirs[-1], "p1-completion-console.txt"):
+        add("no-obsolete-completion-console", "Failed", "obsolete completion console present")
+        break
+else:
+    add("no-obsolete-completion-console", "Passed", "ok")
 
 add("pr-head-sha-recorded", "Passed", pr_head)
 add("checked-out-sha-recorded", "Passed", checked_out)

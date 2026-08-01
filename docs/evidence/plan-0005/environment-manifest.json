@@ -1,7 +1,7 @@
 {
   "plan": "PLAN-0005",
   "round": "P0-round-1",
-  "generatedAtUtc": "2026-08-01T19:05:00Z",
+  "generatedAtUtc": "2026-08-01T19:14:00Z",
   "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
   "pr18": {
     "merged": true,
@@ -88,17 +88,46 @@
     "composeFile": "infrastructure/compose/compose.dev.yml",
     "composeServiceCount": 2,
     "composeServices": [
-      "keycloak",
-      "postgres"
+      "postgres",
+      "keycloak"
     ],
-    "testcontainersCreated": 1,
+    "testcontainersCreated": null,
     "testcontainerImages": [
+      "postgres:18.4",
       "testcontainers/ryuk:0.14.0"
     ],
-    "maximumConcurrentContainers": 3,
-    "totalContainerInstancesCreated": 3,
+    "maximumConcurrentContainers": 5,
+    "totalContainerInstancesCreated": null,
     "measurement": "scripts/plan-0005/container-count.sh samples docker ps during P0/P1; see container-count.json in CI artifacts",
-    "note": "composeServiceCount=2 is Compose only; Testcontainers are recorded separately and concurrency peak is measured, not inferred."
+    "note": "See container-count.json for separate P0/P1 measured Compose vs Testcontainers counts from evidence head 4d07afa.",
+    "p0": {
+      "composeServiceCount": 2,
+      "composeServices": [
+        "keycloak",
+        "postgres"
+      ],
+      "testcontainersCreated": 36,
+      "testcontainerImages": [
+        "postgres:18.4",
+        "testcontainers/ryuk:0.14.0"
+      ],
+      "maximumConcurrentContainers": 5,
+      "totalContainerInstancesCreated": 38
+    },
+    "p1": {
+      "composeServiceCount": 2,
+      "composeServices": [
+        "keycloak",
+        "postgres"
+      ],
+      "testcontainersCreated": 16,
+      "testcontainerImages": [
+        "postgres:18.4",
+        "testcontainers/ryuk:0.14.0"
+      ],
+      "maximumConcurrentContainers": 5,
+      "totalContainerInstancesCreated": 18
+    }
   },
   "syntheticUsers": {
     "userA": "inventory-user-a",
@@ -112,7 +141,7 @@
     "manualVoiceOverAudit": "Deferred \u2014 non-blocking",
     "humanScreenshotInspection": "Deferred \u2014 non-blocking"
   },
-  "prHeadSha": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885",
-  "checkedOutCommitSha": "5680f9dff8c3a593ea57fad5a508de27349a6a7f",
-  "evidenceGenerationSha": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885"
+  "prHeadSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
+  "checkedOutCommitSha": "46f31af8feafccb3eb29756c918da416088a3990",
+  "evidenceGenerationSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70"
 }

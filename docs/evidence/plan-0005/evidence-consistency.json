@@ -2,100 +2,100 @@
   "plan": "PLAN-0005",
   "group": "evidence-consistency",
   "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
-  "prHeadSha": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885",
-  "checkedOutCommitSha": "5680f9dff8c3a593ea57fad5a508de27349a6a7f",
-  "evidenceGenerationSha": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885",
-  "workflowStartedAtUtc": "2026-08-01T19:03:51Z",
+  "prHeadSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
+  "checkedOutCommitSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
+  "evidenceGenerationSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
+  "workflowStartedAtUtc": null,
   "checks": [
     {
       "name": "p0-artifact-present",
       "status": "Passed",
-      "note": "plan-0005-p0-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885"
+      "note": "plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70"
     },
     {
       "name": "p0-artifact-name-pr-head",
       "status": "Passed",
-      "note": "contains prHeadSha a1112a221cc492d52bd08f3dc1dcff1a02ae4885"
+      "note": "contains prHeadSha 4d07afa066fd7994bbc36473242ee7a2d764ea70"
     },
     {
       "name": "p1-artifact-present",
       "status": "Passed",
-      "note": "plan-0005-p1-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885"
+      "note": "plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70"
     },
     {
       "name": "p1-artifact-name-pr-head",
       "status": "Passed",
-      "note": "contains prHeadSha a1112a221cc492d52bd08f3dc1dcff1a02ae4885"
+      "note": "contains prHeadSha 4d07afa066fd7994bbc36473242ee7a2d764ea70"
     },
     {
       "name": "p0:firefox-zoom-pointer-keyboard.json",
       "status": "Passed",
-      "note": "/tmp/plan-0005-artifacts/plan-0005-p0-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/firefox-zoom-pointer-keyboard.json"
+      "note": "/tmp/p5-check/plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/firefox-zoom-pointer-keyboard.json"
     },
     {
       "name": "p0:p0-round1-timing.json",
       "status": "Passed",
-      "note": "/tmp/plan-0005-artifacts/plan-0005-p0-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/p0-round1-timing.json"
+      "note": "/tmp/p5-check/plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/p0-round1-timing.json"
     },
     {
       "name": "p0:keycloak-p0-auth.json",
       "status": "Passed",
-      "note": "/tmp/plan-0005-artifacts/plan-0005-p0-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/keycloak-p0-auth.json"
+      "note": "/tmp/p5-check/plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/keycloak-p0-auth.json"
     },
     {
       "name": "p0:frontend-production-inventory.json",
       "status": "Passed",
-      "note": "/tmp/plan-0005-artifacts/plan-0005-p0-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/frontend-production-inventory.json"
+      "note": "/tmp/p5-check/plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/frontend-production-inventory.json"
     },
     {
       "name": "p0:container-count.json",
       "status": "Passed",
-      "note": "/tmp/plan-0005-artifacts/plan-0005-p0-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/container-count.json"
+      "note": "/tmp/p5-check/plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/container-count.json"
     },
     {
       "name": "p0:run-identity.json",
       "status": "Passed",
-      "note": "/tmp/plan-0005-artifacts/plan-0005-p0-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/run-identity.json"
+      "note": "/tmp/p5-check/plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/run-identity.json"
     },
     {
       "name": "p1:observability-performance-p1.json",
       "status": "Passed",
-      "note": "/tmp/plan-0005-artifacts/plan-0005-p1-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/observability-performance-p1.json"
+      "note": "/tmp/p5-check/plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/observability-performance-p1.json"
     },
     {
       "name": "p1:performance-smoke.json",
       "status": "Passed",
-      "note": "/tmp/plan-0005-artifacts/plan-0005-p1-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/performance-smoke.json"
+      "note": "/tmp/p5-check/plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/performance-smoke.json"
     },
     {
       "name": "p1:performance-concurrent-creates.json",
       "status": "Passed",
-      "note": "/tmp/plan-0005-artifacts/plan-0005-p1-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/performance-concurrent-creates.json"
+      "note": "/tmp/p5-check/plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/performance-concurrent-creates.json"
     },
     {
       "name": "p1:openapi-p1.json",
       "status": "Passed",
-      "note": "/tmp/plan-0005-artifacts/plan-0005-p1-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/openapi-p1.json"
+      "note": "/tmp/p5-check/plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/openapi-p1.json"
     },
     {
       "name": "p1:readiness-postgres-outage.json",
       "status": "Passed",
-      "note": "/tmp/plan-0005-artifacts/plan-0005-p1-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/readiness-postgres-outage.json"
+      "note": "/tmp/p5-check/plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/readiness-postgres-outage.json"
     },
     {
       "name": "p1:outage-mutation-recovery.json",
       "status": "Passed",
-      "note": "/tmp/plan-0005-artifacts/plan-0005-p1-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/outage-mutation-recovery.json"
+      "note": "/tmp/p5-check/plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/outage-mutation-recovery.json"
     },
     {
       "name": "p1:container-count.json",
       "status": "Passed",
-      "note": "/tmp/plan-0005-artifacts/plan-0005-p1-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/container-count.json"
+      "note": "/tmp/p5-check/plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/container-count.json"
     },
     {
       "name": "p1:run-identity.json",
       "status": "Passed",
-      "note": "/tmp/plan-0005-artifacts/plan-0005-p1-evidence-a1112a221cc492d52bd08f3dc1dcff1a02ae4885/run-identity.json"
+      "note": "/tmp/p5-check/plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70/run-identity.json"
     },
     {
       "name": "firefox-zoom:identity",
@@ -120,7 +120,7 @@
     {
       "name": "p0-container-honesty",
       "status": "Passed",
-      "note": "{\"composeServiceCount\": 2, \"composeServices\": [\"keycloak\", \"postgres\"], \"testcontainersCreated\": 0, \"testcontainerImages\": [], \"maximumConcurrentContainers\": 2, \"totalContainerInstancesCreated\": 2}"
+      "note": "{\"composeServiceCount\": 2, \"composeServices\": [\"keycloak\", \"postgres\"], \"testcontainersCreated\": 36, \"testcontainerImages\": [\"postgres:18.4\", \"testcontainers/ryuk:0.14.0\"], \"maximumConcurrentContainers\": 5, \"totalContainerInstancesCreated\": 38}"
     },
     {
       "name": "p0-run:identity",
@@ -135,7 +135,7 @@
     {
       "name": "p1-container-honesty",
       "status": "Passed",
-      "note": "{\"composeServiceCount\": 2, \"composeServices\": [\"keycloak\", \"postgres\"], \"testcontainersCreated\": 1, \"testcontainerImages\": [\"testcontainers/ryuk:0.14.0\"], \"maximumConcurrentContainers\": 3, \"totalContainerInstancesCreated\": 3}"
+      "note": "{\"composeServiceCount\": 2, \"composeServices\": [\"keycloak\", \"postgres\"], \"testcontainersCreated\": 16, \"testcontainerImages\": [\"postgres:18.4\", \"testcontainers/ryuk:0.14.0\"], \"maximumConcurrentContainers\": 5, \"totalContainerInstancesCreated\": 18}"
     },
     {
       "name": "p1-run:identity",
@@ -150,7 +150,7 @@
     {
       "name": "performance-smoke:freshness",
       "status": "Passed",
-      "note": "2026-08-01T19:03:01Z"
+      "note": "2026-08-01T19:12:28Z"
     },
     {
       "name": "performance-metrics",
@@ -165,7 +165,7 @@
     {
       "name": "performance-creates:freshness",
       "status": "Passed",
-      "note": "2026-08-01T19:03:01Z"
+      "note": "2026-08-01T19:12:28Z"
     },
     {
       "name": "concurrent-creates-137",
@@ -180,7 +180,7 @@
     {
       "name": "outage-132:freshness",
       "status": "Passed",
-      "note": "2026-08-01T19:02:51Z"
+      "note": "2026-08-01T19:12:18Z"
     },
     {
       "name": "outage-mutation-132",
@@ -220,12 +220,42 @@
     {
       "name": "final-assessment-head",
       "status": "Passed",
-      "note": "None"
+      "note": "currentPrTip=4d07afa066fd7994bbc36473242ee7a2d764ea70 evidenceGenerationHead=4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "final-assessment-artifact-p0",
+      "status": "Passed",
+      "note": "plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "final-assessment-artifact-p1",
+      "status": "Passed",
+      "note": "plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "final-assessment-artifact-evidenceConsistency",
+      "status": "Passed",
+      "note": "plan-0005-evidence-consistency-4d07afa066fd7994bbc36473242ee7a2d764ea70"
     },
     {
       "name": "final-assessment-head",
       "status": "Passed",
-      "note": "None"
+      "note": "currentPrTip=4d07afa066fd7994bbc36473242ee7a2d764ea70 evidenceGenerationHead=4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "final-assessment-artifact-p0",
+      "status": "Passed",
+      "note": "plan-0005-p0-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "final-assessment-artifact-p1",
+      "status": "Passed",
+      "note": "plan-0005-p1-evidence-4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "final-assessment-artifact-evidenceConsistency",
+      "status": "Passed",
+      "note": "plan-0005-evidence-consistency-4d07afa066fd7994bbc36473242ee7a2d764ea70"
     },
     {
       "name": "result-matrix-math",
@@ -235,7 +265,7 @@
     {
       "name": "subscenario-matrix",
       "status": "Passed",
-      "note": "subScenarioSum=4 detail={'TEST-0005-109': {'Cook_pointer': 'Failed', 'Cook_keyboard': 'Passed', 'Pantry_pointer': 'Failed', 'Pantry_keyboard': 'Passed'}, 'Passed': 2, 'Failed': 2, 'note': 'Sub-scenario counts for TEST-0005-109 only; two pointer failures remain visible and map to issues #21 and #22.'}"
+      "note": "subScenarioSum=4 detail={'TEST-0005-109': {'Cook_pointer': 'Failed', 'Cook_keyboard': 'Passed', 'Pantry_pointer': 'Failed', 'Pantry_keyboard': 'Passed'}, 'Passed': 2, 'Failed': 2}"
     },
     {
       "name": "gitleaks-no-commit-allowlist",
@@ -250,22 +280,77 @@
     {
       "name": "p0-container-count",
       "status": "Passed",
-      "note": "missing=[] peak=2"
+      "note": "compose=2 tc=36 peak=5"
     },
     {
       "name": "p1-container-count",
       "status": "Passed",
-      "note": "missing=[] peak=3"
+      "note": "compose=2 tc=16 peak=5"
+    },
+    {
+      "name": "p0-round1-summary-current",
+      "status": "Passed",
+      "note": "native summary ok"
+    },
+    {
+      "name": "p0-round1-timing-current",
+      "status": "Passed",
+      "note": "timing Passed"
+    },
+    {
+      "name": "no-unmarked-failed-evidence",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "no-unmarked-css-zoom-evidence",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "current-files-have-prHeadSha",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "no-duplicate-logical-evidence",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "canonical-evidence-head",
+      "status": "Passed",
+      "note": "4d07afa066fd7994bbc36473242ee7a2d764ea70"
+    },
+    {
+      "name": "identity-no-null-fields",
+      "status": "Passed",
+      "note": "no ambiguous null tip fields"
+    },
+    {
+      "name": "canonical-artifact-ids",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "canonical-container-counts",
+      "status": "Passed",
+      "note": "ok"
+    },
+    {
+      "name": "no-obsolete-completion-console",
+      "status": "Passed",
+      "note": "ok"
     },
     {
       "name": "pr-head-sha-recorded",
       "status": "Passed",
-      "note": "a1112a221cc492d52bd08f3dc1dcff1a02ae4885"
+      "note": "4d07afa066fd7994bbc36473242ee7a2d764ea70"
     },
     {
       "name": "checked-out-sha-recorded",
       "status": "Passed",
-      "note": "5680f9dff8c3a593ea57fad5a508de27349a6a7f"
+      "note": "4d07afa066fd7994bbc36473242ee7a2d764ea70"
     },
     {
       "name": "integrated-sha-pin",
@@ -274,7 +359,7 @@
     }
   ],
   "summary": {
-    "passed": 53,
+    "passed": 70,
     "failed": 0
   }
 }

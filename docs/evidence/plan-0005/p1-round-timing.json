@@ -2,28 +2,44 @@
   "plan": "PLAN-0005",
   "round": "P1-completion-round",
   "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
-  "startedAtUtc": "2026-08-01T16:09:01Z",
-  "endedAtUtc": "2026-08-01T16:10:25Z",
-  "totalSeconds": 84,
-  "containerCount": 2,
+  "prHeadSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
+  "checkedOutCommitSha": "46f31af8feafccb3eb29756c918da416088a3990",
+  "evidenceGenerationSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
+  "startedAtUtc": "2026-08-01T19:08:16Z",
+  "endedAtUtc": "2026-08-01T19:12:35Z",
+  "totalSeconds": 259,
+  "containers": {
+    "composeServiceCount": 2,
+    "composeServices": [
+      "keycloak",
+      "postgres"
+    ],
+    "testcontainersCreated": 16,
+    "testcontainerImages": [
+      "postgres:18.4",
+      "testcontainers/ryuk:0.14.0"
+    ],
+    "maximumConcurrentContainers": 5,
+    "totalContainerInstancesCreated": 18
+  },
+  "composeServiceCount": 2,
   "groups": [
     {
       "name": "environment",
       "exitCode": 0,
-      "durationSeconds": 28,
+      "durationSeconds": 109,
       "status": "Passed"
     },
     {
       "name": "pagination-http",
       "exitCode": 0,
       "durationSeconds": 11,
-      "status": "Passed",
-      "retest": "Passed after creating two active lots for cursor assertion"
+      "status": "Passed"
     },
     {
       "name": "openapi",
       "exitCode": 0,
-      "durationSeconds": 3,
+      "durationSeconds": 2,
       "status": "Passed"
     },
     {
@@ -35,13 +51,13 @@
     {
       "name": "axe",
       "exitCode": 0,
-      "durationSeconds": 5,
+      "durationSeconds": 3,
       "status": "Passed"
     },
     {
       "name": "observability-performance",
       "exitCode": 0,
-      "durationSeconds": 35,
+      "durationSeconds": 132,
       "status": "Passed"
     },
     {
@@ -68,13 +84,9 @@
     "blocked": 1
   },
   "observability": {
-    "passed": 5,
+    "passed": 8,
     "failed": 0,
     "blocked": 0,
-    "deferred": 6
-  },
-  "paginationRetest": {
-    "passed": 2,
-    "failed": 0
+    "deferred": 3
   }
 }

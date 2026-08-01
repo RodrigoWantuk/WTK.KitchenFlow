@@ -96,13 +96,19 @@ jobs:
           # Headed Firefox + openbox + xdotool for TEST-0005-109 native zoom.
           xvfb-run -a bash -lc 'openbox & sleep 1; bash scripts/plan-0005/run-p0-round1.sh'
 
+      - name: Stage clean P0 artifact directory
+        if: always()
+        run: |
+          chmod +x scripts/plan-0005/stage-artifact-current.sh
+          bash scripts/plan-0005/stage-artifact-current.sh p0
+
       - name: Upload PLAN-0005 P0 evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: plan-0005-p0-evidence-${{ env.PLAN0005_PR_HEAD_SHA }}
           path: |
-            docs/evidence/plan-0005/
+            docs/evidence/plan-0005/artifact-current/
           if-no-files-found: error
           retention-days: 30
 
@@ -170,13 +176,19 @@ jobs:
           chmod +x scripts/plan-0005/*.sh scripts/plan-0005/*.cjs scripts/plan-0005/*.mjs
           bash scripts/plan-0005/run-p1-completion.sh
 
+      - name: Stage clean P1 artifact directory
+        if: always()
+        run: |
+          chmod +x scripts/plan-0005/stage-artifact-current.sh
+          bash scripts/plan-0005/stage-artifact-current.sh p1
+
       - name: Upload PLAN-0005 P1 evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: plan-0005-p1-evidence-${{ env.PLAN0005_PR_HEAD_SHA }}
           path: |
-            docs/evidence/plan-0005/
+            docs/evidence/plan-0005/artifact-current/
           if-no-files-found: error
           retention-days: 30
 
@@ -215,7 +227,8 @@ jobs:
           GITLEAKS_BIN: gitleaks
         run: |
           set -euo pipefail
-          chmod +x scripts/plan-0005/gitleaks-policy.sh scripts/plan-0005/evidence-consistency.sh scripts/plan-0005/lib-identity.sh
+          chmod +x scripts/plan-0005/gitleaks-policy.sh scripts/plan-0005/evidence-consistency.sh scripts/plan-0005/lib-identity.sh scripts/plan-0005/evidence-consistency-fixtures.sh
+          bash scripts/plan-0005/evidence-consistency-fixtures.sh
           bash scripts/plan-0005/gitleaks-policy.sh
           bash scripts/plan-0005/evidence-consistency.sh /tmp/plan-0005-artifacts
 
