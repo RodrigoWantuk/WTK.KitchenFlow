@@ -1,15 +1,18 @@
 # PLAN-0015: Remediate and Validate the Imported Frontend Baseline
 
-- **Status:** Validating
+- **Status:** Completed
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** Cursor agent (PLAN-0015)
 - **Created:** 2026-07-31
-- **Last updated:** 2026-08-01T08:10:00Z
-- **Branch:** `agent/plan-0015-remediate-frontend-baseline` (merged)
+- **Last updated:** 2026-08-01T14:05:00Z
+- **Branch:** `agent/plan-0015-remediate-frontend-baseline` (merged); completion docs on `docs/complete-plan-0015-validation`
 - **Pull request:** [Merged via PR #16](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/16) (`mergedAt` 2026-08-01T06:22:00Z)
-- **Delivery:** Merged via PR #16 — plan remains Validating until remaining manual frontend validation is recorded and the owner decides Completed
-- **Blocker:** Remaining concrete manual frontend validation (not PR merge/approval)
+- **Delivery:** Merged via PR #16
+- **Frontend merge SHA:** `e248126346d60c99df82e9c1e9f1954a07e68da2`
+- **Real browser zoom 200%:** Passed — evidence [`docs/evidence/plan-0015/browser-zoom-200-validation.md`](../evidence/plan-0015/browser-zoom-200-validation.md) (tested main `da295932cd678eef5b8559c39217e19f101d7a80`; Chrome 150.0.7871.186; Firefox 141.0; Linux 6.12.96+deb13-amd64)
+- **Full NVDA/VoiceOver audit:** Deferred to PLAN-0005 by owner decision — **not executed** in PLAN-0015
+- **Blocker:** None (manual zoom gate closed; AT audit transferred)
 - **Implementation SHA (prior reviewed head):** `11f00bdfdcd2f8139d449841c52968df587ed794`
 - **Last CI-validated code SHA (prior round):** `11f00bdfdcd2f8139d449841c52968df587ed794`
 - **Prior push workflow (green):** [Frontend #30680034509](https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30680034509)
@@ -123,7 +126,9 @@ This frontend is **not** declared production-ready by PLAN-0015 until the owner 
 ### Phase 6: Handoff
 
 - [x] PLAN-0015 `Validating`; draft PR open; no agent merge/approve.
-- [ ] Owner review of final head SHA / CI (owner action).
+- [x] Owner merge of PR #16 (implementation) completed on main (`e248126`).
+- [x] Real browser zoom 200% executed and Passed (2026-08-01).
+- [x] Full NVDA/VoiceOver audit deferred to PLAN-0005 by owner decision.
 
 ## Acceptance criteria
 
@@ -142,7 +147,7 @@ This frontend is **not** declared production-ready by PLAN-0015 until the owner 
 - [x] Lint zero warnings; format check blocking; audit not soft-failed with `|| true`.
 - [x] High vulns fixed or individually excepted with versioned justification (`1124282` active).
 - [x] `yarn build` is production; prototype build remains explicit; bundle inspect green.
-- [x] PLAN-0015 remains `Validating` with draft PR; not completed/merged by agent.
+- [x] Implementation merged via PR #16; real browser zoom 200% Passed; plan Completed after documentation PR (agent does not self-merge completion docs).
 
 ## Smoke evidence (truthful)
 
@@ -169,14 +174,12 @@ Dependency: direct `playwright@1.55.1` (`yarn smoke:browser:install`).
 
 | Check | Result | Notes |
 |---|---|---|
-| Real browser zoom 200% | **Not executed — owner/manual validation required** | CSS `zoom` approximation must not be claimed as browser zoom |
-| Full assistive-tech audit (NVDA/VoiceOver) | **Not executed — owner/manual validation required** | Awaiting explicit owner decision on a later plan |
+| Real browser zoom 200% | **Passed** | Headed Chrome 150.0.7871.186 + Firefox 141.0; native Ctrl+Plus; evidence [`browser-zoom-200-validation.md`](../evidence/plan-0015/browser-zoom-200-validation.md); tested main `da29593…` |
+| Full assistive-tech audit (NVDA/VoiceOver) | **Deferred to PLAN-0005** | Owner decision for this phase — **not executed**; do not claim complete AT audit |
 
-#### Owner checklist — real browser zoom 200%
+#### Real browser zoom 200% — closed
 
-Surfaces: Landing, Acesso, Home, Despensa, Planejamento, Compras, modal/dialog, carrossel, CTA Cozinhar.
-
-Verify: no content loss; no global horizontal overflow; actions reachable; text readable; dialogs usable; navigation functional.
+Surfaces validated (production + prototype): Landing, Acesso, FeatureUnavailable, Home, Despensa, Planejamento, Compras, dialog/sheet when present, carrossel, CTA Cozinhar, item detail when reachable. Result: **Passed** (26/26).
 
 ## Bundle size evidence (gzip, CRA report)
 
@@ -192,19 +195,30 @@ Bundle inspect: zero hits for forbidden prototype tokens in production JS.
 - Live BFF session / live projections not wired; production shows FeatureUnavailable / empty — **no mock data**.
 - CRA/`react-scripts@5` retained; advisory **`1124282`** allowlisted through **2026-12-31**.
 - Incompatible Yarn resolution warnings remain for packages listed in `apps/frontend/docs/dependency-resolution-triage.md` (each justified individually; babel systemjs downgrade corrected to `7.29.8`).
-- Real browser zoom 200% and full AT audit remain manual.
+- Full AT audit (NVDA/VoiceOver) deferred to PLAN-0005; real browser zoom 200% closed as Passed.
 
 ## Execution state
 
-- **Current checkpoint:** Residual nesting/focus/evidence round landed; status `Validating`; draft PR #16.
-- **Last completed step:** Full-src interactive nesting remediation + AST guard; baseline/focused focus-visible smoke; smoke evidence moved to CI artifacts; plan/registry updated.
-- **Exact next action:** Owner re-reviews draft PR #16 after quality + browser-smoke CI on the new implementation SHA; agent must not merge/approve.
-- **Blockers:** Owner review required for merge and for unblocking PLAN-0011 / definitive PLAN-0005 frontend pin. Manual real zoom 200% and full AT audit remain pending.
-- **Validation performed:** typecheck, lint, format, test (92), `guard:interactive-nesting`, audit:policy; CI after push.
-- **Working tree state:** Residual remediations on PLAN-0015 branch; PR remains draft.
-- **Substantial run target:** Achieved for owner re-review after residual nesting/focus/evidence fixes.
+- **Current checkpoint:** PLAN-0015 **Completed** pending owner merge of documentation PR on `docs/complete-plan-0015-validation`.
+- **Last completed step:** Real browser zoom 200% Passed on Chrome + Firefox; evidence recorded; AT audit deferred to PLAN-0005 by owner decision.
+- **Exact next action:** Owner merges the documentation PR that marks PLAN-0015 Completed; then an **independent** agent may claim PLAN-0005. Do not start PLAN-0011.
+- **Blockers:** None for PLAN-0015. PLAN-0005 remains Ready (not started here). PLAN-0011 remains Blocked awaiting PLAN-0005.
+- **Validation performed:** Prior PR #16 CI + local dual builds; headed native zoom 200% (26 surfaces Passed).
+- **Working tree state:** Documentation/evidence only on `docs/complete-plan-0015-validation`.
+- **Substantial run target:** Achieved for Phase 0 manual zoom close-out.
 
 ## Progress log
+
+### 2026-08-01T14:05:00Z — Cursor agent
+
+- **Checkpoint:** Real browser zoom 200% Passed; PLAN-0015 marked Completed in docs (awaiting owner merge of docs PR).
+- **Tested main SHA:** `da295932cd678eef5b8559c39217e19f101d7a80`
+- **Frontend merge SHA:** `e248126346d60c99df82e9c1e9f1954a07e68da2`
+- **Browsers:** Google Chrome 150.0.7871.186; Firefox 141.0 (headed); Linux 6.12.96+deb13-amd64
+- **Evidence:** `docs/evidence/plan-0015/browser-zoom-200-validation.md` (+ JSON + PNG artifacts)
+- **AT audit:** Deferred to PLAN-0005 by owner decision — not executed
+- **Result:** Zoom gate closed; no functional code changes in this PR
+- **Next action:** Owner merges docs PR; do not start PLAN-0005 until that merge; do not start PLAN-0011
 
 ### 2026-08-01T05:20:00Z — Cursor agent
 
@@ -252,8 +266,8 @@ Bundle inspect: zero hits for forbidden prototype tokens in production JS.
 ## Completion and handoff checklist
 
 - [x] Acceptance criteria truthful for delivered work.
-- [x] Draft PR linked; not merged/approved by agent.
-- [x] PLAN-0015 status `Validating` at handoff (not `Completed`).
-- [x] Implementation SHA vs Last CI-validated code SHA terminology documented (PR head via GitHub metadata; avoid infinite SHA-only commits).
-- [x] Quality + browser-smoke CI, vulns, smoke, limitations listed for owner.
-- [x] Exact continuation recorded for unfinished items (owner review + manual zoom checklist).
+- [x] Implementation merged via PR #16 (`e248126`); agent did not self-merge.
+- [x] PLAN-0015 status `Completed` after real browser zoom 200% Passed (docs PR awaits owner merge).
+- [x] Implementation SHA vs Last CI-validated code SHA terminology documented.
+- [x] Quality + browser-smoke CI, vulns, smoke, zoom evidence, limitations listed for owner.
+- [x] AT audit explicitly deferred to PLAN-0005; PLAN-0005 Ready; PLAN-0011 Blocked.
