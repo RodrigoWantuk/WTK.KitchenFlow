@@ -5,9 +5,9 @@
 - **Priority:** Critical
 - **Owner:** Cursor cloud agent
 - **Created:** 2026-07-31
-- **Last updated:** 2026-08-01T06:36:00Z
+- **Last updated:** 2026-08-01T07:30:00Z
 - **Branch:** `cursor/plan-0012-profile-backend-1672`
-- **Pull request:** Open — [PR #12](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/12) (Changes requested; OpenAPI/runtime/security remediation)
+- **Pull request:** Open — [PR #12](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/12) (Changes requested; final security/contract remediation)
 - **Base commit:** `f9d429346615bf5b157656822057917ca2fe4032` (PLAN-0003 merged via PR #9)
 - **Related specification:** PLAN-0002, `docs/product/audience-and-profile.md`
 - **Related ADRs:** ADR-0002, ADR-0003, ADR-0004, ADR-0006
@@ -68,22 +68,31 @@ Implement a production-shaped backend slice for progressive profile, single-hous
 - [x] Privacy-minimizing audit history without sensitive payloads
 - [x] Module-owned export and deletion projection interfaces prepared for Privacy workflows
 - [x] Architecture tests enforce module boundaries
-- [x] Full test suite deterministic with zero skipped tests (150/150 local Release: 14 architecture + 29 unit + 107 integration)
+- [x] Full test suite deterministic with zero skipped tests (165/165 local Release: 14 architecture + 29 unit + 122 integration)
 - [x] Release build zero warnings, locked restore, migrations from empty and prior main, OpenAPI truthful
 
 ## Execution state
 
-- **Current phase:** Validating — remediation delivered; Backend CI green on head `aaca54f6d2c067d2ba9cb073174b0c3e01a959a8`
-- **Last verified checkpoint:** Backend workflow green (restore, vulns, format, Release build, tests, migrations, OpenAPI export/drift/lint, secret-scan); local 150/150; OpenAPI collections/enums/ETag/CSRF; null no-profile versions; GET read metrics; isolation/CSRF tests
-- **Blockers:** Independent owner review
+- **Current phase:** Validating — final security/contract remediation pushed; awaiting Backend CI and owner re-review
+- **Last verified checkpoint:** Owner-bound ETag validation; missing-profile `profileExists`/`version:null` without ETag; unique equipment stable codes + ordering by array position; migration `EnforceUniqueProfileEquipmentStableCode`; OpenAPI snapshot refreshed; local 165/165; migrations idempotent artifact OK
+- **Blockers:** Owner re-review after green Backend CI on the final remediation head
 - **Exact next action:** Owner re-review of PR #12; do not merge or mark Completed without approval
 
 ## Progress log
 
+### 2026-08-01T07:30:00Z — Final security and contract remediation
+
+- Bound profile ETag parsing to the authenticated owner (`TryReadVersion(expectedOwnerUserId, ...)`).
+- GET `/api/v1/profile` returns `profileExists: false`, `version: null`, and omits ETag when no profile is persisted.
+- Rejected duplicate equipment `stableCode` values after normalization; removed request `sortOrder` (array order is canonical); added unique PostgreSQL index `(OwnerUserId, StableCode)` via incremental migration `20260801070903_EnforceUniqueProfileEquipmentStableCode` (fails closed if duplicates already exist; no silent cleanup).
+- Added `ProfileHttpTokenServiceTests` and `ProfileFinalRemediationTests`; refreshed OpenAPI snapshot.
+- **Validation:** Release build 0 warnings; local tests 14/29/122; migration apply + idempotent script twice OK.
+- **Next:** Push head, await Backend CI, owner re-review. Keep Validating; do not merge or mark Completed.
+
 ### 2026-08-01T06:45:00Z — Backend CI green
 
-- Backend workflow https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30688134016 succeeded on `aaca54f6d2c067d2ba9cb073174b0c3e01a959a8` (build-and-test + secret-scan), including OpenAPI export/drift/lint with no soft-fail.
-- **Next:** Owner re-review. Keep Validating; do not merge or mark Completed.
+- Backend workflow https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30688134016 succeeded on an earlier remediation head (build-and-test + secret-scan), including OpenAPI export/drift/lint with no soft-fail.
+- **Next:** Owner re-review was interrupted by this final remediation round.
 
 ### 2026-08-01T06:40:00Z — CI format fix
 
