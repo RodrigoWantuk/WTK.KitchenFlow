@@ -321,7 +321,22 @@ async function run() {
         if (!focusedDemo) fail("keyboard-only", "access demo not reachable");
         await page.keyboard.press("Enter");
         await page.waitForURL(/\/app\/hoje/);
-        await page.getByTestId("home-route-block").waitFor();
+        // Fresh CI localStorage defaults to filledPantry without route block — seed scenario.
+        await page.evaluate(() => {
+          const key = "cocinaris_state_v1";
+          let state = {};
+          try {
+            state = JSON.parse(localStorage.getItem(key) || "{}") || {};
+          } catch {
+            state = {};
+          }
+          state.scenario = "routeWithDeps";
+          state.authed = true;
+          localStorage.setItem(key, JSON.stringify(state));
+        });
+        await page.reload({ waitUntil: "domcontentloaded" });
+        await page.waitForURL(/\/app\/hoje/);
+        await page.getByTestId("home-route-block").waitFor({ timeout: 20000 });
         const carousel = page.getByTestId("home-route-carousel").locator("ol");
         await carousel.focus();
         await page.keyboard.press("ArrowRight");
