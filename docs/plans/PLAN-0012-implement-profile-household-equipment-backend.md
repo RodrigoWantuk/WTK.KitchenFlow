@@ -73,12 +73,19 @@ Implement a production-shaped backend slice for progressive profile, single-hous
 
 ## Execution state
 
-- **Current phase:** Validating — privacy/history/timestamp/error-path remediation validated locally; awaiting Backend CI and owner re-review
-- **Last verified checkpoint:** Local Release green with enum-based sensitive history redaction, null missing-profile timestamps, canonical audit codes, nested adultDeclaration error paths, runbook + duplicate-migration fail-closed test, OpenAPI export, 14/46/131 tests (191). Prior reviewed head was `ba6c57d7fa2bf3e738320a8aee7709e81fab3cd6`.
+- **Current phase:** Validating — final privacy/contract/concurrency remediation delivered; Backend CI green on head `0e40d5a1c7266779593535e53f4badf25cdb841c`
+- **Last verified checkpoint:** Enum-based sensitive history redaction; null missing-profile timestamps; canonical audit codes; nested adultDeclaration paths; unique-equipment migration fail-closed; concurrent deadlock→412; OpenAPI export; local+CI 14/46/131 (191). Exact-head Backend https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30692041555 ; evidence artifact 8816035477
 - **Blockers:** Owner re-review
-- **Exact next action:** Push remediation head; await Backend CI; owner re-review of PR #12; do not merge or mark Completed without approval
+- **Exact next action:** Owner re-review of PR #12; do not merge or mark Completed without approval
 
 ## Progress log
+
+### 2026-08-01T08:45:00Z — Backend CI green on privacy + concurrency head
+
+- Exact-head Backend workflow https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30692041555 succeeded on `0e40d5a1c7266779593535e53f4badf25cdb841c` (build-and-test + secret-scan).
+- Evidence artifact: `backend-evidence-0e40d5a1c7266779593535e53f4badf25cdb841c` (id **8816035477**).
+- Prior failed head `a387667` was fixed by deadlock→412 mapping (`1012e9a`).
+- **Next:** Owner re-review. Keep Validating; do not merge or mark Completed.
 
 ### 2026-08-01T08:30:00Z — Concurrent mutation 500→412 fix after CI flake
 
