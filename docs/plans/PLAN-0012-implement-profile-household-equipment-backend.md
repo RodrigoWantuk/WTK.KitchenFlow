@@ -73,12 +73,17 @@ Implement a production-shaped backend slice for progressive profile, single-hous
 
 ## Execution state
 
-- **Current phase:** Validating — OpenAPI/runtime/security remediation delivered locally; awaiting Backend CI on pushed head
-- **Last verified checkpoint:** Release build 0 warnings; 150/150 tests; OpenAPI export/check/lint green; collection wrappers + nullable version; field/preference enums wired; ETag/`If-Match`/CSRF docs; GET read metrics; isolation + CSRF tests; merged `origin/main`
-- **Blockers:** Independent owner review after green Backend CI
-- **Exact next action:** Owner re-review of PR #12 after Backend workflow succeeds on the remediation head
+- **Current phase:** Validating — remediation delivered; Backend CI green on head `aaca54f6d2c067d2ba9cb073174b0c3e01a959a8`
+- **Last verified checkpoint:** Backend workflow green (restore, vulns, format, Release build, tests, migrations, OpenAPI export/drift/lint, secret-scan); local 150/150; OpenAPI collections/enums/ETag/CSRF; null no-profile versions; GET read metrics; isolation/CSRF tests
+- **Blockers:** Independent owner review
+- **Exact next action:** Owner re-review of PR #12; do not merge or mark Completed without approval
 
 ## Progress log
+
+### 2026-08-01T06:45:00Z — Backend CI green
+
+- Backend workflow https://github.com/RodrigoWantuk/WTK.KitchenFlow/actions/runs/30688134016 succeeded on `aaca54f6d2c067d2ba9cb073174b0c3e01a959a8` (build-and-test + secret-scan), including OpenAPI export/drift/lint with no soft-fail.
+- **Next:** Owner re-review. Keep Validating; do not merge or mark Completed.
 
 ### 2026-08-01T06:40:00Z — CI format fix
 
