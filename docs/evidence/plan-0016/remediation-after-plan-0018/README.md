@@ -4,7 +4,7 @@
 
 | Field | PLAN-0018 (immutable Fail) | This remediation (implementation evidence) |
 | --- | --- | --- |
-| Candidate SHA | `814af253814d0ec7f8b0adbbca9c50040b5bab07` | See `exact-remediation-sha.txt` / final tip after CI sync |
+| Candidate SHA | `814af253814d0ec7f8b0adbbca9c50040b5bab07` | CI-green code tip `68c04fc` (see `workflow-ids.md`); Validating docs tip may be later |
 | Outcome | **Fail** | Implementation-agent remediations only — **not** independent Pass |
 | Evidence | `docs/evidence/plan-0018/` | this directory |
 

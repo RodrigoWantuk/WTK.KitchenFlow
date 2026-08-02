@@ -1,6 +1,6 @@
 # PLAN-0016: Implement Production Session and Authenticated Inventory Frontend
 
-- **Status:** In Progress
+- **Status:** Validating
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** agent:composer-plan-0016
@@ -228,15 +228,23 @@ Minimum retest coverage:
 ## Execution state
 
 - **Current run delivery target:** Remediate independent PLAN-0018 Fail findings (#21/#22 pointer; #26 isolation) then re-validate.
-- **Current checkpoint:** Local full gates green for #26/#21/#22 remediation; awaiting GitHub Actions on pushed tip before **Validating**.
+- **Current checkpoint:** **Validating** — remediation tip `68c04fc` has green Backend, Frontend, and PLAN-0005 workflows (implementation CI only).
 - **Last independently tested SHA:** `814af253814d0ec7f8b0adbbca9c50040b5bab07` (PLAN-0018 Fail — immutable)
-- **Last completed step:** Evidence under `docs/evidence/plan-0016/remediation-after-plan-0018/`; independent retest handoff refreshed.
-- **Exact next action:** Push tip; confirm Frontend (+ relevant) workflows green; then mark Validating with workflow IDs; keep Draft; leave issues open.
+- **Remediation candidate SHA:** `68c04fc236f30d3cab0fdd444242cc5fdeecb251`
+- **Last completed step:** #26/#21/#22 remediations + evidence + CI IDs recorded; PR #25 remains Draft.
+- **Exact next action:** Independent retest of tip `68c04fc` (do not reuse implementation evidence as final authority); keep issues open; owner merge only after retest.
 - **Blockers:** None for coding. Owner merge blocked until independent retest Pass/Conditional Pass.
-- **Known failures or limitations:** #21/#22 pointer Failed at native 200% on `814af25`; #26 High isolation 412-vs-404 on `814af25`; PLAN-0005 Conditional Pass; PLAN-0011 Blocked; PR #23 untouched; issues remain open.
-- **Working tree state:** Uncommitted #26 backend changes; PLAN-0018 evidence must remain Fail.
+- **Known failures or limitations:** PLAN-0018 Fail on `814af25` stands; PLAN-0005 Conditional Pass until independent acceptance; PLAN-0011 Blocked; #21/#22/#26/#20/#24 remain open; PR #23 untouched.
+- **Working tree state:** Remediation candidate pushed; PLAN-0018 Fail evidence immutable.
 
 ## Progress log
+
+### 2026-08-02T04:45:00Z — agent:composer-plan-0016
+
+- **Checkpoint:** Status **Validating** on remediation tip `68c04fc`.
+- **CI proof:** Backend `30730920972`; PLAN-0005 `30730920959`; Frontend `30730919691` + `30730920952` (audit flake re-run).
+- **Issues:** #21/#22/#26 remain open for independent verification; #20/#24 owner-controlled; no merge/approval.
+- **Next action:** Independent retest handoff (`docs/evidence/plan-0016/independent-retest-handoff.md`).
 
 ### 2026-08-02T04:20:00Z — agent:composer-plan-0016
 
