@@ -242,7 +242,7 @@ Automated coverage must include:
 
 - **Current checkpoint:** Hardened Phase 1+2: public `/` outside SessionProvider; progressive source loading; per-source retry; empty-menu omission; request-scoped timezone override; chooser retry; expanded tests. Local gates + browser smoke Passed. Status **Validating**.
 - **Exact tip SHA (functional):** `f7d516089a077b39bd9c95c7cc157f44443eaa7d`
-- **Packaging tip SHA:** `df2e077d9fc3ffda5578a8406a4549602be12cae`
+- **Packaging tip SHA:** branch HEAD after tip-metadata commit (functional product tip remains `f7d516089a077b39bd9c95c7cc157f44443eaa7d`)
 - **Run delivery target:** Phase 1 public entry + Phase 2 mock-backed contextual home with tests, isolation, docs, draft PR.
 - **Delivered outcome:** Public entry without session bootstrap; contextual home (mock/unavailable adapters); i18n; Jest; smoke; docs/evidence; draft PR #34 requesting RodrigoWantuk.
 - **Acceptance criteria resolved:** Amended Phase 1/2 product criteria satisfied locally; exact-head CI pending on packaging tip; owner review/merge still pending; live sources remain PLAN-0021.
@@ -252,8 +252,8 @@ Automated coverage must include:
 - **Known failures or limitations:** Production home sources unavailable until PLAN-0021; local Firefox native zoom cannot launch as root; PR remains draft.
 - **Blockers:** None for amended Phase 1 + Phase 2.
 - **Partially modified areas:** None.
-- **Exact next action:** Confirm Frontend + PLAN-0005 green on packaging tip `df2e077`; keep draft PR #34; owner review only — no agent merge.
-- **Working tree state:** Functional tip `f7d5160`; packaging tip `df2e077`.
+- **Exact next action:** Confirm Frontend + PLAN-0005 green on exact PR head; keep draft PR #34; owner review only — no agent merge.
+- **Working tree state:** Functional tip `f7d5160`; packaging metadata on branch HEAD.
 
 ## Progress log
 
