@@ -6,7 +6,7 @@
 - **Owner:** agent:composer-plan-0016
 - **Created:** 2026-08-01
 - **Last updated:** 2026-08-02T13:20:00Z
-- **Exact tip SHA:** 
+- **Exact tip SHA:** `0c6ac53cdd021bec343914214134721bb7a26fd6`
 - **Branch:** `agent/plan-0016-production-inventory-frontend`
 - **Pull request:** [PR #25](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/25) (ready for review; awaiting owner merge)
 - **Related issues:** #20, #21, #22, #24, #26 (closed); PR #25 follow-up: semantic create fingerprint + persistent history-reload warning
@@ -229,23 +229,23 @@ Minimum retest coverage:
 ## Execution state
 
 - **Current run delivery target:** Completed — PR #25 follow-up (semantic fingerprint + history reload) green on exact tip.
-- **Current checkpoint:** **Completed** at exact tip .
-- **Last independently validated remediation SHA:** 
-- **Prior Fail SHA (immutable):**  (PLAN-0018)
+- **Current checkpoint:** **Completed** at exact tip `0c6ac53cdd021bec343914214134721bb7a26fd6`.
+- **Last independently validated remediation SHA:** `0c6ac53cdd021bec343914214134721bb7a26fd6`
+- **Prior Fail SHA (immutable):** `814af253814d0ec7f8b0adbbca9c50040b5bab07` (PLAN-0018)
 - **Last completed step:** Semantic create fingerprint + persistent history-reload warning; CI green; PR ready for review.
 - **Exact next action:** Owner reviews and merges PR #25 (agents must not approve, auto-merge, or merge).
 - **Blockers:** None for PLAN-0016. Owner merge only.
-- **Known failures or limitations:** PLAN-0018 Fail evidence on  remains historical.
-- **Working tree state:** Exact tip .
+- **Known failures or limitations:** PLAN-0018 Fail evidence on `814af25` remains historical.
+- **Working tree state:** Exact tip `0c6ac53cdd021bec343914214134721bb7a26fd6`.
 
 ## Progress log
 
 ### 2026-08-02T13:20:00Z — agent:composer-plan-0016
 
 - **Checkpoint:** **Completed** after follow-up remediation CI green.
-- **Exact tip:** 
-- **CI:** Backend ; Frontend ; PLAN-0005 
-- **Evidence:** 
+- **Exact tip:** `0c6ac53cdd021bec343914214134721bb7a26fd6`
+- **CI:** Backend `30748795864`; Frontend `30748795883`; PLAN-0005 `30748795872`
+- **Evidence:** `docs/evidence/plan-0016/pr25-final-review-remediation/follow-up-semantic-fingerprint-and-history-reload.md`
 - **Next action:** Owner merge only.
 
 ### 2026-08-02T13:00:00Z — agent:composer-plan-0016
