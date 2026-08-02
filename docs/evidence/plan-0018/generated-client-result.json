@@ -1,0 +1,39 @@
+{
+  "testId": "TEST-0018-001-generated-client",
+  "exactShaUnderTest": "814af253814d0ec7f8b0adbbca9c50040b5bab07",
+  "executionHead": "86c76b02b13429e09ff6221345c8cc49a02d76ff",
+  "startedAtUtc": "2026-08-02T02:45:50Z",
+  "endedAtUtc": "2026-08-02T02:45:54Z",
+  "commands": [
+    {
+      "cmd": "yarn install --frozen-lockfile",
+      "exit": 0
+    },
+    {
+      "cmd": "yarn generate",
+      "exit": 0
+    },
+    {
+      "cmd": "yarn check:drift",
+      "exit": 0
+    },
+    {
+      "cmd": "yarn typecheck",
+      "exit": 0
+    },
+    {
+      "cmd": "yarn format:check",
+      "exit": 0
+    },
+    {
+      "cmd": "yarn generate (second)",
+      "exit": 0
+    }
+  ],
+  "gitStatusAfterSecondGenerate": [],
+  "openapiBlobSha": "0cc5050ced6c43daf69538ad1af3fee135871e58",
+  "generatedSchemaBlobSha": "560a6533ff7772c071324d7729530d00c2102127",
+  "mirrorSchemaBlobSha": "560a6533ff7772c071324d7729530d00c2102127",
+  "status": "Passed",
+  "note": "Second generate produced no tracked diffs. Untracked build/smoke artifacts only."
+}

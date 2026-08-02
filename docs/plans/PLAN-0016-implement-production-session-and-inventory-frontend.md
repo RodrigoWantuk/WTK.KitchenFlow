@@ -1,11 +1,11 @@
 # PLAN-0016: Implement Production Session and Authenticated Inventory Frontend
 
-- **Status:** Validating
+- **Status:** In Progress
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** agent:composer-plan-0016
 - **Created:** 2026-08-01
-- **Last updated:** 2026-08-02T02:00:00Z
+- **Last updated:** 2026-08-02T03:00:00Z
 - **Branch:** `agent/plan-0016-production-inventory-frontend`
 - **Pull request:** [Draft PR #25](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/25)
 - **Related issues:** #20 (High), #21 (Medium), #22 (Medium), #24 (coverage)
@@ -227,24 +227,24 @@ Minimum retest coverage:
 
 ## Execution state
 
-- **Current run delivery target:** Deliver remediation candidate ready for independent PLAN-0005 retest.
-- **Current checkpoint:** **Validating** — Frontend CI fully green on candidate tip; independent retest not yet run.
-- **Final candidate SHA:** `aab61629764e7feecdb7b3343010991250fd948e` (Validating sync; remediation implementation at `4d2afd040e58d054ddef70aa25051b39f053b1f5`).
-- **Last completed step:** Frontend workflow success on Validating tip `aab6162`; status Validating; PR body refreshed.
-- **Exact next action:** Independent agent executes `docs/evidence/plan-0016/independent-retest-handoff.md` (integrated Keycloak + Firefox native zoom). Owner-only merge. Avoid further status-only commits that churn CI unless evidence changes.
-- **Blockers:** Integrated Keycloak/PostgreSQL stack not available in this agent environment. Independent Firefox native-zoom still required. Issues #20/#21/#22/#24 remain open until independent verification/owner closes them.
-- **Partially modified areas:** None for coded remediations. Remaining independent work: Keycloak E2E; #21/#22 Firefox native zoom.
-- **Documentation delivered:** Plan/registry Validating; evidence handoff truthful; PR body without overclaims.
-- **Validation performed:**
-  - Prior CI [30725997092](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30725997092) **failed** at `format:check` (superseded).
-  - Local suite on remediation tip: api-client generate×2/drift/typecheck/format; frontend typecheck/lint/format/format:check:api-client/test(126)/guards/builds/inspect/audit/smoke — exit 0.
-  - Frontend CI success on remediation `4d2afd0`: [30727899304](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30727899304) / [30727897692](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30727897692).
-  - Frontend CI success on Validating tip `aab6162`: [30728066476](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30728066476) / [30728064641](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30728064641) (`quality` + `browser-smoke`).
-  - A green PLAN-0005 validation workflow does **not** replace Frontend CI.
-- **Known failures or limitations:** No integrated Keycloak E2E this run; #21/#22 hypothesis only; PLAN-0005 Conditional Pass; PLAN-0011 Blocked; PR #23 collision deferred to later PLAN-0017 renumber (untouched).
-- **Working tree state:** Clean after Validating sync commit (except ignored local build/smoke artifacts).
+- **Current run delivery target:** Remediate independent PLAN-0018 Fail findings (#21/#22 pointer; #26 isolation) then re-validate.
+- **Current checkpoint:** Returned to **In Progress** after PLAN-0018 independent retest **Fail** of tip `814af25`.
+- **Last independently tested SHA:** `814af253814d0ec7f8b0adbbca9c50040b5bab07`
+- **Last completed step:** PLAN-0018 evidence recorded (Fail).
+- **Exact next action:** Fix Firefox native-zoom pointer hit-testing (#21/#22) and nondisclosing foreign mutation responses (#26); keep Draft PR #25; do not claim Pass.
+- **Blockers:** None for coding. Owner merge blocked until retest Pass/Conditional Pass.
+- **Known failures or limitations:** #21/#22 pointer Failed at native 200%; #26 High isolation 412-vs-404; PLAN-0005 Conditional Pass; PLAN-0011 Blocked; PR #23 untouched.
+- **Working tree state:** PLAN-0018 evidence branch records assessment; product branch needs follow-up commits.
 
 ## Progress log
+
+### 2026-08-02T03:00:00Z — agent:independent-retest-plan-0018
+
+- **Checkpoint:** Independent PLAN-0018 assessment **Fail**; PLAN-0016 returned to **In Progress**.
+- **Evidence:** `docs/evidence/plan-0018/final-assessment.md`
+- **Result:** #20/#24 remediations look effective; #21/#22 pointer unresolved; #26 High isolation finding opened.
+- **Next action:** Implementation remediation on PLAN-0016 branch; re-run independent retest.
+- **Notes:** PR #23 untouched; PLAN-0017 unused.
 
 ### 2026-08-02T02:00:00Z — agent:composer-plan-0016
 

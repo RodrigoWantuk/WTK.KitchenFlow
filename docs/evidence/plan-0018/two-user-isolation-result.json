@@ -1,0 +1,27 @@
+{
+  "testId": "TEST-0018-006-two-user-isolation",
+  "exactShaUnderTest": "814af253814d0ec7f8b0adbbca9c50040b5bab07",
+  "status": "Failed",
+  "severity": "High",
+  "issue": 26,
+  "cases": [
+    {
+      "id": "TEST-0005-011",
+      "status": "Passed",
+      "note": "owner/other detail 200/404 from keycloak-p0-auth harness"
+    },
+    {
+      "id": "TEST-0018-INV-ISOLATION-DETAIL",
+      "status": "Passed",
+      "note": "user B GET foreign lotId → 404"
+    },
+    {
+      "id": "TEST-0018-INV-ISOLATION-MUTATE",
+      "status": "Failed",
+      "expected": "404 (nondisclosing)",
+      "actual": 412,
+      "note": "user B POST adjustment with fabricated If-Match returned 412, revealing lot existence via status distinction."
+    }
+  ],
+  "retestInstructions": "Authenticate A/B; create lot as A; as B GET (expect 404) and POST adjust with any If-Match (must be 404, not 412/428)."
+}
