@@ -8,7 +8,7 @@
 - **Last updated:** 2026-08-02T03:00:00Z
 - **Branch:** `agent/plan-0016-production-inventory-frontend`
 - **Pull request:** [Draft PR #25](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/25)
-- **Related issues:** #20 (High), #21 (Medium), #22 (Medium), #24 (coverage)
+- **Related issues:** #20 (High), #21 (Medium), #22 (Medium), #24 (coverage), #26 (High)
 - **Related plans:** PLAN-0002, PLAN-0003, PLAN-0005 (Conditional Pass), PLAN-0011 (Blocked), PLAN-0015 (Completed)
 - **Related ADRs:** ADR-0002 through ADR-0007
 - **Dependencies:** PLAN-0005 merged Conditional Pass on main (`60d98dd9e2e7c460d670e701c027a44f25cdfedc`); committed OpenAPI `packages/contracts/openapi/kitchenflow-v1.json`
@@ -228,15 +228,23 @@ Minimum retest coverage:
 ## Execution state
 
 - **Current run delivery target:** Remediate independent PLAN-0018 Fail findings (#21/#22 pointer; #26 isolation) then re-validate.
-- **Current checkpoint:** Returned to **In Progress** after PLAN-0018 independent retest **Fail** of tip `814af25`.
-- **Last independently tested SHA:** `814af253814d0ec7f8b0adbbca9c50040b5bab07`
-- **Last completed step:** PLAN-0018 evidence recorded (Fail).
-- **Exact next action:** Fix Firefox native-zoom pointer hit-testing (#21/#22) and nondisclosing foreign mutation responses (#26); keep Draft PR #25; do not claim Pass.
-- **Blockers:** None for coding. Owner merge blocked until retest Pass/Conditional Pass.
-- **Known failures or limitations:** #21/#22 pointer Failed at native 200%; #26 High isolation 412-vs-404; PLAN-0005 Conditional Pass; PLAN-0011 Blocked; PR #23 untouched.
-- **Working tree state:** PLAN-0018 evidence branch records assessment; product branch needs follow-up commits.
+- **Current checkpoint:** Remediation started on tip that includes merged PLAN-0018 evidence (`05db662`); #26 ownership-before-precondition fix in progress; Firefox pointer root cause not yet established.
+- **Last independently tested SHA:** `814af253814d0ec7f8b0adbbca9c50040b5bab07` (PLAN-0018 Fail — immutable)
+- **Last completed step:** Phase 0 truth restore — confirmed PR #27 evidence on PLAN-0016 branch; #26 application ordering fix drafted with regression tests.
+- **Exact next action:** Commit #26 fix; diagnose Firefox native-zoom pointer hit-test (#21/#22) with headed Firefox + `elementFromPoint`; apply root-cause fix; fail-closed harness; full validation; then Validating handoff.
+- **Blockers:** None for coding. Owner merge blocked until independent retest Pass/Conditional Pass.
+- **Known failures or limitations:** #21/#22 pointer Failed at native 200% on `814af25`; #26 High isolation 412-vs-404 on `814af25`; PLAN-0005 Conditional Pass; PLAN-0011 Blocked; PR #23 untouched; issues remain open.
+- **Working tree state:** Uncommitted #26 backend changes; PLAN-0018 evidence must remain Fail.
 
 ## Progress log
+
+### 2026-08-02T03:20:00Z — agent:composer-plan-0016
+
+- **Checkpoint:** Phase 0 — remediation start after PLAN-0018 Fail; branch contains merged PR #27 evidence.
+- **Verified:** PR #25 Draft head was `05db662` (merge of #27); `docs/plans/PLAN-0018-*` and `docs/evidence/plan-0018/` present; PLAN-0016 In Progress; PLAN-0005 Conditional Pass; PLAN-0011 Blocked.
+- **Blocking findings retained open:** #21 Cook CTA pointer @ Firefox native ~200%; #22 pantry item pointer @ Firefox native ~200%; #26 foreign adjust returns 412 instead of nondisclosing 404.
+- **Result:** Repository truth restored for remediation; no claim that issues are closed; PLAN-0018 Fail assessment remains immutable.
+- **Next action:** Land #26 ownership-before-precondition fix + tests; then Firefox diagnosis.
 
 ### 2026-08-02T03:00:00Z — agent:independent-retest-plan-0018
 
