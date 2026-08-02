@@ -1,6 +1,6 @@
 # PLAN-0011 Amendment: Immediate Execution Scope After PLAN-0016 Merge
 
-- **Status:** In Progress (PR #34 remediation)
+- **Status:** Completed (PR #34 draft ready for owner review)
 - **Effective:** 2026-08-02
 - **Parent plan:** [`PLAN-0011`](PLAN-0011-implement-entry-and-contextual-home.md)
 - **Supersedes:** Parent-plan dependency, branch-state, execution-state, and exact-next-action text that predates PR #25 merge
@@ -84,11 +84,11 @@ PLAN-0021 must not start until the PLAN-0011 presentation models and states are 
 - [x] No hand-written live home contract is introduced.
 - [x] Existing production inventory/session behavior is preserved.
 - [x] Public and mock home behavior is truthful, accessible, localized, and isolated.
-- [ ] Full frontend gates pass on the final remediation head.
+- [x] Full frontend gates pass on the final remediation head.
 - [x] Plan and registry are updated before every developer commit.
 - [x] A draft PR requests `RodrigoWantuk` review.
 - [x] The agent does not approve, auto-merge, or merge.
 
 ## Exact next action
 
-Push remediation commits to draft PR #34; await exact-head Frontend + PLAN-0005 CI; reconcile PR body/comment; mark Completed only when green.
+Owner reviews/merges draft PR #34. Do not start PLAN-0020 on this branch. Live sources remain PLAN-0021.

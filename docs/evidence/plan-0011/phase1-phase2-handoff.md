@@ -16,8 +16,8 @@ Production `/` renders outside `SessionProvider`. Session bootstrap occurs only 
 |---|---|
 | Review baseline (pre-remediation) | `2bdcd4ff4357167ad2d55284ac30a81a9daaec43` |
 | Functional remediation tip | `febbd5eb2642b77ed2e4848db721b77ac5e0caac` |
-| Current PR head | packaging tip after push (see branch tip; may include metadata-only commits after the functional tip) |
-| Exact-head CI | pending until Frontend + PLAN-0005 succeed on the published tip |
+| Exact-head CI-green tip | `8849133ec1427d57286f4974a665797c3309ec80` |
+| Current PR head | may advance with completion packaging; re-check CI if different from CI-green tip |
 
 Do not treat a packaging-only metadata commit as proof for an older functional SHA.
 
@@ -29,6 +29,13 @@ Do not treat a packaging-only metadata commit as proof for an older functional S
 4. Deterministic immutable-per-scenario prototype adapter (`useMemo`).
 5. Explicit `retryable` on source/chooser results; production unavailable never offers Retry.
 6. Public demo CTA respects `prefers-reduced-motion`; browser smoke asserts `behavior: "auto"`.
+
+## Exact-head CI on `8849133ec1427d57286f4974a665797c3309ec80`
+
+| Workflow | Run ID | Result |
+|---|---|---|
+| Frontend | [30759307393](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30759307393) | success (quality + browser-smoke) |
+| PLAN-0005 | [30759307434](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30759307434) | success (p0 + p1 + evidence-consistency) |
 
 ## Local validation (commands)
 
@@ -75,7 +82,7 @@ Local `yarn validate:firefox-native-zoom` could not launch Firefox as root (`XAU
 ## Handoff
 
 ```text
-PR #34 remains draft until exact-head CI is green.
+PR #34 ready for owner review.
 Next frontend plan after merge: PLAN-0020.
 Future live contextual-home integration: PLAN-0021.
 ```

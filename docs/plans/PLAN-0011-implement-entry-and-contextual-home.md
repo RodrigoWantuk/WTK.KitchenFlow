@@ -1,13 +1,13 @@
 # PLAN-0011: Implement the Public Entry and Contextual Home Experience
 
-- **Status:** In Progress
+- **Status:** Completed
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Cursor agent (PLAN-0011 Phase 1 + Phase 2)
 - **Created:** 2026-07-30
-- **Last updated:** 2026-08-02T17:23:05Z
+- **Last updated:** 2026-08-02T17:45:00Z
 - **Branch:** `agent/plan-0011-contextual-home`
-- **Pull request:** [PR #34](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/34) (draft)
+- **Pull request:** [PR #34](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/34) (draft; ready for owner review)
 - **Binding amendment:** [`PLAN-0011-amendment-2026-08-02-next-execution.md`](PLAN-0011-amendment-2026-08-02-next-execution.md)
 - **Related documentation plan:** PLAN-0010
 - **Related frontend plan:** PLAN-0014 (on main); remediation [PLAN-0015](PLAN-0015-remediate-frontend-baseline.md) (**Completed**; manual visual/NVDA/VoiceOver deferred as non-blocking)
@@ -29,7 +29,7 @@ The implementation must preserve the accepted source priority:
 
 ## Blocking state
 
-Remediation blockers open against draft PR #34 (review baseline `2bdcd4f`): incomplete suggestion presentation contract; incomplete modal chooser; stale async responses; non-deterministic scenario switching; misleading unavailable retries; public reduced-motion scroll. PLAN-0019 reconciled the roadmap and merged via PR #33 (`444969c`). PLAN-0016 production session/inventory is on `main`. Live source contracts and adapters remain owned by PLAN-0021 and are out of scope for this execution.
+None for Phase 1+2. Review remediations against baseline `2bdcd4f` are implemented and exact-head CI is green. Live source contracts and adapters remain owned by PLAN-0021. Delivery awaits owner review/merge of draft PR #34.
 
 ## Scope
 
@@ -240,15 +240,25 @@ Automated coverage must include:
 
 ## Execution state
 
-- **Current checkpoint:** Remediations 1–6 committed at `febbd5eb2642b77ed2e4848db721b77ac5e0caac`; awaiting push and exact-head CI on draft PR #34.
+- **Current checkpoint:** Amended Phase 1+2 **Completed** after remediations; exact-head CI green on `8849133ec1427d57286f4974a665797c3309ec80`.
 - **Exact tip SHA (functional):** `febbd5eb2642b77ed2e4848db721b77ac5e0caac`
-- **Run delivery target:** Keep draft until Frontend + PLAN-0005 green on exact final head; then owner review.
-- **Unresolved blockers:** None remaining in product code; exact-head CI and owner review still required before Completed.
-- **Exact next action:** Push draft PR #34; await exact-head Frontend + PLAN-0005 CI; reconcile PR body/comment.
-- **Blockers:** None for implementation. Firefox native zoom cannot launch as root locally (`XAUTHORITY`); rely on PLAN-0005 CI.
-- **Working tree state:** Clean remediation tip `febbd5e` ready to push.
+- **Exact tip SHA (CI-green / PR head at completion):** `8849133ec1427d57286f4974a665797c3309ec80`
+- **Run delivery target:** Owner review of draft PR #34. No agent merge.
+- **Unresolved blockers:** None for Phase 1+2.
+- **Exact next action:** Owner reviews/merges draft PR #34. Next frontend plan: PLAN-0020. Live home: PLAN-0021.
+- **Blockers:** None. Local Firefox zoom blocked as root; PLAN-0005 CI covers native zoom/pointer.
+- **Working tree state:** Completion packaging commit may advance head after this update; re-verify CI if head moves.
 
 ## Progress log
+
+### 2026-08-02T17:45:00Z — Cursor agent (PLAN-0011 remediation)
+
+- **Checkpoint:** Remediations verified; Frontend + PLAN-0005 exact-head CI green; PLAN-0011 returned to **Completed**.
+- **Changes included in the commit:** Plan/registry/evidence completion; PR body reconciliation.
+- **Validation performed:** Frontend run `30759307393` (quality + browser-smoke success); PLAN-0005 run `30759307434` (p0/p1/evidence-consistency success) on `8849133ec1427d57286f4974a665797c3309ec80`.
+- **Next action:** Owner review of draft PR #34 only — no agent merge.
+- **Blockers or handoff notes:** Next frontend plan PLAN-0020; live contextual-home PLAN-0021.
+
 
 ### 2026-08-02T17:42:00Z — Cursor agent (PLAN-0011 remediation)
 
