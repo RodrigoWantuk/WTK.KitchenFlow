@@ -49,6 +49,10 @@ export function ContextualHomeProvider({
   return createElement(ContextualHomeContext.Provider, { value }, children);
 }
 
+/**
+ * Reads the injected contextual-home adapter and telemetry.
+ * Must be used under ContextualHomeProvider; production never injects mocks.
+ */
 export function useContextualHome(): ContextualHomeContextValue {
   const ctx = useContext(ContextualHomeContext);
   if (!ctx) {

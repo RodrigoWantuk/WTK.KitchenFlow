@@ -33,10 +33,14 @@ export type HomeDayPart =
   | "night"
   | "neutral";
 
-/** Timezone resolution outcome for meal context. */
+/**
+ * Timezone resolution outcome for meal context.
+ * `override` is request-scoped UI review only — it must not mutate the profile.
+ */
 export type HomeTimeZoneSource =
   | "profile"
   | "browser"
+  | "override"
   | "unavailable"
   | "invalid";
 
@@ -63,6 +67,9 @@ export interface HomeSuggestionCandidate {
   freshness?: "current" | "stale";
 }
 
+/**
+ * Independent source projection. One failed/empty tier must not blank siblings.
+ */
 export interface HomeSourceResult {
   tier: HomeSourceTier;
   status: HomeSourceStatus;
@@ -71,12 +78,14 @@ export interface HomeSourceResult {
   items: HomeSuggestionCandidate[];
 }
 
+/** Quick-chooser option with stable id and localized label key. */
 export interface HomeQuickChooserOption {
   id: string;
   /** Localization key for the option label. */
   labelKey: string;
 }
 
+/** Quick-chooser question with localized prompt and option set. */
 export interface HomeQuickChooserQuestion {
   id: string;
   /** Localization key for the question prompt. */
@@ -94,6 +103,10 @@ export interface HomeQuickChooserDefinition {
   questions: HomeQuickChooserQuestion[];
 }
 
+/**
+ * Greeting presentation model derived from safe session fields + injected clock.
+ * Never infers mood, health, family, or gender.
+ */
 export interface HomeGreetingModel {
   displayName: string | null;
   dayPart: HomeDayPart;
@@ -145,12 +158,19 @@ export type HomeTelemetryEventName =
   | "quick_chooser_cancelled"
   | "quick_chooser_completed";
 
+/**
+ * Privacy-safe telemetry event. Codes must never include pantry contents,
+ * restrictions, recipe text, chooser answers, display name, cookies, or tokens.
+ */
 export interface HomeTelemetryEvent {
   name: HomeTelemetryEventName;
   /** Stable non-private codes only (tier, reason, locale code, etc.). */
   codes?: Readonly<Record<string, string>>;
 }
 
+/**
+ * Injected telemetry boundary. A no-op implementation is acceptable for Phase 2.
+ */
 export interface HomeTelemetry {
   track(event: HomeTelemetryEvent): void;
 }

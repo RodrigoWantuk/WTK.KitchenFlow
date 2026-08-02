@@ -9,16 +9,20 @@ import type {
 
 /**
  * Request-scoped quick chooser. Answers are not written to profile/menu/inventory.
+ * Retry reloads capability/definition; it must not cancel silently.
  */
 export function QuickChooser({
   definition,
   onCancel,
+  onRetry,
   onComplete,
   onLoadSuggestions,
   telemetry,
 }: {
   definition: HomeQuickChooserDefinition;
   onCancel: () => void;
+  /** Reload chooser capability/definition after unavailable or load failure. */
+  onRetry: () => void;
   onComplete: (result: HomeSourceResult) => void;
   onLoadSuggestions: (
     answers: Record<string, string>,
@@ -78,7 +82,7 @@ export function QuickChooser({
               type="button"
               variant="secondary"
               data-testid="chooser-retry"
-              onClick={onCancel}
+              onClick={onRetry}
             >
               {t("home.chooser.retry")}
             </Button>

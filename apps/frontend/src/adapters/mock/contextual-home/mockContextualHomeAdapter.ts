@@ -25,6 +25,8 @@ export type MockHomeScenarioId =
   | "profileFailed"
   | "menuStale"
   | "noCandidates"
+  | "oneQuestion"
+  | "twoQuestions"
   | "allSourcesReady";
 
 export const MOCK_HOME_SCENARIO_IDS: readonly MockHomeScenarioId[] = [
@@ -42,6 +44,8 @@ export const MOCK_HOME_SCENARIO_IDS: readonly MockHomeScenarioId[] = [
   "profileFailed",
   "menuStale",
   "noCandidates",
+  "oneQuestion",
+  "twoQuestions",
   "allSourcesReady",
 ] as const;
 
@@ -102,7 +106,7 @@ const CHOOSER_ITEM = candidate({
   effortCode: "low",
 });
 
-const DEFAULT_QUESTIONS: HomeQuickChooserDefinition = {
+const ONE_QUESTION: HomeQuickChooserDefinition = {
   recommendationCapability: "available",
   questions: [
     {
@@ -114,6 +118,13 @@ const DEFAULT_QUESTIONS: HomeQuickChooserDefinition = {
         { id: "flexible", labelKey: "home.chooser.a.flexible" },
       ],
     },
+  ],
+};
+
+const DEFAULT_QUESTIONS: HomeQuickChooserDefinition = {
+  recommendationCapability: "available",
+  questions: [
+    ...ONE_QUESTION.questions,
     {
       id: "shopping_ok",
       promptKey: "home.chooser.q.shopping",
@@ -203,6 +214,12 @@ function buildScenario(id: MockHomeScenarioId): MockHomeScenario {
         ...base,
         menu: empty("menu", "home.source.empty.menu"),
       };
+    case "oneQuestion":
+      return {
+        ...base,
+        chooser: ONE_QUESTION,
+      };
+    case "twoQuestions":
     case "menuAvailable":
     case "allSourcesReady":
     case "default":

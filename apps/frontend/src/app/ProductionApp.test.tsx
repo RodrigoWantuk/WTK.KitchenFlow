@@ -25,6 +25,18 @@ describe("ProductionApp landing controls", () => {
     jest.restoreAllMocks();
   });
 
+  it("renders public `/` without calling session or fetch", async () => {
+    const fetchSpy = jest.spyOn(globalThis, "fetch");
+    render(<ProductionApp />);
+    expect(await screen.findByTestId("production-landing")).toBeInTheDocument();
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(
+      fetchSpy.mock.calls.some(([input]) =>
+        String(input).includes("/api/v1/session"),
+      ),
+    ).toBe(false);
+  });
+
   it("uses asChild link CTA without nested button inside anchor", async () => {
     const user = userEvent.setup();
     render(<ProductionApp />);

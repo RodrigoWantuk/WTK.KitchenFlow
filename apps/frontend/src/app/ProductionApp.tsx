@@ -186,83 +186,120 @@ function HomeRoute() {
   );
 }
 
+/**
+ * Session and inventory providers mount only for access and authenticated
+ * subtrees so the public `/` route never bootstraps `getSession()`.
+ */
+function SessionScopedRoutes({ children }: { children: ReactNode }) {
+  const runtime = useRuntime();
+  return (
+    <SessionProvider adapter={runtime.sessionAdapter}>
+      <InventoryProvider repository={runtime.inventoryRepository}>
+        {children}
+      </InventoryProvider>
+    </SessionProvider>
+  );
+}
+
 function ProductionAppRoutes() {
   const { t } = useProductionI18n();
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public: no SessionProvider — must not call /api/v1/session. */}
         <Route path="/" element={<PublicEntryPage />} />
-        <Route path="/acesso" element={<ProductionAccess />} />
+        <Route
+          path="/acesso"
+          element={
+            <SessionScopedRoutes>
+              <ProductionAccess />
+            </SessionScopedRoutes>
+          }
+        />
         <Route
           path="/app/hoje"
           element={
-            <RequireAuth>
-              <ProductionAppShell>
-                <HomeRoute />
-              </ProductionAppShell>
-            </RequireAuth>
+            <SessionScopedRoutes>
+              <RequireAuth>
+                <ProductionAppShell>
+                  <HomeRoute />
+                </ProductionAppShell>
+              </RequireAuth>
+            </SessionScopedRoutes>
           }
         />
         <Route
           path="/app"
           element={
-            <RequireAuth>
-              <Navigate to="/app/hoje" replace />
-            </RequireAuth>
+            <SessionScopedRoutes>
+              <RequireAuth>
+                <Navigate to="/app/hoje" replace />
+              </RequireAuth>
+            </SessionScopedRoutes>
           }
         />
         <Route
           path="/app/despensa"
           element={
-            <RequireAuth>
-              <ProductionAppShell>
-                <ProductionInventoryList />
-              </ProductionAppShell>
-            </RequireAuth>
+            <SessionScopedRoutes>
+              <RequireAuth>
+                <ProductionAppShell>
+                  <ProductionInventoryList />
+                </ProductionAppShell>
+              </RequireAuth>
+            </SessionScopedRoutes>
           }
         />
         <Route
           path="/app/despensa/novo"
           element={
-            <RequireAuth>
-              <ProductionAppShell>
-                <ProductionInventoryForm mode="create" />
-              </ProductionAppShell>
-            </RequireAuth>
+            <SessionScopedRoutes>
+              <RequireAuth>
+                <ProductionAppShell>
+                  <ProductionInventoryForm mode="create" />
+                </ProductionAppShell>
+              </RequireAuth>
+            </SessionScopedRoutes>
           }
         />
         <Route
           path="/app/despensa/:lotId/editar"
           element={
-            <RequireAuth>
-              <ProductionAppShell>
-                <ProductionInventoryForm mode="edit" />
-              </ProductionAppShell>
-            </RequireAuth>
+            <SessionScopedRoutes>
+              <RequireAuth>
+                <ProductionAppShell>
+                  <ProductionInventoryForm mode="edit" />
+                </ProductionAppShell>
+              </RequireAuth>
+            </SessionScopedRoutes>
           }
         />
         <Route
           path="/app/despensa/:lotId"
           element={
-            <RequireAuth>
-              <ProductionAppShell>
-                <ProductionInventoryDetail />
-              </ProductionAppShell>
-            </RequireAuth>
+            <SessionScopedRoutes>
+              <RequireAuth>
+                <ProductionAppShell>
+                  <ProductionInventoryDetail />
+                </ProductionAppShell>
+              </RequireAuth>
+            </SessionScopedRoutes>
           }
         />
         <Route
           path="/app/*"
           element={
-            <RequireAuth>
-              <ProductionAppShell>
-                <FeatureUnavailable
-                  feature="app"
-                  title={t("feature.unavailable")}
-                  detail={t("app.unavailable.detail")}
-                />
-              </ProductionAppShell>
-            </RequireAuth>
+            <SessionScopedRoutes>
+              <RequireAuth>
+                <ProductionAppShell>
+                  <FeatureUnavailable
+                    feature="app"
+                    title={t("feature.unavailable")}
+                    detail={t("app.unavailable.detail")}
+                  />
+                </ProductionAppShell>
+              </RequireAuth>
+            </SessionScopedRoutes>
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -274,19 +311,16 @@ function ProductionAppRoutes() {
 /**
  * Production composition root.
  * Must not import StoreProvider, mock fixtures, scenario tooling, or synthetic seeds.
+ * Public `/` stays outside SessionProvider so entry never fetches session.
  */
 export default function ProductionApp() {
   // Compose once per mount so tests can stub globalThis.fetch before render.
   const runtime = useMemo(() => createProductionRuntime(), []);
   return (
     <RuntimeProvider runtime={runtime}>
-      <SessionProvider adapter={runtime.sessionAdapter}>
-        <InventoryProvider repository={runtime.inventoryRepository}>
-          <ProductionI18nProvider>
-            <ProductionAppRoutes />
-          </ProductionI18nProvider>
-        </InventoryProvider>
-      </SessionProvider>
+      <ProductionI18nProvider>
+        <ProductionAppRoutes />
+      </ProductionI18nProvider>
     </RuntimeProvider>
   );
 }

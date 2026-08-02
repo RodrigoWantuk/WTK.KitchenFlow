@@ -1,11 +1,11 @@
 # PLAN-0011: Implement the Public Entry and Contextual Home Experience
 
-- **Status:** In Progress
+- **Status:** Validating
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Cursor agent (PLAN-0011 Phase 1 + Phase 2)
 - **Created:** 2026-07-30
-- **Last updated:** 2026-08-02T14:46:55Z
+- **Last updated:** 2026-08-02T16:35:00Z
 - **Branch:** `agent/plan-0011-contextual-home`
 - **Pull request:** [PR #34](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/34) (draft)
 - **Binding amendment:** [`PLAN-0011-amendment-2026-08-02-next-execution.md`](PLAN-0011-amendment-2026-08-02-next-execution.md)
@@ -224,37 +224,46 @@ Automated coverage must include:
 
 ## Acceptance criteria
 
-- [ ] A signed-out adult visitor can understand the product and reach authentication without rich media.
-- [ ] Rich demonstration media satisfies accessibility and fallback requirements.
-- [ ] An authenticated user sees a safe greeting and the primary cooking question.
-- [ ] Local-time context uses a valid user/browser IANA timezone and supports override.
-- [ ] All four source tiers are implemented in the accepted order.
-- [ ] Each suggestion communicates its source and material reasoning.
-- [ ] Urgent inventory is prioritized but never forced.
-- [ ] The quick chooser asks no more than two material questions and does not silently change the profile.
-- [ ] Missing context and source failures degrade independently.
-- [ ] AI unavailability preserves deterministic and stored workflows.
-- [ ] Frontend, backend, AI Gateway, authentication, privacy, and authoritative-state boundaries remain intact.
-- [ ] Required automated and manual validation passes.
-- [ ] Durable documentation and TSDoc/JSDoc are complete where applicable.
+- [x] A signed-out adult visitor can understand the product and reach authentication without rich media.
+- [x] Rich demonstration media satisfies accessibility and fallback requirements.
+- [x] An authenticated user sees a safe greeting and the primary cooking question.
+- [x] Local-time context uses a valid user/browser IANA timezone and supports override.
+- [x] All four source tiers are implemented in the accepted order.
+- [x] Each suggestion communicates its source and material reasoning.
+- [x] Urgent inventory is prioritized but never forced.
+- [x] The quick chooser asks no more than two material questions and does not silently change the profile.
+- [x] Missing context and source failures degrade independently.
+- [x] AI unavailability preserves deterministic and stored workflows.
+- [x] Frontend, backend, AI Gateway, authentication, privacy, and authoritative-state boundaries remain intact.
+- [ ] Required automated and manual validation passes (local gates + browser smoke Passed; await exact-head CI including PLAN-0005 Firefox zoom).
+- [x] Durable documentation and TSDoc/JSDoc are complete where applicable.
 
 ## Execution state
 
-- **Current checkpoint:** Phase 1 + Phase 2 delivered. Functional tip `76e4f962bfc011531fc1f83aa4a41bbf53a1dfff`; packaging tip `84061414aa296981a2e88d1ff812c6c63b1c9763`. Draft PR #34. Status **Validating** (CI green; remains draft for owner review).
-- **Exact tip SHA (functional):** `76e4f962bfc011531fc1f83aa4a41bbf53a1dfff`
+- **Current checkpoint:** Hardened Phase 1+2: public `/` outside SessionProvider; progressive source loading; per-source retry; empty-menu omission; request-scoped timezone override; chooser retry; expanded tests. Local gates + browser smoke Passed. Status **Validating**.
+- **Exact tip SHA (functional):** pending commit after this packaging update (will be HEAD after push).
 - **Run delivery target:** Phase 1 public entry + Phase 2 mock-backed contextual home with tests, isolation, docs, draft PR.
-- **Delivered outcome:** Public entry, contextual home (mock/unavailable adapters), i18n, Jest, smoke, Firefox zoom CTA retarget, evidence, draft PR #34 requesting RodrigoWantuk.
-- **Acceptance criteria resolved:** Amended Phase 1/2 acceptance criteria satisfied for code/tests/CI on the functional tip; owner review/merge still pending; live sources remain PLAN-0021.
-- **Files or areas materially changed:** Frontend entry/home features, adapters, catalogs, smoke/zoom scripts, docs/evidence, plan/registry.
-- **Documentation delivered:** Frontend contextual-home README, evidence handoff, plan/registry, PR body.
-- **Validation performed:** Local gates Passed; Frontend `30752619945` / `30752618360` success; PLAN-0005 `30752619970` success on functional tip `76e4f962bfc011531fc1f83aa4a41bbf53a1dfff`.
-- **Known failures or limitations:** Production home sources unavailable until PLAN-0021; PR remains draft.
+- **Delivered outcome:** Public entry without session bootstrap; contextual home (mock/unavailable adapters); i18n; Jest; smoke; docs/evidence; draft PR #34 requesting RodrigoWantuk.
+- **Acceptance criteria resolved:** Amended Phase 1/2 product criteria satisfied locally; exact-head CI pending; owner review/merge still pending; live sources remain PLAN-0021.
+- **Files or areas materially changed:** ProductionApp composition; PublicEntryPage; ContextualHomePage/QuickChooser/dayPart; mock scenarios; catalogs; tests; PLAN-0019 post-merge docs; redundant branch cleanup.
+- **Documentation delivered:** Frontend contextual-home README, evidence handoff, plan/registry, PLAN-0019 merge reconciliation, amendment baseline `444969c`.
+- **Validation performed:** `yarn typecheck|lint|format:check|test` (188 Passed); guards; builds; `inspect:production-bundle`; `audit:policy`; `smoke:browser:ci` Passed. Local Firefox zoom blocked by root/`XAUTHORITY` environment (defer to PLAN-0005 CI).
+- **Known failures or limitations:** Production home sources unavailable until PLAN-0021; local Firefox native zoom cannot launch as root; PR remains draft.
 - **Blockers:** None for amended Phase 1 + Phase 2.
 - **Partially modified areas:** None.
-- **Exact next action:** Owner reviews draft PR #34; agent must not approve/merge; mark Completed only after owner-ready criteria are met.
-- **Working tree state:** Packaging commit will record this repaired metadata after `84061414aa296981a2e88d1ff812c6c63b1c9763`.
+- **Exact next action:** Push tip; confirm Frontend + PLAN-0005 green on exact head; keep draft PR #34; owner review only — no agent merge.
+- **Working tree state:** Uncommitted hardening + doc reconciliation about to commit.
 
 ## Progress log
+
+### 2026-08-02T16:35:00Z — Cursor agent (PLAN-0011)
+
+- **Checkpoint:** Fixed public-route session bootstrap and Phase 1+2 hardening gaps; reconciled PLAN-0019 merge metadata; deleted redundant PLAN-0019 refs after identical-tree verification.
+- **Changes included in the commit:** SessionScopedRoutes for access/app only; PublicEntryPage without useSession; progressive source load/retry; timezone override; chooser retry; empty-menu omit; one/two-question scenarios; expanded tests; docs.
+- **Validation performed:** Local frontend gates Passed; browser smoke Passed; Firefox zoom local environment blocked (CI covers).
+- **Next action:** Push and await exact-head CI for draft PR #34.
+- **Blockers or handoff notes:** Next frontend plan PLAN-0020; live home PLAN-0021.
+
 
 ### 2026-08-02T14:48:30Z — Cursor agent (PLAN-0011)
 

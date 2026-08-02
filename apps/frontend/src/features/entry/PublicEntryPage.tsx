@@ -4,7 +4,6 @@ import { ArrowRight, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProductionI18n } from "@/app/i18n/ProductionI18nProvider";
 import type { ProductionLocale } from "@/app/i18n/productionCatalog";
-import { useSession } from "@/app/session/SessionProvider";
 import type { HomeTelemetry } from "@/contracts/contextualHome";
 import { createNoOpHomeTelemetry } from "@/features/home/homeTelemetry";
 
@@ -55,7 +54,9 @@ function LocaleSwitcher() {
 }
 
 /**
- * Signed-out public entry. No authenticated API calls or personal data.
+ * Signed-out public entry.
+ * Must not call SessionProvider / getSession or render authenticated personal data.
+ * CTA always targets `/acesso` — do not inspect session to change the destination.
  */
 export function PublicEntryPage({
   telemetry = createNoOpHomeTelemetry(),
@@ -63,7 +64,6 @@ export function PublicEntryPage({
   telemetry?: HomeTelemetry;
 }) {
   const { t } = useProductionI18n();
-  const { isAuthenticated } = useSession();
   const demoRef = useRef<HTMLElement | null>(null);
   const tracked = useRef(false);
 
@@ -73,7 +73,8 @@ export function PublicEntryPage({
     telemetry.track({ name: "public_entry_viewed" });
   }, [telemetry]);
 
-  const loginHref = isAuthenticated ? "/app/hoje" : "/acesso";
+  // Public CTA never depends on session state (assignment: no session inspection).
+  const loginHref = "/acesso";
 
   return (
     <div
@@ -270,12 +271,25 @@ export function PublicEntryPage({
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-10 text-xs text-muted-foreground md:px-10">
           <p>{t("entry.adultNotice")}</p>
           <p className="flex flex-wrap gap-4">
-            <span data-testid="entry-legal-terms">
+            {/* Inert policy placeholders until legal destinations are accepted. */}
+            <a
+              href="#terms-placeholder"
+              data-testid="entry-legal-terms"
+              aria-disabled="true"
+              onClick={(event) => event.preventDefault()}
+              className="underline-offset-2 hover:underline"
+            >
               {t("entry.legal.terms")}
-            </span>
-            <span data-testid="entry-legal-privacy">
+            </a>
+            <a
+              href="#privacy-placeholder"
+              data-testid="entry-legal-privacy"
+              aria-disabled="true"
+              onClick={(event) => event.preventDefault()}
+              className="underline-offset-2 hover:underline"
+            >
               {t("entry.legal.privacy")}
-            </span>
+            </a>
           </p>
           <p>{t("entry.legal.placeholderNote")}</p>
           <p>{t("entry.footer")}</p>

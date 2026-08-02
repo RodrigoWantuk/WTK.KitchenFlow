@@ -17,10 +17,13 @@ They must not depend on future live OpenAPI DTOs.
 
 | Path | Surface |
 |---|---|
-| `/` | Public entry (`PublicEntryPage`) — no authenticated API calls |
-| `/acesso` | Backend-managed login challenge (production) / demo access (prototype) |
-| `/app/hoje` | Contextual home |
+| `/` | Public entry (`PublicEntryPage`) — rendered **outside** `SessionProvider`; no `getSession()` / `/api/v1/session` |
+| `/acesso` | Backend-managed login challenge (production) / demo access (prototype) — session scoped |
+| `/app/hoje` | Contextual home — session scoped |
 | `/app/despensa/*` | Production inventory (PLAN-0016) — preserved |
+
+Public routes intentionally sit above authenticated providers so a session outage cannot blank the product briefing.
+
 
 ## Source order
 

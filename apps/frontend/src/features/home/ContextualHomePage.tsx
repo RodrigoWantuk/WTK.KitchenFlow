@@ -7,6 +7,7 @@ import {
   HOME_SOURCE_TIERS,
   type HomeQuickChooserDefinition,
   type HomeSourceResult,
+  type HomeSourceTier,
   type HomeSuggestionCandidate,
 } from "@/contracts/contextualHome";
 import { Button } from "@/components/ui/button";
@@ -63,10 +64,14 @@ function CandidateCard({
 function SourceSection({
   result,
   t,
+  onRetry,
 }: {
   result: HomeSourceResult;
   t: (key: string, vars?: Readonly<Record<string, string | number>>) => string;
+  onRetry?: () => void;
 }) {
+  const retryable =
+    result.status === "failed" || result.status === "unavailable";
   return (
     <section
       data-testid={`home-source-${result.tier}`}
@@ -97,19 +102,56 @@ function SourceSection({
           ))}
         </div>
       ) : (
-        <p role="status" className="text-sm text-muted-foreground">
-          {result.statusReasonKey
-            ? t(result.statusReasonKey)
-            : t("home.source.unavailable")}
-        </p>
+        <div className="space-y-2">
+          <p role="status" className="text-sm text-muted-foreground">
+            {result.statusReasonKey
+              ? t(result.statusReasonKey)
+              : t("home.source.unavailable")}
+          </p>
+          {retryable && onRetry ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              data-testid={`home-source-retry-${result.tier}`}
+              onClick={onRetry}
+            >
+              {t("home.source.retry")}
+            </Button>
+          ) : null}
+        </div>
       )}
     </section>
   );
 }
 
 /**
- * Authenticated contextual home. Sources load independently; one failure does
- * not erase other tiers. Mock fixtures stay out of production composition.
+ * Empty menu must be omitted (skip Tier 1 without error) while other empty
+ * tiers may still explain themselves.
+ */
+function shouldRenderSource(result: HomeSourceResult): boolean {
+  if (result.tier === "menu" && result.status === "empty") {
+    return false;
+  }
+  return true;
+}
+
+function failedResult(
+  tier: HomeSourceTier,
+  reasonKey: string,
+): HomeSourceResult {
+  return {
+    tier,
+    status: "failed",
+    statusReasonKey: reasonKey,
+    items: [],
+  };
+}
+
+/**
+ * Authenticated contextual home.
+ * Sources load independently so a slow or failed tier cannot blank siblings.
+ * Mock fixtures stay out of production composition.
  */
 export function ContextualHomePage({
   now,
@@ -131,25 +173,34 @@ export function ContextualHomePage({
   const [profile, setProfile] = useState<HomeSourceResult | null>(null);
   const [chooserDef, setChooserDef] =
     useState<HomeQuickChooserDefinition | null>(null);
+  const [chooserLoading, setChooserLoading] = useState(true);
   const [chooserResult, setChooserResult] = useState<HomeSourceResult | null>(
     null,
   );
   const [chooserOpen, setChooserOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  // Request-scoped timezone review — never written to profile or localStorage.
+  const [timeZoneOverride, setTimeZoneOverride] = useState<string | null>(null);
 
   const clock = useMemo(() => now ?? new Date(), [now]);
+  const resolvedBrowserTimeZone =
+    browserTimeZone === undefined ? readBrowserTimeZone() : browserTimeZone;
+
   const greeting = useMemo(
     () =>
       buildHomeGreeting({
         displayName: session.displayName,
+        overrideTimeZone: timeZoneOverride,
         profileTimeZone: session.timeZone,
-        browserTimeZone:
-          browserTimeZone === undefined
-            ? readBrowserTimeZone()
-            : browserTimeZone,
+        browserTimeZone: resolvedBrowserTimeZone,
         now: clock,
       }),
-    [session.displayName, session.timeZone, browserTimeZone, clock],
+    [
+      session.displayName,
+      session.timeZone,
+      resolvedBrowserTimeZone,
+      clock,
+      timeZoneOverride,
+    ],
   );
 
   const greetingText = greeting.displayName
@@ -158,70 +209,102 @@ export function ContextualHomePage({
       })
     : t(`home.greeting.anonymous.${greeting.dayPart}`);
 
-  const loadSources = useCallback(async () => {
-    setLoading(true);
-    const query = {
+  const query = useMemo(
+    () => ({
       locale,
       timeZone: greeting.timeZone,
       now: clock,
-    };
-    const [menuResult, inventoryResult, profileResult, chooser] =
-      await Promise.all([
-        adapter.loadMenuSource(query).catch(
-          (): HomeSourceResult => ({
-            tier: "menu",
-            status: "failed",
-            statusReasonKey: "home.source.failed.menu",
-            items: [],
-          }),
-        ),
-        adapter.loadInventorySource(query).catch(
-          (): HomeSourceResult => ({
-            tier: "inventory",
-            status: "failed",
-            statusReasonKey: "home.source.failed.inventory",
-            items: [],
-          }),
-        ),
-        adapter.loadProfileSource(query).catch(
-          (): HomeSourceResult => ({
-            tier: "profile",
-            status: "failed",
-            statusReasonKey: "home.source.failed.profile",
-            items: [],
-          }),
-        ),
-        adapter.getQuickChooserDefinition(query).catch(
-          (): HomeQuickChooserDefinition => ({
-            recommendationCapability: "unavailable",
-            questions: [],
-          }),
-        ),
-      ]);
-    setMenu(menuResult);
-    setInventory(inventoryResult);
-    setProfile(profileResult);
-    setChooserDef(chooser);
-    setLoading(false);
+    }),
+    [locale, greeting.timeZone, clock],
+  );
 
-    for (const result of [menuResult, inventoryResult, profileResult]) {
-      if (result.status === "unavailable") {
-        telemetry.track({
-          name: "source_unavailable",
-          codes: { tier: result.tier },
-        });
-      } else {
-        telemetry.track({
-          name: "source_rendered",
-          codes: { tier: result.tier, status: result.status },
-        });
-      }
+  const loadMenu = useCallback(async () => {
+    setMenu(null);
+    try {
+      const result = await adapter.loadMenuSource(query);
+      setMenu(result);
+      telemetry.track({
+        name:
+          result.status === "unavailable"
+            ? "source_unavailable"
+            : "source_rendered",
+        codes: { tier: "menu", status: result.status },
+      });
+    } catch {
+      const result = failedResult("menu", "home.source.failed.menu");
+      setMenu(result);
+      telemetry.track({
+        name: "source_rendered",
+        codes: { tier: "menu", status: "failed" },
+      });
     }
-  }, [adapter, locale, greeting.timeZone, clock, telemetry]);
+  }, [adapter, query, telemetry]);
+
+  const loadInventory = useCallback(async () => {
+    setInventory(null);
+    try {
+      const result = await adapter.loadInventorySource(query);
+      setInventory(result);
+      telemetry.track({
+        name:
+          result.status === "unavailable"
+            ? "source_unavailable"
+            : "source_rendered",
+        codes: { tier: "inventory", status: result.status },
+      });
+    } catch {
+      const result = failedResult("inventory", "home.source.failed.inventory");
+      setInventory(result);
+      telemetry.track({
+        name: "source_rendered",
+        codes: { tier: "inventory", status: "failed" },
+      });
+    }
+  }, [adapter, query, telemetry]);
+
+  const loadProfile = useCallback(async () => {
+    setProfile(null);
+    try {
+      const result = await adapter.loadProfileSource(query);
+      setProfile(result);
+      telemetry.track({
+        name:
+          result.status === "unavailable"
+            ? "source_unavailable"
+            : "source_rendered",
+        codes: { tier: "profile", status: result.status },
+      });
+    } catch {
+      const result = failedResult("profile", "home.source.failed.profile");
+      setProfile(result);
+      telemetry.track({
+        name: "source_rendered",
+        codes: { tier: "profile", status: "failed" },
+      });
+    }
+  }, [adapter, query, telemetry]);
+
+  const loadChooserDefinition = useCallback(async () => {
+    setChooserLoading(true);
+    try {
+      const chooser = await adapter.getQuickChooserDefinition(query);
+      setChooserDef(chooser);
+    } catch {
+      setChooserDef({
+        recommendationCapability: "unavailable",
+        questions: [],
+      });
+    } finally {
+      setChooserLoading(false);
+    }
+  }, [adapter, query]);
 
   useEffect(() => {
-    void loadSources();
-  }, [loadSources, scenarioId]);
+    void loadMenu();
+    void loadInventory();
+    void loadProfile();
+    void loadChooserDefinition();
+  }, [loadMenu, loadInventory, loadProfile, loadChooserDefinition, scenarioId]);
 
   const orderedSources = useMemo(() => {
     const map: Record<string, HomeSourceResult | null> = {
@@ -238,6 +321,11 @@ export function ContextualHomePage({
     (s) =>
       s && (s.status === "ready" || s.status === "stale") && s.items.length,
   );
+
+  const canUseBrowserOverride =
+    Boolean(resolvedBrowserTimeZone) &&
+    greeting.timeZoneSource !== "browser" &&
+    greeting.timeZoneSource !== "override";
 
   return (
     <div data-testid="contextual-home" className="space-y-8">
@@ -274,6 +362,30 @@ export function ContextualHomePage({
           </p>
         ) : null}
         <div className="flex flex-wrap gap-2">
+          {canUseBrowserOverride ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              data-testid="home-timezone-use-browser"
+              onClick={() =>
+                setTimeZoneOverride(resolvedBrowserTimeZone ?? null)
+              }
+            >
+              {t("home.timezone.useBrowser")}
+            </Button>
+          ) : null}
+          {timeZoneOverride ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              data-testid="home-timezone-clear-override"
+              onClick={() => setTimeZoneOverride(null)}
+            >
+              {t("home.timezone.clearOverride")}
+            </Button>
+          ) : null}
           <Button asChild variant="secondary" size="sm">
             <Link to="/app/despensa" data-testid="home-nav-pantry">
               {t("home.nav.pantry")}
@@ -283,6 +395,7 @@ export function ContextualHomePage({
             type="button"
             size="sm"
             data-testid="home-open-chooser"
+            disabled={chooserLoading || !chooserDef}
             onClick={() => {
               telemetry.track({ name: "quick_chooser_started" });
               setChooserOpen(true);
@@ -313,76 +426,103 @@ export function ContextualHomePage({
         </label>
       ) : null}
 
-      {loading ? (
-        <p role="status">{t("home.loading")}</p>
-      ) : (
-        <div data-testid="home-sources" className="flex flex-col gap-10">
-          {orderedSources.map((result) =>
-            result ? (
-              <SourceSection key={result.tier} result={result} t={t} />
-            ) : null,
-          )}
+      <div data-testid="home-sources" className="flex flex-col gap-10">
+        {orderedSources.map((result, index) => {
+          const tier = HOME_SOURCE_TIERS[index];
+          if (!result) {
+            return (
+              <p
+                key={tier}
+                role="status"
+                data-testid={`home-source-loading-${tier}`}
+                className="text-sm text-muted-foreground"
+              >
+                {t("home.loading")}
+              </p>
+            );
+          }
+          if (!shouldRenderSource(result)) {
+            return null;
+          }
+          const retry =
+            result.tier === "menu"
+              ? loadMenu
+              : result.tier === "inventory"
+                ? loadInventory
+                : loadProfile;
+          return (
+            <SourceSection
+              key={result.tier}
+              result={result}
+              t={t}
+              onRetry={() => void retry()}
+            />
+          );
+        })}
 
-          <section
-            data-testid="home-source-quickChooser"
-            aria-labelledby="home-source-heading-quickChooser"
-            className="space-y-3"
+        <section
+          data-testid="home-source-quickChooser"
+          aria-labelledby="home-source-heading-quickChooser"
+          className="space-y-3"
+        >
+          <h2
+            id="home-source-heading-quickChooser"
+            className="font-display text-2xl"
           >
-            <h2
-              id="home-source-heading-quickChooser"
-              className="font-display text-2xl"
-            >
-              {t("home.source.heading.quickChooser")}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {t("home.source.label.quickChooser")}
-            </p>
-            {chooserResult ? (
-              chooserResult.status === "ready" &&
-              chooserResult.items.length > 0 ? (
-                <div className="grid gap-3" data-testid="chooser-results">
-                  <p className="text-sm font-medium">
-                    {t("home.chooser.results")}
-                  </p>
-                  {chooserResult.items.map((item) => (
-                    <CandidateCard key={item.id} item={item} t={t} />
-                  ))}
-                </div>
-              ) : (
-                <p role="status">
-                  {chooserResult.statusReasonKey
-                    ? t(chooserResult.statusReasonKey)
-                    : t("home.chooser.empty")}
+            {t("home.source.heading.quickChooser")}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t("home.source.label.quickChooser")}
+          </p>
+          {chooserResult ? (
+            chooserResult.status === "ready" &&
+            chooserResult.items.length > 0 ? (
+              <div className="grid gap-3" data-testid="chooser-results">
+                <p className="text-sm font-medium">
+                  {t("home.chooser.results")}
                 </p>
-              )
-            ) : null}
-          </section>
-
-          {!hasAnyCandidate && !chooserResult ? (
-            <p role="status" data-testid="home-no-suggestions">
-              {t("home.noSuggestions")}
-            </p>
+                {chooserResult.items.map((item) => (
+                  <CandidateCard key={item.id} item={item} t={t} />
+                ))}
+              </div>
+            ) : (
+              <p role="status">
+                {chooserResult.statusReasonKey
+                  ? t(chooserResult.statusReasonKey)
+                  : t("home.chooser.empty")}
+              </p>
+            )
           ) : null}
+        </section>
 
-          {menu?.status === "unavailable" &&
-          inventory?.status === "unavailable" &&
-          profile?.status === "unavailable" ? (
-            <p
-              role="status"
-              data-testid="home-live-unavailable"
-              className="text-sm text-muted-foreground"
-            >
-              {t("home.unavailable.detail")}
-            </p>
-          ) : null}
-        </div>
-      )}
+        {!hasAnyCandidate && !chooserResult && menu && inventory && profile ? (
+          <p role="status" data-testid="home-no-suggestions">
+            {t("home.noSuggestions")}
+          </p>
+        ) : null}
+
+        {menu?.status === "unavailable" &&
+        inventory?.status === "unavailable" &&
+        profile?.status === "unavailable" ? (
+          <p
+            role="status"
+            data-testid="home-live-unavailable"
+            className="text-sm text-muted-foreground"
+          >
+            {t("home.unavailable.detail")}
+          </p>
+        ) : null}
+      </div>
 
       {chooserOpen && chooserDef ? (
         <QuickChooser
           definition={chooserDef}
           telemetry={telemetry}
           onCancel={() => setChooserOpen(false)}
+          onRetry={() => {
+            setChooserOpen(false);
+            void loadChooserDefinition().then(() => setChooserOpen(true));
+          }}
           onLoadSuggestions={async (answers) =>
             adapter.loadQuickChooserSuggestions({
               locale,

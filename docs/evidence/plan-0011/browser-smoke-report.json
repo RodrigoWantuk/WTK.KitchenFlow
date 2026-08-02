@@ -1,10 +1,10 @@
 {
   "kind": "automated-browser-smoke",
   "evidenceNote": "CI artifact only — not a versioned source-of-truth report in git",
-  "testedCodeSha": "c0830a34d680e59a96c5640ae7e77a1e89d9943c",
+  "testedCodeSha": "5932813b771da02ea438a2dfeed4115965fe662f",
   "prHeadSha": null,
   "syntheticMergeSha": null,
-  "gitHeadSha": "c0830a34d680e59a96c5640ae7e77a1e89d9943c",
+  "gitHeadSha": "5932813b771da02ea438a2dfeed4115965fe662f",
   "githubRunId": null,
   "githubRunAttempt": null,
   "githubEventName": "local",
@@ -20,7 +20,7 @@
   "playwrightVersion": "1.55.1",
   "chromiumVersion": "140.0.7339.186",
   "frontendMode": "prototype+production-static",
-  "timestamp": "2026-08-02T14:30:33.933Z",
+  "timestamp": "2026-08-02T16:33:15.432Z",
   "headless": true,
   "operatingSystem": "linux 6.12.96+deb13-amd64 x64",
   "results": [

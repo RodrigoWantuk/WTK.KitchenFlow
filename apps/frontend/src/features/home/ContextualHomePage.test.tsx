@@ -94,11 +94,37 @@ describe("ContextualHomePage", () => {
     expect(screen.getByTestId("home-timezone-fallback")).toBeInTheDocument();
   });
 
+  it("allows request-scoped timezone override without persistence", async () => {
+    const user = userEvent.setup();
+    renderHome({
+      displayName: "Ana",
+      timeZone: "America/Sao_Paulo",
+      browserTimeZone: "Europe/Lisbon",
+    });
+    expect(await screen.findByTestId("home-timezone")).toHaveTextContent(
+      /America\/Sao_Paulo/,
+    );
+    await user.click(screen.getByTestId("home-timezone-use-browser"));
+    expect(screen.getByTestId("home-timezone")).toHaveTextContent(
+      /Europe\/Lisbon/,
+    );
+    expect(localStorage.getItem("cocinaris_state_v1")).toBeNull();
+    await user.click(screen.getByTestId("home-timezone-clear-override"));
+    expect(screen.getByTestId("home-timezone")).toHaveTextContent(
+      /America\/Sao_Paulo/,
+    );
+  });
+
   it("renders sources in menu → inventory → profile order", async () => {
     renderHome({ scenario: { scenario: "default" } });
     const sources = await screen.findByTestId("home-sources");
+    await screen.findByTestId("home-source-menu");
     const sections = within(sources).getAllByTestId(/home-source-/);
-    expect(sections.map((el) => el.getAttribute("data-testid"))).toEqual([
+    expect(
+      sections
+        .map((el) => el.getAttribute("data-testid"))
+        .filter((id) => id && !id.includes("loading")),
+    ).toEqual([
       "home-source-menu",
       "home-source-inventory",
       "home-source-profile",
@@ -106,7 +132,16 @@ describe("ContextualHomePage", () => {
     ]);
   });
 
-  it("keeps inventory when menu fails", async () => {
+  it("omits empty menu tier without blanking inventory", async () => {
+    renderHome({ scenario: { scenario: "noMenu" } });
+    expect(
+      await screen.findByTestId("home-source-inventory"),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("home-source-menu")).not.toBeInTheDocument();
+  });
+
+  it("keeps inventory when menu fails and exposes retry", async () => {
+    const user = userEvent.setup();
     renderHome({ scenario: { scenario: "menuFailed" } });
     expect(await screen.findByTestId("home-source-menu")).toHaveAttribute(
       "data-status",
@@ -119,6 +154,56 @@ describe("ContextualHomePage", () => {
     expect(
       screen.getByTestId("home-candidate-mock-inv-spinach-omelette"),
     ).toBeInTheDocument();
+    expect(screen.getByTestId("home-source-retry-menu")).toBeInTheDocument();
+    await user.click(screen.getByTestId("home-source-retry-menu"));
+    expect(await screen.findByTestId("home-source-menu")).toBeInTheDocument();
+  });
+
+  it("shows empty inventory state", async () => {
+    renderHome({ scenario: { scenario: "emptyInventory" } });
+    expect(await screen.findByTestId("home-source-inventory")).toHaveAttribute(
+      "data-status",
+      "empty",
+    );
+  });
+
+  it("shows incomplete profile state", async () => {
+    renderHome({ scenario: { scenario: "incompleteProfile" } });
+    expect(await screen.findByTestId("home-source-profile")).toHaveAttribute(
+      "data-status",
+      "incomplete",
+    );
+  });
+
+  it("shows stale menu with freshness badge", async () => {
+    renderHome({ scenario: { scenario: "menuStale" } });
+    expect(await screen.findByTestId("home-source-menu")).toHaveAttribute(
+      "data-status",
+      "stale",
+    );
+    expect(
+      screen.getByTestId("home-candidate-mock-menu-lentil-stew"),
+    ).toHaveAttribute("data-freshness", "stale");
+  });
+
+  it("shows no-candidates empty state", async () => {
+    renderHome({ scenario: { scenario: "noCandidates" } });
+    expect(
+      await screen.findByTestId("home-no-suggestions"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows AI unavailable chooser with working retry path", async () => {
+    const user = userEvent.setup();
+    renderHome({ scenario: { scenario: "aiUnavailable" } });
+    await screen.findByTestId("home-open-chooser");
+    await user.click(screen.getByTestId("home-open-chooser"));
+    expect(screen.getByTestId("quick-chooser")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Assisted choosing is unavailable/i),
+    ).toBeInTheDocument();
+    await user.click(screen.getByTestId("chooser-retry"));
+    expect(await screen.findByTestId("quick-chooser")).toBeInTheDocument();
   });
 
   it("shows production unavailable capability states without fixtures", async () => {
@@ -132,17 +217,41 @@ describe("ContextualHomePage", () => {
     );
   });
 
-  it("runs quick chooser without mutating answers into profile storage", async () => {
+  it("runs one-question chooser without persistence", async () => {
     const user = userEvent.setup();
-    renderHome({ scenario: { scenario: "default" } });
+    renderHome({ scenario: { scenario: "oneQuestion" } });
     await screen.findByTestId("home-open-chooser");
     await user.click(screen.getByTestId("home-open-chooser"));
-    expect(screen.getByTestId("quick-chooser")).toBeInTheDocument();
+    await user.click(screen.getByTestId("chooser-option-under_20"));
+    await user.click(screen.getByTestId("chooser-next"));
+    expect(await screen.findByTestId("chooser-results")).toBeInTheDocument();
+    expect(localStorage.getItem("cocinaris_state_v1")).toBeNull();
+  });
+
+  it("runs two-question chooser without persistence", async () => {
+    const user = userEvent.setup();
+    renderHome({ scenario: { scenario: "twoQuestions" } });
+    await screen.findByTestId("home-open-chooser");
+    await user.click(screen.getByTestId("home-open-chooser"));
     await user.click(screen.getByTestId("chooser-option-under_20"));
     await user.click(screen.getByTestId("chooser-next"));
     await user.click(screen.getByTestId("chooser-option-use_what_i_have"));
     await user.click(screen.getByTestId("chooser-next"));
     expect(await screen.findByTestId("chooser-results")).toBeInTheDocument();
+    expect(localStorage.getItem("cocinaris_state_v1")).toBeNull();
+  });
+
+  it("supports skip and back without profile mutation", async () => {
+    const user = userEvent.setup();
+    renderHome({ scenario: { scenario: "default" } });
+    await screen.findByTestId("home-open-chooser");
+    await user.click(screen.getByTestId("home-open-chooser"));
+    await user.click(screen.getByTestId("chooser-skip"));
+    expect(screen.getByTestId("chooser-back")).toBeInTheDocument();
+    await user.click(screen.getByTestId("chooser-back"));
+    expect(screen.getByTestId("chooser-prompt")).toHaveTextContent(
+      /How much time/,
+    );
     expect(localStorage.getItem("cocinaris_state_v1")).toBeNull();
   });
 
