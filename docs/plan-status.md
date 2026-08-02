@@ -39,6 +39,7 @@ Plans with status `Draft`, `Ready`, `In Progress`, `Paused`, `Blocked`, or `Vali
 
 | Plan | Title | Type | Status | Delivery | Owner | Branch / PR | Current checkpoint | Exact next action | Blocker | Updated |
 |---|---|---|---|---|---|---|---|---|---|---|
+| [PLAN-0017](plans/PLAN-0017-define-ai-recipe-artifact-protocol.md) | Define AI Recipe Artifact Protocol and Model Evaluation Pack | Documentation | Validating | Replacement draft for PR #23 — awaiting stakeholder/model validation | Stakeholder + AI architecture collaboration | `docs/plan-0017-ai-recipe-artifacts` | Protocol 0.3 defines three-candidate generation, `cook_now`, sequential menu planning, projected purchase reuse, preparation reminders and a versioned expanded-recipe `thumbnailVisual` contract linked to PLAN-0008 caching | Run repeated DeepSeek benchmarks for fixtures 06–10 and record latency/token/semantic plus visual-descriptor validation | Repeated benchmark evidence, strict-output decision, ingredient identity, package-confidence thresholds and PLAN-0008 contract acceptance | 2026-08-02 |
 | [PLAN-0011](plans/PLAN-0011-implement-entry-and-contextual-home.md) | Implement the Public Entry and Contextual Home Experience | Implementation | Blocked | Not started | Unassigned frontend/product implementation agent | `agent/plan-0011-contextual-home` | PLAN-0005 Completed Conditional Pass (evidence head cabd2c2); residual High #20 | Owner decides whether to start after reviewing PR #19 / #20 | Residual High #20 and owner go/no-go | 2026-08-01 |
 
 ## Completed plans
