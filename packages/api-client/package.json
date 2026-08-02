@@ -12,13 +12,16 @@
   "scripts": {
     "generate": "openapi-typescript ../contracts/openapi/kitchenflow-v1.json -o src/generated/schema.ts && node ../../scripts/contracts/sync-api-client-to-frontend.mjs",
     "check:drift": "node ../../scripts/contracts/check-api-client-drift.mjs",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "format:check": "prettier --check \"src/**/*.{ts,md}\" --ignore-path .prettierignore",
+    "format": "prettier --write \"src/**/*.{ts,md}\" --ignore-path .prettierignore"
   },
   "dependencies": {
     "openapi-fetch": "0.14.0"
   },
   "devDependencies": {
     "openapi-typescript": "7.9.1",
+    "prettier": "3.5.3",
     "typescript": "5.8.2"
   },
   "packageManager": "yarn@1.22.22"

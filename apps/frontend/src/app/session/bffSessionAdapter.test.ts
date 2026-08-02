@@ -64,6 +64,47 @@ describe("createBffSessionAdapter", () => {
     expect((await unavailable.getSession()).status).toBe("unavailable");
   });
 
+  it("normalizes unsafe return URLs and uses POST login challenge path", () => {
+    const navigations: string[] = [];
+    const adapter = createBffSessionAdapter({
+      navigate: (url) => navigations.push(url),
+      fetchImpl: (async () =>
+        new Response(null, { status: 401 })) as typeof fetch,
+    });
+    adapter.beginLogin("https://evil.example/phish");
+    expect(navigations[0]).toContain("/api/v1/auth/login?returnUrl=");
+    expect(navigations[0]).toContain(encodeURIComponent("/app/despensa"));
+    expect(navigations[0]).not.toContain("evil.example");
+  });
+
+  it("does not write OIDC tokens into browser storage APIs", async () => {
+    const adapter = createBffSessionAdapter({
+      fetchImpl: (async () =>
+        new Response(
+          JSON.stringify({
+            userId: "11111111-1111-1111-1111-111111111111",
+            csrfToken: "csrf-test",
+            supportedLocales: ["en"],
+            displayName: "Ada",
+            language: "en",
+            timeZone: "UTC",
+            measurementSystem: "Metric",
+            profileExists: true,
+            profilePercentComplete: 1,
+            adultDeclarationState: "Declared",
+            accessToken: "should-never-be-stored",
+            refreshToken: "should-never-be-stored",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        )) as typeof fetch,
+    });
+    await adapter.getSession();
+    expect(localStorage.getItem("access_token")).toBeNull();
+    expect(localStorage.getItem("refresh_token")).toBeNull();
+    expect(sessionStorage.getItem("access_token")).toBeNull();
+    expect(document.cookie).not.toMatch(/access_token|refresh_token/i);
+  });
+
   it("logout sends CSRF and does not keep tokens in storage", async () => {
     const calls: Array<{
       url: string;

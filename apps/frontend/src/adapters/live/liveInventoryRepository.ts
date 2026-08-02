@@ -18,20 +18,58 @@ import {
 type LotDto = components["schemas"]["LotResponse"];
 type QuantityDto = components["schemas"]["QuantityResponse"];
 
-function mapQuantity(q: QuantityDto): InventoryQuantity {
-  if (q.measuredValue != null && q.unit) {
+const MEASURED_UNITS = new Set(["Gram", "Milliliter", "Unit"]);
+const AVAILABILITY = new Set(["Available", "Low", "Unavailable"]);
+
+/**
+ * Maps a wire quantity with fail-closed mutual-exclusion checks.
+ * Never invents an authoritative availability default.
+ */
+export function mapQuantity(q: QuantityDto): InventoryQuantity {
+  const hasMeasured = q.measuredValue != null && q.measuredValue !== undefined;
+  const hasUnit = Boolean(q.unit);
+  const hasAvailability = Boolean(q.availabilityState);
+
+  if (hasMeasured || hasUnit) {
+    if (!hasMeasured || !hasUnit || hasAvailability) {
+      throw new InventoryApiError(
+        "unexpected",
+        "Malformed measured quantity projection.",
+        502,
+      );
+    }
+    if (!MEASURED_UNITS.has(String(q.unit))) {
+      throw new InventoryApiError(
+        "unexpected",
+        "Unsupported measured unit in projection.",
+        502,
+      );
+    }
+    const value = Number(q.measuredValue);
+    if (!Number.isFinite(value)) {
+      throw new InventoryApiError(
+        "unexpected",
+        "Non-finite measured value in projection.",
+        502,
+      );
+    }
     return {
       kind: "measured",
-      value: Number(q.measuredValue),
+      value,
       unit: q.unit as "Gram" | "Milliliter" | "Unit",
     };
   }
+
+  if (!hasAvailability || !AVAILABILITY.has(String(q.availabilityState))) {
+    throw new InventoryApiError(
+      "unexpected",
+      "Malformed qualitative quantity projection.",
+      502,
+    );
+  }
   return {
     kind: "qualitative",
-    availability: (q.availabilityState ?? "Available") as
-      | "Available"
-      | "Low"
-      | "Unavailable",
+    availability: q.availabilityState as "Available" | "Low" | "Unavailable",
   };
 }
 

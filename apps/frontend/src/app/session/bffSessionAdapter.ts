@@ -30,12 +30,9 @@ export function createBffSessionAdapter(options?: {
           credentials: "include",
         });
         if (response.status === 401) {
-          const problem = error
-            ? ((error as { errorCode?: string }).errorCode ?? null)
-            : null;
-          if (problem === "authentication_expired") {
-            return { status: "expired", internalUserId: null, csrfToken: null };
-          }
+          // Contract currently emits authentication_required for absent/invalid sessions.
+          // Do not invent an "expired" distinction without a stable backend errorCode.
+          void error;
           return { status: "signedOut", internalUserId: null, csrfToken: null };
         }
         if (!response.ok || !data) {

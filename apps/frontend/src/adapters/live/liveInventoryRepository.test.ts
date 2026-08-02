@@ -1,4 +1,7 @@
-import { createLiveInventoryRepository } from "./liveInventoryRepository";
+import {
+  createLiveInventoryRepository,
+  mapQuantity,
+} from "./liveInventoryRepository";
 import { InventoryApiError } from "./inventoryTypes";
 
 function jsonResponse(
@@ -11,6 +14,26 @@ function jsonResponse(
     headers: { "content-type": "application/json", ...headers },
   });
 }
+
+describe("mapQuantity", () => {
+  it("fail-closes malformed qualitative and mixed quantities", () => {
+    expect(() =>
+      mapQuantity({
+        measuredValue: null,
+        unit: null,
+        availabilityState: null,
+      }),
+    ).toThrow(/Malformed qualitative/);
+    expect(() =>
+      mapQuantity({
+        measuredValue: 1,
+        unit: "Gram",
+        // Intentionally invalid mixed projection for fail-closed coverage.
+        availabilityState: "Low",
+      } as never),
+    ).toThrow(/Malformed measured/);
+  });
+});
 
 describe("createLiveInventoryRepository", () => {
   it("lists lots and maps measured quantities", async () => {

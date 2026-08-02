@@ -1,17 +1,18 @@
 # PLAN-0016: Implement Production Session and Authenticated Inventory Frontend
 
-- **Status:** Validating
+- **Status:** In Progress
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** agent:composer-plan-0016
 - **Created:** 2026-08-01
-- **Last updated:** 2026-08-02T01:10:00Z
+- **Last updated:** 2026-08-02T01:55:00Z
 - **Branch:** `agent/plan-0016-production-inventory-frontend`
 - **Pull request:** [Draft PR #25](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/25)
 - **Related issues:** #20 (High), #21 (Medium), #22 (Medium), #24 (coverage)
 - **Related plans:** PLAN-0002, PLAN-0003, PLAN-0005 (Conditional Pass), PLAN-0011 (Blocked), PLAN-0015 (Completed)
 - **Related ADRs:** ADR-0002 through ADR-0007
 - **Dependencies:** PLAN-0005 merged Conditional Pass on main (`60d98dd9e2e7c460d670e701c027a44f25cdfedc`); committed OpenAPI `packages/contracts/openapi/kitchenflow-v1.json`
+- **Plan ID collision handoff:** Draft PR #23 also uses the string “PLAN-0016” for an unrelated AI recipe-protocol documentation plan. For this critical-path inventory work, PLAN-0016 remains assigned to PR #25. PR #23 must later be renumbered to PLAN-0017 on a separate branch/run. Do not merge, cherry-pick, or modify PR #23 from this branch; do not introduce PLAN-0017 files here.
 
 ## Objective
 
@@ -126,28 +127,33 @@ PLAN-0015 is Completed; its manual visual/NVDA/VoiceOver checks were deferred as
 ### Phase 1: Generated client
 
 - [x] Pin generator; commit generated schema; add generate/drift/typecheck scripts; wire CI.
+- [x] Exclude generated CRA mirror from Prettier app scope (`.prettierignore`); format-check application-owned `packages/api-client/src` (generated schema excluded); double-generate leaves no additional tracked diff; drift checks unchanged.
 
 ### Phase 2: Live session adapter
 
 - [x] Replace `createUnavailableSessionAdapter()` in production runtime.
 - [x] Login form POST, session projection, CSRF-protected logout without browser token storage.
+- [x] Strengthen session tests; do **not** claim unsupported `authentication_expired` (401 → signed-out).
 
 ### Phase 3: Live inventory adapter + production UI
 
-- [x] Full inventory slice over generated client.
-- [x] Production routes: list/detail/create/edit/adjust/delete/history with conflict UX.
+- [x] Live inventory repository over generated client.
+- [x] Production routes mount inventory screens (not FeatureUnavailable for `/app/despensa*`).
+- [x] Mutation UI: Consume, Discard, Correct, qualitative availability, metadata edit, soft delete, history (ETag + per-command idempotency; no silent retry on 412/428).
+- [x] Custom location when `Other`; list search/status/location filters with draft-vs-submitted query + AbortController; fail-closed quantity mapping.
 
 ### Phase 4: Locale, dates, Firefox zoom
 
-- [x] Locale decimal parsing tests for `en` / `pt-BR` / `es`.
-- [x] Printed dates as calendar dates.
-- [x] Root-cause fix for #21/#22 (no keyboard-only acceptance).
+- [x] Locale decimal parsing unit tests for `en` / `pt-BR` / `es`.
+- [x] Printed dates as calendar dates (helpers present).
+- [x] Localize inventory/history enums and timestamps; resource-completeness tests for new keys.
+- [ ] #21/#22 CSS remediation remains a hypothesis until independent Firefox native-zoom retest.
 
 ### Phase 5: Validation, remediation evidence, draft PR
 
-- [x] Frontend quality gates green (typecheck/lint/format/test/guards/build/inspect/audit + client drift).
-- [x] Integrated browser login against live Keycloak deferred to independent retest / environment; unit/adapter coverage present.
-- [x] Independent retest handoff; draft PR pending this commit; PLAN-0005 remains Conditional Pass.
+- [ ] Frontend CI fully green on exact PR head (prior run `30725997092` failed at `format:check`; remediation tip pending push/CI).
+- [x] Component/journey tests for list/form/detail + production route proof (126 Jest tests locally).
+- [x] Independent retest handoff kept truthful; PLAN-0005 Conditional Pass; PLAN-0011 Blocked.
 
 ## Testing and validation plan
 
@@ -190,21 +196,21 @@ Document API base path (same-origin `/api/v1`), regeneration commands, and retes
 
 ## Acceptance criteria
 
-- [ ] Production no longer uses `createUnavailableSessionAdapter()`.
-- [ ] Production inventory journey no longer renders `FeatureUnavailable`.
-- [ ] Generated TypeScript client is reproducible and protected by drift checks.
-- [ ] Production login/session work through the BFF; no OIDC tokens browser-visible.
-- [ ] Inventory list/detail/create/update/adjust/delete/history against real backend protocol.
-- [ ] CSRF, idempotency, ETag preserved; stale changes never silently overwritten/retried.
-- [ ] Locale decimals correct in `en`, `pt-BR`, `es`; printed dates timezone-independent.
-- [ ] Prototype fixtures/mock auth absent from production bundle.
+- [x] Production no longer uses `createUnavailableSessionAdapter()` (wired via `createProductionRuntime` + isolation test).
+- [x] Production inventory journey no longer renders `FeatureUnavailable` for `/app/despensa*` (route test).
+- [x] Generated TypeScript client is reproducible and protected by drift checks (local `generate` ×2 + `check:drift`).
+- [ ] Production login/session work through the BFF against integrated Keycloak topology; no OIDC tokens browser-visible (unit coverage present; integrated E2E pending independent retest).
+- [ ] Inventory list/detail/create/update/adjust/delete/history against live backend + PostgreSQL (UI + adapter tests present; integrated E2E pending).
+- [x] CSRF, idempotency, ETag preserved in client/UI; stale 412/428 never silently retried (component tests).
+- [x] Locale decimals correct in `en`, `pt-BR`, `es`; printed dates timezone-independent (unit + form tests).
+- [x] Prototype fixtures/mock auth absent from production bundle (`inspect:production-bundle` local pass).
 - [ ] Firefox native-zoom pointer and keyboard checks pass independently for #21/#22.
-- [ ] Frontend quality gates pass; backend/contract gates if contracts change.
-- [ ] Issues #20/#24 have concrete remediation; #21/#22 have root-cause fixes + evidence.
-- [ ] PLAN-0005 remains Conditional Pass pending independent retest.
-- [ ] PLAN-0011 remains Blocked with corrected dependencies.
-- [ ] Exact independent-retest handoff exists.
-- [ ] Draft PR describes scope, validation, risks, limitations, owner-only merge authority.
+- [ ] Frontend quality gates pass on the exact PR head in GitHub Actions (local suite green; CI pending).
+- [x] Issues #20/#24 have concrete remediation implementation; #21/#22 have CSS remediation **hypothesis** only (not proven).
+- [x] PLAN-0005 remains Conditional Pass pending independent retest.
+- [x] PLAN-0011 remains Blocked with corrected dependencies.
+- [x] Exact independent-retest handoff exists (`docs/evidence/plan-0016/independent-retest-handoff.md`).
+- [ ] Draft PR body describes current evidence without overclaims (update after CI tip lands).
 
 ## Independent retest handoff
 
@@ -221,25 +227,44 @@ Minimum retest coverage:
 
 ## Execution state
 
-- **Current run delivery target:** Full production session + inventory vertical slice with generated client, #21/#22 fixes, and draft PR.
-- **Current checkpoint:** Implementation candidate ready for draft PR / independent retest (Validating).
-- **Last completed step:** Live session + inventory + generated client + production UI + locale/zoom remediations + frontend gates.
-- **Exact next action:** Independent PLAN-0005 retest per `docs/evidence/plan-0016/independent-retest-handoff.md`; owner-only merge of Draft PR #25.
-- **Blockers:** Full same-origin Keycloak browser journey and Firefox native-zoom headed suite need independent/environment retest (Firefox zoom harness reported Unsupported in this agent environment).
-- **Partially modified areas:** None intentional beyond plan scope.
-- **Documentation delivered:** Frontend/contracts/api-client READMEs; `docs/evidence/plan-0016/*` handoff.
-- **Validation performed:** `yarn typecheck|lint|format:check|test|guards|build:production|inspect|audit:policy|check:api-client-drift` green; 105 Jest tests passed.
-- **Known failures or limitations:** Integrated Keycloak E2E not executed in this run; Firefox native-zoom harness Incomplete/Unsupported here — root-cause CSS fix landed for independent retest.
-- **Working tree state:** Uncommitted implementation + docs for this checkpoint.
+- **Current run delivery target:** Remediate PR #25 until Frontend CI is fully green; then mark **Validating** for independent PLAN-0005 retest.
+- **Current checkpoint:** Functional remediations implemented; local Frontend gates green; status remains **In Progress** until GitHub Frontend workflow is fully green on the pushed tip.
+- **Last completed step:** Format policy, full mutation/list/custom-location UI, fail-closed mapping, i18n catalog, component/session/route tests, local gate suite.
+- **Exact next action:** Commit + push remediation tip; await full green Frontend workflow; then set status **Validating** and refresh PR body.
+- **Blockers:** Integrated Keycloak/PostgreSQL stack not running in this agent environment (`docker compose` has no active project). Independent Firefox native-zoom still required.
+- **Partially modified areas:** None for coded remediations listed in the user brief. Remaining: CI tip proof; integrated E2E; #21/#22 Firefox native zoom.
+- **Documentation delivered:** Plan/registry truthful; evidence handoff + remediation notes updated for format policy and UX completeness.
+- **Validation performed (local, 2026-08-02):**
+  - Prior CI [30725997092](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30725997092) **failed** at `format:check` on generated mirror files; later steps skipped.
+  - `packages/api-client`: `yarn install --frozen-lockfile`, `yarn generate`, `yarn check:drift`, `yarn typecheck`, `yarn format:check`, second `yarn generate` → no additional tracked diff.
+  - `apps/frontend`: `check:api-client-drift`, `typecheck:api-client`, `typecheck`, `lint`, `format:check`, `format:check:api-client`, `test` (126 passed), guards, `build`, `inspect:production-bundle`, `build:prototype`, `build:production`, `inspect:production-bundle`, `audit:policy`, `smoke:browser:ci` — all exit 0.
+- **Known failures or limitations:** Frontend CI not yet re-proven on remediation tip; no integrated Keycloak E2E this run; #21/#22 hypothesis only; PLAN-0005 Conditional Pass; PLAN-0011 Blocked; PR #23 collision deferred to later PLAN-0017 renumber (untouched).
+- **Working tree state:** Dirty until remediation commit; then push pending CI.
 
 ## Progress log
+
+### 2026-08-02T01:55:00Z — agent:composer-plan-0016
+
+- **Checkpoint:** Remediation implementation + local full Frontend gate suite green; status still **In Progress** (CI tip pending).
+- **Changes included in the commit:** `.prettierignore` mirror exclusion; api-client owned-source format check; fail-closed `mapQuantity`; list draft/submit/filters/AbortController; full adjustment/delete/history UI; `Other` custom location; inventory i18n catalog; component/session/route tests; crypto polyfill for Jest; plan/registry/evidence updates.
+- **Result:** Local gates green; not yet independent-retest ready until Frontend CI fully green on tip.
+- **Next action:** Push; await Frontend workflow; move to Validating only after green CI; update PR body.
+- **Blockers or handoff notes:** PR #23 must later become PLAN-0017 elsewhere; leave untouched. Do not start PLAN-0011.
+
+### 2026-08-02T01:50:00Z — agent:composer-plan-0016
+
+- **Checkpoint:** Corrected overclaims; status **In Progress**; recorded CI failure `30725997092`.
+- **Changes included in the commit:** Plan/registry truth (superseded by remediation commit if combined).
+- **Result:** Candidate was not ready; remediation continued in the same run.
+- **Next action:** Finish remediations; prove double-generate clean; push; await full green Frontend workflow.
+- **Blockers or handoff notes:** PR #23 must later become PLAN-0017 elsewhere; leave untouched.
 
 ### 2026-08-02T01:20:00Z — agent:composer-plan-0016
 
 - **Checkpoint:** Draft PR #25 opened; delivery metadata synced.
 - **Changes included in the commit:** Plan/registry PR link only.
-- **Result:** Validating candidate published as draft; no agent merge.
-- **Next action:** Independent PLAN-0005 retest; owner-only merge.
+- **Result:** Superseded — prior Validating claim was premature (CI `format:check` failed).
+- **Next action:** Remediate; do not start independent retest yet.
 
 ### 2026-08-02T01:10:00Z — agent:composer-plan-0016
 

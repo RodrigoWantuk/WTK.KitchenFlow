@@ -70,6 +70,7 @@
     "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,css,md}\"",
+    "format:check:api-client": "yarn --cwd ../../packages/api-client format:check",
     "guard:ts-only": "node scripts/guard-ts-only.js",
     "guard:interactive-nesting": "node scripts/guard-interactive-nesting.js",
     "guard:production-isolation": "node scripts/guard-production-isolation.js",

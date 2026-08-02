@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 type Mode = "measured" | "qualitative";
+const CUSTOM_LOCATION_MAX = 80;
 
 /**
  * Create or edit inventory lot metadata / initial quantity.
@@ -35,10 +36,12 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
   >("Available");
   const [storageLocation, setStorageLocation] =
     useState<StorageLocation>("Pantry");
+  const [customLocation, setCustomLocation] = useState("");
   const [packageState, setPackageState] = useState<PackageState | "">("");
   const [printedDate, setPrintedDate] = useState("");
   const [notes, setNotes] = useState("");
   const [fieldError, setFieldError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [conflict, setConflict] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -49,6 +52,7 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
       setExisting(lot);
       setProductName(lot.productName);
       setStorageLocation(lot.storageLocation as StorageLocation);
+      setCustomLocation(lot.customLocation ?? "");
       setPackageState((lot.packageState as PackageState) || "");
       setPrintedDate(lot.printedExpirationDate ?? "");
       setNotes(lot.notes ?? "");
@@ -65,13 +69,53 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
     })();
   }, [locale, lotId, mode, repo]);
 
+  function setStorage(next: StorageLocation) {
+    setStorageLocation(next);
+    if (next !== "Other") {
+      setCustomLocation("");
+    }
+  }
+
+  function mapBackendFieldErrors(errors: Record<string, string[]>) {
+    const mapped: Record<string, string> = {};
+    for (const [key, values] of Object.entries(errors)) {
+      if (values?.[0]) mapped[key] = values[0];
+    }
+    setFieldErrors(mapped);
+    if (mapped.customLocation) {
+      setFieldError(mapped.customLocation);
+    } else if (mapped.productName) {
+      setFieldError(mapped.productName);
+    } else if (Object.keys(mapped).length) {
+      setFieldError(Object.values(mapped)[0]);
+    }
+  }
+
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setFieldError(null);
+    setFieldErrors({});
     setConflict(false);
     if (!productName.trim()) {
       setFieldError(t("inventory.error.productName"));
       return;
+    }
+    if (storageLocation === "Other") {
+      const trimmed = customLocation.trim();
+      if (!trimmed) {
+        setFieldError(t("inventory.error.customLocationRequired"));
+        setFieldErrors({
+          customLocation: t("inventory.error.customLocationRequired"),
+        });
+        return;
+      }
+      if ([...trimmed].length > CUSTOM_LOCATION_MAX) {
+        setFieldError(t("inventory.error.customLocationLength"));
+        setFieldErrors({
+          customLocation: t("inventory.error.customLocationLength"),
+        });
+        return;
+      }
     }
     if (printedDate && !isCalendarDateString(printedDate)) {
       setFieldError(t("inventory.error.printedDate"));
@@ -84,6 +128,9 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
 
     setBusy(true);
     try {
+      const resolvedCustom =
+        storageLocation === "Other" ? customLocation.trim() : null;
+
       if (mode === "create") {
         let quantity;
         if (quantityMode === "measured") {
@@ -112,7 +159,7 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
             packageState: packageState || null,
             printedExpirationDate: printedDate || null,
             notes: notes || null,
-            customLocation: null,
+            customLocation: resolvedCustom,
           },
           {
             csrfToken: session.csrfToken,
@@ -129,7 +176,7 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
         {
           productName: productName.trim(),
           storageLocation,
-          customLocation: existing.customLocation,
+          customLocation: resolvedCustom,
           packageState: packageState || null,
           printedExpirationDate: printedDate || null,
           notes: notes || null,
@@ -146,9 +193,17 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
         setFieldError(t("inventory.error.staleVersion"));
       } else if (
         err instanceof InventoryApiError &&
+        err.code === "precondition_required"
+      ) {
+        setFieldError(t("inventory.error.missingPrecondition"));
+      } else if (
+        err instanceof InventoryApiError &&
         err.code === "validation_failed"
       ) {
-        setFieldError(err.message || t("inventory.error.validation"));
+        mapBackendFieldErrors(err.fieldErrors);
+        if (!Object.keys(err.fieldErrors).length) {
+          setFieldError(err.message || t("inventory.error.validation"));
+        }
       } else {
         setFieldError(t("inventory.error.save"));
       }
@@ -186,8 +241,10 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
         <Input
           data-testid="inventory-product-name"
           value={productName}
+          disabled={busy}
           onChange={(event) => setProductName(event.target.value)}
           required
+          aria-invalid={Boolean(fieldErrors.productName)}
         />
       </label>
 
@@ -200,6 +257,7 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
                 type="radio"
                 name="qty-mode"
                 checked={quantityMode === "measured"}
+                disabled={busy}
                 onChange={() => setQuantityMode("measured")}
               />
               {t("inventory.quantityMode.measured")}
@@ -209,6 +267,7 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
                 type="radio"
                 name="qty-mode"
                 checked={quantityMode === "qualitative"}
+                disabled={busy}
                 onChange={() => setQuantityMode("qualitative")}
               />
               {t("inventory.quantityMode.qualitative")}
@@ -222,6 +281,7 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
                 <Input
                   data-testid="inventory-amount"
                   value={amount}
+                  disabled={busy}
                   onChange={(event) => setAmount(event.target.value)}
                   inputMode="decimal"
                 />
@@ -231,6 +291,7 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
                 <select
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
                   value={unit}
+                  disabled={busy}
                   onChange={(event) =>
                     setUnit(event.target.value as typeof unit)
                   }
@@ -249,6 +310,7 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
               <select
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
                 value={availability}
+                disabled={busy}
                 onChange={(event) =>
                   setAvailability(event.target.value as typeof availability)
                 }
@@ -272,8 +334,9 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
           data-testid="inventory-location"
           className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
           value={storageLocation}
+          disabled={busy}
           onChange={(event) =>
-            setStorageLocation(event.target.value as StorageLocation)
+            setStorage(event.target.value as StorageLocation)
           }
         >
           {(["Pantry", "Refrigerator", "Freezer", "Other"] as const).map(
@@ -286,11 +349,39 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
         </select>
       </label>
 
+      {storageLocation === "Other" && (
+        <label className="block space-y-1">
+          <span>{t("inventory.fields.customLocation")}</span>
+          <Input
+            data-testid="inventory-custom-location"
+            value={customLocation}
+            disabled={busy}
+            maxLength={CUSTOM_LOCATION_MAX}
+            onChange={(event) => setCustomLocation(event.target.value)}
+            required
+            aria-invalid={Boolean(fieldErrors.customLocation)}
+            aria-describedby={
+              fieldErrors.customLocation ? "custom-location-error" : undefined
+            }
+          />
+          {fieldErrors.customLocation && (
+            <span
+              id="custom-location-error"
+              role="alert"
+              className="text-sm text-destructive"
+            >
+              {fieldErrors.customLocation}
+            </span>
+          )}
+        </label>
+      )}
+
       <label className="block space-y-1">
         <span>{t("inventory.fields.packageState")}</span>
         <select
           className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
           value={packageState}
+          disabled={busy}
           onChange={(event) =>
             setPackageState(event.target.value as PackageState | "")
           }
@@ -310,6 +401,7 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
           inputMode="numeric"
           placeholder="YYYY-MM-DD"
           value={printedDate}
+          disabled={busy}
           onChange={(event) => setPrintedDate(event.target.value)}
         />
         <span className="block text-xs text-muted-foreground">
@@ -321,6 +413,7 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
         <span>{t("inventory.fields.notes")}</span>
         <Input
           value={notes}
+          disabled={busy}
           onChange={(event) => setNotes(event.target.value)}
         />
       </label>
@@ -332,7 +425,11 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
       )}
 
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" data-testid="inventory-save" disabled={busy}>
+        <Button
+          type="submit"
+          data-testid="inventory-save"
+          disabled={busy || !session.csrfToken}
+        >
           {t("inventory.actions.save")}
         </Button>
         <Button asChild type="button" variant="secondary">

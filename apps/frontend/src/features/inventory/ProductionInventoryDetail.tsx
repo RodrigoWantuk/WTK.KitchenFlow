@@ -3,7 +3,13 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useInventoryRepository } from "./InventoryProvider";
 import { formatQuantityLabel } from "./quantityDisplay";
 import {
+  formatHistoryTimestamp,
+  localizeInventoryKey,
+} from "./inventoryLabels";
+import {
   InventoryApiError,
+  type AdjustmentType,
+  type AvailabilityState,
   type InventoryHistoryEntry,
   type InventoryLotView,
 } from "@/adapters/live/inventoryTypes";
@@ -17,8 +23,11 @@ import { parseLocaleDecimal } from "@/lib/localeDecimal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+type MeasuredAction = "Consume" | "Discard" | "Correct";
+
 /**
- * Lot detail with adjust, history, delete, and stale-version conflict handling.
+ * Lot detail with adjust (consume/discard/correct/availability), history,
+ * delete, and stale-version conflict handling.
  */
 export function ProductionInventoryDetail() {
   const { lotId = "" } = useParams();
@@ -33,14 +42,22 @@ export function ProductionInventoryDetail() {
   );
   const [error, setError] = useState<string | null>(null);
   const [conflict, setConflict] = useState(false);
+  const [missingPrecondition, setMissingPrecondition] = useState(false);
   const [adjustValue, setAdjustValue] = useState("");
+  const [measuredAction, setMeasuredAction] =
+    useState<MeasuredAction>("Consume");
+  const [availability, setAvailability] =
+    useState<AvailabilityState>("Available");
   const [adjustError, setAdjustError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const historyTimeZone =
+    session.timeZone && session.timeZone.trim() ? session.timeZone : "UTC";
 
   const reload = useCallback(async () => {
     setStatus("loading");
     setError(null);
     setConflict(false);
+    setMissingPrecondition(false);
     try {
       const [next, hist] = await Promise.all([
         repo.getLot(lotId),
@@ -48,6 +65,9 @@ export function ProductionInventoryDetail() {
       ]);
       setLot(next);
       setHistory(hist);
+      if (next.quantity.kind === "qualitative") {
+        setAvailability(next.quantity.availability);
+      }
       setStatus("ready");
     } catch (err) {
       setStatus("error");
@@ -63,7 +83,7 @@ export function ProductionInventoryDetail() {
     void reload();
   }, [reload]);
 
-  async function requireCsrf(): Promise<string> {
+  function requireCsrf(): string {
     if (!session.csrfToken) {
       throw new InventoryApiError(
         "authentication_required",
@@ -74,8 +94,32 @@ export function ProductionInventoryDetail() {
     return session.csrfToken;
   }
 
-  async function onConsume() {
-    if (!lot) return;
+  function handleMutationError(err: unknown, fallbackKey: string) {
+    if (err instanceof InventoryApiError) {
+      if (err.code === "precondition_failed") {
+        setConflict(true);
+        setError(t("inventory.error.staleVersion"));
+        return;
+      }
+      if (err.code === "precondition_required") {
+        setMissingPrecondition(true);
+        setError(t("inventory.error.missingPrecondition"));
+        return;
+      }
+      if (err.code === "authentication_required") {
+        setAdjustError(t("inventory.error.session"));
+        return;
+      }
+      if (err.code === "validation_failed") {
+        setAdjustError(err.message || t("inventory.error.validation"));
+        return;
+      }
+    }
+    setAdjustError(t(fallbackKey));
+  }
+
+  async function runMeasuredAdjustment() {
+    if (!lot || lot.quantity.kind !== "measured") return;
     setAdjustError(null);
     const parsed = parseLocaleDecimal(adjustValue, locale);
     if (!parsed.ok) {
@@ -84,10 +128,15 @@ export function ProductionInventoryDetail() {
     }
     setBusy(true);
     try {
-      const csrfToken = await requireCsrf();
+      const csrfToken = requireCsrf();
+      const type: AdjustmentType = measuredAction;
       const next = await repo.adjustLot(
         lot.lotId,
-        { type: "Consume", value: parsed.value, reasonCode: "ui_consume" },
+        {
+          type,
+          value: parsed.value,
+          reasonCode: `ui_${type.toLowerCase()}`,
+        },
         {
           csrfToken,
           etag: lot.etag,
@@ -98,15 +147,35 @@ export function ProductionInventoryDetail() {
       setAdjustValue("");
       setHistory(await repo.getHistory(lot.lotId));
     } catch (err) {
-      if (
-        err instanceof InventoryApiError &&
-        err.code === "precondition_failed"
-      ) {
-        setConflict(true);
-        setError(t("inventory.error.staleVersion"));
-      } else {
-        setAdjustError(t("inventory.error.adjust"));
-      }
+      handleMutationError(err, "inventory.error.adjust");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function runAvailabilityChange() {
+    if (!lot || lot.quantity.kind !== "qualitative") return;
+    setAdjustError(null);
+    setBusy(true);
+    try {
+      const csrfToken = requireCsrf();
+      const next = await repo.adjustLot(
+        lot.lotId,
+        {
+          type: "AvailabilityChanged",
+          availabilityState: availability,
+          reasonCode: "ui_availability",
+        },
+        {
+          csrfToken,
+          etag: lot.etag,
+          idempotencyKey: crypto.randomUUID(),
+        },
+      );
+      setLot(next);
+      setHistory(await repo.getHistory(lot.lotId));
+    } catch (err) {
+      handleMutationError(err, "inventory.error.adjust");
     } finally {
       setBusy(false);
     }
@@ -117,19 +186,11 @@ export function ProductionInventoryDetail() {
     if (!window.confirm(t("inventory.confirmDelete"))) return;
     setBusy(true);
     try {
-      const csrfToken = await requireCsrf();
+      const csrfToken = requireCsrf();
       await repo.deleteLot(lot.lotId, { csrfToken, etag: lot.etag });
       navigate("/app/despensa");
     } catch (err) {
-      if (
-        err instanceof InventoryApiError &&
-        err.code === "precondition_failed"
-      ) {
-        setConflict(true);
-        setError(t("inventory.error.staleVersion"));
-      } else {
-        setError(t("inventory.error.delete"));
-      }
+      handleMutationError(err, "inventory.error.delete");
     } finally {
       setBusy(false);
     }
@@ -184,7 +245,7 @@ export function ProductionInventoryDetail() {
             type="button"
             variant="destructive"
             data-testid="inventory-delete"
-            disabled={busy}
+            disabled={busy || !session.csrfToken}
             onClick={() => void onDelete()}
           >
             {t("inventory.actions.delete")}
@@ -192,16 +253,22 @@ export function ProductionInventoryDetail() {
         </div>
       </div>
 
-      {conflict && (
+      {(conflict || missingPrecondition) && (
         <div
           role="alert"
-          data-testid="inventory-stale-conflict"
+          data-testid={
+            conflict
+              ? "inventory-stale-conflict"
+              : "inventory-missing-precondition"
+          }
           className="rounded-xl border border-warning/40 bg-warning/10 p-4"
         >
-          <p>{t("inventory.error.staleVersion")}</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("inventory.error.staleHint")}
-          </p>
+          <p>{error}</p>
+          {conflict && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t("inventory.error.staleHint")}
+            </p>
+          )}
           <Button
             type="button"
             className="mt-3"
@@ -218,7 +285,18 @@ export function ProductionInventoryDetail() {
           <dt className="text-muted-foreground">
             {t("inventory.fields.location")}
           </dt>
-          <dd>{t(`inventory.location.${lot.storageLocation}`)}</dd>
+          <dd>
+            {localizeInventoryKey(t, "inventory.location", lot.storageLocation)}
+            {lot.customLocation ? ` · ${lot.customLocation}` : ""}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">
+            {t("inventory.fields.packageState")}
+          </dt>
+          <dd>
+            {localizeInventoryKey(t, "inventory.package", lot.packageState)}
+          </dd>
         </div>
         <div>
           <dt className="text-muted-foreground">
@@ -241,16 +319,47 @@ export function ProductionInventoryDetail() {
         </div>
       </dl>
 
+      {!session.csrfToken && (
+        <p role="alert" data-testid="inventory-missing-csrf">
+          {t("inventory.error.session")}
+        </p>
+      )}
+
       {lot.quantity.kind === "measured" && (
         <section className="space-y-3 rounded-xl border p-4">
           <h2 className="font-display text-xl">
-            {t("inventory.actions.consume")}
+            {t("inventory.actions.adjust")}
           </h2>
+          <label className="block max-w-xs space-y-1">
+            <span className="text-sm">
+              {t("inventory.fields.adjustmentType")}
+            </span>
+            <select
+              data-testid="inventory-adjust-type"
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+              value={measuredAction}
+              disabled={busy}
+              onChange={(event) =>
+                setMeasuredAction(event.target.value as MeasuredAction)
+              }
+            >
+              <option value="Consume">
+                {t("inventory.adjustment.Consume")}
+              </option>
+              <option value="Discard">
+                {t("inventory.adjustment.Discard")}
+              </option>
+              <option value="Correct">
+                {t("inventory.adjustment.Correct")}
+              </option>
+            </select>
+          </label>
           <label className="block max-w-xs">
             <span className="text-sm">{t("inventory.fields.amount")}</span>
             <Input
               data-testid="inventory-adjust-value"
               value={adjustValue}
+              disabled={busy || !session.csrfToken}
               onChange={(event) => setAdjustValue(event.target.value)}
               inputMode="decimal"
               aria-invalid={Boolean(adjustError)}
@@ -268,11 +377,52 @@ export function ProductionInventoryDetail() {
           )}
           <Button
             type="button"
-            data-testid="inventory-consume"
-            disabled={busy}
-            onClick={() => void onConsume()}
+            data-testid="inventory-adjust-submit"
+            disabled={busy || !session.csrfToken}
+            onClick={() => void runMeasuredAdjustment()}
           >
-            {t("inventory.actions.consume")}
+            {t(`inventory.adjustment.${measuredAction}`)}
+          </Button>
+        </section>
+      )}
+
+      {lot.quantity.kind === "qualitative" && (
+        <section className="space-y-3 rounded-xl border p-4">
+          <h2 className="font-display text-xl">
+            {t("inventory.actions.changeAvailability")}
+          </h2>
+          <label className="block max-w-xs space-y-1">
+            <span className="text-sm">
+              {t("inventory.fields.availability")}
+            </span>
+            <select
+              data-testid="inventory-availability"
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+              value={availability}
+              disabled={busy || !session.csrfToken}
+              onChange={(event) =>
+                setAvailability(event.target.value as AvailabilityState)
+              }
+            >
+              {(["Available", "Low", "Unavailable"] as const).map((state) => (
+                <option key={state} value={state}>
+                  {t(`inventory.availability.${state}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          {adjustError && (
+            <p role="alert" className="text-sm text-destructive">
+              {adjustError}
+            </p>
+          )}
+          <Button
+            type="button"
+            data-testid="inventory-availability-submit"
+            disabled={busy || !session.csrfToken}
+            onClick={() => void runAvailabilityChange()}
+          >
+            {t("inventory.actions.changeAvailability")}
           </Button>
         </section>
       )}
@@ -285,11 +435,32 @@ export function ProductionInventoryDetail() {
               key={entry.entryId}
               className="rounded-lg border px-3 py-2 text-sm"
             >
-              <span className="font-medium">{entry.kind}</span>
-              {entry.type ? ` · ${entry.type}` : ""}
-              <span className="block text-xs text-muted-foreground">
-                {entry.occurredAt}
+              <span className="font-medium">
+                {localizeInventoryKey(t, "inventory.history.kind", entry.kind)}
               </span>
+              {entry.type
+                ? ` · ${localizeInventoryKey(t, "inventory.adjustment", entry.type)}`
+                : ""}
+              {entry.reasonCode
+                ? ` · ${localizeInventoryKey(t, "inventory.reason", entry.reasonCode)}`
+                : ""}
+              <span className="block text-xs text-muted-foreground">
+                {formatHistoryTimestamp(
+                  entry.occurredAt,
+                  locale,
+                  historyTimeZone,
+                )}
+              </span>
+              {entry.changedFields?.length ? (
+                <span className="block text-xs text-muted-foreground">
+                  {t("inventory.history.changedFields")}:{" "}
+                  {entry.changedFields
+                    .map((field) =>
+                      localizeInventoryKey(t, "inventory.fields", field),
+                    )
+                    .join(", ")}
+                </span>
+              ) : null}
             </li>
           ))}
         </ol>

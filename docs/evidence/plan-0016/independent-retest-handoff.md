@@ -30,19 +30,24 @@ An **independent** testing agent must re-run the affected cases. Implementation-
 ```bash
 cd apps/frontend
 yarn install --frozen-lockfile
+yarn check:api-client-drift
+yarn typecheck:api-client
 yarn typecheck
 yarn lint
 yarn format:check
+yarn format:check:api-client
 yarn test
 yarn guard:ts-only
 yarn guard:interactive-nesting
 yarn guard:build-mode
 yarn guard:production-isolation
-yarn check:api-client-drift
-yarn typecheck:api-client
+yarn build
+yarn inspect:production-bundle
+yarn build:prototype
 yarn build:production
 yarn inspect:production-bundle
 yarn audit:policy
+yarn smoke:browser:ci
 ```
 
 ## Commands (contracts / client)
@@ -53,8 +58,15 @@ yarn install --frozen-lockfile
 yarn generate
 yarn check:drift
 yarn typecheck
+yarn format:check
+# Prove idempotent generation:
+yarn generate
+git status --short   # must show no generated drift
 ```
 
+## Plan ID collision handoff
+
+Draft PR #23 also uses “PLAN-0016” for unrelated AI recipe-protocol documentation. Leave it untouched from this inventory branch. A later run must renumber that work to PLAN-0017, rebase, and reconcile separately.
 ## Integrated browser validation
 
 Use synthetic users only. Run production-mode frontend with real backend, PostgreSQL, and Keycloak on a same-origin topology.

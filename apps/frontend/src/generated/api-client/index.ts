@@ -5,7 +5,10 @@
  * Regenerate with `yarn generate` after OpenAPI snapshot changes.
  */
 export type { paths, components, operations } from "./generated/schema";
-export { createKitchenFlowClient, type KitchenFlowClient } from "./createClient";
+export {
+  createKitchenFlowClient,
+  type KitchenFlowClient,
+} from "./createClient";
 export {
   readProblemDetails,
   readEtag,

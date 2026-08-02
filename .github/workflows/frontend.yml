@@ -51,6 +51,8 @@ jobs:
         run: yarn check:api-client-drift
       - name: Generated API client typecheck
         run: yarn typecheck:api-client
+      - name: API client owned-source format check
+        run: yarn format:check:api-client
       - name: Typecheck
         run: yarn typecheck
       - name: Lint
