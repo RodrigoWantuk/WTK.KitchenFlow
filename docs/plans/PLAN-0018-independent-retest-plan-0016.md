@@ -43,7 +43,7 @@ Passed areas include generated client (#24), production isolation / live invento
 - [x] Production isolation results recorded.
 - [x] `docs/evidence/plan-0018/final-assessment.md` states Fail with justification.
 - [x] Draft PR targeting `agent/plan-0016-production-inventory-frontend` opened with evidence only ([#27](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/27)).
-- [x] REQUEST_CHANGES review left on PR #25 linking PLAN-0018 evidence.
+- [x] blocking COMMENT review left on PR #25 (REQUEST_CHANGES unavailable on self-authored PR #25) linking PLAN-0018 evidence.
 - [x] PLAN-0005 / PLAN-0016 / PLAN-0011 statuses updated per outcome rules.
 
 ## Evidence package
@@ -53,7 +53,7 @@ Passed areas include generated client (#24), production isolation / live invento
 ## Execution state
 
 - **Current run delivery target:** Decision-ready independent assessment — delivered (**Fail**).
-- **Current checkpoint:** Evidence package complete; opening Draft PR + REQUEST_CHANGES on #25.
+- **Current checkpoint:** Evidence package complete; opening Draft PR + blocking COMMENT on #25.
 - **Exact next action:** Push branch; open Draft PR to PLAN-0016 branch; submit review on #25; stop (no product fixes in this plan).
 - **Blockers:** None for assessment delivery.
 - **Working tree state:** Dirty with evidence/docs pending commit.
@@ -62,7 +62,7 @@ Passed areas include generated client (#24), production isolation / live invento
 
 ### 2026-08-02T03:10:00Z — agent:independent-retest-plan-0018
 
-- **Checkpoint:** Draft PR #27 opened; REQUEST_CHANGES on #25; issue comments posted.
+- **Checkpoint:** Draft PR #27 opened; blocking COMMENT on #25; issue comments posted.
 - **Next action:** Owner/implementer remediate on PLAN-0016; no further PLAN-0018 product changes.
 
 ### 2026-08-02T03:00:00Z — agent:independent-retest-plan-0018
