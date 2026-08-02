@@ -1,109 +1,73 @@
 # PLAN-0018: Independently Retest PLAN-0016 Authenticated Inventory Remediations
 
-- **Status:** In Progress
+- **Status:** Completed
 - **Type:** Testing
 - **Priority:** Critical
 - **Owner:** agent:independent-retest-plan-0018
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-02T02:45:00Z
+- **Last updated:** 2026-08-02T03:00:00Z
+- **Result:** **Fail**
 - **Branch:** `agent/plan-0018-independent-retest-plan-0016`
-- **Pull request:** (pending)
+- **Pull request:** (opening)
 - **System under test:** Draft PR #25 / `agent/plan-0016-production-inventory-frontend` @ `814af253814d0ec7f8b0adbbca9c50040b5bab07`
 - **Base at PLAN-0016 start:** `60d98dd9e2e7c460d670e701c027a44f25cdfedc`
-- **Related plans:** PLAN-0005 (Conditional Pass), PLAN-0016 (Validating), PLAN-0011 (Blocked)
-- **Related issues:** #20, #21, #22, #24
-- **Plan ID collision:** Draft PR #23 also uses “PLAN-0016” for unrelated AI recipe docs. Leave PR #23 untouched. PLAN-0017 remains reserved for future renumbering of PR #23. This plan uses **PLAN-0018** only.
+- **Related plans:** PLAN-0005 (Conditional Pass, unchanged), PLAN-0016 (returned to In Progress), PLAN-0011 (Blocked)
+- **Related issues:** #20, #21, #22, #24, **#26** (new)
+- **Plan ID collision:** PR #23 untouched; PLAN-0017 reserved; this plan is PLAN-0018 only.
 
 ## Objective
 
-Independently determine whether the PLAN-0016 remediation candidate at the pinned SHA resolves residual PLAN-0005 findings and related authentication/inventory requirements, without modifying production behavior.
+Independently determine whether the PLAN-0016 remediation candidate resolves residual PLAN-0005 findings without modifying production behavior.
 
-Possible outcomes: **Pass** | **Conditional Pass** | **Fail** | **Inconclusive**. Do not predetermine the result.
+## Outcome
 
-## Independence restrictions
+**Fail** — see [`docs/evidence/plan-0018/final-assessment.md`](../evidence/plan-0018/final-assessment.md).
 
-Permitted changes only:
+Primary blocking findings:
 
-- PLAN-0018 documentation and registry rows;
-- test-only automation and fixtures (synthetic data);
-- environment manifests;
-- sanitized evidence under `docs/evidence/plan-0018/`;
-- requirements traceability and reports;
-- issue/PR evidence comments and non-approving reviews on PR #25.
+1. Firefox native ~200% **pointer** Fail for Cook CTA (#21) and pantry item (#22); keyboard Pass does not upgrade.
+2. Cross-user inventory adjust returns **412** instead of nondisclosing **404** (#26, High).
 
-Do **not** fix defects found during the retest. Do **not** weaken tests to obtain a pass.
-
-## System under test pin
-
-| Item | Value |
-|---|---|
-| PR | [#25](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/25) |
-| Branch | `agent/plan-0016-production-inventory-frontend` |
-| Exact SHA | `814af253814d0ec7f8b0adbbca9c50040b5bab07` |
-| PLAN-0016 prior “final candidate” note | `aab6162` (docs-only delta to `814af25`; workflows green) |
-| Authoritative Frontend CI on tip | [30728413882](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30728413882) (`quality` + `browser-smoke` success) |
-| PLAN-0005 validation workflow on tip | [30728413915](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30728413915) |
-| Stale CI ID not to cite as current-head | `30728412465` |
-
-Independent local gate execution is still mandatory; CI is baseline context only.
-
-## Scope
-
-### Included
-
-- Generated client determinism and drift.
-- Frontend quality gates from a clean checkout of the pinned SHA.
-- Production-equivalent env: Release API, PostgreSQL, Keycloak, production FE, same-origin topology.
-- Real Keycloak auth/session/logout/token absence.
-- Complete production inventory journey (create/list/filter/detail/adjust/delete/history).
-- CSRF, ETag 412, missing If-Match 428, idempotency.
-- Two-user isolation.
-- Locale decimals and printed calendar dates.
-- Firefox native ~200% zoom pointer **and** keyboard for #21/#22 (independent scores).
-- Production isolation (no mock/prototype auth in production inventory path).
-
-### Excluded
-
-- Modifying PLAN-0016 product code.
-- Starting PLAN-0011.
-- Touching PR #23 / introducing PLAN-0017.
-- Claiming Pass without mandatory phases.
-- Owner merge or issue closure without owner instruction.
+Passed areas include generated client (#24), production isolation / live inventory wiring (#20), real Keycloak auth/CSRF/token absence, locale decimals, printed dates, and API 412/428 concurrency behavior.
 
 ## Acceptance criteria
 
-- [ ] Phase 1 clean source + generated client + frontend gates recorded with exit codes on pinned SHA.
-- [ ] Environment manifest committed (sanitized).
-- [ ] Authentication/session real Keycloak results recorded.
-- [ ] Production inventory journey results recorded.
-- [ ] Concurrency/idempotency/CSRF results recorded.
-- [ ] Two-user isolation results recorded.
-- [ ] Locale/date results recorded.
-- [ ] Firefox native-zoom pointer and keyboard results recorded for #21 and #22.
-- [ ] Production isolation results recorded.
-- [ ] `docs/evidence/plan-0018/final-assessment.md` states Pass | Conditional Pass | Fail | Inconclusive with justification.
+- [x] Phase 1 clean source + generated client + frontend gates recorded on pinned SHA.
+- [x] Environment manifest committed (sanitized).
+- [x] Authentication/session real Keycloak results recorded.
+- [x] Production inventory journey results recorded.
+- [x] Concurrency/idempotency/CSRF results recorded.
+- [x] Two-user isolation results recorded.
+- [x] Locale/date results recorded.
+- [x] Firefox native-zoom pointer and keyboard results recorded for #21 and #22.
+- [x] Production isolation results recorded.
+- [x] `docs/evidence/plan-0018/final-assessment.md` states Fail with justification.
 - [ ] Draft PR targeting `agent/plan-0016-production-inventory-frontend` opened with evidence only.
 - [ ] Non-approving review left on PR #25 linking PLAN-0018 evidence.
-- [ ] PLAN-0005 / PLAN-0016 / PLAN-0011 statuses updated only according to outcome rules.
+- [x] PLAN-0005 / PLAN-0016 / PLAN-0011 statuses updated per outcome rules.
 
 ## Evidence package
 
-`docs/evidence/plan-0018/` — see directory contents after execution.
+`docs/evidence/plan-0018/`
 
 ## Execution state
 
-- **Current run delivery target:** Decision-ready independent assessment of PLAN-0016 tip `814af25`.
-- **Current checkpoint:** Branch created from pinned SHA; plan registration underway; Phase 1 starting.
-- **Exact next action:** Commit plan/registry; run Phase 1 gates; construct integrated environment; execute Phases 3–9; write final assessment; open Draft PR; review #25.
-- **Blockers:** None known yet.
-- **Working tree state:** Dirty with PLAN-0018 docs (untracked) plus ignored local frontend build artifacts from prior work.
+- **Current run delivery target:** Decision-ready independent assessment — delivered (**Fail**).
+- **Current checkpoint:** Evidence package complete; opening Draft PR + REQUEST_CHANGES on #25.
+- **Exact next action:** Push branch; open Draft PR to PLAN-0016 branch; submit review on #25; stop (no product fixes in this plan).
+- **Blockers:** None for assessment delivery.
+- **Working tree state:** Dirty with evidence/docs pending commit.
 
 ## Progress log
 
+### 2026-08-02T03:00:00Z — agent:independent-retest-plan-0018
+
+- **Checkpoint:** Assessment **Fail** completed; PLAN-0016 → In Progress; #26 opened.
+- **Validation:** Phase 1 gates Passed; Keycloak P0 12/12 Passed; inventory journey 20/21 Passed (isolation mutate Failed); Firefox pointer Failed / keyboard Passed; production isolation Passed.
+- **Next action:** Draft PR + PR #25 review.
+- **Notes:** PR #23 untouched.
+
 ### 2026-08-02T02:45:00Z — agent:independent-retest-plan-0018
 
-- **Checkpoint:** PLAN-0018 created; branch `agent/plan-0018-independent-retest-plan-0016` from `814af25`; PR #25 head verified unchanged.
-- **Changes:** Plan file + registry row (this commit).
-- **Result:** Ready to execute Phase 1.
-- **Next action:** Independent gate suite + environment construction.
-- **Notes:** PR #23 untouched; PLAN-0017 unused.
+- **Checkpoint:** Plan registered; branch from `814af25`.
+- **Next action:** Execute Phases 1–9.

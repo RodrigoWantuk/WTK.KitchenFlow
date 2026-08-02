@@ -1,0 +1,36 @@
+{
+  "testId": "TEST-0018-005-concurrency-idempotency",
+  "exactShaUnderTest": "814af253814d0ec7f8b0adbbca9c50040b5bab07",
+  "status": "Passed",
+  "cases": [
+    {
+      "id": "TEST-0018-INV-412",
+      "expected": 412,
+      "actual": 412,
+      "status": "Passed",
+      "note": "Stale If-Match rejected; no silent retry at API client journey."
+    },
+    {
+      "id": "TEST-0018-INV-428",
+      "expected": 428,
+      "actual": 428,
+      "status": "Passed",
+      "note": "Missing If-Match rejected."
+    },
+    {
+      "id": "UI-412-no-silent-retry",
+      "status": "Passed",
+      "evidence": "ProductionInventoryDetail.test.tsx / ProductionInventoryForm.test.tsx",
+      "note": "Component tests assert single mutation call and reload/review UI for 412."
+    },
+    {
+      "id": "CSRF-missing-invalid-foreign",
+      "status": "Passed",
+      "evidence": "authentication-session-result.json TEST-0005-005/006/006B"
+    }
+  ],
+  "idempotency": {
+    "status": "Passed-with-limitation",
+    "note": "Create/adjust calls used fresh UUID keys per command. Same-key replay conflict matrix was not exhaustively re-executed beyond backend contract coverage already present in PLAN-0005 backend suites; no UI auto-retry observed in component tests."
+  }
+}
