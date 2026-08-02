@@ -255,6 +255,15 @@ Automated coverage must include:
 
 ## Progress log
 
+### 2026-08-02T14:42:00Z — Cursor agent (PLAN-0011)
+
+- **Checkpoint:** Fix PLAN-0005 Firefox zoom home CTA after Phase 2 replaced Today suggestions.
+- **Changes included in the commit:** Point native-zoom/diagnose scripts at `home-nav-pantry` → `/app/despensa`.
+- **Validation performed:** Frontend CI green on `6ba87b2`; PLAN-0005 p0 failed on missing `sugg-open-r2`; retest after this fix.
+- **Next action:** Push fix and wait for Backend/Frontend/PLAN-0005 green on new tip.
+- **Blockers or handoff notes:** None.
+
+
 ### 2026-08-02T14:28:45Z — Cursor agent (PLAN-0011)
 
 - **Checkpoint:** Phase 1 public entry + Phase 2 mock-backed contextual home implemented with tests and production isolation.

@@ -299,7 +299,7 @@ async function main() {
   const page = await context.newPage();
   const reports = [];
   try {
-    reports.push(await diagnose(page, base, "/app/hoje", '[data-testid="sugg-open-r2"]', "cook-cta"));
+    reports.push(await diagnose(page, base, "/app/hoje", '[data-testid="home-nav-pantry"]', "home-pantry-cta"));
     reports.push(await diagnose(page, base, "/app/despensa", "[data-testid^=pantry-item-link-]", "pantry-item"));
   } finally {
     await browser.close();

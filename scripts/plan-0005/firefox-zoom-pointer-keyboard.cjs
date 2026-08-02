@@ -272,18 +272,18 @@ async function runCook(page, base, zoomMeasurement, browserVersion) {
   await page.goto(`${base}/app/hoje`, { waitUntil: "networkidle" });
   const zoom = await applyNativeFirefoxZoom200(page);
   Object.assign(zoomMeasurement, zoom);
-  const selector = '[data-testid="sugg-open-r2"]';
+  const selector = '[data-testid="home-nav-pantry"]';
   const cta = page.locator(selector).first();
   if (!(await cta.count())) {
     return {
       scenario: "Cook_CTA",
-      label: "Firefox native 200% — Cook CTA",
+      label: "Firefox native 200% — Home pantry CTA",
       browser: "firefox",
       browserVersion,
       zoom: "native-approx-200pct",
       zoomMeasurement: { ...zoomMeasurement },
-      pointer: { status: "Blocked", detail: "sugg-open-r2 missing on /app/hoje" },
-      keyboard: { status: "Blocked", detail: "sugg-open-r2 missing on /app/hoje" }
+      pointer: { status: "Blocked", detail: "home-nav-pantry missing on /app/hoje" },
+      keyboard: { status: "Blocked", detail: "home-nav-pantry missing on /app/hoje" }
     };
   }
 
@@ -292,7 +292,9 @@ async function runCook(page, base, zoomMeasurement, browserVersion) {
   await wait(700);
   const afterPointerUrl = page.url();
   const pointerStatus =
-    pointer.status === "Passed" && afterPointerUrl !== beforeUrl ? "Passed" : "Failed";
+    pointer.status === "Passed" && afterPointerUrl.includes("/app/despensa")
+      ? "Passed"
+      : "Failed";
 
   await ensurePrototypeDemo(page, base);
   await page.goto(`${base}/app/hoje`, { waitUntil: "networkidle" });
@@ -303,11 +305,13 @@ async function runCook(page, base, zoomMeasurement, browserVersion) {
   await wait(700);
   const afterKeyboardUrl = page.url();
   const keyboardStatus =
-    keyboard.status === "Passed" && afterKeyboardUrl !== beforeKeyboardUrl ? "Passed" : "Failed";
+    keyboard.status === "Passed" && afterKeyboardUrl.includes("/app/despensa")
+      ? "Passed"
+      : "Failed";
 
   return {
     scenario: "Cook_CTA",
-    label: "Firefox native 200% — Cook CTA",
+    label: "Firefox native 200% — Home pantry CTA",
     browser: "firefox",
     browserVersion,
     zoom: "native-approx-200pct",
