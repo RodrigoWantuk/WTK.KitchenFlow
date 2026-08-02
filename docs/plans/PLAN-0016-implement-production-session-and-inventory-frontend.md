@@ -7,7 +7,7 @@
 - **Created:** 2026-08-01
 - **Last updated:** 2026-08-02T01:10:00Z
 - **Branch:** `agent/plan-0016-production-inventory-frontend`
-- **Pull request:** Draft PR pending push
+- **Pull request:** [Draft PR #25](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/25)
 - **Related issues:** #20 (High), #21 (Medium), #22 (Medium), #24 (coverage)
 - **Related plans:** PLAN-0002, PLAN-0003, PLAN-0005 (Conditional Pass), PLAN-0011 (Blocked), PLAN-0015 (Completed)
 - **Related ADRs:** ADR-0002 through ADR-0007
