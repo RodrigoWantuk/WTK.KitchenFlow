@@ -5,38 +5,39 @@ import type {
   HomeQuickChooserDefinition,
   HomeSourceResult,
 } from "@/contracts/contextualHome";
+import { homeCatalogText } from "@/contracts/contextualHome";
 import { QuickChooser } from "./QuickChooser";
 
 const twoQuestionDef: HomeQuickChooserDefinition = {
-  recommendationCapability: "available",
+  capabilityStatus: "available",
   retryable: true,
   questions: [
     {
       id: "time",
       promptKey: "home.chooser.q.time",
       options: [
-        { id: "under_20", labelKey: "home.chooser.opt.under20" },
-        { id: "under_45", labelKey: "home.chooser.opt.under45" },
+        { id: "under_20", labelKey: "home.chooser.a.under20" },
+        { id: "under_45", labelKey: "home.chooser.a.about40" },
       ],
     },
     {
       id: "priority",
-      promptKey: "home.chooser.q.priority",
+      promptKey: "home.chooser.q.shopping",
       options: [
-        { id: "use_what_i_have", labelKey: "home.chooser.opt.useWhatIHave" },
+        { id: "use_what_i_have", labelKey: "home.chooser.a.useWhatIHave" },
       ],
     },
   ],
 };
 
 const oneQuestionDef: HomeQuickChooserDefinition = {
-  recommendationCapability: "available",
+  capabilityStatus: "available",
   retryable: true,
   questions: [
     {
       id: "only",
       promptKey: "home.chooser.q.time",
-      options: [{ id: "under_20", labelKey: "home.chooser.opt.under20" }],
+      options: [{ id: "under_20", labelKey: "home.chooser.a.under20" }],
     },
   ],
 };
@@ -128,7 +129,7 @@ describe("QuickChooser", () => {
     const user = userEvent.setup();
     let attempt = 0;
     const onComplete = jest.fn();
-    renderChooser(oneQuestionDef, {
+    const { telemetry } = renderChooser(oneQuestionDef, {
       onComplete,
       onLoadSuggestions: async () => {
         attempt += 1;
@@ -142,7 +143,7 @@ describe("QuickChooser", () => {
           items: [
             {
               id: "recovered",
-              titleKey: "home.fixture.chooser.simpleSoup",
+              title: homeCatalogText("home.fixture.chooser.simpleSoup"),
               sourceTier: "quickChooser",
               sourceLabelKey: "home.source.label.quickChooser",
               reasonCodes: ["matches_request_answers"],
@@ -154,8 +155,112 @@ describe("QuickChooser", () => {
     await user.click(screen.getByTestId("chooser-option-under_20"));
     await user.click(screen.getByTestId("chooser-next"));
     expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(telemetry.track).not.toHaveBeenCalledWith(
+      expect.objectContaining({ name: "quick_chooser_completed" }),
+    );
     await user.click(screen.getByTestId("chooser-retry"));
     await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
     expect(onComplete.mock.calls[0][0].items[0].id).toBe("recovered");
+    expect(telemetry.track).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "quick_chooser_completed",
+        codes: expect.objectContaining({ outcome: "ready" }),
+      }),
+    );
+  });
+
+  it("keeps answers and retries after a resolved failed+retryable result", async () => {
+    const user = userEvent.setup();
+    let attempt = 0;
+    const onComplete = jest.fn();
+    const { telemetry } = renderChooser(oneQuestionDef, {
+      onComplete,
+      onLoadSuggestions: async () => {
+        attempt += 1;
+        if (attempt === 1) {
+          return {
+            tier: "quickChooser",
+            status: "failed",
+            retryable: true,
+            statusReasonKey: "home.chooser.loadFailed",
+            items: [],
+          };
+        }
+        return {
+          tier: "quickChooser",
+          status: "ready",
+          retryable: false,
+          items: [
+            {
+              id: "after-fail",
+              title: homeCatalogText("home.fixture.chooser.simpleSoup"),
+              sourceTier: "quickChooser",
+              sourceLabelKey: "home.source.label.quickChooser",
+              reasonCodes: ["matches_request_answers"],
+            },
+          ],
+        };
+      },
+    });
+    await user.click(screen.getByTestId("chooser-option-under_20"));
+    await user.click(screen.getByTestId("chooser-next"));
+    expect(await screen.findByTestId("chooser-error")).toBeInTheDocument();
+    expect(screen.getByTestId("chooser-option-under_20")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(telemetry.track).not.toHaveBeenCalledWith(
+      expect.objectContaining({ name: "quick_chooser_completed" }),
+    );
+    await user.click(screen.getByTestId("chooser-retry"));
+    await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
+    expect(attempt).toBe(2);
+  });
+
+  it("shows permanent unavailable suggestion without retry or completion telemetry", async () => {
+    const user = userEvent.setup();
+    const onComplete = jest.fn();
+    const { telemetry } = renderChooser(oneQuestionDef, {
+      onComplete,
+      onLoadSuggestions: async () => ({
+        tier: "quickChooser",
+        status: "unavailable",
+        retryable: false,
+        statusReasonKey: "home.chooser.unavailable",
+        items: [],
+      }),
+    });
+    await user.click(screen.getByTestId("chooser-option-under_20"));
+    await user.click(screen.getByTestId("chooser-next"));
+    expect(await screen.findByTestId("chooser-error")).toBeInTheDocument();
+    expect(screen.queryByTestId("chooser-retry")).not.toBeInTheDocument();
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(telemetry.track).not.toHaveBeenCalledWith(
+      expect.objectContaining({ name: "quick_chooser_completed" }),
+    );
+  });
+
+  it("emits completed with empty outcome for empty suggestion results", async () => {
+    const user = userEvent.setup();
+    const onComplete = jest.fn();
+    const { telemetry } = renderChooser(oneQuestionDef, {
+      onComplete,
+      onLoadSuggestions: async () => ({
+        tier: "quickChooser",
+        status: "empty",
+        retryable: false,
+        statusReasonKey: "home.chooser.empty",
+        items: [],
+      }),
+    });
+    await user.click(screen.getByTestId("chooser-option-under_20"));
+    await user.click(screen.getByTestId("chooser-next"));
+    await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
+    expect(telemetry.track).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "quick_chooser_completed",
+        codes: expect.objectContaining({ outcome: "empty" }),
+      }),
+    );
   });
 });

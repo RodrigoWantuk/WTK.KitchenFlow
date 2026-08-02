@@ -18,8 +18,9 @@ const unavailable = (tier: HomeSourceResult["tier"]): HomeSourceResult => ({
 });
 
 const UNAVAILABLE_CHOOSER: HomeQuickChooserDefinition = {
-  recommendationCapability: "unavailable",
+  capabilityStatus: "not_implemented",
   retryable: false,
+  statusReasonKey: "home.chooser.unavailable",
   questions: [],
 };
 

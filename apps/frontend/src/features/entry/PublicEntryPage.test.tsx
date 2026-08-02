@@ -122,7 +122,7 @@ describe("PublicEntryPage", () => {
     window.matchMedia = originalMatchMedia;
   });
 
-  it("falls back safely when matchMedia is unavailable", async () => {
+  it("falls back to auto scrolling when matchMedia is unavailable", async () => {
     const user = userEvent.setup();
     const scrollSpy = jest.fn();
     Element.prototype.scrollIntoView = scrollSpy;
@@ -131,7 +131,21 @@ describe("PublicEntryPage", () => {
     window.matchMedia = undefined;
     renderEntry();
     await user.click(screen.getByTestId("entry-cta-demo"));
-    expect(scrollSpy).toHaveBeenCalledWith({ behavior: "smooth" });
+    expect(scrollSpy).toHaveBeenCalledWith({ behavior: "auto" });
+    window.matchMedia = original;
+  });
+
+  it("falls back to auto scrolling when matchMedia throws", async () => {
+    const user = userEvent.setup();
+    const scrollSpy = jest.fn();
+    Element.prototype.scrollIntoView = scrollSpy;
+    const original = window.matchMedia;
+    window.matchMedia = jest.fn(() => {
+      throw new Error("matchMedia unavailable");
+    }) as unknown as typeof window.matchMedia;
+    renderEntry();
+    await user.click(screen.getByTestId("entry-cta-demo"));
+    expect(scrollSpy).toHaveBeenCalledWith({ behavior: "auto" });
     window.matchMedia = original;
   });
 });

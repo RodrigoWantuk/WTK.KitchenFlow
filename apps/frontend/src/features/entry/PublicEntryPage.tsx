@@ -7,6 +7,22 @@ import type { ProductionLocale } from "@/app/i18n/productionCatalog";
 import type { HomeTelemetry } from "@/contracts/contextualHome";
 import { createNoOpHomeTelemetry } from "@/features/home/homeTelemetry";
 
+/**
+ * Resolves the reduced-motion preference.
+ * Returns `null` when preference cannot be determined (missing/throwing matchMedia).
+ * Unknown preference must use conservative non-smooth scrolling.
+ */
+function prefersReducedMotion(): boolean | null {
+  if (typeof window.matchMedia !== "function") {
+    return null;
+  }
+  try {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch {
+    return null;
+  }
+}
+
 function LocaleSwitcher() {
   const { locale, locales, setLocale, t } = useProductionI18n();
   return (
@@ -76,11 +92,9 @@ export function PublicEntryPage({
   const loginHref = "/acesso";
 
   function scrollToDemo() {
-    const reduceMotion =
-      typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const preference = prefersReducedMotion();
     demoRef.current?.scrollIntoView({
-      behavior: reduceMotion ? "auto" : "smooth",
+      behavior: preference === false ? "smooth" : "auto",
     });
   }
 

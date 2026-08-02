@@ -55,15 +55,45 @@ export type HomeShoppingState =
   | "unknown";
 
 /**
- * Product/requirement projection for display. Codes and label keys only —
- * never raw pantry contents or private notes.
+ * Display text for presentation fields that may be catalog-backed (prototype
+ * fixtures) or literal (future live recipe/product names from PLAN-0021).
+ *
+ * Literal values must be rendered as plain text (never HTML) and must never be
+ * passed through localization-key lookup. Telemetry must never receive literal
+ * recipe or product text.
+ */
+export type HomeDisplayText =
+  | {
+      kind: "catalog";
+      /** Localization catalog key. */
+      key: string;
+    }
+  | {
+      kind: "literal";
+      /** Plain text value — React-escaped by the renderer; never HTML. */
+      value: string;
+    };
+
+/** Convenience constructor for catalog-backed display text. */
+export function homeCatalogText(key: string): HomeDisplayText {
+  return { kind: "catalog", key };
+}
+
+/** Convenience constructor for literal display text. */
+export function homeLiteralText(value: string): HomeDisplayText {
+  return { kind: "literal", value };
+}
+
+/**
+ * Product/requirement projection for display.
+ * Labels may be catalog keys (fixtures) or literal product names (live adapters).
  */
 export interface HomeRequirementProjection {
   /** Stable synthetic code (not a live inventory lot id). */
   code: string;
   kind: "required" | "optional";
-  /** Localization key for the human-readable requirement label. */
-  labelKey: string;
+  /** Privacy-safe presentation label (catalog or literal). */
+  label: HomeDisplayText;
 }
 
 /**
@@ -73,20 +103,32 @@ export interface HomeRequirementProjection {
 export interface HomePreparationProjection {
   code: string;
   kind: "thaw" | "advance" | "other";
-  labelKey: string;
+  /** Privacy-safe preparation label (catalog or literal). */
+  label: HomeDisplayText;
   /** Advisory lead time in hours when known; never authoritative. */
   leadTimeHours?: number | null;
 }
 
 /**
- * Suggestion candidate shown in the home. Titles and reasons are localization
- * keys or stable codes — never raw private inventory/profile payloads.
+ * Optional non-authoritative subject identity for future live adapters.
+ * Formats are presentation-level only — do not invent backend identifier contracts.
+ */
+export interface HomeSuggestionSubject {
+  kind: "recipe" | "preparation";
+  id: string;
+  revision?: string | null;
+}
+
+/**
+ * Suggestion candidate shown in the home.
+ * Stable reason/effort/cleanup/readiness/uncertainty/conflict/source codes remain
+ * catalog-driven. Titles and dynamic labels use {@link HomeDisplayText}.
  */
 export interface HomeSuggestionCandidate {
   /** Stable synthetic identifier (not a live recipe UUID contract). */
   id: string;
-  /** Localization key for the candidate title. */
-  titleKey: string;
+  /** Candidate title — catalog for fixtures; literal for live recipe names. */
+  title: HomeDisplayText;
   /** Source tier for deterministic ordering and labels. */
   sourceTier: HomeSourceTier;
   /** Localization key for the human-readable source label. */
@@ -114,6 +156,8 @@ export interface HomeSuggestionCandidate {
   attentionInfluenced?: boolean;
   /** Freshness marker; stale items must not appear as current. */
   freshness?: "current" | "stale";
+  /** Optional non-authoritative subject identity for PLAN-0021 consumers. */
+  subject?: HomeSuggestionSubject;
 }
 
 /**
@@ -151,17 +195,32 @@ export interface HomeQuickChooserQuestion {
 }
 
 /**
+ * Quick-chooser capability outcome.
+ * Distinguishes permanent absence from a transient definition-load failure.
+ */
+export type HomeQuickChooserCapabilityStatus =
+  | "available"
+  | "temporarily_unavailable"
+  | "not_implemented";
+
+/**
  * Quick-chooser definition. Answers remain request-scoped in the UI and must
  * not mutate profile, menu, inventory, or shopping.
+ *
+ * - `available` — questions may be answered;
+ * - `temporarily_unavailable` — show failure copy + Retry (`retryable: true`);
+ * - `not_implemented` — permanent gap (production until PLAN-0021); no Retry.
  */
 export interface HomeQuickChooserDefinition {
-  /** Capability for recommendation/AI-backed narrowing. */
-  recommendationCapability: "available" | "unavailable";
+  capabilityStatus: HomeQuickChooserCapabilityStatus;
   /**
-   * Whether Retry is meaningful when capability is unavailable.
-   * Production permanent-unavailable adapters set false.
+   * Whether Retry is meaningful when capability is not available.
+   * Production permanent-unavailable adapters set false with `not_implemented`.
+   * Transient definition failures set true with `temporarily_unavailable`.
    */
   retryable: boolean;
+  /** Localization key for unavailable/temporary failure copy when applicable. */
+  statusReasonKey?: string;
   questions: HomeQuickChooserQuestion[];
 }
 

@@ -6,16 +6,54 @@ Stable application models live in `src/contracts/contextualHome.ts`.
 UI components consume those models through `ContextualHomeAdapter`.
 They must not depend on future live OpenAPI DTOs (PLAN-0021).
 
-`HomeSuggestionCandidate` carries presentation-only fields: timing, effort/cleanup/readiness codes, available/missing requirements, preparation requirements, shopping state, uncertainty/conflict codes, attention influence, and freshness. Values are stable codes and localization keys — never raw pantry contents.
+### Display text
 
-`HomeSourceResult.retryable` distinguishes transient recoverable failures (Retry allowed) from permanent capability gaps (for example production unavailable-until-PLAN-0021). Empty and incomplete states are not error-style retries.
+Dynamic titles and labels use `HomeDisplayText`:
+
+- `catalog` — localization key resolved by `renderHomeText` / i18n;
+- `literal` — plain text rendered as React text (never HTML, never passed through key lookup).
+
+Prototype fixtures continue to use catalog references. Future live adapters may supply literal recipe/product names. Telemetry must never receive literal recipe or product text.
+
+Stable reason, readiness, effort, cleanup, uncertainty, conflict, source, and status codes remain catalog-driven codes.
+
+`HomeSuggestionCandidate` also carries timing, requirements, preparation, shopping, attention, and freshness projections.
+
+### Source retryability
+
+`HomeSourceResult.retryable` distinguishes transient recoverable failures (Retry allowed) from permanent capability gaps (production unavailable-until-PLAN-0021). Empty and incomplete states are not error-style retries.
+
+### Quick-chooser capability
+
+`HomeQuickChooserDefinition.capabilityStatus`:
+
+| Status | Meaning | Retry |
+|---|---|---|
+| `available` | Questions may be answered | n/a |
+| `temporarily_unavailable` | Transient definition load failure | yes (`retryable: true`) |
+| `not_implemented` | Permanent gap (production until PLAN-0021) | no |
+
+A thrown error from `getQuickChooserDefinition` must map to `temporarily_unavailable` + `retryable: true`, never to permanent `not_implemented`.
+
+### Suggestion result handling
+
+Resolved `loadQuickChooserSuggestions` Promises are classified by status:
+
+| Status | Behavior | `quick_chooser_completed` |
+|---|---|---|
+| `ready` (with candidates) | Publish + close | yes (`outcome: ready`) |
+| `empty` | Publish truthful empty result + close | yes (`outcome: empty`) — completed search with zero candidates |
+| `failed` + `retryable` | Keep chooser open; retain answers; Retry | no |
+| `unavailable` + `retryable` | Keep open; Retry | no |
+| `unavailable` + `!retryable` | Truthful unavailable; Cancel only | no |
+| invalid tier/shape | Fail closed; do not crash the home | no |
 
 ## Adapters
 
 | Mode | Adapter | Notes |
 |---|---|---|
-| production | `createUnavailableContextualHomeAdapter` | Controlled capability-unavailable; `retryable: false` everywhere until PLAN-0021 |
-| prototype / test | `createMockContextualHomeAdapter` | Synthetic fixtures only; never silently wired in production. Prefer immutable adapter per scenario (`createMockContextualHomeAdapter({ scenario })`) |
+| production | `createUnavailableContextualHomeAdapter` | `capabilityStatus: not_implemented`, `retryable: false` everywhere until PLAN-0021 |
+| prototype / test | `createMockContextualHomeAdapter` | Synthetic fixtures only; never silently wired in production. Prefer immutable adapter per scenario |
 
 ## Routes
 
@@ -26,47 +64,25 @@ They must not depend on future live OpenAPI DTOs (PLAN-0021).
 | `/app/hoje` | Contextual home — session scoped |
 | `/app/despensa/*` | Production inventory (PLAN-0016) — preserved |
 
-Public routes intentionally sit above authenticated providers so a session outage cannot blank the product briefing.
-
 ## Async consistency
 
-`ContextualHomePage` uses a generation counter and AbortController:
+`ContextualHomePage` uses a generation counter and AbortController so older responses cannot overwrite newer context. Sources load independently. An open chooser is closed when context is invalidated. Stale definition loads must not reopen the chooser.
 
-- older successful responses cannot overwrite newer context;
-- older failures cannot replace newer successes;
-- locale, timezone, timezone override, adapter instance, and scenario changes bump generation and abort in-flight loads;
-- sources load independently (not one blocking `Promise.all`);
-- unmount prevents further state publication;
-- an open chooser is closed when context is invalidated.
+## Quick chooser accessibility
 
-## Quick chooser
-
-Built on Radix Dialog:
-
-- focus moves into the dialog; Tab/Shift+Tab stay inside;
-- Escape closes (including during submit, which cancels the attempt);
-- background content is not interactable while open;
-- focus returns to the opener control;
-- accessible title and description;
-- Cancel remains available during busy loads and aborts/invalidates the attempt;
-- late results and late failures after cancel or a newer attempt are ignored;
-- `onComplete` is never invoked after cancel;
-- answers stay request-scoped (no profile/menu/inventory/localStorage mutation);
-- Retry appears only when `definition.retryable` is true for unavailable capability, or after a transient suggestion failure.
+Built on Radix Dialog with focus trap, Escape, focus restore to opener, cancel-during-load abort, and stale-attempt suppression.
 
 ## Scenario switching (prototype)
 
-`PrototypeContextualHomeRoute` recreates an immutable mock adapter via `useMemo` keyed by scenario id. Correctness must not depend on passive-effect ordering between parent mutation and child reloads.
+`PrototypeContextualHomeRoute` recreates an immutable mock adapter via `useMemo` keyed by scenario id.
 
 ## Reduced motion
 
-Public entry demo CTA resolves `prefers-reduced-motion` before `scrollIntoView`:
+Public entry demo CTA:
 
-- reduce → `behavior: "auto"`;
-- otherwise → `behavior: "smooth"`;
-- missing `matchMedia` → safe smooth fallback.
-
-Browser smoke covers the public CTA under the reduced-motion scenario.
+- explicit reduced preference → `behavior: "auto"`;
+- explicit no-reduction → `behavior: "smooth"`;
+- missing or throwing `matchMedia` → `behavior: "auto"` (conservative; never treat unknown as smooth-safe).
 
 ## Source order
 
@@ -74,8 +90,6 @@ Browser smoke covers the public CTA under the reduced-motion scenario.
 2. inventory
 3. profile
 4. quick chooser (explicit action; request-scoped answers)
-
-A failed tier must not erase successful siblings.
 
 ## Localization
 
@@ -91,4 +105,4 @@ Do not emit pantry contents, preferences, allergies, recipe text, chooser answer
 
 - Production home sources remain unavailable until PLAN-0021.
 - Mock fixtures are synthetic and non-authoritative.
-- Suggestion fields are presentation projections only; React must not calculate sufficiency, food safety, or mutate authoritative state.
+- Suggestion fields are presentation projections only.

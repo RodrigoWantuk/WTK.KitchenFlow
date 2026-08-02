@@ -1,13 +1,13 @@
 # PLAN-0011: Implement the Public Entry and Contextual Home Experience
 
-- **Status:** Completed
+- **Status:** In Progress
 - **Type:** Implementation
 - **Priority:** High
-- **Owner:** Cursor agent (PLAN-0011 Phase 1 + Phase 2)
+- **Owner:** Cursor agent (PLAN-0011 final remediation)
 - **Created:** 2026-07-30
-- **Last updated:** 2026-08-02T17:45:00Z
+- **Last updated:** 2026-08-02T18:30:00Z
 - **Branch:** `agent/plan-0011-contextual-home`
-- **Pull request:** [PR #34](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/34) (draft; ready for owner review)
+- **Pull request:** [PR #34](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/34) (draft)
 - **Binding amendment:** [`PLAN-0011-amendment-2026-08-02-next-execution.md`](PLAN-0011-amendment-2026-08-02-next-execution.md)
 - **Related documentation plan:** PLAN-0010
 - **Related frontend plan:** PLAN-0014 (on main); remediation [PLAN-0015](PLAN-0015-remediate-frontend-baseline.md) (**Completed**; manual visual/NVDA/VoiceOver deferred as non-blocking)
@@ -29,7 +29,7 @@ The implementation must preserve the accepted source priority:
 
 ## Blocking state
 
-None for Phase 1+2. Review remediations against baseline `2bdcd4f` are implemented and exact-head CI is green. Live source contracts and adapters remain owned by PLAN-0021. Delivery awaits owner review/merge of draft PR #34.
+Final residual review gaps against tip `893b8a471feb71451ef4fe21d13c6c12261a4567`: transient chooser-definition failures treated as permanent; resolved failed suggestion results treated as completion; `titleKey`/`labelKey`-only model insufficient for PLAN-0021 literals; unknown reduced-motion fallback used smooth scrolling. Live source contracts remain PLAN-0021.
 
 ## Scope
 
@@ -240,16 +240,34 @@ Automated coverage must include:
 
 ## Execution state
 
-- **Current checkpoint:** Amended Phase 1+2 **Completed** after remediations; exact-head CI green on `8849133ec1427d57286f4974a665797c3309ec80`.
-- **Exact tip SHA (functional):** `febbd5eb2642b77ed2e4848db721b77ac5e0caac`
-- **Exact tip SHA (CI-green / PR head at completion):** `8849133ec1427d57286f4974a665797c3309ec80`
-- **Run delivery target:** Owner review of draft PR #34. No agent merge.
-- **Unresolved blockers:** None for Phase 1+2.
-- **Exact next action:** Owner reviews/merges draft PR #34. Next frontend plan: PLAN-0020. Live home: PLAN-0021.
-- **Blockers:** None. Local Firefox zoom blocked as root; PLAN-0005 CI covers native zoom/pointer.
-- **Working tree state:** Completion packaging commit may advance head after this update; re-verify CI if head moves.
+- **Current checkpoint:** Residual remediations implemented locally; awaiting commit/push and exact-head CI.
+- **Exact tip SHA (functional implementation tip):** pending commit on this run (baseline `893b8a4`).
+- **Review baseline:** `893b8a471feb71451ef4fe21d13c6c12261a4567`
+- **Run delivery target:** Push residual fixes; exact-head Frontend + PLAN-0005; keep draft; mark Completed when green.
+- **Unresolved blockers:** Exact-head CI pending.
+- **Exact next action:** Commit + push; await CI; reconcile PR; mark Completed when green.
+- **Blockers:** Local Firefox zoom blocked as root; PLAN-0005 CI covers.
+- **Working tree state:** Residual implementation ready to commit.
 
 ## Progress log
+
+### 2026-08-02T18:40:00Z — Cursor agent (PLAN-0011 final remediation)
+
+- **Checkpoint:** Residual remediations implemented (definition retry, suggestion status/telemetry, HomeDisplayText, reduced-motion unknown → auto).
+- **Changes included in the commit:** Contracts, QuickChooser/ContextualHomePage, PublicEntryPage, mocks, i18n, tests, docs/plan/registry.
+- **Validation performed:** typecheck/lint/format/test (208)/guards/builds/isolation/api-client/smoke Passed.
+- **Next action:** Push draft PR #34; await exact-head CI.
+- **Blockers or handoff notes:** Keep draft; no agent merge.
+
+
+### 2026-08-02T18:30:00Z — Cursor agent (PLAN-0011 final remediation)
+
+- **Checkpoint:** Restored **In Progress** for residual contract/retry/telemetry/a11y gaps on tip `893b8a4`.
+- **Changes included in the commit:** Plan/registry claim + functional residual remediations.
+- **Validation performed:** Host `NOTEBOOK-DEB-RODRIGO`; branch synced at review baseline.
+- **Next action:** Land residual fixes; local gates; exact-head CI; return Completed only when green.
+- **Blockers or handoff notes:** Keep draft; no agent merge.
+
 
 ### 2026-08-02T17:45:00Z — Cursor agent (PLAN-0011 remediation)
 

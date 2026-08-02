@@ -6,7 +6,10 @@ import type {
   HomeSuggestionCandidate,
   HomeSourceTier,
 } from "@/contracts/contextualHome";
-import { homeSourceLabelKey } from "@/contracts/contextualHome";
+import {
+  homeCatalogText,
+  homeSourceLabelKey,
+} from "@/contracts/contextualHome";
 
 /**
  * Synthetic scenario identifiers for prototype/test only.
@@ -98,7 +101,7 @@ function candidate(
 
 const MENU_READY = candidate({
   id: "mock-menu-lentil-stew",
-  titleKey: "home.fixture.menu.lentilStew",
+  title: homeCatalogText("home.fixture.menu.lentilStew"),
   sourceTier: "menu",
   reasonCodes: ["planned_for_daypart"],
   timing: { activeMinutes: 20, totalMinutes: 35 },
@@ -109,14 +112,14 @@ const MENU_READY = candidate({
     {
       code: "lentils",
       kind: "required",
-      labelKey: "home.requirement.lentils",
+      label: homeCatalogText("home.requirement.lentils"),
     },
   ],
 });
 
 const MENU_MISSING = candidate({
   id: "mock-menu-missing-garlic",
-  titleKey: "home.fixture.menu.missingGarlic",
+  title: homeCatalogText("home.fixture.menu.missingGarlic"),
   sourceTier: "menu",
   reasonCodes: ["planned_for_daypart"],
   timing: { activeMinutes: 25, totalMinutes: 40 },
@@ -127,14 +130,14 @@ const MENU_MISSING = candidate({
     {
       code: "pasta",
       kind: "required",
-      labelKey: "home.requirement.pasta",
+      label: homeCatalogText("home.requirement.pasta"),
     },
   ],
   missingRequirements: [
     {
       code: "garlic",
       kind: "required",
-      labelKey: "home.requirement.garlic",
+      label: homeCatalogText("home.requirement.garlic"),
     },
   ],
   shoppingState: "required",
@@ -142,7 +145,7 @@ const MENU_MISSING = candidate({
 
 const MENU_THAW = candidate({
   id: "mock-menu-needs-thaw",
-  titleKey: "home.fixture.menu.needsThaw",
+  title: homeCatalogText("home.fixture.menu.needsThaw"),
   sourceTier: "menu",
   reasonCodes: ["planned_for_daypart"],
   timing: { activeMinutes: 15, totalMinutes: 30 },
@@ -153,7 +156,7 @@ const MENU_THAW = candidate({
     {
       code: "thaw_chicken",
       kind: "thaw",
-      labelKey: "home.prep.thawChicken",
+      label: homeCatalogText("home.prep.thawChicken"),
       leadTimeHours: 12,
     },
   ],
@@ -161,7 +164,7 @@ const MENU_THAW = candidate({
 
 const INVENTORY_ATTENTION = candidate({
   id: "mock-inv-spinach-omelette",
-  titleKey: "home.fixture.inventory.spinachOmelette",
+  title: homeCatalogText("home.fixture.inventory.spinachOmelette"),
   sourceTier: "inventory",
   reasonCodes: ["uses_attention_product"],
   timing: { activeMinutes: 10, totalMinutes: 15 },
@@ -173,7 +176,7 @@ const INVENTORY_ATTENTION = candidate({
 
 const PROFILE_FIT = candidate({
   id: "mock-profile-grain-bowl",
-  titleKey: "home.fixture.profile.grainBowl",
+  title: homeCatalogText("home.fixture.profile.grainBowl"),
   sourceTier: "profile",
   reasonCodes: ["matches_confirmed_preferences"],
   timing: { activeMinutes: 15, totalMinutes: 25 },
@@ -184,7 +187,7 @@ const PROFILE_FIT = candidate({
 
 const PROFILE_EFFORT = candidate({
   id: "mock-profile-roast-tray",
-  titleKey: "home.fixture.profile.roastTray",
+  title: homeCatalogText("home.fixture.profile.roastTray"),
   sourceTier: "profile",
   reasonCodes: ["matches_confirmed_preferences"],
   timing: { activeMinutes: 20, totalMinutes: 55 },
@@ -195,7 +198,7 @@ const PROFILE_EFFORT = candidate({
 
 const SHOPPING_OPTIONAL = candidate({
   id: "mock-menu-optional-herb",
-  titleKey: "home.fixture.menu.optionalHerb",
+  title: homeCatalogText("home.fixture.menu.optionalHerb"),
   sourceTier: "menu",
   reasonCodes: ["planned_for_daypart"],
   timing: { activeMinutes: 18, totalMinutes: 30 },
@@ -206,7 +209,7 @@ const SHOPPING_OPTIONAL = candidate({
     {
       code: "fresh_parsley",
       kind: "optional",
-      labelKey: "home.requirement.parsley",
+      label: homeCatalogText("home.requirement.parsley"),
     },
   ],
   shoppingState: "optional",
@@ -219,7 +222,7 @@ const SHOPPING_REQUIRED = candidate({
 
 const UNCERTAIN = candidate({
   id: "mock-inv-uncertain-stew",
-  titleKey: "home.fixture.inventory.uncertainStew",
+  title: homeCatalogText("home.fixture.inventory.uncertainStew"),
   sourceTier: "inventory",
   reasonCodes: ["uses_attention_product"],
   timing: { activeMinutes: 25, totalMinutes: 45 },
@@ -232,7 +235,7 @@ const UNCERTAIN = candidate({
 
 const CHOOSER_ITEM = candidate({
   id: "mock-chooser-simple-soup",
-  titleKey: "home.fixture.chooser.simpleSoup",
+  title: homeCatalogText("home.fixture.chooser.simpleSoup"),
   sourceTier: "quickChooser",
   reasonCodes: ["matches_request_answers"],
   timing: { activeMinutes: 12, totalMinutes: 20 },
@@ -242,7 +245,7 @@ const CHOOSER_ITEM = candidate({
 });
 
 const ONE_QUESTION: HomeQuickChooserDefinition = {
-  recommendationCapability: "available",
+  capabilityStatus: "available",
   retryable: true,
   questions: [
     {
@@ -258,7 +261,7 @@ const ONE_QUESTION: HomeQuickChooserDefinition = {
 };
 
 const DEFAULT_QUESTIONS: HomeQuickChooserDefinition = {
-  recommendationCapability: "available",
+  capabilityStatus: "available",
   retryable: true,
   questions: [
     ...ONE_QUESTION.questions,
@@ -387,8 +390,9 @@ export function buildScenario(id: MockHomeScenarioId): MockHomeScenario {
       return {
         ...base,
         chooser: {
-          recommendationCapability: "unavailable",
+          capabilityStatus: "not_implemented",
           retryable: false,
+          statusReasonKey: "home.chooser.unavailable",
           questions: [],
         },
         chooserSuggestions: {
@@ -512,7 +516,7 @@ export function createMockContextualHomeAdapter(options?: {
         throw new DOMException("Aborted", "AbortError");
       }
       const scenario = buildScenario(scenarioId);
-      if (scenario.chooser.recommendationCapability === "unavailable") {
+      if (scenario.chooser.capabilityStatus !== "available") {
         return scenario.chooserSuggestions;
       }
       if (

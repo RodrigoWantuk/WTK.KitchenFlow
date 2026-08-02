@@ -106,9 +106,10 @@ CI fails when the OpenAPI snapshot, package output, or frontend mirror drift.
 - Cookies use `credentials: "include"`; OIDC tokens are never stored in JavaScript storage.
 - Production inventory routes live under `/app/despensa` (list/detail/create/edit/adjust/history).
 - Authenticated contextual home lives under `/app/hoje` (mock-backed in prototype/test; unavailable sources in production until PLAN-0021).
-- Production home adapters set `retryable: false` so permanent capability gaps do not show misleading Retry.
-- Quick chooser uses Radix Dialog with focus trap, Escape, cancel-during-load abort, and request-scoped answers only.
-- Public entry demo CTA respects `prefers-reduced-motion` when choosing scroll behavior.
+- Production home adapters set `capabilityStatus: "not_implemented"` and `retryable: false` so permanent capability gaps do not show misleading Retry.
+- Quick chooser classifies resolved suggestion statuses (`ready`/`empty` complete; failed/unavailable do not emit completion telemetry).
+- Titles/labels use `HomeDisplayText` (`catalog` | `literal`) via `renderHomeText` for PLAN-0021-ready dynamic names without inventing live DTOs.
+- Public entry demo CTA respects `prefers-reduced-motion`; unknown/missing `matchMedia` uses conservative `auto` scrolling.
 - Production does not fall back to mock pantry data, mock home fixtures, or prototype `localStorage` auth.
 - Same-origin API base path: `/api/v1` (proxy or reverse-proxy in integrated environments).
 - See [`docs/contextual-home/README.md`](docs/contextual-home/README.md) for presentation/adapter boundaries, async invalidation, and suggestion model fields.

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { buildHomeGreeting, readBrowserTimeZone } from "./dayPart";
 import { useContextualHome } from "./ContextualHomeProvider";
 import { QuickChooser } from "./QuickChooser";
+import { renderHomeText } from "./renderHomeText";
 
 function CandidateCard({
   item,
@@ -51,7 +52,9 @@ function CandidateCard({
           </span>
         ) : null}
       </div>
-      <h3 className="mt-3 font-display text-xl">{t(item.titleKey)}</h3>
+      <h3 className="mt-3 font-display text-xl">
+        {renderHomeText(item.title, t)}
+      </h3>
       <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
         {item.reasonCodes.map((code) => (
           <li key={code}>{t(`home.reason.${code}`)}</li>
@@ -84,7 +87,8 @@ function CandidateCard({
           <ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">
             {item.missingRequirements.map((req) => (
               <li key={req.code}>
-                {t(req.labelKey)} ({t(`home.requirement.kind.${req.kind}`)})
+                {renderHomeText(req.label, t)} (
+                {t(`home.requirement.kind.${req.kind}`)})
               </li>
             ))}
           </ul>
@@ -95,7 +99,7 @@ function CandidateCard({
           <p className="text-xs font-medium">{t("home.available.title")}</p>
           <ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">
             {item.availableRequirements.map((req) => (
-              <li key={req.code}>{t(req.labelKey)}</li>
+              <li key={req.code}>{renderHomeText(req.label, t)}</li>
             ))}
           </ul>
         </div>
@@ -107,7 +111,7 @@ function CandidateCard({
           <ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">
             {item.preparationRequirements.map((prep) => (
               <li key={prep.code}>
-                {t(prep.labelKey)}
+                {renderHomeText(prep.label, t)}
                 {prep.leadTimeHours != null
                   ? ` — ${t("home.prep.leadHours", { count: prep.leadTimeHours })}`
                   : null}
@@ -428,8 +432,9 @@ export function ContextualHomePage({
         if (signal.aborted || !isCurrent(generation)) return;
         if (err instanceof DOMException && err.name === "AbortError") return;
         setChooserDef({
-          recommendationCapability: "unavailable",
-          retryable: false,
+          capabilityStatus: "temporarily_unavailable",
+          retryable: true,
+          statusReasonKey: "home.chooser.definitionFailed",
           questions: [],
         });
       } finally {

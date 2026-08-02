@@ -15,8 +15,10 @@ import { ContextualHomePage } from "./ContextualHomePage";
 import type { FrontendRuntime } from "@/app/runtime/types";
 import type {
   ContextualHomeAdapter,
+  HomeQuickChooserDefinition,
   HomeSourceResult,
 } from "@/contracts/contextualHome";
+import { homeCatalogText } from "@/contracts/contextualHome";
 import { UnavailablePreparationRouteRepository } from "@/adapters/live/unavailablePreparationRouteRepository";
 
 function renderHome(options?: {
@@ -222,7 +224,7 @@ describe("ContextualHomePage", () => {
       },
       async getQuickChooserDefinition() {
         return {
-          recommendationCapability: "available",
+          capabilityStatus: "available",
           retryable: true,
           questions: [],
         };
@@ -257,7 +259,7 @@ describe("ContextualHomePage", () => {
         items: [
           {
             id: "newer",
-            titleKey: "home.fixture.menu.lentilStew",
+            title: homeCatalogText("home.fixture.menu.lentilStew"),
             sourceTier: "menu",
             sourceLabelKey: "home.source.label.menu",
             reasonCodes: ["planned_for_daypart"],
@@ -278,7 +280,7 @@ describe("ContextualHomePage", () => {
         items: [
           {
             id: "stale-old",
-            titleKey: "home.fixture.menu.lentilStew",
+            title: homeCatalogText("home.fixture.menu.lentilStew"),
             sourceTier: "menu",
             sourceLabelKey: "home.source.label.menu",
             reasonCodes: ["planned_for_daypart"],
@@ -333,7 +335,7 @@ describe("ContextualHomePage", () => {
         items: [
           {
             id: "late",
-            titleKey: "home.fixture.chooser.simpleSoup",
+            title: homeCatalogText("home.fixture.chooser.simpleSoup"),
             sourceTier: "quickChooser",
             sourceLabelKey: "home.source.label.quickChooser",
             reasonCodes: ["matches_request_answers"],
@@ -398,7 +400,7 @@ describe("ContextualHomePage", () => {
         items: [
           {
             id: "once",
-            titleKey: "home.fixture.chooser.simpleSoup",
+            title: homeCatalogText("home.fixture.chooser.simpleSoup"),
             sourceTier: "quickChooser",
             sourceLabelKey: "home.source.label.quickChooser",
             reasonCodes: ["matches_request_answers"],
@@ -447,7 +449,7 @@ describe("ContextualHomePage", () => {
         items: [
           {
             id: "newer-choice",
-            titleKey: "home.fixture.chooser.simpleSoup",
+            title: homeCatalogText("home.fixture.chooser.simpleSoup"),
             sourceTier: "quickChooser",
             sourceLabelKey: "home.source.label.quickChooser",
             reasonCodes: ["matches_request_answers"],
@@ -468,7 +470,7 @@ describe("ContextualHomePage", () => {
         items: [
           {
             id: "older-choice",
-            titleKey: "home.fixture.chooser.simpleSoup",
+            title: homeCatalogText("home.fixture.chooser.simpleSoup"),
             sourceTier: "quickChooser",
             sourceLabelKey: "home.source.label.quickChooser",
             reasonCodes: ["matches_request_answers"],
@@ -514,7 +516,7 @@ describe("ContextualHomePage", () => {
       },
       async getQuickChooserDefinition() {
         return {
-          recommendationCapability: "available",
+          capabilityStatus: "available",
           retryable: true,
           questions: [],
         };
@@ -546,7 +548,7 @@ describe("ContextualHomePage", () => {
         items: [
           {
             id: "inv-new",
-            titleKey: "home.fixture.inventory.attentionStew",
+            title: homeCatalogText("home.fixture.inventory.attentionStew"),
             sourceTier: "inventory",
             sourceLabelKey: "home.source.label.inventory",
             reasonCodes: ["attention_window"],
@@ -567,7 +569,7 @@ describe("ContextualHomePage", () => {
         items: [
           {
             id: "inv-old",
-            titleKey: "home.fixture.inventory.attentionStew",
+            title: homeCatalogText("home.fixture.inventory.attentionStew"),
             sourceTier: "inventory",
             sourceLabelKey: "home.source.label.inventory",
             reasonCodes: ["attention_window"],
@@ -612,5 +614,186 @@ describe("ContextualHomePage", () => {
       expect(screen.queryByTestId("quick-chooser")).not.toBeInTheDocument(),
     );
     expect(document.activeElement).toBe(open);
+  });
+
+  it("retries transient chooser-definition failures", async () => {
+    const user = userEvent.setup();
+    let calls = 0;
+    const base = createMockContextualHomeAdapter({ scenario: "default" });
+    const adapter: ContextualHomeAdapter = {
+      loadMenuSource: (q) => base.loadMenuSource(q),
+      loadInventorySource: (q) => base.loadInventorySource(q),
+      loadProfileSource: (q) => base.loadProfileSource(q),
+      getQuickChooserDefinition: async () => {
+        calls += 1;
+        if (calls === 1) {
+          throw new Error("transient definition");
+        }
+        return base.getQuickChooserDefinition({
+          locale: "en",
+          timeZone: "UTC",
+          now: new Date(),
+        });
+      },
+      loadQuickChooserSuggestions: (q) => base.loadQuickChooserSuggestions(q),
+    };
+    renderHome({ adapter });
+    const open = await screen.findByTestId("home-open-chooser");
+    await user.click(open);
+    expect(screen.getByTestId("quick-chooser")).toHaveAttribute(
+      "data-capability",
+      "temporarily_unavailable",
+    );
+    expect(screen.getByTestId("chooser-retry")).toBeInTheDocument();
+    const callsBeforeRetry = calls;
+    await user.click(screen.getByTestId("chooser-retry"));
+    await waitFor(() =>
+      expect(screen.getByTestId("quick-chooser")).toHaveAttribute(
+        "data-capability",
+        "available",
+      ),
+    );
+    expect(calls).toBe(callsBeforeRetry + 1);
+  });
+
+  it("ignores stale deferred chooser definitions after a newer load", async () => {
+    const first = deferred<HomeQuickChooserDefinition>();
+    const second = deferred<HomeQuickChooserDefinition>();
+    let call = 0;
+    const base = createMockContextualHomeAdapter({ scenario: "default" });
+    const adapter: ContextualHomeAdapter = {
+      loadMenuSource: (q) => base.loadMenuSource(q),
+      loadInventorySource: (q) => base.loadInventorySource(q),
+      loadProfileSource: (q) => base.loadProfileSource(q),
+      getQuickChooserDefinition: async () => {
+        call += 1;
+        return call === 1 ? first.promise : second.promise;
+      },
+      loadQuickChooserSuggestions: (q) => base.loadQuickChooserSuggestions(q),
+    };
+    renderHome({
+      adapter,
+      timeZone: "America/Sao_Paulo",
+      browserTimeZone: "Europe/Lisbon",
+    });
+    await screen.findByTestId("home-source-loading-menu");
+    const user = userEvent.setup();
+    await user.click(screen.getByTestId("home-timezone-use-browser"));
+    await act(async () => {
+      second.resolve({
+        capabilityStatus: "available",
+        retryable: true,
+        questions: [
+          {
+            id: "only",
+            promptKey: "home.chooser.q.time",
+            options: [{ id: "under_20", labelKey: "home.chooser.a.under20" }],
+          },
+        ],
+      });
+      await second.promise;
+    });
+    await user.click(await screen.findByTestId("home-open-chooser"));
+    expect(screen.getByTestId("chooser-option-under_20")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("chooser-option-use_what_i_have"),
+    ).not.toBeInTheDocument();
+    await act(async () => {
+      first.resolve({
+        capabilityStatus: "available",
+        retryable: true,
+        questions: [
+          {
+            id: "stale",
+            promptKey: "home.chooser.q.shopping",
+            options: [
+              {
+                id: "use_what_i_have",
+                labelKey: "home.chooser.a.useWhatIHave",
+              },
+            ],
+          },
+        ],
+      });
+      await first.promise;
+    });
+    expect(screen.getByTestId("chooser-option-under_20")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("chooser-option-use_what_i_have"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders literal recipe and product names without localization lookup", async () => {
+    const adapter: ContextualHomeAdapter = {
+      async loadMenuSource() {
+        return {
+          tier: "menu",
+          status: "ready",
+          retryable: false,
+          items: [
+            {
+              id: "live-recipe",
+              title: { kind: "literal", value: "Live Garlic Pasta" },
+              sourceTier: "menu",
+              sourceLabelKey: "home.source.label.menu",
+              reasonCodes: ["planned_for_daypart"],
+              missingRequirements: [
+                {
+                  code: "garlic",
+                  kind: "required",
+                  label: { kind: "literal", value: "Fresh garlic bulb" },
+                },
+              ],
+            },
+          ],
+        };
+      },
+      async loadInventorySource() {
+        return {
+          tier: "inventory",
+          status: "empty",
+          retryable: false,
+          items: [],
+        };
+      },
+      async loadProfileSource() {
+        return {
+          tier: "profile",
+          status: "empty",
+          retryable: false,
+          items: [],
+        };
+      },
+      async getQuickChooserDefinition() {
+        return {
+          capabilityStatus: "available",
+          retryable: true,
+          questions: [],
+        };
+      },
+      async loadQuickChooserSuggestions() {
+        return {
+          tier: "quickChooser",
+          status: "empty",
+          retryable: false,
+          items: [],
+        };
+      },
+    };
+    renderHome({ adapter });
+    expect(await screen.findByText("Live Garlic Pasta")).toBeInTheDocument();
+    expect(screen.getByText(/Fresh garlic bulb/)).toBeInTheDocument();
+  });
+
+  it("keeps production chooser definition permanent and non-retryable", async () => {
+    const user = userEvent.setup();
+    renderHome({ unavailable: true });
+    await screen.findByTestId("home-open-chooser");
+    await user.click(screen.getByTestId("home-open-chooser"));
+    expect(screen.getByTestId("quick-chooser")).toHaveAttribute(
+      "data-capability",
+      "not_implemented",
+    );
+    expect(screen.queryByTestId("chooser-retry")).not.toBeInTheDocument();
   });
 });

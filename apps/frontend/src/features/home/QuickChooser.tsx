@@ -18,11 +18,75 @@ import type {
 } from "@/contracts/contextualHome";
 
 /**
+ * Classifies a resolved suggestion result.
+ *
+ * Telemetry: `quick_chooser_completed` is emitted for a finished search that
+ * yields `ready` or `empty` (empty = completed search with zero candidates).
+ * Failures and permanent unavailable never emit completion.
+ */
+function classifySuggestionResult(
+  result: HomeSourceResult,
+):
+  | { kind: "complete"; empty: boolean }
+  | { kind: "recoverable"; messageKey: string }
+  | { kind: "permanent"; messageKey: string }
+  | { kind: "invalid"; messageKey: string } {
+  if (result.tier !== "quickChooser") {
+    return { kind: "invalid", messageKey: "home.chooser.invalidResult" };
+  }
+  if (typeof result.retryable !== "boolean") {
+    return { kind: "invalid", messageKey: "home.chooser.invalidResult" };
+  }
+  for (const item of result.items) {
+    if (item.sourceTier !== "quickChooser") {
+      return { kind: "invalid", messageKey: "home.chooser.invalidResult" };
+    }
+  }
+
+  if (result.status === "ready") {
+    if (result.items.length === 0) {
+      return { kind: "invalid", messageKey: "home.chooser.invalidResult" };
+    }
+    return { kind: "complete", empty: false };
+  }
+
+  if (result.status === "empty") {
+    return { kind: "complete", empty: true };
+  }
+
+  if (result.status === "failed" && result.retryable) {
+    return {
+      kind: "recoverable",
+      messageKey: result.statusReasonKey ?? "home.chooser.loadFailed",
+    };
+  }
+
+  if (result.status === "unavailable" && result.retryable) {
+    return {
+      kind: "recoverable",
+      messageKey: result.statusReasonKey ?? "home.chooser.loadFailed",
+    };
+  }
+
+  if (result.status === "unavailable" && !result.retryable) {
+    return {
+      kind: "permanent",
+      messageKey: result.statusReasonKey ?? "home.chooser.unavailable",
+    };
+  }
+
+  return { kind: "invalid", messageKey: "home.chooser.invalidResult" };
+}
+
+/**
  * Request-scoped quick chooser built on Radix Dialog.
  *
  * Answers are never written to profile/menu/inventory/localStorage.
- * Escape closes only when not submitting. Cancel aborts in-flight loads.
+ * Escape closes (including during submit, which cancels the attempt).
  * Late results after cancel or a newer attempt are ignored.
+ *
+ * Resolved suggestion Promises are classified by status — a resolved
+ * `failed`/`unavailable` result is not treated as successful completion.
  */
 export function QuickChooser({
   definition,
@@ -53,12 +117,16 @@ export function QuickChooser({
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [suggestionRetryable, setSuggestionRetryable] = useState(false);
+  const [permanentSuggestionBlock, setPermanentSuggestionBlock] =
+    useState(false);
 
   const questions = definition.questions;
   const question = questions[step];
   const isLast = step >= questions.length - 1;
-  const showRetry =
-    definition.recommendationCapability === "unavailable" &&
+  const definitionUnavailable = definition.capabilityStatus !== "available";
+  const showDefinitionRetry =
+    definition.capabilityStatus === "temporarily_unavailable" &&
     definition.retryable;
 
   useEffect(() => {
@@ -70,17 +138,19 @@ export function QuickChooser({
   }, []);
 
   // Reset wizard when definition identity changes while open.
+  // Suggestion-level retry keeps the same definition object and preserves answers.
   useEffect(() => {
     setStep(0);
     setAnswers({});
     setError(null);
     setBusy(false);
+    setSuggestionRetryable(false);
+    setPermanentSuggestionBlock(false);
     abortRef.current?.abort();
     abortRef.current = null;
   }, [definition]);
 
   function requestClose() {
-    // Cancel remains available during submit so the user can abandon a slow load.
     telemetry.track({ name: "quick_chooser_cancelled" });
     abortRef.current?.abort();
     attemptRef.current += 1;
@@ -95,6 +165,8 @@ export function QuickChooser({
     abortRef.current = controller;
     setBusy(true);
     setError(null);
+    setSuggestionRetryable(false);
+    setPermanentSuggestionBlock(false);
     try {
       const result = await onLoadSuggestions(finalAnswers, controller.signal);
       if (
@@ -104,11 +176,35 @@ export function QuickChooser({
       ) {
         return;
       }
-      telemetry.track({
-        name: "quick_chooser_completed",
-        codes: { questionCount: String(Object.keys(finalAnswers).length) },
-      });
-      onComplete(result);
+
+      const classified = classifySuggestionResult(result);
+      if (classified.kind === "complete") {
+        telemetry.track({
+          name: "quick_chooser_completed",
+          codes: {
+            questionCount: String(Object.keys(finalAnswers).length),
+            outcome: classified.empty ? "empty" : "ready",
+          },
+        });
+        onComplete(result);
+        return;
+      }
+
+      if (classified.kind === "recoverable") {
+        setError(t(classified.messageKey));
+        setSuggestionRetryable(true);
+        return;
+      }
+
+      if (classified.kind === "permanent") {
+        setError(t(classified.messageKey));
+        setPermanentSuggestionBlock(true);
+        setSuggestionRetryable(false);
+        return;
+      }
+
+      setError(t(classified.messageKey));
+      setSuggestionRetryable(false);
     } catch (err) {
       if (
         !mountedRef.current ||
@@ -118,13 +214,23 @@ export function QuickChooser({
       ) {
         return;
       }
-      setError(t("home.chooser.empty"));
+      setError(t("home.chooser.loadFailed"));
+      setSuggestionRetryable(true);
     } finally {
       if (mountedRef.current && attempt === attemptRef.current) {
         setBusy(false);
       }
     }
   }
+
+  const descriptionCopy = definitionUnavailable
+    ? t(
+        definition.statusReasonKey ??
+          (definition.capabilityStatus === "temporarily_unavailable"
+            ? "home.chooser.definitionFailed"
+            : "home.chooser.unavailable"),
+      )
+    : t("home.chooser.description");
 
   return (
     <Dialog
@@ -137,6 +243,7 @@ export function QuickChooser({
         <DialogOverlay className="motion-reduce:animate-none" />
         <DialogPrimitive.Content
           data-testid="quick-chooser"
+          data-capability={definition.capabilityStatus}
           aria-labelledby={titleId}
           aria-describedby={descriptionId}
           className={cn(
@@ -145,7 +252,6 @@ export function QuickChooser({
             "motion-reduce:duration-0 motion-reduce:data-[state=open]:animate-none motion-reduce:data-[state=closed]:animate-none",
           )}
           onEscapeKeyDown={(event) => {
-            // Escape remains available to cancel, including during submit.
             void event;
           }}
           onPointerDownOutside={(event) => {
@@ -157,13 +263,11 @@ export function QuickChooser({
               {t("home.chooser.title")}
             </DialogTitle>
             <DialogDescription id={descriptionId}>
-              {definition.recommendationCapability === "unavailable"
-                ? t("home.chooser.unavailable")
-                : t("home.chooser.description")}
+              {descriptionCopy}
             </DialogDescription>
           </DialogHeader>
 
-          {definition.recommendationCapability === "unavailable" ? (
+          {definitionUnavailable ? (
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
@@ -172,7 +276,7 @@ export function QuickChooser({
               >
                 {t("home.chooser.cancel")}
               </Button>
-              {showRetry ? (
+              {showDefinitionRetry ? (
                 <Button
                   type="button"
                   variant="secondary"
@@ -182,6 +286,25 @@ export function QuickChooser({
                   {t("home.chooser.retry")}
                 </Button>
               ) : null}
+            </div>
+          ) : permanentSuggestionBlock ? (
+            <div className="space-y-3">
+              {error ? (
+                <p
+                  role="alert"
+                  data-testid="chooser-error"
+                  className="text-sm text-destructive"
+                >
+                  {error}
+                </p>
+              ) : null}
+              <Button
+                type="button"
+                data-testid="chooser-cancel"
+                onClick={requestClose}
+              >
+                {t("home.chooser.cancel")}
+              </Button>
             </div>
           ) : question ? (
             <>
@@ -220,7 +343,11 @@ export function QuickChooser({
                 })}
               </div>
               {error ? (
-                <p role="alert" className="text-sm text-destructive">
+                <p
+                  role="alert"
+                  data-testid="chooser-error"
+                  className="text-sm text-destructive"
+                >
                   {error}
                 </p>
               ) : null}
@@ -259,12 +386,12 @@ export function QuickChooser({
                     {t("home.chooser.back")}
                   </Button>
                 ) : null}
-                {error ? (
+                {suggestionRetryable ? (
                   <Button
                     type="button"
                     variant="secondary"
                     data-testid="chooser-retry"
-                    disabled={busy || !answers[question.id]}
+                    disabled={busy}
                     onClick={() => void submit(answers)}
                   >
                     {t("home.chooser.retry")}
