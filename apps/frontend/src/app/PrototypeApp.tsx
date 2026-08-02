@@ -9,11 +9,12 @@ import { createPrototypeRuntime } from "@/app/runtime/createPrototypeRuntime";
 import { FeatureUnavailable } from "@/components/runtime/FeatureUnavailable";
 import { PrototypeModeBanner } from "@/components/runtime/PrototypeModeBanner";
 import AppShell from "@/components/AppShell";
-import Landing from "@/pages/Landing";
 import Access from "@/pages/Access";
 import Onboarding from "@/pages/Onboarding";
-import Today from "@/pages/Today";
 import Pantry from "@/pages/Pantry";
+import { ProductionI18nProvider } from "@/app/i18n/ProductionI18nProvider";
+import { PublicEntryPage } from "@/features/entry/PublicEntryPage";
+import { PrototypeContextualHomeRoute } from "@/features/home/PrototypeContextualHomeRoute";
 import ItemForm from "@/pages/ItemForm";
 import ItemDetail from "@/pages/ItemDetail";
 import Recipes from "@/pages/Recipes";
@@ -75,7 +76,14 @@ function AppRoutes() {
       {prototypeBanner ? <PrototypeModeBanner /> : null}
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Landing />} />
+          <Route
+            path="/"
+            element={
+              <ProductionI18nProvider>
+                <PublicEntryPage />
+              </ProductionI18nProvider>
+            }
+          />
           <Route path="/acesso" element={<Access />} />
           <Route path="/onboarding" element={<Onboarding />} />
 
@@ -83,7 +91,9 @@ function AppRoutes() {
             path="/app/hoje"
             element={
               <ShellRoute>
-                <Today />
+                <ProductionI18nProvider>
+                  <PrototypeContextualHomeRoute />
+                </ProductionI18nProvider>
               </ShellRoute>
             }
           />

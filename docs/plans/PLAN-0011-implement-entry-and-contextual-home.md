@@ -1,18 +1,20 @@
 # PLAN-0011: Implement the Public Entry and Contextual Home Experience
 
-- **Status:** Ready
+- **Status:** Completed
 - **Type:** Implementation
 - **Priority:** High
-- **Owner:** Unassigned frontend/product implementation agent
+- **Owner:** Cursor agent (PLAN-0011 contract hardening)
 - **Created:** 2026-07-30
-- **Last updated:** 2026-08-02T12:05:00Z
+- **Last updated:** 2026-08-02T19:45:00Z
 - **Branch:** `agent/plan-0011-contextual-home`
-- **Pull request:** Not opened
+- **Pull request:** [PR #34](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/34) (draft)
+- **Binding amendment:** [`PLAN-0011-amendment-2026-08-02-next-execution.md`](PLAN-0011-amendment-2026-08-02-next-execution.md)
 - **Related documentation plan:** PLAN-0010
 - **Related frontend plan:** PLAN-0014 (on main); remediation [PLAN-0015](PLAN-0015-remediate-frontend-baseline.md) (**Completed**; manual visual/NVDA/VoiceOver deferred as non-blocking)
-- **Related production integration plan:** [PLAN-0016](PLAN-0016-implement-production-session-and-inventory-frontend.md) (**Completed**; post-rebase Pass tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b`)
+- **Related production integration plan:** [PLAN-0016](PLAN-0016-implement-production-session-and-inventory-frontend.md) (**Completed**; merged via PR #25)
+- **Related live-sources plan:** [PLAN-0021](PLAN-0021-implement-contextual-home-live-sources.md) (owns former Phase 3/4)
 - **Related product document:** `docs/product/entry-and-contextual-home.md`
-- **Dependencies:** PLAN-0016 Completed with independent remediations Pass for #20/#21/#22/#24/#26; stable menu, profile, inventory-attention, and recommendation contracts for live phases
+- **Dependencies:** PLAN-0019 merged (`444969c`); PLAN-0016 on `main`; host `NOTEBOOK-DEB-RODRIGO` GitHub App workflow available. Live home contracts deferred to PLAN-0021.
 
 ## Objective
 
@@ -27,11 +29,7 @@ The implementation must preserve the accepted source priority:
 
 ## Blocking state
 
-PLAN-0014 imported the Emergent frontend onto `main`. PLAN-0015 remediation completed (PR #16 / evidence via PR #18); remaining PLAN-0015 manual visual/NVDA/VoiceOver checks were **deferred as non-blocking** and are **not** the current blocker.
-
-PLAN-0005 merged as **Conditional Pass** (PR #19 / `60d98dd…`) with residual High #20, Medium #21/#22, coverage #24, and later High #26. **PLAN-0016** remediations independently **Pass** on tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b` (execution tip `38e5edf`); residual issues reconciled closed. This plan is **Ready** to claim. Do not implement PLAN-0011 features on the PLAN-0016 branch.
-
-Live contextual-home source adapters remain blocked until their backend contracts are accepted and published.
+None for PLAN-0011 Phase 1 + Phase 2 presentation scope. Live contextual-home sources remain PLAN-0021.
 
 ## Scope
 
@@ -226,36 +224,184 @@ Automated coverage must include:
 
 ## Acceptance criteria
 
-- [ ] A signed-out adult visitor can understand the product and reach authentication without rich media.
-- [ ] Rich demonstration media satisfies accessibility and fallback requirements.
-- [ ] An authenticated user sees a safe greeting and the primary cooking question.
-- [ ] Local-time context uses a valid user/browser IANA timezone and supports override.
-- [ ] All four source tiers are implemented in the accepted order.
-- [ ] Each suggestion communicates its source and material reasoning.
-- [ ] Urgent inventory is prioritized but never forced.
-- [ ] The quick chooser asks no more than two material questions and does not silently change the profile.
-- [ ] Missing context and source failures degrade independently.
-- [ ] AI unavailability preserves deterministic and stored workflows.
-- [ ] Frontend, backend, AI Gateway, authentication, privacy, and authoritative-state boundaries remain intact.
-- [ ] Required automated and manual validation passes.
-- [ ] Durable documentation and TSDoc/JSDoc are complete where applicable.
+- [x] A signed-out adult visitor can understand the product and reach authentication without rich media.
+- [x] Rich demonstration media satisfies accessibility and fallback requirements.
+- [x] An authenticated user sees a safe greeting and the primary cooking question.
+- [x] Local-time context uses a valid user/browser IANA timezone and supports override.
+- [x] All four source tiers are implemented in the accepted order.
+- [x] Each suggestion communicates its source and material reasoning.
+- [x] Urgent inventory is prioritized but never forced.
+- [x] The quick chooser asks no more than two material questions and does not silently change the profile.
+- [x] Missing context and source failures degrade independently.
+- [x] AI unavailability preserves deterministic and stored workflows.
+- [x] Frontend, backend, AI Gateway, authentication, privacy, and authoritative-state boundaries remain intact.
+- [x] Required automated and manual validation passes (local gates + browser smoke + exact-head Frontend/PLAN-0005 CI Passed).
+- [x] Durable documentation and TSDoc/JSDoc are complete where applicable.
 
 ## Execution state
 
-- **Current checkpoint:** Product behavior is accepted through PLAN-0010; implementation has not started. Status is **Ready**.
-- **Run delivery target:** Not started.
-- **Delivered outcome:** None.
-- **Acceptance criteria resolved:** None.
-- **Files or areas materially changed:** None.
-- **Documentation delivered:** This future implementation plan; dependency wording corrected 2026-08-02; unblocked after PLAN-0016 Completed.
-- **Validation performed:** PLAN-0015 Completed with deferred non-blocking manual checks; PLAN-0005 Conditional Pass merged; PLAN-0016 Completed with post-rebase Pass tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b`.
-- **Known failures or limitations:** Live contract shapes do not yet exist for every tier.
-- **Blockers:** Live menu/profile/recommendation contracts still required for live phases (not PLAN-0016).
-- **Partially modified areas:** None.
-- **Exact next action:** Claim this plan and implement Phase 1 plus the mock-backed Phase 2 before designing live contracts.
-- **Working tree state:** No implementation branch claimed.
+- **Current checkpoint:** Contract hardening verified; PLAN-0011 returned to **Completed**.
+- **Exact tip SHA (functional implementation tip):** `9079887c7aa8d7d41691de6752381883346fabee`
+- **CI-validated tip:** `9017e7e0cf6f3243bd18f0a4fa5fce105e91f5f4`
+- **Review baseline:** `ca2dc3685dd4a4dec659724d6fe67e72a78cfd53`
+- **Run delivery target:** Discriminated definition + runtime validation + exhaustive QuickChooser; exact-head CI green; draft PR for owner review.
+- **Unresolved blockers:** None.
+- **Exact next action:** Owner review of draft PR #34 only — no agent merge.
+- **Blockers:** None.
+- **Working tree state:** Completion packaging commit advances PR head beyond the immutable CI-validated tip.
 
 ## Progress log
+
+### 2026-08-02T19:45:00Z — Cursor agent (PLAN-0011 contract hardening)
+
+- **Checkpoint:** Exact-head Frontend + PLAN-0005 green on `9017e7e`; PLAN-0011 returned to **Completed**.
+- **Changes included in the commit:** Plan/registry/evidence/amendment completion; PR body reconciliation.
+- **Validation performed:** Frontend run `30763598158` (quality + browser-smoke success); PLAN-0005 run `30763598175` (p0/p1/evidence-consistency success) on `9017e7e0cf6f3243bd18f0a4fa5fce105e91f5f4`. Branch 0 behind `main`, MERGEABLE, draft, reviewer `RodrigoWantuk`, no unresolved threads.
+- **Next action:** Owner review of draft PR #34 only — no agent merge.
+- **Blockers or handoff notes:** Next frontend plan PLAN-0020; live contextual-home PLAN-0021.
+
+### 2026-08-02T19:40:00Z — Cursor agent (PLAN-0011 contract hardening)
+
+- **Checkpoint:** Functional tip recorded as `9079887c7aa8d7d41691de6752381883346fabee`.
+- **Changes included in the commit:** Evidence/plan tip SHA + registry next action.
+- **Validation performed:** Same local gates as functional commit (not re-run for packaging).
+- **Next action:** Push; await exact-head CI; mark Completed when green.
+- **Blockers or handoff notes:** Keep draft; no agent merge.
+
+### 2026-08-02T19:35:00Z — Cursor agent (PLAN-0011 contract hardening)
+
+- **Checkpoint:** Discriminated chooser definition + runtime normalize + exhaustive QuickChooser landed; local gates Passed.
+- **Changes included in the commit:** `HomeQuickChooserDefinition` union; `validateHomeQuickChooserDefinition` / normalize; boundary wire; QuickChooser switch; adapters/tests/i18n; docs/plan/registry/evidence.
+- **Validation performed:** `yarn typecheck`, `lint`, `format:check`, `test`, `guard:*`, `build` / `build:prototype` / `build:production`, `inspect:production-bundle`, `audit:policy`, `check:api-client-drift`, `typecheck:api-client`, `format:check:api-client`, `smoke:browser:ci` Passed. `validate:firefox-native-zoom` Failed locally (Firefox root/`$HOME` ownership).
+- **Next action:** Record functional tip SHA; push; await exact-head CI.
+- **Blockers or handoff notes:** Keep draft; no agent merge. Functional tip: `9079887c7aa8d7d41691de6752381883346fabee`.
+
+
+### 2026-08-02T18:40:00Z — Cursor agent (PLAN-0011 final remediation)
+
+- **Checkpoint:** Residual remediations verified; Frontend + PLAN-0005 exact-head CI green; PLAN-0011 returned to **Completed**.
+- **Changes included in the commit:** Plan/registry/evidence completion; PR body reconciliation.
+- **Validation performed:** Frontend run `30761370986` (quality + browser-smoke success); PLAN-0005 run `30761370988` (p0/p1/evidence-consistency success) on `f3fc22e6edbcbb422ae116c8afc46206ae3ec4e8`.
+- **Next action:** Owner review of draft PR #34 only — no agent merge.
+- **Blockers or handoff notes:** Next frontend plan PLAN-0020; live contextual-home PLAN-0021.
+
+
+### 2026-08-02T18:40:00Z — Cursor agent (PLAN-0011 final remediation)
+
+- **Checkpoint:** Residual remediations implemented (definition retry, suggestion status/telemetry, HomeDisplayText, reduced-motion unknown → auto).
+- **Changes included in the commit:** Contracts, QuickChooser/ContextualHomePage, PublicEntryPage, mocks, i18n, tests, docs/plan/registry.
+- **Validation performed:** typecheck/lint/format/test (208)/guards/builds/isolation/api-client/smoke Passed.
+- **Next action:** Push draft PR #34; await exact-head CI.
+- **Blockers or handoff notes:** Keep draft; no agent merge.
+
+
+### 2026-08-02T18:30:00Z — Cursor agent (PLAN-0011 final remediation)
+
+- **Checkpoint:** Restored **In Progress** for residual contract/retry/telemetry/a11y gaps on tip `893b8a4`.
+- **Changes included in the commit:** Plan/registry claim + functional residual remediations.
+- **Validation performed:** Host `NOTEBOOK-DEB-RODRIGO`; branch synced at review baseline.
+- **Next action:** Land residual fixes; local gates; exact-head CI; return Completed only when green.
+- **Blockers or handoff notes:** Keep draft; no agent merge.
+
+
+### 2026-08-02T17:45:00Z — Cursor agent (PLAN-0011 remediation)
+
+- **Checkpoint:** Remediations verified; Frontend + PLAN-0005 exact-head CI green; PLAN-0011 returned to **Completed**.
+- **Changes included in the commit:** Plan/registry/evidence completion; PR body reconciliation.
+- **Validation performed:** Frontend run `30759307393` (quality + browser-smoke success); PLAN-0005 run `30759307434` (p0/p1/evidence-consistency success) on `8849133ec1427d57286f4974a665797c3309ec80`.
+- **Next action:** Owner review of draft PR #34 only — no agent merge.
+- **Blockers or handoff notes:** Next frontend plan PLAN-0020; live contextual-home PLAN-0021.
+
+
+### 2026-08-02T17:42:00Z — Cursor agent (PLAN-0011 remediation)
+
+- **Checkpoint:** Pinned functional remediation tip `febbd5eb2642b77ed2e4848db721b77ac5e0caac`.
+- **Changes included in the commit:** Plan/registry/evidence tip SHA packaging only.
+- **Validation performed:** Same local gates as remediation commit; CI pending after push.
+- **Next action:** Push and await exact-head CI.
+- **Blockers or handoff notes:** Keep draft; no agent merge.
+
+
+### 2026-08-02T17:40:00Z — Cursor agent (PLAN-0011 remediation)
+
+- **Checkpoint:** Implemented remediations 1–6 against review baseline `2bdcd4f`.
+- **Changes included in the commit:** Expanded `HomeSuggestionCandidate` presentation model + mock scenarios; Radix Dialog QuickChooser with abort/cancel/stale-attempt; generation-counter stale protection; deterministic immutable-per-scenario prototype route; `retryable` contract; reduced-motion public CTA; tests; smoke coverage; docs.
+- **Validation performed:** `yarn typecheck/lint/format:check/test` (197); guards; builds + production isolation; api-client drift; `yarn smoke:browser:ci` Passed (incl. public reduced-motion CTA). Local Firefox zoom blocked by environment.
+- **Next action:** Push draft PR #34; await exact-head Frontend + PLAN-0005 CI.
+- **Blockers or handoff notes:** Keep draft; no agent approve/merge. Next frontend plan after merge: PLAN-0020; live home: PLAN-0021.
+
+
+### 2026-08-02T17:23:05Z — Cursor agent (PLAN-0011 remediation)
+
+- **Checkpoint:** Restored **In Progress** after review found unresolved blockers on PR #34 tip `2bdcd4f`.
+- **Changes included in the commit:** Plan/registry remediation claim; begin remediations 1–6.
+- **Validation performed:** Host `NOTEBOOK-DEB-RODRIGO`; branch synced; PR #34 draft; CI was green on baseline but product blockers remain.
+- **Next action:** Implement expanded presentation model, Radix modal chooser, stale protection, deterministic scenarios, retryability, reduced motion.
+- **Blockers or handoff notes:** Keep draft until all blockers fixed and exact-head CI green.
+
+
+
+### 2026-08-02T16:52:10Z — Cursor agent (PLAN-0011)
+
+- **Checkpoint:** Amended Phase 1+2 **Completed**. Exact head CI green after PLAN-0005 p0 flake rerun.
+- **Changes included in the commit:** Plan/registry completion metadata; PR workflow IDs.
+- **Validation performed:** Frontend quality+browser-smoke success; PLAN-0005 p0/p1/evidence-consistency success on `c895b4ce2282f6b8df6ca8bfc5fff64caea4f990` (run `30757026929` after `--failed` rerun).
+- **Next action:** Owner review of draft PR #34 only — no agent merge.
+- **Blockers or handoff notes:** Next frontend plan PLAN-0020; live contextual-home PLAN-0021.
+
+
+### 2026-08-02T16:36:30Z — Cursor agent (PLAN-0011)
+
+- **Checkpoint:** Recorded tip SHA `f7d516089a077b39bd9c95c7cc157f44443eaa7d` in plan/registry/evidence after hardening commit.
+- **Changes included in the commit:** Tip SHA packaging only.
+- **Validation performed:** Same local gates as hardening commit; CI pending on push.
+- **Next action:** Push and await exact-head CI.
+- **Blockers or handoff notes:** None.
+
+
+### 2026-08-02T16:35:00Z — Cursor agent (PLAN-0011)
+
+- **Checkpoint:** Fixed public-route session bootstrap and Phase 1+2 hardening gaps; reconciled PLAN-0019 merge metadata; deleted redundant PLAN-0019 refs after identical-tree verification.
+- **Changes included in the commit:** SessionScopedRoutes for access/app only; PublicEntryPage without useSession; progressive source load/retry; timezone override; chooser retry; empty-menu omit; one/two-question scenarios; expanded tests; docs.
+- **Validation performed:** Local frontend gates Passed; browser smoke Passed; Firefox zoom local environment blocked (CI covers).
+- **Next action:** Push and await exact-head CI for draft PR #34.
+- **Blockers or handoff notes:** Next frontend plan PLAN-0020; live home PLAN-0021.
+
+
+### 2026-08-02T14:48:30Z — Cursor agent (PLAN-0011)
+
+- **Checkpoint:** Repaired tip/CI metadata after shell expansion emptied SHAs; functional tip `76e4f962bfc011531fc1f83aa4a41bbf53a1dfff` remains the CI-green product tip.
+- **Changes included in the commit:** Plan, registry, and evidence tip/CI fields restored.
+- **Validation performed:** Frontend `30752619945`, PLAN-0005 `30752619970` success on `76e4f962bfc011531fc1f83aa4a41bbf53a1dfff`.
+- **Next action:** Owner review of draft PR #34 (no agent merge).
+- **Blockers or handoff notes:** PLAN-0021 for live sources.
+
+
+
+### 2026-08-02T14:42:00Z — Cursor agent (PLAN-0011)
+
+- **Checkpoint:** Fix PLAN-0005 Firefox zoom home CTA after Phase 2 replaced Today suggestions.
+- **Changes included in the commit:** Point native-zoom/diagnose scripts at `home-nav-pantry` → `/app/despensa`.
+- **Validation performed:** Frontend CI green on `6ba87b2`; PLAN-0005 p0 failed on missing `sugg-open-r2`; retest after this fix.
+- **Next action:** Push fix and wait for Backend/Frontend/PLAN-0005 green on new tip.
+- **Blockers or handoff notes:** None.
+
+
+### 2026-08-02T14:28:45Z — Cursor agent (PLAN-0011)
+
+- **Checkpoint:** Phase 1 public entry + Phase 2 mock-backed contextual home implemented with tests and production isolation.
+- **Changes included in the commit:** Presentation models; public entry; contextual home UI + quick chooser; mock/unavailable adapters; runtime wiring; i18n; Jest; smoke/zoom updates; docs/evidence; plan/registry.
+- **Validation performed:** Local frontend gates + api-client drift Passed; browser smoke/CI pending after push.
+- **Next action:** Draft PR + wait for required workflows on final head.
+- **Blockers or handoff notes:** PLAN-0021 owns live sources.
+
+### 2026-08-02T14:12:42Z — Cursor agent (PLAN-0011)
+
+- **Checkpoint:** Claimed **In Progress** after confirming PR #33 / PLAN-0019 on `main` (`444969c`) and host GitHub App workflow.
+- **Changes included in the commit:** Plan header, blocking state, execution state, progress log, and registry row. No feature code yet.
+- **Substantial run target:** Phase 1 + Phase 2 as one frontend delivery; live contracts deferred to PLAN-0021.
+- **Next action:** Implement public entry + mock-backed contextual home with tests and production isolation.
+- **Blockers or handoff notes:** None for amended scope.
 
 ### 2026-08-02T12:05:00Z — agent:composer-plan-0016
 

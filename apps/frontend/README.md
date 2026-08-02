@@ -10,8 +10,8 @@ Official KitchenFlow frontend package living at `apps/frontend`.
 - Emergent and Lovable remain optional generation tools only (ADR-0007).
 - PLAN-0015 remediation and browser gates are completed.
 - PLAN-0016 is merged and supplies the production BFF session plus authenticated inventory routes.
-- The broader initial release is not production-complete. Contextual home and other undeveloped product areas must show truthful unavailable/prototype states until their plans deliver live behavior.
-- The immediate frontend plan is PLAN-0011 Phase 1 + Phase 2: public entry and mock-backed contextual home.
+- PLAN-0011 Phase 1 + Phase 2 deliver the public entry and mock-backed contextual home on `/` and `/app/hoje`. Live home sources remain PLAN-0021 (production uses controlled unavailable adapters).
+- The broader initial release is not production-complete. Undeveloped product areas must show truthful unavailable/prototype states until their plans deliver live behavior.
 
 ## Stack
 
@@ -76,11 +76,13 @@ Historical reports and plan-specific evidence live under the documented evidence
 
 | Path | Role |
 |---|---|
-| `src/adapters/mock/` | Fixture-backed presentation projections for **prototype/test** only |
-| `src/adapters/live/` | Live inventory repository and future production boundaries |
+| `src/adapters/mock/` | Fixture-backed presentation projections for **prototype/test** only (includes contextual-home mocks) |
+| `src/adapters/live/` | Live inventory repository and unavailable stand-ins for undeveloped areas (including contextual home) |
 | `src/generated/api-client/` | CRA mirror of `@kitchenflow/api-client` (do not edit; regenerate) |
-| `src/contracts/` | Presentation models |
+| `src/contracts/` | Presentation models (inventory quantity, preparation, contextual home) |
 | `src/features/inventory/` | Production inventory screens |
+| `src/features/entry/` | Public entry (Phase 1) |
+| `src/features/home/` | Contextual home presentation (Phase 2) |
 | `src/app/session/` | `SessionAdapter` boundary (`createBffSessionAdapter` in production; mock in prototype) |
 
 Presentation components consume projections. They must **not** perform authoritative inventory, reservation, unit-conversion, recommendation, quota, or safety arithmetic.
@@ -103,9 +105,15 @@ CI fails when the OpenAPI snapshot, package output, or frontend mirror drift.
 - Browser auth is BFF/session oriented via `POST /api/v1/auth/login`, `GET /api/v1/session`, `POST /api/v1/auth/logout`.
 - Cookies use `credentials: "include"`; OIDC tokens are never stored in JavaScript storage.
 - Production inventory routes live under `/app/despensa` (list/detail/create/edit/adjust/history).
-- Production does not fall back to mock pantry data or prototype `localStorage` auth.
+- Authenticated contextual home lives under `/app/hoje` (mock-backed in prototype/test; unavailable sources in production until PLAN-0021).
+- Production home adapters set `capabilityStatus: "not_implemented"` and `retryable: false` so permanent capability gaps do not show misleading Retry.
+- Quick chooser classifies resolved suggestion statuses (`ready`/`empty` complete; failed/unavailable do not emit completion telemetry).
+- Chooser definitions are a discriminated union (exactly 1–2 questions when available) with runtime normalization before UI state.
+- Titles/labels use `HomeDisplayText` (`catalog` | `literal`) via `renderHomeText` for PLAN-0021-ready dynamic names without inventing live DTOs.
+- Public entry demo CTA respects `prefers-reduced-motion`; unknown/missing `matchMedia` uses conservative `auto` scrolling.
+- Production does not fall back to mock pantry data, mock home fixtures, or prototype `localStorage` auth.
 - Same-origin API base path: `/api/v1` (proxy or reverse-proxy in integrated environments).
-- Contextual home and other undeveloped product areas use controlled unavailable states until their live plans are implemented.
+- See [`docs/contextual-home/README.md`](docs/contextual-home/README.md) for presentation/adapter boundaries, async invalidation, and suggestion model fields.
 
 ### Local integrated run (production mode)
 

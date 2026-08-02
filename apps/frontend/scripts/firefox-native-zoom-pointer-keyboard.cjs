@@ -368,10 +368,10 @@ async function main() {
         base,
         {
           scenario: "Cook_CTA",
-          label: "Firefox native 200% — Cook CTA",
+          label: "Firefox native 200% — Home pantry CTA",
           route: "/app/hoje",
-          selector: '[data-testid="sugg-open-r2"]',
-          expectedPathPrefix: "/app/receitas/",
+          selector: '[data-testid="home-nav-pantry"]',
+          expectedPathPrefix: "/app/despensa",
         },
         zoomMeasurement,
         browserVersion,

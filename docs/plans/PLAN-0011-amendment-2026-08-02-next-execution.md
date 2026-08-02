@@ -1,17 +1,18 @@
 # PLAN-0011 Amendment: Immediate Execution Scope After PLAN-0016 Merge
 
-- **Status:** Ready
+- **Status:** Completed (PR #34 draft; owner merge pending)
 - **Effective:** 2026-08-02
 - **Parent plan:** [`PLAN-0011`](PLAN-0011-implement-entry-and-contextual-home.md)
 - **Supersedes:** Parent-plan dependency, branch-state, execution-state, and exact-next-action text that predates PR #25 merge
-- **Current main baseline:** `388cd6a560bfc275e14e1ab72852ec30f31285e2`
+- **Current main baseline:** `444969ccd95526cb19730cfed8d016c9f299a7b7` (PLAN-0019 merge via PR #33)
 - **Required branch:** `agent/plan-0011-contextual-home`
+- **Draft PR:** [#34](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/34)
 
 ## Current truth
 
-PLAN-0016 is merged through PR #25 at `e35c453acccd79f01398e51b7fe8ee4cb94f44a3`. Production session and authenticated inventory routes are on `main`. PR #32 subsequently added the host-specific GitHub App workflow to `AGENTS.md`.
+PLAN-0016 is merged through PR #25 at `e35c453acccd79f01398e51b7fe8ee4cb94f44a3`. Production session and authenticated inventory routes are on `main`. PR #32 subsequently added the host-specific GitHub App workflow to `AGENTS.md`. PLAN-0019 reconciled the roadmap and merged via PR #33 at `444969ccd95526cb19730cfed8d016c9f299a7b7`.
 
-PLAN-0011 therefore has no blocker for its public-entry and mock-backed presentation scope.
+PLAN-0011 therefore has no blocker for its public-entry and mock-backed presentation scope. Live source contracts remain PLAN-0021.
 
 ## Binding execution boundary
 
@@ -79,15 +80,15 @@ PLAN-0021 must not start until the PLAN-0011 presentation models and states are 
 
 ## Acceptance criteria for this amendment
 
-- [ ] Phase 1 and Phase 2 are completed together or a real blocker is recorded.
-- [ ] No hand-written live home contract is introduced.
-- [ ] Existing production inventory/session behavior is preserved.
-- [ ] Public and mock home behavior is truthful, accessible, localized, and isolated.
-- [ ] Full frontend gates pass.
-- [ ] Plan and registry are updated before every developer commit.
-- [ ] A draft PR requests `RodrigoWantuk` review.
-- [ ] The agent does not approve, auto-merge, or merge.
+- [x] Phase 1 and Phase 2 are completed together or a real blocker is recorded.
+- [x] No hand-written live home contract is introduced.
+- [x] Existing production inventory/session behavior is preserved.
+- [x] Public and mock home behavior is truthful, accessible, localized, and isolated.
+- [ ] Full frontend gates pass on the final remediation head.
+- [x] Plan and registry are updated before every developer commit.
+- [x] A draft PR requests `RodrigoWantuk` review.
+- [x] The agent does not approve, auto-merge, or merge.
 
 ## Exact next action
 
-Claim PLAN-0011 from current `main`, verify the hostname and repository environment, create `agent/plan-0011-contextual-home`, update PLAN-0011 plus the registry to `In Progress`, and implement Phase 1 + Phase 2 as one coherent frontend delivery.
+Contract hardening Completed: discriminated union + runtime validation + exhaustive QuickChooser; exact-head Frontend `30763598158` and PLAN-0005 `30763598175` green on `9017e7e`. Draft PR #34 awaits owner review.

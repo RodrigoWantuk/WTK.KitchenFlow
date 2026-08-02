@@ -73,7 +73,7 @@ describe("createBffSessionAdapter", () => {
     });
     adapter.beginLogin("https://evil.example/phish");
     expect(navigations[0]).toContain("/api/v1/auth/login?returnUrl=");
-    expect(navigations[0]).toContain(encodeURIComponent("/app/despensa"));
+    expect(navigations[0]).toContain(encodeURIComponent("/app/hoje"));
     expect(navigations[0]).not.toContain("evil.example");
   });
 

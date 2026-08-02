@@ -25,13 +25,25 @@ describe("ProductionApp landing controls", () => {
     jest.restoreAllMocks();
   });
 
+  it("renders public `/` without calling session or fetch", async () => {
+    const fetchSpy = jest.spyOn(globalThis, "fetch");
+    render(<ProductionApp />);
+    expect(await screen.findByTestId("production-landing")).toBeInTheDocument();
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(
+      fetchSpy.mock.calls.some(([input]) =>
+        String(input).includes("/api/v1/session"),
+      ),
+    ).toBe(false);
+  });
+
   it("uses asChild link CTA without nested button inside anchor", async () => {
     const user = userEvent.setup();
     render(<ProductionApp />);
 
     expect(document.querySelectorAll("a button").length).toBe(0);
 
-    const cta = screen.getByTestId("production-landing-enter");
+    const cta = screen.getByTestId("landing-enter");
     expect(cta.tagName.toLowerCase()).toBe("a");
     expect(cta).toHaveAttribute("href", "/acesso");
 
@@ -56,7 +68,7 @@ describe("ProductionApp landing controls", () => {
     expect(localStorage.getItem(PRODUCTION_LOCALE_STORAGE_KEY)).toBe("en");
     expect(document.documentElement.lang).toBe("en");
     expect(screen.getByTestId("production-landing-tagline")).toHaveTextContent(
-      /KitchenFlow helps transform/,
+      /KitchenFlow helps you decide|Turn available food|KitchenFlow helps transform/,
     );
 
     await user.selectOptions(select, "es");

@@ -6,6 +6,8 @@ import type { SessionAdapter, SessionState } from "./types";
  */
 export function createMockSessionAdapter(options?: {
   initiallyAuthenticated?: boolean;
+  displayName?: string | null;
+  timeZone?: string | null;
   onAuthChange?: (authenticated: boolean) => void;
 }): SessionAdapter {
   let authenticated = options?.initiallyAuthenticated ?? false;
@@ -17,6 +19,8 @@ export function createMockSessionAdapter(options?: {
             status: "authenticated",
             internalUserId: "prototype-user",
             csrfToken: null,
+            displayName: options?.displayName ?? null,
+            timeZone: options?.timeZone ?? null,
           }
         : { status: "signedOut", internalUserId: null, csrfToken: null };
     },
