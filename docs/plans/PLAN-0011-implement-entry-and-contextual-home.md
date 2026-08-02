@@ -240,24 +240,32 @@ Automated coverage must include:
 
 ## Execution state
 
-- **Current checkpoint:** Contract hardening implemented; awaiting exact-head Frontend + PLAN-0005 CI.
-- **Exact tip SHA (functional implementation tip):** pending publish of this commit.
+- **Current checkpoint:** Contract hardening published; awaiting exact-head Frontend + PLAN-0005 CI.
+- **Exact tip SHA (functional implementation tip):** `9079887c7aa8d7d41691de6752381883346fabee`
 - **Review baseline:** `ca2dc3685dd4a4dec659724d6fe67e72a78cfd53`
 - **Run delivery target:** Discriminated `HomeQuickChooserDefinition`, runtime validation, exhaustive QuickChooser; exact-head CI; keep draft.
 - **Unresolved blockers:** None local — exact-head CI pending.
-- **Exact next action:** Push draft PR #34; await Frontend + PLAN-0005 on published tip; mark Completed when green.
+- **Exact next action:** Await Frontend + PLAN-0005 on published tip; mark Completed when green.
 - **Blockers:** None external. Local Firefox zoom blocked by root/`$HOME` ownership (rely on PLAN-0005 CI).
-- **Working tree state:** Contract hardening ready to commit from `ca2dc36`.
+- **Working tree state:** Functional tip recorded; packaging commit may advance PR head.
 
 ## Progress log
+
+### 2026-08-02T19:40:00Z — Cursor agent (PLAN-0011 contract hardening)
+
+- **Checkpoint:** Functional tip recorded as `9079887c7aa8d7d41691de6752381883346fabee`.
+- **Changes included in the commit:** Evidence/plan tip SHA + registry next action.
+- **Validation performed:** Same local gates as functional commit (not re-run for packaging).
+- **Next action:** Push; await exact-head CI; mark Completed when green.
+- **Blockers or handoff notes:** Keep draft; no agent merge.
 
 ### 2026-08-02T19:35:00Z — Cursor agent (PLAN-0011 contract hardening)
 
 - **Checkpoint:** Discriminated chooser definition + runtime normalize + exhaustive QuickChooser landed; local gates Passed.
 - **Changes included in the commit:** `HomeQuickChooserDefinition` union; `validateHomeQuickChooserDefinition` / normalize; boundary wire; QuickChooser switch; adapters/tests/i18n; docs/plan/registry/evidence.
 - **Validation performed:** `yarn typecheck`, `lint`, `format:check`, `test`, `guard:*`, `build` / `build:prototype` / `build:production`, `inspect:production-bundle`, `audit:policy`, `check:api-client-drift`, `typecheck:api-client`, `format:check:api-client`, `smoke:browser:ci` Passed. `validate:firefox-native-zoom` Failed locally (Firefox root/`$HOME` ownership).
-- **Next action:** Push; await exact-head CI; record functional tip SHA; mark Completed when green.
-- **Blockers or handoff notes:** Keep draft; no agent merge.
+- **Next action:** Record functional tip SHA; push; await exact-head CI.
+- **Blockers or handoff notes:** Keep draft; no agent merge. Functional tip: `9079887c7aa8d7d41691de6752381883346fabee`.
 
 
 ### 2026-08-02T18:40:00Z — Cursor agent (PLAN-0011 final remediation)

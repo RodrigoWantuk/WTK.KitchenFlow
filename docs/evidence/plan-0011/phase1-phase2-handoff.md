@@ -10,9 +10,9 @@ Live source contracts remain PLAN-0021.
 | Role | Value |
 |---|---|
 | Review baseline | `ca2dc3685dd4a4dec659724d6fe67e72a78cfd53` |
-| Functional implementation tip | pending contract-hardening commit |
+| Functional implementation tip | `9079887c7aa8d7d41691de6752381883346fabee` |
 | CI-validated tip | pending exact-head Frontend + PLAN-0005 |
-| Current PR head reported in PR metadata | published branch tip after push |
+| Current PR head reported in PR metadata | published branch tip (advances with packaging commits) |
 
 ## Contract hardening summary
 
