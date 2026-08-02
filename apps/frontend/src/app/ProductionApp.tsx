@@ -7,12 +7,11 @@ import {
   Link,
   useLocation,
 } from "react-router-dom";
-import { RuntimeProvider } from "@/app/runtime/RuntimeProvider";
+import { RuntimeProvider, useRuntime } from "@/app/runtime/RuntimeProvider";
 import { SessionProvider, useSession } from "@/app/session/SessionProvider";
 import { createProductionRuntime } from "@/app/runtime/createProductionRuntime";
 import { FeatureUnavailable } from "@/components/runtime/FeatureUnavailable";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
 import {
   ProductionI18nProvider,
   useProductionI18n,
@@ -22,6 +21,9 @@ import { InventoryProvider } from "@/features/inventory/InventoryProvider";
 import { ProductionInventoryList } from "@/features/inventory/ProductionInventoryList";
 import { ProductionInventoryDetail } from "@/features/inventory/ProductionInventoryDetail";
 import { ProductionInventoryForm } from "@/features/inventory/ProductionInventoryForm";
+import { PublicEntryPage } from "@/features/entry/PublicEntryPage";
+import { ContextualHomePage } from "@/features/home/ContextualHomePage";
+import { ContextualHomeProvider } from "@/features/home/ContextualHomeProvider";
 
 function LocaleSwitcher() {
   const { locale, locales, setLocale, t } = useProductionI18n();
@@ -69,73 +71,12 @@ function LocaleSwitcher() {
   );
 }
 
-/**
- * Static production landing — no StoreProvider, fixtures, or demo auth.
- */
-function ProductionLanding() {
-  const { t } = useProductionI18n();
-  const { isAuthenticated } = useSession();
-  return (
-    <div
-      data-testid="production-landing"
-      className="min-h-screen bg-background text-foreground"
-    >
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6 md:px-10">
-        <div className="flex items-center gap-2">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground font-display text-lg">
-            C
-          </span>
-          <span className="font-display text-2xl">{t("brand.name")}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <LocaleSwitcher />
-          <Button asChild size="sm" className="rounded-full">
-            <Link
-              to={isAuthenticated ? "/app/despensa" : "/acesso"}
-              data-testid="production-landing-enter"
-            >
-              {t("landing.enter")} <ArrowRight className="ml-1 h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-      </header>
-      <main className="mx-auto max-w-3xl px-6 py-16 md:px-10">
-        <h1
-          data-testid="production-landing-title"
-          className="font-display text-4xl md:text-5xl"
-        >
-          {t("brand.name")}
-        </h1>
-        <p
-          data-testid="production-landing-tagline"
-          className="mt-4 text-muted-foreground"
-        >
-          {t("landing.tagline")}
-        </p>
-        <p
-          data-testid="production-landing-subtitle"
-          className="mt-2 text-sm text-muted-foreground"
-        >
-          {t("landing.subtitle")}
-        </p>
-        <div className="mt-8">
-          <FeatureUnavailable
-            feature="production-home"
-            title={t("feature.integrationPending")}
-            detail={t("home.unavailable.detail")}
-          />
-        </div>
-      </main>
-    </div>
-  );
-}
-
 function ProductionAccess() {
   const { session, beginLogin } = useSession();
   const { t } = useProductionI18n();
   const location = useLocation();
   const returnUrl =
-    (location.state as { from?: string } | null)?.from ?? "/app/despensa";
+    (location.state as { from?: string } | null)?.from ?? "/app/hoje";
 
   if (session.status === "loading") {
     return (
@@ -146,7 +87,7 @@ function ProductionAccess() {
   }
 
   if (session.status === "authenticated") {
-    return <Navigate to="/app/despensa" replace />;
+    return <Navigate to="/app/hoje" replace />;
   }
 
   if (session.status === "unavailable") {
@@ -191,7 +132,7 @@ function ProductionAppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 px-6 py-4 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
-          <Link to="/app/despensa" className="font-display text-xl">
+          <Link to="/app/hoje" className="font-display text-xl">
             {t("brand.name")}
           </Link>
           <div className="flex items-center gap-2">
@@ -234,13 +175,42 @@ function RequireAuth({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+function HomeRoute() {
+  const runtime = useRuntime();
+  // Production wires the unavailable adapter; prototype composition may inject mocks
+  // via a separate app root — never through createProductionRuntime.
+  return (
+    <ContextualHomeProvider adapter={runtime.contextualHomeAdapter}>
+      <ContextualHomePage />
+    </ContextualHomeProvider>
+  );
+}
+
 function ProductionAppRoutes() {
   const { t } = useProductionI18n();
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<ProductionLanding />} />
+        <Route path="/" element={<PublicEntryPage />} />
         <Route path="/acesso" element={<ProductionAccess />} />
+        <Route
+          path="/app/hoje"
+          element={
+            <RequireAuth>
+              <ProductionAppShell>
+                <HomeRoute />
+              </ProductionAppShell>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/app"
+          element={
+            <RequireAuth>
+              <Navigate to="/app/hoje" replace />
+            </RequireAuth>
+          }
+        />
         <Route
           path="/app/despensa"
           element={

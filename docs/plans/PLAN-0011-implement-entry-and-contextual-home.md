@@ -240,20 +240,28 @@ Automated coverage must include:
 
 ## Execution state
 
-- **Current checkpoint:** Claimed on `agent/plan-0011-contextual-home` from `main` (`444969c`). Status **In Progress**. Implementing Phase 1 public entry + Phase 2 mock-backed contextual home.
+- **Current checkpoint:** Phase 1 + Phase 2 implemented on `agent/plan-0011-contextual-home`. Status **In Progress** / Validating pending CI + draft PR.
 - **Run delivery target:** One reviewable frontend slice: public entry, mock-backed authenticated home with four ordered sources and quick chooser, localization (`en`/`pt-BR`/`es`), accessibility/responsive coverage, production isolation (no home fixtures in production), tests, docs, and draft PR. Exclude Phase 3/4 (PLAN-0021).
-- **Delivered outcome:** Plan claimed; branch created from current `main` after PR #33 merge confirmation.
-- **Acceptance criteria resolved:** None yet for Phase 1/2 product surfaces.
-- **Files or areas materially changed:** Plan + registry claim only in this commit.
-- **Documentation delivered:** Claim updates in this plan and `docs/plan-status.md`.
-- **Validation performed:** Confirmed hostname `NOTEBOOK-DEB-RODRIGO`; confirmed PR #33 merged; branch tracking `origin/main` at `444969c`.
-- **Known failures or limitations:** Live home adapters remain PLAN-0021.
+- **Delivered outcome:** Public entry + contextual home presentation, mock/unavailable adapters, catalogs, Jest coverage, production isolation guards, smoke/zoom script updates, frontend docs + evidence handoff.
+- **Acceptance criteria resolved:** Phase 1/2 product surfaces implemented locally; CI and draft PR still required before Completed.
+- **Files or areas materially changed:** `apps/frontend` entry/home features, contracts, adapters, runtime composition, i18n catalogs, smoke/zoom scripts, README/docs/evidence, plan + registry.
+- **Documentation delivered:** `apps/frontend/docs/contextual-home/README.md`, `docs/evidence/plan-0011/phase1-phase2-handoff.md`, README updates, plan/registry.
+- **Validation performed:** Local `typecheck`, `lint`, `format:check`, full Jest, guards, production/prototype builds, `inspect:production-bundle`, `audit:policy`, api-client drift/typecheck Passed. Browser smoke CI pending on this packaging.
+- **Known failures or limitations:** Live home adapters remain PLAN-0021; production home shows controlled unavailable sources.
 - **Blockers:** None for amended Phase 1 + Phase 2.
 - **Partially modified areas:** None.
-- **Exact next action:** Implement presentation models, public entry, mock/unavailable home adapters, production + prototype wiring, catalogs, tests, then open draft PR.
-- **Working tree state:** Branch `agent/plan-0011-contextual-home` claimed; implementation pending next commits.
+- **Exact next action:** Push branch, open draft PR requesting `RodrigoWantuk`, wait for required workflows, then mark Validating/Completed only after green CI.
+- **Working tree state:** Implementation ready to commit and push.
 
 ## Progress log
+
+### 2026-08-02T14:28:45Z — Cursor agent (PLAN-0011)
+
+- **Checkpoint:** Phase 1 public entry + Phase 2 mock-backed contextual home implemented with tests and production isolation.
+- **Changes included in the commit:** Presentation models; public entry; contextual home UI + quick chooser; mock/unavailable adapters; runtime wiring; i18n; Jest; smoke/zoom updates; docs/evidence; plan/registry.
+- **Validation performed:** Local frontend gates + api-client drift Passed; browser smoke/CI pending after push.
+- **Next action:** Draft PR + wait for required workflows on final head.
+- **Blockers or handoff notes:** PLAN-0021 owns live sources.
 
 ### 2026-08-02T14:12:42Z — Cursor agent (PLAN-0011)
 

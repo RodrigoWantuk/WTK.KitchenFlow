@@ -61,6 +61,25 @@ if (!productionRuntime.includes("createLiveInventoryRepository")) {
     "production composition root must wire createLiveInventoryRepository",
   );
 }
+if (!productionRuntime.includes("createUnavailableContextualHomeAdapter")) {
+  failures.push(
+    "production composition root must wire createUnavailableContextualHomeAdapter",
+  );
+}
+assertNotIncludes(
+  "src/app/runtime/createProductionRuntime.ts",
+  ["createMockContextualHomeAdapter"],
+  "production composition root home adapter",
+);
+assertNotIncludes(
+  "src/app/ProductionApp.tsx",
+  [
+    "adapters/mock/contextual-home",
+    "PrototypeContextualHomeRoute",
+    "createMockContextualHomeAdapter",
+  ],
+  "production app home isolation",
+);
 
 assertNotIncludes(
   "src/features/preparation-route/PreparationRouteProvider.tsx",

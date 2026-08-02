@@ -22,7 +22,8 @@ export interface ProductionI18nValue {
   locale: ProductionLocale;
   locales: readonly ProductionLocale[];
   setLocale: (locale: ProductionLocale) => void;
-  t: (key: string) => string;
+  /** Translates a catalog key; optional `{{token}}` vars for safe interpolation. */
+  t: (key: string, vars?: Readonly<Record<string, string | number>>) => string;
 }
 
 const ProductionI18nContext = createContext<ProductionI18nValue | null>(null);
@@ -74,7 +75,8 @@ export function ProductionI18nProvider({
   }, []);
 
   const t = useCallback(
-    (key: string) => translateProduction(locale, key),
+    (key: string, vars?: Readonly<Record<string, string | number>>) =>
+      translateProduction(locale, key, vars),
     [locale],
   );
 

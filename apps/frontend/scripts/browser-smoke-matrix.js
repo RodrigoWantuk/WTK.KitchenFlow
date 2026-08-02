@@ -432,24 +432,24 @@ async function run() {
       await selectScenario(page, scenario);
       await page.goto(BASE + "/app/hoje", { waitUntil: "domcontentloaded" });
     }
-    await page.getByTestId("home-route-block").waitFor({ timeout: 15000 });
+    await page.getByTestId("contextual-home").waitFor({ timeout: 15000 });
   }
 
   const localeExpectations = {
     "pt-BR": {
-      a: "O cozinhar do dia a dia, sem stress.",
-      b: "Entrar no Cocinaris",
-      c: "Entrar em modo demo",
+      a: "Transforme alimentos disponíveis em refeições úteis",
+      b: "Criar conta ou entrar",
+      c: "Não é só um gerador de receitas",
     },
     en: {
-      a: "Everyday cooking, without the stress.",
-      b: "Enter Cocinaris",
-      c: "Enter demo mode",
+      a: "Turn available food into useful meals",
+      b: "Create an account or sign in",
+      c: "not just a recipe generator",
     },
     es: {
-      a: "Cocinar cada día, sin estrés.",
-      b: "Entrar en Cocinaris",
-      c: "Entrar en modo demo",
+      a: "Convierte alimentos disponibles en comidas útiles",
+      b: "Crear cuenta o iniciar sesión",
+      c: "No es solo un generador de recetas",
     },
   };
 
@@ -530,25 +530,11 @@ async function run() {
         });
         await page.reload({ waitUntil: "domcontentloaded" });
         await page.waitForURL(/\/app\/hoje/);
-        await page.getByTestId("home-route-block").waitFor({ timeout: 20000 });
+        await page.getByTestId("contextual-home").waitFor({ timeout: 20000 });
 
-        await assertKeyboardFocusVisible(page, "carousel action", [
-          "home-route-carousel-list",
-          "home-route-open",
-        ]);
-        const carouselFocused = await page.evaluate(
-          () => document.activeElement?.getAttribute("data-testid") || "",
-        );
-        if (carouselFocused === "home-route-carousel-list") {
-          await page.keyboard.press("ArrowRight");
-          await page.keyboard.press("ArrowLeft");
-        }
-
-        await assertKeyboardFocusVisible(page, "authenticated asChild CTA", [
-          "today-open-plan",
-          "planned-open",
-          "planned-view",
-          "nav-settings",
+        await assertKeyboardFocusVisible(page, "home action", [
+          "home-open-chooser",
+          "home-nav-pantry",
         ]);
 
         await assertKeyboardFocusVisible(page, "main navigation", [
@@ -569,9 +555,9 @@ async function run() {
         await page.waitForURL(/\/app\/ajustes/);
 
         record(
-          "keyboard-only Landing→Access→Home→carousel→Plan→Settings",
+          "keyboard-only Landing→Access→Home→Plan→Settings",
           "Passed",
-          "Tab/Enter/Arrow only; baseline vs focused :focus-visible",
+          "Tab/Enter only; baseline vs focused :focus-visible",
         );
       },
     );
@@ -590,7 +576,7 @@ async function run() {
             document.documentElement.scrollWidth >
             document.documentElement.clientWidth + 40,
         );
-        await page.getByTestId("home-route-block").waitFor();
+        await page.getByTestId("contextual-home").waitFor();
         await navTo(page, "pantry");
         await page.waitForURL(/despensa/);
         await navTo(page, "plan");
@@ -630,7 +616,7 @@ async function run() {
         await page.waitForURL(/review=shortfall/);
         await selectScenario(page, "routeWithDeps");
         await page.goto(BASE + "/app/hoje", { waitUntil: "domcontentloaded" });
-        await page.getByTestId("home-route-carousel").waitFor();
+        await page.getByTestId("contextual-home").waitFor();
         await page.getByTestId("bottomnav-plan").click();
         await page.getByTestId("route-chain").waitFor();
         for (const id of ["n2", "n3"]) {
@@ -664,10 +650,11 @@ async function run() {
           );
         }
         await enterHome(page, { scenario: "routeWithDeps" });
-        const carousel = page.getByTestId("home-route-carousel").locator("ol");
-        await carousel.focus();
-        await page.keyboard.press("ArrowRight");
-        await page.getByTestId("home-route-block").waitFor();
+        await page.getByTestId("home-open-chooser").focus();
+        await page.keyboard.press("Enter");
+        await page.getByTestId("quick-chooser").waitFor({ timeout: 5000 });
+        await page.getByTestId("chooser-cancel").click();
+        await page.getByTestId("contextual-home").waitFor();
 
         // Open a real overlay (scenario Sheet) so reduced-motion covers an open panel.
         let overlayOpened = false;
@@ -736,7 +723,7 @@ async function run() {
         record(
           "prefers-reduced-motion",
           "Passed",
-          `matchMedia true; carousel operable; scenarioSheet=${overlayOpened}; motion samples=${samples.length}; no long durations on rendered nodes`,
+          `matchMedia true; quick chooser operable; scenarioSheet=${overlayOpened}; motion samples=${samples.length}; no long durations on rendered nodes`,
         );
       },
     );
@@ -777,7 +764,7 @@ async function run() {
         const tagline = await page
           .getByTestId("production-landing-tagline")
           .innerText();
-        if (!/KitchenFlow helps transform/i.test(tagline)) {
+        if (!/KitchenFlow helps/i.test(tagline)) {
           fail(
             "production locale mobile 360",
             `EN tagline missing: ${tagline}`,

@@ -339,7 +339,9 @@ async function runLanguageSelector(page, meta, base) {
   await page.goto(base + "/", { waitUntil: "load" });
   // At ~200% zoom (CSS width ~640), the mobile <select> is the operable control.
   const mobile = page.getByTestId("production-lang-select");
-  const desktopEn = page.getByTestId("production-lang-en");
+  const desktopEn = page
+    .getByTestId("production-lang-en")
+    .or(page.getByTestId("landing-lang-en"));
   const tagline = page.getByTestId("production-landing-tagline");
   const before = (await tagline.innerText()).trim();
   const name =
@@ -355,7 +357,11 @@ async function runLanguageSelector(page, meta, base) {
     await mobile.selectOption("en");
     await wait(400);
     const after = (await tagline.innerText()).trim();
-    const changed = after !== mid && /kitchenflow helps|transform available food/i.test(after);
+    const changed =
+      after !== mid &&
+      /kitchenflow helps|transform available food|turn available food|decide what to prepare/i.test(
+        after,
+      );
     await mobile.selectOption("pt-BR");
     await wait(300);
     const restored = (await tagline.innerText()).trim();
@@ -805,13 +811,21 @@ async function runBrowserSuite({ browserName, classPattern, launch }) {
             browser: browserName,
             browserVersion: version,
             mode: "production",
-            surface: "FeatureUnavailable",
+            surface: "ContextualHome",
             startPath: "/app/hoje",
           },
           {
-            expectSubstring: ["indispon", "unavailable"],
+            expectSubstring: [
+              "indispon",
+              "unavailable",
+              "Sign in",
+              "Entrar",
+              "cook today",
+              "cozinhamos",
+            ],
             forbidMockTokens: ["Continuar em modo demo", "Scenario"],
-            assertion: "FeatureUnavailable messaging; no mock demo CTA; no overflow",
+            assertion:
+              "auth gate or contextual-home unavailable; no mock demo CTA; no overflow",
           },
         );
       }),

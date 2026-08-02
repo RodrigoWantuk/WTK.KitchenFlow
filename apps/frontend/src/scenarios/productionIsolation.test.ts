@@ -68,7 +68,7 @@ describe("production isolation", () => {
     expect(scripts.build).not.toMatch(/FRONTEND_MODE=prototype/);
   });
 
-  it("production composition root does not use mock preparation repository", () => {
+  it("production composition root does not use mock preparation or home repositories", () => {
     const runtime = createProductionRuntime();
     expect(runtime.mode).toBe("production");
     expect(runtime.enableScenarioBar).toBe(false);
@@ -81,11 +81,14 @@ describe("production isolation", () => {
       sharedMockPreparationRouteRepository,
     );
     expect(runtime.shoppingRequirementProjections).toEqual([]);
+    expect(runtime.contextualHomeAdapter).toBeDefined();
     const sessionSource = readSrc("app/runtime/createProductionRuntime.ts");
     expect(sessionSource).toMatch(/createBffSessionAdapter/);
     expect(sessionSource).not.toMatch(/createUnavailableSessionAdapter/);
     expect(sessionSource).toMatch(/createLiveInventoryRepository/);
+    expect(sessionSource).toMatch(/createUnavailableContextualHomeAdapter/);
     expect(sessionSource).not.toMatch(/createMockSessionAdapter/);
+    expect(sessionSource).not.toMatch(/createMockContextualHomeAdapter/);
   });
 
   it("prototype composition root explicitly wires mock tooling", () => {
@@ -94,6 +97,7 @@ describe("production isolation", () => {
     expect(runtime.preparationRouteRepository).toBe(
       sharedMockPreparationRouteRepository,
     );
+    expect(runtime.contextualHomeAdapter).toBeDefined();
   });
 
   it("production runtime module does not import adapters/mock", () => {
@@ -101,8 +105,15 @@ describe("production isolation", () => {
     expect(source).not.toMatch(/adapters\/mock/);
     expect(source).not.toMatch(/sharedMockPreparationRouteRepository/);
     expect(source).not.toMatch(
-      /SEED_PANTRY|SEED_PLAN|cocinaris_state_v1|createMockSessionAdapter/,
+      /SEED_PANTRY|SEED_PLAN|cocinaris_state_v1|createMockSessionAdapter|createMockContextualHomeAdapter/,
     );
+  });
+
+  it("production app does not import contextual-home mock modules", () => {
+    const source = readSrc("app/ProductionApp.tsx");
+    expect(source).not.toMatch(/adapters\/mock\/contextual-home/);
+    expect(source).not.toMatch(/PrototypeContextualHomeRoute/);
+    expect(source).not.toMatch(/createMockContextualHomeAdapter/);
   });
 
   it("AppShell renders scenario tooling only when runtime enables it", () => {

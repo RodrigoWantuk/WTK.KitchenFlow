@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { PreparationRouteRepository } from "@/contracts/preparation";
+import type { ContextualHomeAdapter } from "@/contracts/contextualHome";
 import type { InventoryRepository } from "@/adapters/live/inventoryTypes";
 import type { SessionAdapter } from "@/app/session/types";
 import type { FrontendMode } from "./mode";
@@ -15,6 +16,11 @@ export interface FrontendRuntime {
   /** Live inventory repository for production; prototype may inject a stub. */
   inventoryRepository: InventoryRepository;
   preparationRouteRepository: PreparationRouteRepository;
+  /**
+   * Contextual home sources. Production uses unavailable until PLAN-0021.
+   * Prototype/test may inject mocks — never silently in production.
+   */
+  contextualHomeAdapter: ContextualHomeAdapter;
   /** When false, ScenarioBar and scenario tooling must not render. */
   enableScenarioBar: boolean;
   /** When true, seed fixtures and local mock persistence of personal data are allowed. */
