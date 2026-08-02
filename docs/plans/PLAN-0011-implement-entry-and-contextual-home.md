@@ -240,15 +240,24 @@ Automated coverage must include:
 
 ## Execution state
 
-- **Current checkpoint:** Remediations 1–6 implemented locally; awaiting commit, push, and exact-head CI on draft PR #34.
-- **Exact tip SHA (functional):** pending first remediation commit on `agent/plan-0011-contextual-home` (baseline was `2bdcd4f`).
-- **Run delivery target:** Land remediations with docs/tests; keep draft until Frontend + PLAN-0005 green on exact final head; then owner review.
+- **Current checkpoint:** Remediations 1–6 committed at `febbd5eb2642b77ed2e4848db721b77ac5e0caac`; awaiting push and exact-head CI on draft PR #34.
+- **Exact tip SHA (functional):** `febbd5eb2642b77ed2e4848db721b77ac5e0caac`
+- **Run delivery target:** Keep draft until Frontend + PLAN-0005 green on exact final head; then owner review.
 - **Unresolved blockers:** None remaining in product code; exact-head CI and owner review still required before Completed.
-- **Exact next action:** Commit remediation + docs; push; await CI; reconcile PR body/comment; mark Completed only after green exact head.
+- **Exact next action:** Push draft PR #34; await exact-head Frontend + PLAN-0005 CI; reconcile PR body/comment.
 - **Blockers:** None for implementation. Firefox native zoom cannot launch as root locally (`XAUTHORITY`); rely on PLAN-0005 CI.
-- **Working tree state:** Remediation implementation ready to commit.
+- **Working tree state:** Clean remediation tip `febbd5e` ready to push.
 
 ## Progress log
+
+### 2026-08-02T17:42:00Z — Cursor agent (PLAN-0011 remediation)
+
+- **Checkpoint:** Pinned functional remediation tip `febbd5eb2642b77ed2e4848db721b77ac5e0caac`.
+- **Changes included in the commit:** Plan/registry/evidence tip SHA packaging only.
+- **Validation performed:** Same local gates as remediation commit; CI pending after push.
+- **Next action:** Push and await exact-head CI.
+- **Blockers or handoff notes:** Keep draft; no agent merge.
+
 
 ### 2026-08-02T17:40:00Z — Cursor agent (PLAN-0011 remediation)
 
