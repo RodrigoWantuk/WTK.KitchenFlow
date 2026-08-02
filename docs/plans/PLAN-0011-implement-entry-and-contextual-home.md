@@ -240,30 +240,31 @@ Automated coverage must include:
 
 ## Execution state
 
-- **Current checkpoint:** Phase 1 + Phase 2 delivered on tip . Draft PR #34. Status **Validating** (CI green; remains draft for owner review).
+- **Current checkpoint:** Phase 1 + Phase 2 delivered. Functional tip `76e4f962bfc011531fc1f83aa4a41bbf53a1dfff`; packaging tip `84061414aa296981a2e88d1ff812c6c63b1c9763`. Draft PR #34. Status **Validating** (CI green; remains draft for owner review).
+- **Exact tip SHA (functional):** `76e4f962bfc011531fc1f83aa4a41bbf53a1dfff`
 - **Run delivery target:** Phase 1 public entry + Phase 2 mock-backed contextual home with tests, isolation, docs, draft PR.
 - **Delivered outcome:** Public entry, contextual home (mock/unavailable adapters), i18n, Jest, smoke, Firefox zoom CTA retarget, evidence, draft PR #34 requesting RodrigoWantuk.
-- **Acceptance criteria resolved:** Amended Phase 1/2 acceptance criteria satisfied for code/tests/CI on this tip; owner review/merge still pending; live sources remain PLAN-0021.
+- **Acceptance criteria resolved:** Amended Phase 1/2 acceptance criteria satisfied for code/tests/CI on the functional tip; owner review/merge still pending; live sources remain PLAN-0021.
 - **Files or areas materially changed:** Frontend entry/home features, adapters, catalogs, smoke/zoom scripts, docs/evidence, plan/registry.
 - **Documentation delivered:** Frontend contextual-home README, evidence handoff, plan/registry, PR body.
-- **Validation performed:** Local gates Passed; Frontend  /  success; PLAN-0005  success on tip .
+- **Validation performed:** Local gates Passed; Frontend `30752619945` / `30752618360` success; PLAN-0005 `30752619970` success on functional tip `76e4f962bfc011531fc1f83aa4a41bbf53a1dfff`.
 - **Known failures or limitations:** Production home sources unavailable until PLAN-0021; PR remains draft.
 - **Blockers:** None for amended Phase 1 + Phase 2.
 - **Partially modified areas:** None.
-- **Exact next action:** Owner reviews draft PR #34; agent must not approve/merge; after owner ready-for-review/merge decision, mark Completed only when criteria allow.
-- **Working tree state:** Clean relative to tip  after this packaging commit.
+- **Exact next action:** Owner reviews draft PR #34; agent must not approve/merge; mark Completed only after owner-ready criteria are met.
+- **Working tree state:** Packaging commit will record this repaired metadata after `84061414aa296981a2e88d1ff812c6c63b1c9763`.
 
 ## Progress log
 
-### 2026-08-02T14:46:55Z — Cursor agent (PLAN-0011)
+### 2026-08-02T14:48:30Z — Cursor agent (PLAN-0011)
 
-- **Checkpoint:** CI green on tip ; draft PR #34 updated with workflow IDs.
-- **Changes included in the commit:** Plan/registry/evidence tip + CI metadata packaging.
-- **Validation performed:** Frontend + PLAN-0005 success on tip.
+- **Checkpoint:** Repaired tip/CI metadata after shell expansion emptied SHAs; functional tip `76e4f962bfc011531fc1f83aa4a41bbf53a1dfff` remains the CI-green product tip.
+- **Changes included in the commit:** Plan, registry, and evidence tip/CI fields restored.
+- **Validation performed:** Frontend `30752619945`, PLAN-0005 `30752619970` success on `76e4f962bfc011531fc1f83aa4a41bbf53a1dfff`.
 - **Next action:** Owner review of draft PR #34 (no agent merge).
 - **Blockers or handoff notes:** PLAN-0021 for live sources.
 
-## Progress log
+
 
 ### 2026-08-02T14:42:00Z — Cursor agent (PLAN-0011)
 

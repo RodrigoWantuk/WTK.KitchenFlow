@@ -7,10 +7,17 @@ Live source contracts remain PLAN-0021.
 
 ## Functional tip
 
-Recorded after local gates on branch `agent/plan-0011-contextual-home`.
-Exact tip SHA: 
+`76e4f962bfc011531fc1f83aa4a41bbf53a1dfff`
 
-CI: Frontend , PLAN-0005 .
+Packaging metadata tip may advance after this SHA; product CI for Phase 1+2 + zoom CTA fix is pinned to the functional tip above.
+
+## CI on functional tip
+
+| Workflow | Run ID | Result |
+|---|---|---|
+| Frontend | [30752619945](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30752619945) | success |
+| Frontend | [30752618360](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30752618360) | success |
+| PLAN-0005 | [30752619970](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30752619970) | success |
 
 ## Local validation (commands)
 
@@ -37,6 +44,7 @@ yarn typecheck
 ```
 
 Results at packaging time: all of the above Passed locally before push.
+Browser smoke: `yarn smoke:browser:ci` Passed (see `browser-smoke-report.json`).
 
 ## Architecture notes
 
