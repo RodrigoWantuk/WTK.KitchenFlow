@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import {
   Dialog,
@@ -13,9 +13,11 @@ import { useProductionI18n } from "@/app/i18n/ProductionI18nProvider";
 import { cn } from "@/lib/utils";
 import type {
   HomeQuickChooserDefinition,
+  HomeQuickChooserQuestion,
   HomeSourceResult,
   HomeTelemetry,
 } from "@/contracts/contextualHome";
+import { assertNeverChooserDefinition } from "./validateHomeQuickChooserDefinition";
 
 /**
  * Classifies a resolved suggestion result.
@@ -84,9 +86,6 @@ function classifySuggestionResult(
  * Answers are never written to profile/menu/inventory/localStorage.
  * Escape closes (including during submit, which cancels the attempt).
  * Late results after cancel or a newer attempt are ignored.
- *
- * Resolved suggestion Promises are classified by status — a resolved
- * `failed`/`unavailable` result is not treated as successful completion.
  */
 export function QuickChooser({
   definition,
@@ -121,14 +120,6 @@ export function QuickChooser({
   const [permanentSuggestionBlock, setPermanentSuggestionBlock] =
     useState(false);
 
-  const questions = definition.questions;
-  const question = questions[step];
-  const isLast = step >= questions.length - 1;
-  const definitionUnavailable = definition.capabilityStatus !== "available";
-  const showDefinitionRetry =
-    definition.capabilityStatus === "temporarily_unavailable" &&
-    definition.retryable;
-
   useEffect(() => {
     mountedRef.current = true;
     return () => {
@@ -137,8 +128,6 @@ export function QuickChooser({
     };
   }, []);
 
-  // Reset wizard when definition identity changes while open.
-  // Suggestion-level retry keeps the same definition object and preserves answers.
   useEffect(() => {
     setStep(0);
     setAnswers({});
@@ -223,14 +212,188 @@ export function QuickChooser({
     }
   }
 
-  const descriptionCopy = definitionUnavailable
-    ? t(
-        definition.statusReasonKey ??
-          (definition.capabilityStatus === "temporarily_unavailable"
-            ? "home.chooser.definitionFailed"
-            : "home.chooser.unavailable"),
-      )
-    : t("home.chooser.description");
+  function renderUnavailableActions(showRetry: boolean) {
+    return (
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          data-testid="chooser-cancel"
+          onClick={requestClose}
+        >
+          {t("home.chooser.cancel")}
+        </Button>
+        {showRetry ? (
+          <Button
+            type="button"
+            variant="secondary"
+            data-testid="chooser-retry"
+            onClick={onRetry}
+          >
+            {t("home.chooser.retry")}
+          </Button>
+        ) : null}
+      </div>
+    );
+  }
+
+  function renderAvailableBody(questions: readonly HomeQuickChooserQuestion[]) {
+    const safeStep = Math.min(Math.max(step, 0), questions.length - 1);
+    const question = questions[safeStep];
+    const isLast = safeStep >= questions.length - 1;
+
+    if (permanentSuggestionBlock) {
+      return (
+        <div className="space-y-3">
+          {error ? (
+            <p
+              role="alert"
+              data-testid="chooser-error"
+              className="text-sm text-destructive"
+            >
+              {error}
+            </p>
+          ) : null}
+          <Button
+            type="button"
+            data-testid="chooser-cancel"
+            onClick={requestClose}
+          >
+            {t("home.chooser.cancel")}
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <p className="text-base" data-testid="chooser-prompt">
+          {t(question.promptKey)}
+        </p>
+        <div
+          role="group"
+          aria-label={t(question.promptKey)}
+          className="flex flex-col gap-2"
+        >
+          {question.options.map((option) => {
+            const selected = answers[question.id] === option.id;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                data-testid={`chooser-option-${option.id}`}
+                aria-pressed={selected}
+                disabled={busy}
+                className={`min-h-11 rounded-xl border px-4 py-3 text-left text-sm ${
+                  selected
+                    ? "border-primary bg-secondary"
+                    : "border-border hover:bg-secondary/50"
+                } disabled:opacity-60`}
+                onClick={() =>
+                  setAnswers((prev) => ({
+                    ...prev,
+                    [question.id]: option.id,
+                  }))
+                }
+              >
+                {t(option.labelKey)}
+              </button>
+            );
+          })}
+        </div>
+        {error ? (
+          <p
+            role="alert"
+            data-testid="chooser-error"
+            className="text-sm text-destructive"
+          >
+            {error}
+          </p>
+        ) : null}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            data-testid="chooser-cancel"
+            onClick={requestClose}
+          >
+            {t("home.chooser.cancel")}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            data-testid="chooser-skip"
+            disabled={busy}
+            onClick={() => {
+              if (isLast) {
+                void submit(answers);
+              } else {
+                setStep(1);
+              }
+            }}
+          >
+            {t("home.chooser.skip")}
+          </Button>
+          {safeStep > 0 ? (
+            <Button
+              type="button"
+              variant="secondary"
+              data-testid="chooser-back"
+              disabled={busy}
+              onClick={() => setStep(0)}
+            >
+              {t("home.chooser.back")}
+            </Button>
+          ) : null}
+          {suggestionRetryable ? (
+            <Button
+              type="button"
+              variant="secondary"
+              data-testid="chooser-retry"
+              disabled={busy}
+              onClick={() => void submit(answers)}
+            >
+              {t("home.chooser.retry")}
+            </Button>
+          ) : null}
+          <Button
+            type="button"
+            data-testid="chooser-next"
+            disabled={!answers[question.id] || busy}
+            onClick={() => {
+              if (isLast) {
+                void submit(answers);
+              } else {
+                setStep(1);
+              }
+            }}
+          >
+            {isLast ? t("home.chooser.submit") : t("home.chooser.next")}
+          </Button>
+        </div>
+      </>
+    );
+  }
+
+  let descriptionCopy: string;
+  let body: ReactNode;
+  switch (definition.capabilityStatus) {
+    case "available":
+      descriptionCopy = t("home.chooser.description");
+      body = renderAvailableBody(definition.questions);
+      break;
+    case "temporarily_unavailable":
+      descriptionCopy = t(definition.statusReasonKey);
+      body = renderUnavailableActions(true);
+      break;
+    case "not_implemented":
+      descriptionCopy = t(
+        definition.statusReasonKey ?? "home.chooser.unavailable",
+      );
+      body = renderUnavailableActions(false);
+      break;
+    default:
+      return assertNeverChooserDefinition(definition);
+  }
 
   return (
     <Dialog
@@ -266,154 +429,7 @@ export function QuickChooser({
               {descriptionCopy}
             </DialogDescription>
           </DialogHeader>
-
-          {definitionUnavailable ? (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                data-testid="chooser-cancel"
-                onClick={requestClose}
-              >
-                {t("home.chooser.cancel")}
-              </Button>
-              {showDefinitionRetry ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  data-testid="chooser-retry"
-                  onClick={onRetry}
-                >
-                  {t("home.chooser.retry")}
-                </Button>
-              ) : null}
-            </div>
-          ) : permanentSuggestionBlock ? (
-            <div className="space-y-3">
-              {error ? (
-                <p
-                  role="alert"
-                  data-testid="chooser-error"
-                  className="text-sm text-destructive"
-                >
-                  {error}
-                </p>
-              ) : null}
-              <Button
-                type="button"
-                data-testid="chooser-cancel"
-                onClick={requestClose}
-              >
-                {t("home.chooser.cancel")}
-              </Button>
-            </div>
-          ) : question ? (
-            <>
-              <p className="text-base" data-testid="chooser-prompt">
-                {t(question.promptKey)}
-              </p>
-              <div
-                role="group"
-                aria-label={t(question.promptKey)}
-                className="flex flex-col gap-2"
-              >
-                {question.options.map((option) => {
-                  const selected = answers[question.id] === option.id;
-                  return (
-                    <button
-                      key={option.id}
-                      type="button"
-                      data-testid={`chooser-option-${option.id}`}
-                      aria-pressed={selected}
-                      disabled={busy}
-                      className={`min-h-11 rounded-xl border px-4 py-3 text-left text-sm ${
-                        selected
-                          ? "border-primary bg-secondary"
-                          : "border-border hover:bg-secondary/50"
-                      } disabled:opacity-60`}
-                      onClick={() =>
-                        setAnswers((prev) => ({
-                          ...prev,
-                          [question.id]: option.id,
-                        }))
-                      }
-                    >
-                      {t(option.labelKey)}
-                    </button>
-                  );
-                })}
-              </div>
-              {error ? (
-                <p
-                  role="alert"
-                  data-testid="chooser-error"
-                  className="text-sm text-destructive"
-                >
-                  {error}
-                </p>
-              ) : null}
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  data-testid="chooser-cancel"
-                  onClick={requestClose}
-                >
-                  {t("home.chooser.cancel")}
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  data-testid="chooser-skip"
-                  disabled={busy}
-                  onClick={() => {
-                    if (isLast) {
-                      void submit(answers);
-                    } else {
-                      setStep((s) => s + 1);
-                    }
-                  }}
-                >
-                  {t("home.chooser.skip")}
-                </Button>
-                {step > 0 ? (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    data-testid="chooser-back"
-                    disabled={busy}
-                    onClick={() => setStep((s) => Math.max(0, s - 1))}
-                  >
-                    {t("home.chooser.back")}
-                  </Button>
-                ) : null}
-                {suggestionRetryable ? (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    data-testid="chooser-retry"
-                    disabled={busy}
-                    onClick={() => void submit(answers)}
-                  >
-                    {t("home.chooser.retry")}
-                  </Button>
-                ) : null}
-                <Button
-                  type="button"
-                  data-testid="chooser-next"
-                  disabled={!answers[question.id] || busy}
-                  onClick={() => {
-                    if (isLast) {
-                      void submit(answers);
-                    } else {
-                      setStep((s) => s + 1);
-                    }
-                  }}
-                >
-                  {isLast ? t("home.chooser.submit") : t("home.chooser.next")}
-                </Button>
-              </div>
-            </>
-          ) : null}
+          {body}
         </DialogPrimitive.Content>
       </DialogPortal>
     </Dialog>

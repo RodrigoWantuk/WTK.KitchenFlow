@@ -246,7 +246,6 @@ const CHOOSER_ITEM = candidate({
 
 const ONE_QUESTION: HomeQuickChooserDefinition = {
   capabilityStatus: "available",
-  retryable: true,
   questions: [
     {
       id: "time_available",
@@ -262,9 +261,8 @@ const ONE_QUESTION: HomeQuickChooserDefinition = {
 
 const DEFAULT_QUESTIONS: HomeQuickChooserDefinition = {
   capabilityStatus: "available",
-  retryable: true,
   questions: [
-    ...ONE_QUESTION.questions,
+    ONE_QUESTION.questions[0],
     {
       id: "shopping_ok",
       promptKey: "home.chooser.q.shopping",

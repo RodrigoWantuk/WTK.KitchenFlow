@@ -10,7 +10,6 @@ import { QuickChooser } from "./QuickChooser";
 
 const twoQuestionDef: HomeQuickChooserDefinition = {
   capabilityStatus: "available",
-  retryable: true,
   questions: [
     {
       id: "time",
@@ -25,6 +24,7 @@ const twoQuestionDef: HomeQuickChooserDefinition = {
       promptKey: "home.chooser.q.shopping",
       options: [
         { id: "use_what_i_have", labelKey: "home.chooser.a.useWhatIHave" },
+        { id: "ok_to_buy", labelKey: "home.chooser.a.okToBuy" },
       ],
     },
   ],
@@ -32,12 +32,14 @@ const twoQuestionDef: HomeQuickChooserDefinition = {
 
 const oneQuestionDef: HomeQuickChooserDefinition = {
   capabilityStatus: "available",
-  retryable: true,
   questions: [
     {
       id: "only",
       promptKey: "home.chooser.q.time",
-      options: [{ id: "under_20", labelKey: "home.chooser.a.under20" }],
+      options: [
+        { id: "under_20", labelKey: "home.chooser.a.under20" },
+        { id: "about_40", labelKey: "home.chooser.a.about40" },
+      ],
     },
   ],
 };

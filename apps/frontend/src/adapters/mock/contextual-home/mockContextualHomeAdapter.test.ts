@@ -25,7 +25,9 @@ describe("contextual home adapters", () => {
     expect(profile.status).toBe("unavailable");
     expect(suggestions.status).toBe("unavailable");
     expect(chooser.capabilityStatus).toBe("not_implemented");
-    expect(chooser.retryable).toBe(false);
+    if (chooser.capabilityStatus === "not_implemented") {
+      expect(chooser.retryable).toBe(false);
+    }
   });
 
   it("retry recovers after transient menu failures", async () => {
@@ -113,7 +115,9 @@ describe("contextual home adapters", () => {
       if (scenario === "aiUnavailable") {
         const def = await adapter.getQuickChooserDefinition(query);
         expect(def.capabilityStatus).toBe("not_implemented");
-        expect(def.retryable).toBe(false);
+        if (def.capabilityStatus === "not_implemented") {
+          expect(def.retryable).toBe(false);
+        }
         expect(
           (
             await adapter.loadQuickChooserSuggestions({

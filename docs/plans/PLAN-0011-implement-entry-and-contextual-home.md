@@ -1,13 +1,13 @@
 # PLAN-0011: Implement the Public Entry and Contextual Home Experience
 
-- **Status:** Completed
+- **Status:** In Progress
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Cursor agent (PLAN-0011 final remediation)
 - **Created:** 2026-07-30
-- **Last updated:** 2026-08-02T18:40:00Z
+- **Last updated:** 2026-08-02T19:30:00Z
 - **Branch:** `agent/plan-0011-contextual-home`
-- **Pull request:** [PR #34](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/34) (draft; ready for owner review)
+- **Pull request:** [PR #34](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/34) (draft)
 - **Binding amendment:** [`PLAN-0011-amendment-2026-08-02-next-execution.md`](PLAN-0011-amendment-2026-08-02-next-execution.md)
 - **Related documentation plan:** PLAN-0010
 - **Related frontend plan:** PLAN-0014 (on main); remediation [PLAN-0015](PLAN-0015-remediate-frontend-baseline.md) (**Completed**; manual visual/NVDA/VoiceOver deferred as non-blocking)
@@ -29,7 +29,7 @@ The implementation must preserve the accepted source priority:
 
 ## Blocking state
 
-None for Phase 1+2 residual remediations. Exact-head CI green on `f3fc22e6edbcbb422ae116c8afc46206ae3ec4e8`. Live sources remain PLAN-0021. Delivery awaits owner review/merge of draft PR #34.
+Quick-chooser definition contract still permissive against tip `ca2dc3685dd4a4dec659724d6fe67e72a78cfd53`: available/unavailable combinations and question cardinality are not enforced by a discriminated union + runtime validation. Live sources remain PLAN-0021.
 
 ## Scope
 
@@ -240,17 +240,25 @@ Automated coverage must include:
 
 ## Execution state
 
-- **Current checkpoint:** Residual remediations **Completed**; exact-head CI green on `f3fc22e6edbcbb422ae116c8afc46206ae3ec4e8`.
-- **Exact tip SHA (functional implementation tip):** `b7c213be3bd326adea1b522ee60c4e0d63be564a`
-- **CI-validated tip:** `f3fc22e6edbcbb422ae116c8afc46206ae3ec4e8`
-- **Review baseline:** `893b8a471feb71451ef4fe21d13c6c12261a4567`
-- **Run delivery target:** Owner review of draft PR #34. No agent merge.
-- **Unresolved blockers:** None for Phase 1+2.
-- **Exact next action:** Owner reviews/merges draft PR #34. Next frontend plan: PLAN-0020. Live home: PLAN-0021.
-- **Blockers:** None. Local Firefox zoom blocked as root; PLAN-0005 CI covers.
-- **Working tree state:** Completion packaging may advance head after this update; re-verify CI if head moves.
+- **Current checkpoint:** Contract hardening implemented; awaiting exact-head Frontend + PLAN-0005 CI.
+- **Exact tip SHA (functional implementation tip):** pending publish of this commit.
+- **Review baseline:** `ca2dc3685dd4a4dec659724d6fe67e72a78cfd53`
+- **Run delivery target:** Discriminated `HomeQuickChooserDefinition`, runtime validation, exhaustive QuickChooser; exact-head CI; keep draft.
+- **Unresolved blockers:** None local — exact-head CI pending.
+- **Exact next action:** Push draft PR #34; await Frontend + PLAN-0005 on published tip; mark Completed when green.
+- **Blockers:** None external. Local Firefox zoom blocked by root/`$HOME` ownership (rely on PLAN-0005 CI).
+- **Working tree state:** Contract hardening ready to commit from `ca2dc36`.
 
 ## Progress log
+
+### 2026-08-02T19:35:00Z — Cursor agent (PLAN-0011 contract hardening)
+
+- **Checkpoint:** Discriminated chooser definition + runtime normalize + exhaustive QuickChooser landed; local gates Passed.
+- **Changes included in the commit:** `HomeQuickChooserDefinition` union; `validateHomeQuickChooserDefinition` / normalize; boundary wire; QuickChooser switch; adapters/tests/i18n; docs/plan/registry/evidence.
+- **Validation performed:** `yarn typecheck`, `lint`, `format:check`, `test`, `guard:*`, `build` / `build:prototype` / `build:production`, `inspect:production-bundle`, `audit:policy`, `check:api-client-drift`, `typecheck:api-client`, `format:check:api-client`, `smoke:browser:ci` Passed. `validate:firefox-native-zoom` Failed locally (Firefox root/`$HOME` ownership).
+- **Next action:** Push; await exact-head CI; record functional tip SHA; mark Completed when green.
+- **Blockers or handoff notes:** Keep draft; no agent merge.
+
 
 ### 2026-08-02T18:40:00Z — Cursor agent (PLAN-0011 final remediation)
 

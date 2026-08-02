@@ -25,13 +25,15 @@ Stable reason, readiness, effort, cleanup, uncertainty, conflict, source, and st
 
 ### Quick-chooser capability
 
-`HomeQuickChooserDefinition.capabilityStatus`:
+`HomeQuickChooserDefinition` is a discriminated union:
 
-| Status | Meaning | Retry |
+| Variant | Questions | Retry |
 |---|---|---|
-| `available` | Questions may be answered | n/a |
-| `temporarily_unavailable` | Transient definition load failure | yes (`retryable: true`) |
-| `not_implemented` | Permanent gap (production until PLAN-0021) | no |
+| `available` | Exactly one or two | n/a |
+| `temporarily_unavailable` | Empty; `retryable: true`; required `statusReasonKey` | yes |
+| `not_implemented` | Empty; `retryable: false` | no |
+
+Runtime validation (`normalizeHomeQuickChooserDefinition`) rejects invalid shapes without silent truncation (including 0/3+ questions, duplicate IDs, <2 options, contradictory retryability). Invalid input fails closed to temporary-unavailable + Retry (`home.chooser.invalidDefinition`).
 
 A thrown error from `getQuickChooserDefinition` must map to `temporarily_unavailable` + `retryable: true`, never to permanent `not_implemented`.
 

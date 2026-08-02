@@ -225,8 +225,16 @@ describe("ContextualHomePage", () => {
       async getQuickChooserDefinition() {
         return {
           capabilityStatus: "available",
-          retryable: true,
-          questions: [],
+          questions: [
+            {
+              id: "time",
+              promptKey: "home.chooser.q.time",
+              options: [
+                { id: "under_20", labelKey: "home.chooser.a.under20" },
+                { id: "about_40", labelKey: "home.chooser.a.about40" },
+              ],
+            },
+          ],
         };
       },
       async loadQuickChooserSuggestions() {
@@ -517,8 +525,16 @@ describe("ContextualHomePage", () => {
       async getQuickChooserDefinition() {
         return {
           capabilityStatus: "available",
-          retryable: true,
-          questions: [],
+          questions: [
+            {
+              id: "time",
+              promptKey: "home.chooser.q.time",
+              options: [
+                { id: "under_20", labelKey: "home.chooser.a.under20" },
+                { id: "about_40", labelKey: "home.chooser.a.about40" },
+              ],
+            },
+          ],
         };
       },
       async loadQuickChooserSuggestions() {
@@ -682,12 +698,14 @@ describe("ContextualHomePage", () => {
     await act(async () => {
       second.resolve({
         capabilityStatus: "available",
-        retryable: true,
         questions: [
           {
             id: "only",
             promptKey: "home.chooser.q.time",
-            options: [{ id: "under_20", labelKey: "home.chooser.a.under20" }],
+            options: [
+              { id: "under_20", labelKey: "home.chooser.a.under20" },
+              { id: "about_40", labelKey: "home.chooser.a.about40" },
+            ],
           },
         ],
       });
@@ -701,7 +719,6 @@ describe("ContextualHomePage", () => {
     await act(async () => {
       first.resolve({
         capabilityStatus: "available",
-        retryable: true,
         questions: [
           {
             id: "stale",
@@ -711,6 +728,7 @@ describe("ContextualHomePage", () => {
                 id: "use_what_i_have",
                 labelKey: "home.chooser.a.useWhatIHave",
               },
+              { id: "ok_to_buy", labelKey: "home.chooser.a.okToBuy" },
             ],
           },
         ],
@@ -767,8 +785,16 @@ describe("ContextualHomePage", () => {
       async getQuickChooserDefinition() {
         return {
           capabilityStatus: "available",
-          retryable: true,
-          questions: [],
+          questions: [
+            {
+              id: "time",
+              promptKey: "home.chooser.q.time",
+              options: [
+                { id: "under_20", labelKey: "home.chooser.a.under20" },
+                { id: "about_40", labelKey: "home.chooser.a.about40" },
+              ],
+            },
+          ],
         };
       },
       async loadQuickChooserSuggestions() {
@@ -795,5 +821,38 @@ describe("ContextualHomePage", () => {
       "not_implemented",
     );
     expect(screen.queryByTestId("chooser-retry")).not.toBeInTheDocument();
+  });
+
+  it("fails closed for invalid runtime definitions without blanking the home", async () => {
+    const user = userEvent.setup();
+    const base = createMockContextualHomeAdapter({ scenario: "default" });
+    const adapter: ContextualHomeAdapter = {
+      loadMenuSource: (q) => base.loadMenuSource(q),
+      loadInventorySource: (q) => base.loadInventorySource(q),
+      loadProfileSource: (q) => base.loadProfileSource(q),
+      getQuickChooserDefinition: async () =>
+        ({
+          capabilityStatus: "available",
+          questions: [],
+        }) as unknown as HomeQuickChooserDefinition,
+      loadQuickChooserSuggestions: (q) => base.loadQuickChooserSuggestions(q),
+    };
+    renderHome({ adapter });
+    expect(
+      await screen.findByTestId("home-candidate-mock-menu-lentil-stew"),
+    ).toBeInTheDocument();
+    await user.click(await screen.findByTestId("home-open-chooser"));
+    expect(screen.getByTestId("quick-chooser")).toHaveAttribute(
+      "data-capability",
+      "temporarily_unavailable",
+    );
+    expect(
+      screen.getByText(/Could not open the quick chooser/i),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("chooser-cancel")).toBeInTheDocument();
+    expect(screen.getByTestId("chooser-retry")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("home-candidate-mock-menu-lentil-stew"),
+    ).toBeInTheDocument();
   });
 });

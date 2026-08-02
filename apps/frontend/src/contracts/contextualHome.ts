@@ -186,13 +186,31 @@ export interface HomeQuickChooserOption {
   labelKey: string;
 }
 
+/**
+ * Option set for a chooser question. Runtime validation requires at least two
+ * options; the type permits additional options after the required pair.
+ */
+export type HomeQuickChooserOptions = readonly [
+  HomeQuickChooserOption,
+  HomeQuickChooserOption,
+  ...HomeQuickChooserOption[],
+];
+
 /** Quick-chooser question with localized prompt and option set. */
 export interface HomeQuickChooserQuestion {
   id: string;
   /** Localization key for the question prompt. */
   promptKey: string;
-  options: HomeQuickChooserOption[];
+  options: HomeQuickChooserOptions;
 }
+
+/**
+ * Exactly one or two questions — the accepted quick-chooser depth.
+ * TypeScript construction cannot express zero or three+ questions here.
+ */
+export type HomeQuickChooserQuestions =
+  | readonly [HomeQuickChooserQuestion]
+  | readonly [HomeQuickChooserQuestion, HomeQuickChooserQuestion];
 
 /**
  * Quick-chooser capability outcome.
@@ -204,25 +222,32 @@ export type HomeQuickChooserCapabilityStatus =
   | "not_implemented";
 
 /**
- * Quick-chooser definition. Answers remain request-scoped in the UI and must
- * not mutate profile, menu, inventory, or shopping.
+ * Discriminated quick-chooser definition.
+ * Answers remain request-scoped and must not mutate profile/menu/inventory.
  *
- * - `available` — questions may be answered;
- * - `temporarily_unavailable` — show failure copy + Retry (`retryable: true`);
- * - `not_implemented` — permanent gap (production until PLAN-0021); no Retry.
+ * Impossible under ordinary TypeScript construction:
+ * - available with zero or more than two questions;
+ * - unavailable variants carrying questions;
+ * - temporary unavailable with `retryable: false`;
+ * - not implemented with `retryable: true`.
  */
-export interface HomeQuickChooserDefinition {
-  capabilityStatus: HomeQuickChooserCapabilityStatus;
-  /**
-   * Whether Retry is meaningful when capability is not available.
-   * Production permanent-unavailable adapters set false with `not_implemented`.
-   * Transient definition failures set true with `temporarily_unavailable`.
-   */
-  retryable: boolean;
-  /** Localization key for unavailable/temporary failure copy when applicable. */
-  statusReasonKey?: string;
-  questions: HomeQuickChooserQuestion[];
-}
+export type HomeQuickChooserDefinition =
+  | {
+      capabilityStatus: "available";
+      questions: HomeQuickChooserQuestions;
+    }
+  | {
+      capabilityStatus: "temporarily_unavailable";
+      retryable: true;
+      statusReasonKey: string;
+      questions: readonly [];
+    }
+  | {
+      capabilityStatus: "not_implemented";
+      retryable: false;
+      statusReasonKey?: string;
+      questions: readonly [];
+    };
 
 /**
  * Greeting presentation model derived from safe session fields + injected clock.

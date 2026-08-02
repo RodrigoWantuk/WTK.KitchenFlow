@@ -108,6 +108,7 @@ CI fails when the OpenAPI snapshot, package output, or frontend mirror drift.
 - Authenticated contextual home lives under `/app/hoje` (mock-backed in prototype/test; unavailable sources in production until PLAN-0021).
 - Production home adapters set `capabilityStatus: "not_implemented"` and `retryable: false` so permanent capability gaps do not show misleading Retry.
 - Quick chooser classifies resolved suggestion statuses (`ready`/`empty` complete; failed/unavailable do not emit completion telemetry).
+- Chooser definitions are a discriminated union (exactly 1–2 questions when available) with runtime normalization before UI state.
 - Titles/labels use `HomeDisplayText` (`catalog` | `literal`) via `renderHomeText` for PLAN-0021-ready dynamic names without inventing live DTOs.
 - Public entry demo CTA respects `prefers-reduced-motion`; unknown/missing `matchMedia` uses conservative `auto` scrolling.
 - Production does not fall back to mock pantry data, mock home fixtures, or prototype `localStorage` auth.

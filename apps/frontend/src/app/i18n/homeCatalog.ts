@@ -98,6 +98,7 @@ export const REQUIRED_HOME_I18N_KEYS = [
   "home.chooser.definitionFailed",
   "home.chooser.loadFailed",
   "home.chooser.invalidResult",
+  "home.chooser.invalidDefinition",
   "home.noSuggestions",
   "home.fixture.menu.lentilStew",
   "home.fixture.menu.missingGarlic",
@@ -199,6 +200,8 @@ export const homeCatalogs: Record<ProductionLocale, Catalog> = {
       "Não foi possível carregar as sugestões. Tente de novo.",
     "home.chooser.invalidResult":
       "Resposta inválida da escolha rápida. Tente de novo ou cancele.",
+    "home.chooser.invalidDefinition":
+      "Não foi possível abrir a escolha rápida. Tente de novo.",
     "home.noSuggestions":
       "Nenhuma sugestão elegível agora. Você pode abrir a despensa ou tentar a escolha rápida.",
     "home.fixture.menu.lentilStew": "Ensopado de lentilha (sintético)",
@@ -324,6 +327,8 @@ export const homeCatalogs: Record<ProductionLocale, Catalog> = {
     "home.chooser.loadFailed": "Could not load suggestions. Please try again.",
     "home.chooser.invalidResult":
       "Invalid quick-chooser response. Retry or cancel.",
+    "home.chooser.invalidDefinition":
+      "Could not open the quick chooser. Please try again.",
     "home.noSuggestions":
       "No eligible suggestions right now. You can open the pantry or try the quick chooser.",
     "home.fixture.menu.lentilStew": "Lentil stew (synthetic)",
@@ -453,6 +458,8 @@ export const homeCatalogs: Record<ProductionLocale, Catalog> = {
       "No se pudieron cargar las sugerencias. Inténtalo de nuevo.",
     "home.chooser.invalidResult":
       "Respuesta inválida de la elección rápida. Reintenta o cancela.",
+    "home.chooser.invalidDefinition":
+      "No se pudo abrir la elección rápida. Inténtalo de nuevo.",
     "home.noSuggestions":
       "No hay sugerencias elegibles ahora. Puedes abrir la despensa o probar la elección rápida.",
     "home.fixture.menu.lentilStew": "Guiso de lentejas (sintético)",

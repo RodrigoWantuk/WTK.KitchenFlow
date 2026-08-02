@@ -15,6 +15,7 @@ import { buildHomeGreeting, readBrowserTimeZone } from "./dayPart";
 import { useContextualHome } from "./ContextualHomeProvider";
 import { QuickChooser } from "./QuickChooser";
 import { renderHomeText } from "./renderHomeText";
+import { normalizeHomeQuickChooserDefinition } from "./validateHomeQuickChooserDefinition";
 
 function CandidateCard({
   item,
@@ -427,7 +428,7 @@ export function ContextualHomePage({
           signal,
         });
         if (!isCurrent(generation)) return;
-        setChooserDef(chooser);
+        setChooserDef(normalizeHomeQuickChooserDefinition(chooser));
       } catch (err) {
         if (signal.aborted || !isCurrent(generation)) return;
         if (err instanceof DOMException && err.name === "AbortError") return;
