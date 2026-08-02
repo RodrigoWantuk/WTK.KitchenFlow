@@ -4,17 +4,27 @@ on:
   push:
     paths:
       - "apps/frontend/**"
+      - "packages/api-client/**"
+      - "packages/contracts/openapi/**"
+      - "scripts/contracts/**"
       - "scripts/frontend/**"
       - "docs/evidence/plan-0015/**"
+      - "docs/evidence/plan-0016/**"
       - "docs/plans/PLAN-0015-remediate-frontend-baseline.md"
+      - "docs/plans/PLAN-0016-implement-production-session-and-inventory-frontend.md"
       - "docs/plan-status.md"
       - ".github/workflows/frontend.yml"
   pull_request:
     paths:
       - "apps/frontend/**"
+      - "packages/api-client/**"
+      - "packages/contracts/openapi/**"
+      - "scripts/contracts/**"
       - "scripts/frontend/**"
       - "docs/evidence/plan-0015/**"
+      - "docs/evidence/plan-0016/**"
       - "docs/plans/PLAN-0015-remediate-frontend-baseline.md"
+      - "docs/plans/PLAN-0016-implement-production-session-and-inventory-frontend.md"
       - "docs/plan-status.md"
       - ".github/workflows/frontend.yml"
 
@@ -34,6 +44,13 @@ jobs:
           cache-dependency-path: apps/frontend/yarn.lock
       - name: Install
         run: yarn install --frozen-lockfile
+      - name: Install API client package
+        working-directory: packages/api-client
+        run: yarn install --frozen-lockfile
+      - name: Generated API client drift check
+        run: yarn check:api-client-drift
+      - name: Generated API client typecheck
+        run: yarn typecheck:api-client
       - name: Typecheck
         run: yarn typecheck
       - name: Lint

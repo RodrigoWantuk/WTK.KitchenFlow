@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { PreparationRouteRepository } from "@/contracts/preparation";
+import type { InventoryRepository } from "@/adapters/live/inventoryTypes";
 import type { SessionAdapter } from "@/app/session/types";
 import type { FrontendMode } from "./mode";
 import type { ShoppingRequirementProjection } from "@/contracts/preparation";
@@ -11,6 +12,8 @@ import type { ShoppingRequirementProjection } from "@/contracts/preparation";
 export interface FrontendRuntime {
   mode: FrontendMode;
   sessionAdapter: SessionAdapter;
+  /** Live inventory repository for production; prototype may inject a stub. */
+  inventoryRepository: InventoryRepository;
   preparationRouteRepository: PreparationRouteRepository;
   /** When false, ScenarioBar and scenario tooling must not render. */
   enableScenarioBar: boolean;

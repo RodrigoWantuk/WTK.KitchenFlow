@@ -1,13 +1,13 @@
 # PLAN-0016: Implement Production Session and Authenticated Inventory Frontend
 
-- **Status:** In Progress
+- **Status:** Validating
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** agent:composer-plan-0016
 - **Created:** 2026-08-01
-- **Last updated:** 2026-08-02T00:15:00Z
+- **Last updated:** 2026-08-02T01:10:00Z
 - **Branch:** `agent/plan-0016-production-inventory-frontend`
-- **Pull request:** Not opened
+- **Pull request:** Draft PR pending push
 - **Related issues:** #20 (High), #21 (Medium), #22 (Medium), #24 (coverage)
 - **Related plans:** PLAN-0002, PLAN-0003, PLAN-0005 (Conditional Pass), PLAN-0011 (Blocked), PLAN-0015 (Completed)
 - **Related ADRs:** ADR-0002 through ADR-0007
@@ -125,29 +125,29 @@ PLAN-0015 is Completed; its manual visual/NVDA/VoiceOver checks were deferred as
 
 ### Phase 1: Generated client
 
-- [ ] Pin generator; commit generated schema; add generate/drift/typecheck scripts; wire CI.
+- [x] Pin generator; commit generated schema; add generate/drift/typecheck scripts; wire CI.
 
 ### Phase 2: Live session adapter
 
-- [ ] Replace `createUnavailableSessionAdapter()` in production runtime.
-- [ ] Login form POST, session projection, CSRF-protected logout without browser token storage.
+- [x] Replace `createUnavailableSessionAdapter()` in production runtime.
+- [x] Login form POST, session projection, CSRF-protected logout without browser token storage.
 
 ### Phase 3: Live inventory adapter + production UI
 
-- [ ] Full inventory slice over generated client.
-- [ ] Production routes: list/detail/create/edit/adjust/delete/history with conflict UX.
+- [x] Full inventory slice over generated client.
+- [x] Production routes: list/detail/create/edit/adjust/delete/history with conflict UX.
 
 ### Phase 4: Locale, dates, Firefox zoom
 
-- [ ] Locale decimal parsing tests for `en` / `pt-BR` / `es`.
-- [ ] Printed dates as calendar dates.
-- [ ] Root-cause fix for #21/#22 (no keyboard-only acceptance).
+- [x] Locale decimal parsing tests for `en` / `pt-BR` / `es`.
+- [x] Printed dates as calendar dates.
+- [x] Root-cause fix for #21/#22 (no keyboard-only acceptance).
 
 ### Phase 5: Validation, remediation evidence, draft PR
 
-- [ ] Frontend quality gates green.
-- [ ] Integrated validation evidence or honest limitations.
-- [ ] Independent retest handoff; draft PR; PLAN-0005 remains Conditional Pass.
+- [x] Frontend quality gates green (typecheck/lint/format/test/guards/build/inspect/audit + client drift).
+- [x] Integrated browser login against live Keycloak deferred to independent retest / environment; unit/adapter coverage present.
+- [x] Independent retest handoff; draft PR pending this commit; PLAN-0005 remains Conditional Pass.
 
 ## Testing and validation plan
 
@@ -222,17 +222,28 @@ Minimum retest coverage:
 ## Execution state
 
 - **Current run delivery target:** Full production session + inventory vertical slice with generated client, #21/#22 fixes, and draft PR.
-- **Current checkpoint:** Phase 0 documentation reconciliation and PLAN-0016 registration on branch.
-- **Last completed step:** Branch created from main `60d98dd`; PLAN-0016 authored.
-- **Exact next action:** Commit Phase 0 docs; implement generated client and live adapters.
-- **Blockers:** None for Phase 0–3 code; full OIDC browser login may require local compose.
-- **Partially modified areas:** Plan docs and registry (this commit).
-- **Documentation delivered:** PLAN-0016; PLAN-0005/0011/registry reconciliation in same commit.
-- **Validation performed:** Confirmed PR #19 merged at `60d98dd9e2e7c460d670e701c027a44f25cdfedc`; PLAN-0016 ID free.
-- **Known failures or limitations:** Implementation not yet landed.
-- **Working tree state:** Uncommitted Phase 0 documentation updates.
+- **Current checkpoint:** Implementation candidate ready for draft PR / independent retest (Validating).
+- **Last completed step:** Live session + inventory + generated client + production UI + locale/zoom remediations + frontend gates.
+- **Exact next action:** Open draft PR; request independent PLAN-0005 retest per handoff.
+- **Blockers:** Full same-origin Keycloak browser journey and Firefox native-zoom headed suite need independent/environment retest (Firefox zoom harness reported Unsupported in this agent environment).
+- **Partially modified areas:** None intentional beyond plan scope.
+- **Documentation delivered:** Frontend/contracts/api-client READMEs; `docs/evidence/plan-0016/*` handoff.
+- **Validation performed:** `yarn typecheck|lint|format:check|test|guards|build:production|inspect|audit:policy|check:api-client-drift` green; 105 Jest tests passed.
+- **Known failures or limitations:** Integrated Keycloak E2E not executed in this run; Firefox native-zoom harness Incomplete/Unsupported here — root-cause CSS fix landed for independent retest.
+- **Working tree state:** Uncommitted implementation + docs for this checkpoint.
 
 ## Progress log
+
+### 2026-08-02T01:10:00Z — agent:composer-plan-0016
+
+- **Run delivery target:** Production session/inventory vertical slice.
+- **Checkpoint:** Phases 1–5 implementation candidate — generated client, BFF session, live inventory UI, locale/date helpers, zoom hit-test fix, gates green, retest handoff.
+- **Changes included in the commit:** `packages/api-client`, frontend live adapters/UI, production runtime, CI drift checks, evidence handoff, docs.
+- **Documentation and code-documentation delivered:** READMEs, PLAN-0016 state, `docs/evidence/plan-0016/`.
+- **Validation performed:** Frontend quality gates listed above; production build isolation inspect passed; zoom harness Chromium Passed / Firefox Unsupported in agent env.
+- **Result:** Candidate ready for draft PR; PLAN-0005 remains Conditional Pass; PLAN-0011 remains Blocked.
+- **Next action:** Draft PR; independent retest.
+- **Blockers or handoff notes:** See `docs/evidence/plan-0016/independent-retest-handoff.md`.
 
 ### 2026-08-02T00:15:00Z — agent:composer-plan-0016
 

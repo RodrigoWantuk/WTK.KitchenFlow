@@ -141,7 +141,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         )}
       </header>
 
-      <div className="mx-auto flex max-w-7xl gap-8 px-4 pb-28 pt-6 md:px-8 md:pb-10">
+      <div className="mx-auto flex max-w-7xl gap-8 px-4 pb-32 pt-6 md:px-8 md:pb-10">
         {/* Sidebar (desktop) */}
         <aside className="sticky top-24 hidden h-fit w-56 shrink-0 md:block">
           <nav className="flex flex-col gap-1">

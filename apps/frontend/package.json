@@ -45,6 +45,7 @@
     "lodash": "4.18.1",
     "lucide-react": "0.516.0",
     "next-themes": "0.4.6",
+    "openapi-fetch": "0.14.0",
     "react": "19.0.0",
     "react-day-picker": "8.10.1",
     "react-dom": "19.0.0",
@@ -75,6 +76,9 @@
     "guard:build-mode": "node scripts/guard-build-mode.js",
     "inspect:production-bundle": "node scripts/inspect-production-bundle.js",
     "audit:policy": "node scripts/audit-policy.js",
+    "generate:api-client": "yarn --cwd ../../packages/api-client generate",
+    "check:api-client-drift": "yarn --cwd ../../packages/api-client check:drift",
+    "typecheck:api-client": "yarn --cwd ../../packages/api-client typecheck",
     "smoke:browser": "node scripts/browser-smoke-matrix.js",
     "smoke:browser:install": "playwright install --with-deps chromium",
     "smoke:browser:ci": "SMOKE_MANAGE_SERVER=1 SMOKE_TRACE=1 node scripts/browser-smoke-matrix.js"

@@ -9,12 +9,23 @@ export type SessionStatus =
   | "expired"
   | "unavailable";
 
+/**
+ * Safe session projection for production UI. Never includes OIDC tokens.
+ */
 export interface SessionState {
   status: SessionStatus;
   /** Internal KitchenFlow user id when authenticated; never an OIDC token. */
   internalUserId?: string | null;
   /** CSRF token from GET /api/v1/session when available. */
   csrfToken?: string | null;
+  displayName?: string | null;
+  language?: string | null;
+  timeZone?: string | null;
+  measurementSystem?: string | null;
+  profileExists?: boolean;
+  profilePercentComplete?: number | null;
+  adultDeclarationState?: string | null;
+  supportedLocales?: string[];
 }
 
 /**

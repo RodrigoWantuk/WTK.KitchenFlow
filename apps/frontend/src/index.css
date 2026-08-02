@@ -97,15 +97,24 @@
     opacity: 0.35;
   }
 
+  /*
+   * Avoid hover transforms on interactive cards: Firefox native zoom ~200%
+   * mis-hit-tests transformed ancestors (Cook CTA / pantry links).
+   */
   .card-hover {
     transition:
-      transform 0.25s ease,
       box-shadow 0.25s ease,
       border-color 0.25s ease;
   }
   .card-hover:hover {
-    transform: translateY(-2px);
     box-shadow: 0 12px 30px -18px hsl(var(--foreground) / 0.18);
+  }
+
+  /* Keep sticky/fixed chrome from covering focused/scrolled interactive targets. */
+  [data-testid^="sugg-open-"],
+  [data-testid^="pantry-item-link-"],
+  [data-testid^="inventory-lot-link-"] {
+    scroll-margin-block: 6.5rem;
   }
 
   .pill {

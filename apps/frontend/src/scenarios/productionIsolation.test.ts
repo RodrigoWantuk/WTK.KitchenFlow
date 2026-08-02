@@ -81,6 +81,11 @@ describe("production isolation", () => {
       sharedMockPreparationRouteRepository,
     );
     expect(runtime.shoppingRequirementProjections).toEqual([]);
+    const sessionSource = readSrc("app/runtime/createProductionRuntime.ts");
+    expect(sessionSource).toMatch(/createBffSessionAdapter/);
+    expect(sessionSource).not.toMatch(/createUnavailableSessionAdapter/);
+    expect(sessionSource).toMatch(/createLiveInventoryRepository/);
+    expect(sessionSource).not.toMatch(/createMockSessionAdapter/);
   });
 
   it("prototype composition root explicitly wires mock tooling", () => {
