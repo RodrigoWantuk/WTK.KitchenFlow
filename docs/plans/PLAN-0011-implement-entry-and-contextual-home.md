@@ -5,9 +5,9 @@
 - **Priority:** High
 - **Owner:** Cursor agent (PLAN-0011 Phase 1 + Phase 2)
 - **Created:** 2026-07-30
-- **Last updated:** 2026-08-02T14:12:42Z
+- **Last updated:** 2026-08-02T14:46:55Z
 - **Branch:** `agent/plan-0011-contextual-home`
-- **Pull request:** Draft to be opened on this branch
+- **Pull request:** [PR #34](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/34) (draft)
 - **Binding amendment:** [`PLAN-0011-amendment-2026-08-02-next-execution.md`](PLAN-0011-amendment-2026-08-02-next-execution.md)
 - **Related documentation plan:** PLAN-0010
 - **Related frontend plan:** PLAN-0014 (on main); remediation [PLAN-0015](PLAN-0015-remediate-frontend-baseline.md) (**Completed**; manual visual/NVDA/VoiceOver deferred as non-blocking)
@@ -240,18 +240,28 @@ Automated coverage must include:
 
 ## Execution state
 
-- **Current checkpoint:** Phase 1 + Phase 2 implemented on `agent/plan-0011-contextual-home`. Status **In Progress** / Validating pending CI + draft PR.
-- **Run delivery target:** One reviewable frontend slice: public entry, mock-backed authenticated home with four ordered sources and quick chooser, localization (`en`/`pt-BR`/`es`), accessibility/responsive coverage, production isolation (no home fixtures in production), tests, docs, and draft PR. Exclude Phase 3/4 (PLAN-0021).
-- **Delivered outcome:** Public entry + contextual home presentation, mock/unavailable adapters, catalogs, Jest coverage, production isolation guards, smoke/zoom script updates, frontend docs + evidence handoff.
-- **Acceptance criteria resolved:** Phase 1/2 product surfaces implemented locally; CI and draft PR still required before Completed.
-- **Files or areas materially changed:** `apps/frontend` entry/home features, contracts, adapters, runtime composition, i18n catalogs, smoke/zoom scripts, README/docs/evidence, plan + registry.
-- **Documentation delivered:** `apps/frontend/docs/contextual-home/README.md`, `docs/evidence/plan-0011/phase1-phase2-handoff.md`, README updates, plan/registry.
-- **Validation performed:** Local `typecheck`, `lint`, `format:check`, full Jest, guards, production/prototype builds, `inspect:production-bundle`, `audit:policy`, api-client drift/typecheck Passed. Browser smoke CI pending on this packaging.
-- **Known failures or limitations:** Live home adapters remain PLAN-0021; production home shows controlled unavailable sources.
+- **Current checkpoint:** Phase 1 + Phase 2 delivered on tip . Draft PR #34. Status **Validating** (CI green; remains draft for owner review).
+- **Run delivery target:** Phase 1 public entry + Phase 2 mock-backed contextual home with tests, isolation, docs, draft PR.
+- **Delivered outcome:** Public entry, contextual home (mock/unavailable adapters), i18n, Jest, smoke, Firefox zoom CTA retarget, evidence, draft PR #34 requesting RodrigoWantuk.
+- **Acceptance criteria resolved:** Amended Phase 1/2 acceptance criteria satisfied for code/tests/CI on this tip; owner review/merge still pending; live sources remain PLAN-0021.
+- **Files or areas materially changed:** Frontend entry/home features, adapters, catalogs, smoke/zoom scripts, docs/evidence, plan/registry.
+- **Documentation delivered:** Frontend contextual-home README, evidence handoff, plan/registry, PR body.
+- **Validation performed:** Local gates Passed; Frontend  /  success; PLAN-0005  success on tip .
+- **Known failures or limitations:** Production home sources unavailable until PLAN-0021; PR remains draft.
 - **Blockers:** None for amended Phase 1 + Phase 2.
 - **Partially modified areas:** None.
-- **Exact next action:** Push branch, open draft PR requesting `RodrigoWantuk`, wait for required workflows, then mark Validating/Completed only after green CI.
-- **Working tree state:** Implementation ready to commit and push.
+- **Exact next action:** Owner reviews draft PR #34; agent must not approve/merge; after owner ready-for-review/merge decision, mark Completed only when criteria allow.
+- **Working tree state:** Clean relative to tip  after this packaging commit.
+
+## Progress log
+
+### 2026-08-02T14:46:55Z — Cursor agent (PLAN-0011)
+
+- **Checkpoint:** CI green on tip ; draft PR #34 updated with workflow IDs.
+- **Changes included in the commit:** Plan/registry/evidence tip + CI metadata packaging.
+- **Validation performed:** Frontend + PLAN-0005 success on tip.
+- **Next action:** Owner review of draft PR #34 (no agent merge).
+- **Blockers or handoff notes:** PLAN-0021 for live sources.
 
 ## Progress log
 

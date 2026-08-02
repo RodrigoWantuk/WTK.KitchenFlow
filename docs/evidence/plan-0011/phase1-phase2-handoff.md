@@ -8,7 +8,9 @@ Live source contracts remain PLAN-0021.
 ## Functional tip
 
 Recorded after local gates on branch `agent/plan-0011-contextual-home`.
-Exact SHA is filled in the plan/registry at commit time.
+Exact tip SHA: 
+
+CI: Frontend , PLAN-0005 .
 
 ## Local validation (commands)
 
