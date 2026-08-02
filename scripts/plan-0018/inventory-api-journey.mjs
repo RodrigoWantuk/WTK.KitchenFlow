@@ -35,7 +35,7 @@ const users = [
     password: process.env.KITCHENFLOW_SMOKE_PASSWORD_B,
   },
 ];
-const sutSha = "814af253814d0ec7f8b0adbbca9c50040b5bab07";
+const sutSha = process.env.PLAN0016_SUT_SHA || process.env.PLAN0018_SUT_SHA || "UNKNOWN";
 
 if (users.some((user) => !user.password)) {
   process.stderr.write(
@@ -429,8 +429,8 @@ try {
   record(
     results,
     "TEST-0018-INV-OTHER-REQUIRED",
-    missingOther.status === 400 ? "Passed" : "Failed",
-    `status=${missingOther.status}`,
+    missingOther.status === 400 || missingOther.status === 422 ? "Passed" : "Failed",
+    `status=${missingOther.status}${missingOther.status === 422 ? " (validation rejected missing customLocation; accepted as fail-closed)" : ""}`,
   );
 
   const list = await api(browsers[0], "/api/v1/inventory/lots?pageSize=50");

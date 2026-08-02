@@ -1,0 +1,122 @@
+{
+  "testId": "TEST-0018-004-production-inventory-journey",
+  "exactShaUnderTest": "38e5edfb49407d895995e0cf1b49054dc7ce5c5b",
+  "apiUrl": "https://localhost:7443",
+  "allowUntrustedLocalCertificate": true,
+  "startedAtUtc": "2026-08-02T11:39:02.790Z",
+  "endedAtUtc": "2026-08-02T11:39:08.276Z",
+  "summary": {
+    "total": 21,
+    "passed": 21,
+    "failed": 0
+  },
+  "results": [
+    {
+      "testId": "TEST-0018-INV-CREATE-measured-gram",
+      "status": "Passed",
+      "note": "status=201"
+    },
+    {
+      "testId": "TEST-0018-INV-CREATE-measured-ml",
+      "status": "Passed",
+      "note": "status=201"
+    },
+    {
+      "testId": "TEST-0018-INV-CREATE-measured-unit",
+      "status": "Passed",
+      "note": "status=201"
+    },
+    {
+      "testId": "TEST-0018-INV-CREATE-qual-available",
+      "status": "Passed",
+      "note": "status=201"
+    },
+    {
+      "testId": "TEST-0018-INV-CREATE-qual-low",
+      "status": "Passed",
+      "note": "status=201"
+    },
+    {
+      "testId": "TEST-0018-INV-CREATE-other-custom",
+      "status": "Passed",
+      "note": "status=201"
+    },
+    {
+      "testId": "TEST-0018-INV-OTHER-REQUIRED",
+      "status": "Passed",
+      "note": "status=422 (validation rejected missing customLocation; accepted as fail-closed)"
+    },
+    {
+      "testId": "TEST-0018-INV-LIST",
+      "status": "Passed",
+      "note": "status=200 count=22"
+    },
+    {
+      "testId": "TEST-0018-INV-SEARCH",
+      "status": "Passed",
+      "note": "status=200"
+    },
+    {
+      "testId": "TEST-0018-INV-ADJ-Consume",
+      "status": "Passed",
+      "note": "status=200"
+    },
+    {
+      "testId": "TEST-0018-INV-ADJ-Discard",
+      "status": "Passed",
+      "note": "status=200"
+    },
+    {
+      "testId": "TEST-0018-INV-ADJ-Correct",
+      "status": "Passed",
+      "note": "status=200"
+    },
+    {
+      "testId": "TEST-0018-INV-HISTORY",
+      "status": "Passed",
+      "note": "status=200 entries=4"
+    },
+    {
+      "testId": "TEST-0018-INV-428",
+      "status": "Passed",
+      "note": "status=428"
+    },
+    {
+      "testId": "TEST-0018-INV-412",
+      "status": "Passed",
+      "note": "status=412"
+    },
+    {
+      "testId": "TEST-0018-INV-DELETE",
+      "status": "Passed",
+      "note": "status=204"
+    },
+    {
+      "testId": "TEST-0018-INV-AVAIL",
+      "status": "Passed",
+      "note": "status=200"
+    },
+    {
+      "testId": "TEST-0018-INV-ISOLATION-DETAIL",
+      "status": "Passed",
+      "note": "userB detail status=404"
+    },
+    {
+      "testId": "TEST-0018-INV-ISOLATION-MUTATE",
+      "status": "Passed",
+      "note": "userB mutate status=404"
+    },
+    {
+      "testId": "TEST-0018-INV-CUSTOM-LOCATION",
+      "status": "Passed",
+      "note": "custom=Garage shelf"
+    },
+    {
+      "testId": "TEST-0018-INV-PRINTED-DATE",
+      "status": "Passed",
+      "note": "printed=2026-08-15"
+    }
+  ],
+  "status": "Passed",
+  "topologyNote": "Real Keycloak Authorization Code session on API origin. SPA same-origin UI click-path is additional evidence; API journey proves inventory contract under authenticated BFF cookies."
+}

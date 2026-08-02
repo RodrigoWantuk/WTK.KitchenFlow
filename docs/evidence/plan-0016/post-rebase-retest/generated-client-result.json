@@ -1,0 +1,21 @@
+{
+  "testId": "TEST-0016-024-generated-client",
+  "issue": 24,
+  "exactShaUnderTest": "38e5edfb49407d895995e0cf1b49054dc7ce5c5b",
+  "packagingTipSha": "38e5edfb49407d895995e0cf1b49054dc7ce5c5b",
+  "startedAtUtc": "2026-08-02T11:45:00Z",
+  "commands": [
+    "yarn generate",
+    "yarn generate",
+    "yarn check:drift",
+    "yarn typecheck"
+  ],
+  "workingDirectory": "packages/api-client",
+  "summary": {
+    "doubleGenerateClean": true,
+    "driftCheck": "Passed",
+    "typecheck": "Passed"
+  },
+  "status": "Passed",
+  "note": "Frontend CI on the same execution tip also exercises generate/drift gates."
+}

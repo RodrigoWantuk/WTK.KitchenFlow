@@ -8,7 +8,7 @@
 - **Last updated:** 2026-08-01T20:30:00Z
 - **Branch:** `agent/plan-0005-test-inventory-slice`
 - **Pull request:** [PR #19](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/19) — **merged**
-- **Delivery:** Merged by owner at `60d98dd9e2e7c460d670e701c027a44f25cdfedc` (2026-08-01T20:25:11Z). Final outcome remains **Conditional Pass**. Residual findings High #20, Medium #21/#22, coverage #24 are remediated under PLAN-0016 and require an **independent** retest before any Pass upgrade.
+- **Delivery:** Merged by owner at `60d98dd9e2e7c460d670e701c027a44f25cdfedc` (2026-08-01T20:25:11Z). Final outcome remains **Conditional Pass**. Residual findings High #20, Medium #21/#22, coverage #24, and High #26 were independently **Pass**-verified under PLAN-0016 tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b` and issues closed; this plan’s Conditional Pass string is not rewritten.
 - **System under test:** Integrated `main` after PR #18 merge (`b94abd9a83fe29d88b095e3e9a42f10d01c05414`); merge commit of this plan on main is `60d98dd9e2e7c460d670e701c027a44f25cdfedc`
 - **Related implementation plans:** PLAN-0003, PLAN-0014 (on main), PLAN-0015 (Completed via PR #18), PLAN-0016 (remediation; In Progress)
 - **Related issues:** #20 (High), #21 (Medium), #22 (Medium), #24 (coverage Blocked)
@@ -510,7 +510,7 @@ Do not fix implementation in the independent test branch unless explicitly reass
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0005 **Completed** / **Conditional Pass**. Merged via PR #19 at `60d98dd9e2e7c460d670e701c027a44f25cdfedc`. Evidence-generation head `cabd2c23addd3c8ab741b5075ec6d33f37f9e359` (clean raw-only artifacts).
+- **Current checkpoint:** PLAN-0005 **Completed** / **Conditional Pass**. Merged via PR #19 at `60d98dd9e2e7c460d670e701c027a44f25cdfedc`. Evidence-generation head `cabd2c23addd3c8ab741b5075ec6d33f37f9e359` (clean raw-only artifacts). Residual remediations independently Pass under PLAN-0016 tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b` (see `docs/evidence/plan-0016/post-rebase-retest/`); issues #20/#21/#22/#24/#26 closed.
 - **Last completed step:** Separated raw P0/P1 uploads from repository docs/historical files; pinned measured metrics from that tip; owner merged PR #19.
 - **Exact next action:** Independent retest after PLAN-0016 remediation candidate. Do not rewrite outcome to Pass from implementation-only evidence. Do not start PLAN-0011 until that retest accepts remediations.
 - **Defects:** Critical 0; High 1 (#20); Medium 2 (#21/#22); coverage #24.

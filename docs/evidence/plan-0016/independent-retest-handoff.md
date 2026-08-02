@@ -3,72 +3,37 @@
 ## Purpose
 
 PLAN-0018 independently tested tip `814af25` and concluded **Fail** (#21/#22 pointer; #26 isolation).
-This handoff covers the **new PLAN-0016 remediation candidate**. Implementation-agent evidence is **not** final authority.
+That Fail evidence under `docs/evidence/plan-0018/` is **immutable**.
 
-## System under test
+This handoff now records the **Completed** post-rebase Pass tip for PLAN-0016.
+
+## System under test (single exact tip)
 
 - Branch: `agent/plan-0016-production-inventory-frontend`
-- Draft PR: [#25](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/25) (keep Draft)
-- Base: `main`
-- Prior failed candidate: `814af253814d0ec7f8b0adbbca9c50040b5bab07`
-- Remediation PR tip (Validating head): `2f0d24adc44bf5f1ba61f8e43402d38aa39e201f`
-- Product remediation tip (same code): `68c04fc236f30d3cab0fdd444242cc5fdeecb251`
-- Workflow IDs: `docs/evidence/plan-0016/remediation-after-plan-0018/workflow-ids.md`
-- Diff since PLAN-0018 tip: `git diff 814af253814d0ec7f8b0adbbca9c50040b5bab07...2f0d24adc44bf5f1ba61f8e43402d38aa39e201f`
-- PLAN-0018 Fail evidence (immutable): `docs/evidence/plan-0018/`
+- PR: [#25](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/25) (ready for review; awaiting owner merge)
+- Base: `main` (`1115ba4` absorbed — PLAN-0017 via PR #31; PLAN-0008 via PR #29; PR #23 closed/superseded)
+- **Exact tip SHA:** `38e5edfb49407d895995e0cf1b49054dc7ce5c5b`
+- Retest/CI execution tip: `38e5edfb49407d895995e0cf1b49054dc7ce5c5b`
+- Prior Fail candidate: `814af253814d0ec7f8b0adbbca9c50040b5bab07`
+- Pass evidence: `docs/evidence/plan-0016/post-rebase-retest/`
 
-## Required independent coverage
+## Independent coverage result
 
-| Case | Issue | What to verify |
+| Case | Issue | Result |
 | --- | --- | --- |
-| Foreign adjust fabricated If-Match | #26 | User B adjust on A’s lot → **404** (not 412); same as random GUID |
-| Foreign/missing across ops | #26 | detail, adjust (fabricated/stale/missing If-Match), update, delete, history, availability — foreign ≡ nonexistent |
-| Owner concurrency | #26 regression | Owner missing If-Match → **428**; stale → **412**; current → success |
-| Cook CTA pointer @ Firefox native ~200% | #21 | Real pointer Passed; keyboard separate |
-| Pantry item pointer @ Firefox native ~200% | #22 | Real pointer Passed; keyboard separate |
-| Production inventory journey | #20 | Still live BFF path (do not close without owner) |
-| Generated client | #24 | Drift/generate green (do not close without owner) |
-| Production isolation | — | No mock/fixture leakage in production bundle |
-| Adjacent smoke | — | Frontend CI + browser smoke on exact tip |
+| Foreign adjust fabricated If-Match → 404 | #26 | Passed |
+| Foreign/missing across ops ≡ nonexistent | #26 | Passed |
+| Owner missing If-Match 428; stale 412 | #26 | Passed |
+| Cook CTA Firefox native ~200% pointer + keyboard | #21 | Passed |
+| Pantry item Firefox native ~200% pointer + keyboard | #22 | Passed |
+| Production inventory journey (BFF/Keycloak/API/PostgreSQL) | #20 | Passed (21/21) |
+| Generated client generate/drift/typecheck | #24 | Passed |
+| Production isolation / no mock fallback | — | Passed |
 
-## Firefox native zoom procedure (fail-closed)
+## Outcome recording
 
-```bash
-cd apps/frontend
-BUILD_PATH=build-prototype yarn build:prototype
-BUILD_PATH=build-production yarn build:production   # if required by shared scripts
-DISPLAY=:99 HOME=/root XAUTHORITY= yarn validate:firefox-native-zoom
-# or: node ../../scripts/plan-0005/firefox-zoom-pointer-keyboard.cjs
-```
-
-Requirements:
-
-- Headed Firefox (not Chromium)
-- Native `Ctrl+0` / `Ctrl+Plus` via xdotool (no CSS zoom, no viewport resize substitute)
-- Measured `widthRatio` ≈ 2.0
-- Pointer and keyboard independent; keyboard Pass must not upgrade pointer
-- Unsupported/Skipped/incomplete → Fail
-
-## Backend isolation reproduction (#26)
-
-Reproduce PLAN-0018 steps:
-
-1. User A creates a lot; capture `lotId` + ETag.
-2. User B `GET` lot → 404.
-3. User B `POST .../adjustments` with fabricated `If-Match: "v1"` → must be **404** (was 412 on `814af25`).
-4. Repeat for missing If-Match, owner ETag, update, delete, history; compare to random GUID.
-
-Automated coverage exists in `ForeignAndNonexistentLotMutationsAreNondisclosingForPreconditionVariants` — still re-run independently.
-
-## Frontend / contracts commands
-
-Same as prior handoff (`yarn` gates under `apps/frontend` and `packages/api-client`, including double generate).
-
-## Outcome recording rules
-
-- Do **not** treat implementation evidence as Pass.
-- Keep PLAN-0005 **Conditional Pass** until independent acceptance.
-- Keep PLAN-0011 **Blocked**.
-- Do not close #21/#22/#26/#20/#24 without owner/independent authority.
-- PLAN-0017 is already on main (PR #31); PR #23 is closed/superseded. Do not rewrite PLAN-0018 Fail → Pass.
-- Agents must not approve/merge PR #25 or enable auto-merge.
+- PLAN-0016: **Completed**
+- PLAN-0018 Fail on `814af25`: **not** rewritten to Pass
+- PLAN-0005: historical **Conditional Pass** retained; residual issues reconciled closed
+- PLAN-0011: **Ready**
+- Agents must not approve/merge PR #25 or enable auto-merge

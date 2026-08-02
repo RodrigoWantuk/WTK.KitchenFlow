@@ -29,7 +29,7 @@
 - Removed CSS `transform` on `.card-hover:hover` (known Firefox zoom hit-test mismatch with transformed ancestors).
 - Added `scroll-margin-block` for Cook CTA / pantry / inventory links.
 - Increased AppShell bottom padding slightly for fixed mobile nav clearance.
-- Independent headed Firefox retest still required (see handoff). Chromium / CSS `zoom` / keyboard-only success are **not** proof.
+- Independent headed Firefox retest: **Passed** on tip `38e5edf` / exact tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b` (`docs/evidence/plan-0016/post-rebase-retest/firefox-zoom-pointer-keyboard.json`).
 
 ## Locale decimals and printed dates
 

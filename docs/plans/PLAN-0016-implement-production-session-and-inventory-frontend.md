@@ -1,15 +1,16 @@
 # PLAN-0016: Implement Production Session and Authenticated Inventory Frontend
 
-- **Status:** Validating
+- **Status:** Completed
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** agent:composer-plan-0016
 - **Created:** 2026-08-01
-- **Last updated:** 2026-08-02T03:00:00Z
+- **Last updated:** 2026-08-02T12:05:00Z
+- **Exact tip SHA:** `38e5edfb49407d895995e0cf1b49054dc7ce5c5b`
 - **Branch:** `agent/plan-0016-production-inventory-frontend`
-- **Pull request:** [Draft PR #25](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/25)
-- **Related issues:** #20 (High), #21 (Medium), #22 (Medium), #24 (coverage), #26 (High)
-- **Related plans:** PLAN-0002, PLAN-0003, PLAN-0005 (Conditional Pass), PLAN-0011 (Blocked), PLAN-0015 (Completed)
+- **Pull request:** [PR #25](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/25) (ready for review; awaiting owner merge)
+- **Related issues:** #20, #21, #22, #24, #26 (reconciled closed after post-rebase Pass)
+- **Related plans:** PLAN-0002, PLAN-0003, PLAN-0005 (Conditional Pass historical; residuals reconciled), PLAN-0011 (Ready), PLAN-0015 (Completed), PLAN-0018 (Fail immutable)
 - **Related ADRs:** ADR-0002 through ADR-0007
 - **Dependencies:** PLAN-0005 merged Conditional Pass on main (`60d98dd9e2e7c460d670e701c027a44f25cdfedc`); committed OpenAPI `packages/contracts/openapi/kitchenflow-v1.json`
 - **Plan ID collision handoff:** Former Draft PR #23 collision is resolved: AI recipe-protocol work shipped as [PLAN-0017](PLAN-0017-define-ai-recipe-artifact-protocol.md) via [PR #31](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/31) (PR #23 closed as superseded). PLAN-0016 remains exclusively PR #25.
@@ -147,13 +148,13 @@ PLAN-0015 is Completed; its manual visual/NVDA/VoiceOver checks were deferred as
 - [x] Locale decimal parsing unit tests for `en` / `pt-BR` / `es`.
 - [x] Printed dates as calendar dates (helpers present).
 - [x] Localize inventory/history enums and timestamps; resource-completeness tests for new keys.
-- [ ] #21/#22 CSS remediation remains a hypothesis until independent Firefox native-zoom retest.
+- [x] #21/#22 Firefox native-zoom pointer + keyboard independently Passed at ~200% (`widthRatio=2.0`) on tip `38e5edf`.
 
 ### Phase 5: Validation, remediation evidence, draft PR
 
 - [x] Frontend CI fully green on remediation tip `4d2afd0` (`30727899304` / `30727897692`) and Validating tip `aab6162` (`30728066476` / `30728064641`); prior failure `30725997092` superseded.
 - [x] Component/journey tests for list/form/detail + production route proof (126 Jest tests locally + CI).
-- [x] Independent retest handoff kept truthful; PLAN-0005 Conditional Pass; PLAN-0011 Blocked.
+- [x] Post-rebase independent retest Pass on `38e5edf` / exact tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b`; PLAN-0011 unblocked to Ready.
 
 ## Testing and validation plan
 
@@ -199,18 +200,18 @@ Document API base path (same-origin `/api/v1`), regeneration commands, and retes
 - [x] Production no longer uses `createUnavailableSessionAdapter()` (wired via `createProductionRuntime` + isolation test).
 - [x] Production inventory journey no longer renders `FeatureUnavailable` for `/app/despensa*` (route test).
 - [x] Generated TypeScript client is reproducible and protected by drift checks (local `generate` ×2 + `check:drift`).
-- [ ] Production login/session work through the BFF against integrated Keycloak topology; no OIDC tokens browser-visible (unit coverage present; integrated E2E pending independent retest).
-- [ ] Inventory list/detail/create/update/adjust/delete/history against live backend + PostgreSQL (UI + adapter tests present; integrated E2E pending).
-- [x] CSRF, idempotency, ETag preserved in client/UI; stale 412/428 never silently retried (component tests).
+- [x] Production login/session work through the BFF against integrated Keycloak topology; no OIDC tokens browser-visible (unit + post-rebase Keycloak journey).
+- [x] Inventory list/detail/create/update/adjust/delete/history against live backend + PostgreSQL (21/21 journey + UI/adapter tests).
+- [x] CSRF, idempotency, ETag preserved in client/UI; stale 412/428 never silently retried (component tests + journey).
 - [x] Locale decimals correct in `en`, `pt-BR`, `es`; printed dates timezone-independent (unit + form tests).
-- [x] Prototype fixtures/mock auth absent from production bundle (`inspect:production-bundle` local pass).
-- [ ] Firefox native-zoom pointer and keyboard checks pass independently for #21/#22.
-- [x] Frontend quality gates pass on the exact PR head in GitHub Actions (`30728066476` / `30728064641` success on `aab6162`; remediation tip `4d2afd0` also green).
-- [x] Issues #20/#24 have concrete remediation implementation; #21/#22 have CSS remediation **hypothesis** only (not proven).
-- [x] PLAN-0005 remains Conditional Pass pending independent retest.
-- [x] PLAN-0011 remains Blocked with corrected dependencies.
-- [x] Exact independent-retest handoff exists (`docs/evidence/plan-0016/independent-retest-handoff.md`).
-- [x] Draft PR body describes current evidence without overclaims (refreshed with CI tip).
+- [x] Prototype fixtures/mock auth absent from production bundle (`inspect:production-bundle` local + CI).
+- [x] Firefox native-zoom pointer and keyboard checks pass independently for #21/#22.
+- [x] Backend / Frontend / PLAN-0005 gates green on retest tip `38e5edf` (`30745906193` / `30745906161` / `30745906171`).
+- [x] Issues #20/#21/#22/#24/#26 remediated and independently verified Pass on the rebased tip.
+- [x] PLAN-0005 historical Conditional Pass retained; residual issues reconciled closed after Pass.
+- [x] PLAN-0011 unblocked to Ready.
+- [x] Exact independent-retest evidence exists (`docs/evidence/plan-0016/post-rebase-retest/`).
+- [x] PR #25 body synced to exact tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b` and marked ready for review (no agent merge).
 
 ## Independent retest handoff
 
@@ -227,17 +228,34 @@ Minimum retest coverage:
 
 ## Execution state
 
-- **Current run delivery target:** Remediate independent PLAN-0018 Fail findings (#21/#22 pointer; #26 isolation) then re-validate.
-- **Current checkpoint:** **Validating** — PR tip `2f0d24a` and product tip `68c04fc` have green Backend, Frontend, and PLAN-0005 workflows (implementation CI only).
-- **Last independently tested SHA:** `814af253814d0ec7f8b0adbbca9c50040b5bab07` (PLAN-0018 Fail — immutable)
-- **Remediation candidate SHA:** `2f0d24adc44bf5f1ba61f8e43402d38aa39e201f` (PR head); product changes through `68c04fc`
-- **Last completed step:** #26/#21/#22 remediations + evidence + CI IDs recorded; PR #25 remains Draft.
-- **Exact next action:** Independent retest of tip `2f0d24a` (do not reuse implementation evidence as final authority); keep issues open; owner merge only after retest.
-- **Blockers:** None for coding. Owner merge blocked until independent retest Pass/Conditional Pass.
-- **Known failures or limitations:** PLAN-0018 Fail on `814af25` stands; PLAN-0005 Conditional Pass until independent acceptance; PLAN-0011 Blocked; #21/#22/#26/#20/#24 remain open; PR #23 closed/superseded by PLAN-0017 PR #31.
-- **Working tree state:** Remediation candidate pushed; PLAN-0018 Fail evidence immutable.
+- **Current run delivery target:** Completed — rebased tip independently retested Pass; PR ready for owner review.
+- **Current checkpoint:** **Completed** at exact tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b`.
+- **Last independently tested SHA (Pass):** `38e5edfb49407d895995e0cf1b49054dc7ce5c5b` (retest commands + CI on product tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b`)
+- **Prior Fail SHA (immutable):** `814af253814d0ec7f8b0adbbca9c50040b5bab07` (PLAN-0018)
+- **Last completed step:** Post-rebase Pass evidence; PLAN-0016 Completed; issues reconciled; PR #25 ready for review.
+- **Exact next action:** Owner reviews and merges PR #25 (agents must not approve, auto-merge, or merge).
+- **Blockers:** None for PLAN-0016. Owner merge only.
+- **Known failures or limitations:** PLAN-0018 Fail evidence on `814af25` remains historical; manual NVDA/VoiceOver/visual remain deferred non-blocking; PLAN-0005 historical Conditional Pass not rewritten.
+- **Working tree state:** Completion packaging committed on tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b`.
 
 ## Progress log
+
+### 2026-08-02T12:05:00Z — agent:composer-plan-0016
+
+- **Checkpoint:** **Completed** after post-rebase independent retest Pass.
+- **Exact tip:** `38e5edfb49407d895995e0cf1b49054dc7ce5c5b` (retest/CI execution tip `38e5edf`).
+- **Coverage:** #26 foreign≡nonexistent + owner 428/412; #21/#22 Firefox native zoom pointer+keyboard; #20 Keycloak journey 21/21; #24 generate/drift/typecheck; production isolation.
+- **CI on `38e5edf`:** Backend `30745906193`; Frontend `30745906161`; PLAN-0005 `30745906171`.
+- **Evidence:** `docs/evidence/plan-0016/post-rebase-retest/`.
+- **Status moves:** PLAN-0016 Completed; PLAN-0011 Ready; issues #20/#21/#22/#24/#26 reconciled closed; PR #25 ready for review.
+- **Next action:** Owner merge only.
+
+### 2026-08-02T11:30:00Z — agent:composer-plan-0016
+
+- **Checkpoint:** Merged `origin/main` (`1115ba4`) into PLAN-0016 branch; resolved `docs/plan-status.md`.
+- **Main absorbed:** PLAN-0017 Validating (PR #31); PLAN-0008 thumbnail amendment (PR #29); former PR #23 collision closed/superseded.
+- **Status:** Validating pending single-tip Backend/Frontend/PLAN-0005 + independent retest.
+- **Next action:** Push merge tip; revalidate CI; execute independent retest coverage; mark Completed + ready for review.
 
 ### 2026-08-02T04:45:00Z — agent:composer-plan-0016
 
