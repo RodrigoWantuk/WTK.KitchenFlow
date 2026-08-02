@@ -252,3 +252,126 @@ A change is complete only when:
 - unsupported behavior is not claimed.
 
 When an item cannot be completed, document the exact limitation and leave a truthful, resumable state.
+
+## 13. ## GitHub App workflow por host
+
+As instruções desta seção aplicam-se **somente quando o agente estiver rodando no host cujo hostname exato seja**:
+
+```text
+NOTEBOOK-DEB-RODRIGO
+```
+
+Antes de usar qualquer comando específico do GitHub App, confirme o hostname:
+
+```bash
+CURRENT_HOSTNAME="$(hostname)"
+printf 'Hostname atual: %s\n' "$CURRENT_HOSTNAME"
+```
+
+O fluxo especial está habilitado somente quando:
+
+```bash
+[[ "$(hostname)" == "NOTEBOOK-DEB-RODRIGO" ]]
+```
+
+### Quando o hostname for `NOTEBOOK-DEB-RODRIGO`
+
+Neste host estão disponíveis os scripts locais de autenticação do GitHub App.
+
+Para operações remotas do Git, use obrigatoriamente:
+
+```bash
+github-app-run git fetch origin
+github-app-run git pull --ff-only origin <branch>
+github-app-run git push --set-upstream origin HEAD
+```
+
+Quando disponíveis, estes atalhos também são válidos:
+
+```bash
+agent-git-remote fetch origin
+agent-git-remote pull --ff-only origin <branch>
+agent-git-remote push --set-upstream origin HEAD
+```
+
+Para operações com o GitHub CLI, use obrigatoriamente:
+
+```bash
+github-app-run gh <comando>
+```
+
+Ou, quando disponível:
+
+```bash
+agent-gh <comando>
+```
+
+Exemplos:
+
+```bash
+github-app-run gh pr create
+github-app-run gh pr view
+github-app-run gh pr checks
+github-app-run gh pr comment
+```
+
+Neste host:
+
+* operações remotas devem usar a identidade do GitHub App;
+* branches de trabalho devem usar o prefixo `agent/`;
+* o agente deve abrir ou atualizar um pull request;
+* `RodrigoWantuk` deve ser solicitado como revisor;
+* o agente nunca deve executar `gh pr merge`;
+* o agente nunca deve fazer push direto para a branch principal;
+* o agente nunca deve executar `gh auth login` ou `gh auth logout`;
+* o agente nunca deve exibir tokens, JWTs ou a chave privada do GitHub App.
+
+Operações locais não autenticadas continuam usando o Git normalmente:
+
+```bash
+git status
+git diff
+git add
+git commit
+git log
+git branch
+git switch
+```
+
+### Quando o hostname for diferente
+
+Se:
+
+```bash
+[[ "$(hostname)" != "NOTEBOOK-DEB-RODRIGO" ]]
+```
+
+então:
+
+* não presuma que `github-app-run`, `agent-gh` ou `agent-git-remote` existam;
+* não tente instalar, copiar ou recriar esses scripts automaticamente;
+* não tente acessar `~/.config/github-agent`;
+* não tente usar a identidade do GitHub App;
+* não execute operações remotas de escrita sem seguir as regras próprias do ambiente atual;
+* informe claramente que o fluxo de GitHub App está disponível somente no host `NOTEBOOK-DEB-RODRIGO`.
+
+A ausência dos comandos específicos em outro host não deve ser tratada como erro de configuração do repositório.
+
+### Verificação obrigatória antes de publicar
+
+Antes de qualquer `fetch`, `pull`, `push`, criação de PR ou alteração remota, execute logicamente o equivalente a:
+
+```bash
+if [[ "$(hostname)" == "NOTEBOOK-DEB-RODRIGO" ]]; then
+    echo "GitHub App workflow habilitado."
+else
+    echo "GitHub App workflow indisponível neste host." >&2
+    exit 1
+fi
+```
+
+Não use o fluxo especial apenas porque o sistema é Linux, Debian, pertence ao usuário `rodrigo` ou contém os scripts no `PATH`. A condição autorizadora é exclusivamente o hostname exato:
+
+```text
+NOTEBOOK-DEB-RODRIGO
+```
