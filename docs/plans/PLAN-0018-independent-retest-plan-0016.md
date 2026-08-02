@@ -8,7 +8,7 @@
 - **Last updated:** 2026-08-02T03:00:00Z
 - **Result:** **Fail**
 - **Branch:** `agent/plan-0018-independent-retest-plan-0016`
-- **Pull request:** (opening)
+- **Pull request:** [Draft PR #27](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/27)
 - **System under test:** Draft PR #25 / `agent/plan-0016-production-inventory-frontend` @ `814af253814d0ec7f8b0adbbca9c50040b5bab07`
 - **Base at PLAN-0016 start:** `60d98dd9e2e7c460d670e701c027a44f25cdfedc`
 - **Related plans:** PLAN-0005 (Conditional Pass, unchanged), PLAN-0016 (returned to In Progress), PLAN-0011 (Blocked)
@@ -42,8 +42,8 @@ Passed areas include generated client (#24), production isolation / live invento
 - [x] Firefox native-zoom pointer and keyboard results recorded for #21 and #22.
 - [x] Production isolation results recorded.
 - [x] `docs/evidence/plan-0018/final-assessment.md` states Fail with justification.
-- [ ] Draft PR targeting `agent/plan-0016-production-inventory-frontend` opened with evidence only.
-- [ ] Non-approving review left on PR #25 linking PLAN-0018 evidence.
+- [x] Draft PR targeting `agent/plan-0016-production-inventory-frontend` opened with evidence only ([#27](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/27)).
+- [x] REQUEST_CHANGES review left on PR #25 linking PLAN-0018 evidence.
 - [x] PLAN-0005 / PLAN-0016 / PLAN-0011 statuses updated per outcome rules.
 
 ## Evidence package
@@ -59,6 +59,11 @@ Passed areas include generated client (#24), production isolation / live invento
 - **Working tree state:** Dirty with evidence/docs pending commit.
 
 ## Progress log
+
+### 2026-08-02T03:10:00Z — agent:independent-retest-plan-0018
+
+- **Checkpoint:** Draft PR #27 opened; REQUEST_CHANGES on #25; issue comments posted.
+- **Next action:** Owner/implementer remediate on PLAN-0016; no further PLAN-0018 product changes.
 
 ### 2026-08-02T03:00:00Z — agent:independent-retest-plan-0018
 
