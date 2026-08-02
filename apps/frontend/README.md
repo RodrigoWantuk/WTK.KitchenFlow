@@ -2,13 +2,16 @@
 
 Official KitchenFlow frontend package living at `apps/frontend`.
 
-## Authority
+## Authority and current state
 
 - This directory is the **only** official frontend source for KitchenFlow.
 - Imported from Emergent snapshot `69f798f66b7987c4ed785c52c90a5539bf46f52e` (see [`docs/development/emergent-frontend-import-provenance.md`](../../docs/development/emergent-frontend-import-provenance.md)).
 - `kitchen-emergent` is a historical snapshot. There is **no** bidirectional sync.
 - Emergent and Lovable remain optional generation tools only (ADR-0007).
-- After PLAN-0014 merge, remediations land through **PLAN-0015**. This package is **not** declared production-ready until PLAN-0015 is owner-approved.
+- PLAN-0015 remediation and browser gates are completed.
+- PLAN-0016 is merged and supplies the production BFF session plus authenticated inventory routes.
+- The broader initial release is not production-complete. Contextual home and other undeveloped product areas must show truthful unavailable/prototype states until their plans deliver live behavior.
+- The immediate frontend plan is PLAN-0011 Phase 1 + Phase 2: public entry and mock-backed contextual home.
 
 ## Stack
 
@@ -23,7 +26,7 @@ Set `REACT_APP_FRONTEND_MODE` at build/start time (validated):
 | Mode | Script | Behavior |
 |---|---|---|
 | `prototype` | `yarn start` / `yarn build:prototype` | ScenarioBar, fixtures, mock session allowed |
-| `production` | `yarn build:production` | No scenario tooling; unavailable adapters; no local `authed` |
+| `production` | `yarn build:production` | No scenario tooling; live session/inventory adapters; unavailable adapters for undeveloped areas |
 | `test` | `yarn test` | Prototype-compatible composition for Jest |
 
 Composition roots live under `src/app/runtime/`. Providers require injected adapters — no silent mock defaults in production.
@@ -61,28 +64,26 @@ Playwright is a **direct** `devDependency`. Do not rely on global installs or ab
 cd apps/frontend
 yarn install --frozen-lockfile
 yarn smoke:browser:install
-yarn start   # terminal 1 — prototype mode
-yarn smoke:browser   # terminal 2
+yarn start            # terminal 1 — prototype mode
+yarn smoke:browser    # terminal 2
 ```
 
 CI uses `yarn smoke:browser:ci` (`SMOKE_MANAGE_SERVER=1`) after the quality job. Any `Failed` / `Blocked` / `Not executed` mandatory automated check exits non-zero.
 
-Reports land under `docs/browser-smoke/` (JSON + HTML; failure screenshots/traces when enabled).
-
-**Manual** browser validation (for example real browser zoom 200%) is tracked separately in PLAN-0015 and is not claimed Passed by the automated matrix.
+Historical reports and plan-specific evidence live under the documented evidence paths. New feature plans must produce their own current evidence and must not reuse an old report as proof.
 
 ## Mock vs live adapters
 
 | Path | Role |
 |---|---|
 | `src/adapters/mock/` | Fixture-backed presentation projections for **prototype/test** only |
-| `src/adapters/live/` | Live inventory repository and related production boundaries |
+| `src/adapters/live/` | Live inventory repository and future production boundaries |
 | `src/generated/api-client/` | CRA mirror of `@kitchenflow/api-client` (do not edit; regenerate) |
 | `src/contracts/` | Presentation models |
 | `src/features/inventory/` | Production inventory screens |
 | `src/app/session/` | `SessionAdapter` boundary (`createBffSessionAdapter` in production; mock in prototype) |
 
-Presentation components consume projections. They must **not** perform authoritative inventory, reservation, or unit-conversion arithmetic.
+Presentation components consume projections. They must **not** perform authoritative inventory, reservation, unit-conversion, recommendation, quota, or safety arithmetic.
 
 ## Generated OpenAPI client
 
@@ -90,7 +91,7 @@ Canonical package: `packages/api-client` (generator `openapi-typescript` 7.9.1 +
 
 ```bash
 cd apps/frontend
-yarn generate:api-client   # regenerate + sync CRA mirror
+yarn generate:api-client
 yarn check:api-client-drift
 yarn typecheck:api-client
 ```
@@ -104,7 +105,7 @@ CI fails when the OpenAPI snapshot, package output, or frontend mirror drift.
 - Production inventory routes live under `/app/despensa` (list/detail/create/edit/adjust/history).
 - Production does not fall back to mock pantry data or prototype `localStorage` auth.
 - Same-origin API base path: `/api/v1` (proxy or reverse-proxy in integrated environments).
-- Contextual home and other product areas may still show controlled unavailable states.
+- Contextual home and other undeveloped product areas use controlled unavailable states until their live plans are implemented.
 
 ### Local integrated run (production mode)
 
@@ -115,12 +116,16 @@ CI fails when the OpenAPI snapshot, package output, or frontend mirror drift.
 ## Dependency triage
 
 - Vulnerabilities / allowlist: [`docs/dependency-vulnerability-triage.md`](docs/dependency-vulnerability-triage.md) and `audit-allowlist.json`
-- Incompatible Yarn resolutions (individual table): [`docs/dependency-resolution-triage.md`](docs/dependency-resolution-triage.md)
+- Incompatible Yarn resolutions: [`docs/dependency-resolution-triage.md`](docs/dependency-resolution-triage.md)
 
 ## CI
 
-GitHub Actions workflow: `.github/workflows/frontend.yml` — required jobs **quality** and **browser-smoke** (blocking; no `continue-on-error` / `|| true`).
+GitHub Actions workflow: `.github/workflows/frontend.yml` — required jobs **quality** and **browser-smoke** are blocking.
 
 ## TypeScript
 
 Application sources under `src/` must be TypeScript (`.ts`/`.tsx`). Enforce with `yarn guard:ts-only`.
+
+## Agent environment
+
+Before any remote Git or GitHub operation, read the final section of [`../../AGENTS.md`](../../AGENTS.md). On the exact host `NOTEBOOK-DEB-RODRIGO`, use the documented GitHub App wrappers, an `agent/` branch, a draft PR, and request `RodrigoWantuk` review. Never push directly to `main`, merge, or expose credentials.

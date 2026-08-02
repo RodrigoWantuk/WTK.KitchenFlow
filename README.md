@@ -13,9 +13,18 @@ KitchenFlow is not primarily a recipe catalog. Inventory, shopping, optional men
 
 ## Project status
 
-KitchenFlow has completed its initial product and architecture discovery. The accepted foundation is documented and must guide all implementation and testing plans.
+KitchenFlow has completed its initial product and architecture discovery and now has production-shaped authenticated foundations on `main`:
 
-No production application has been implemented yet. Do not interpret accepted architecture as completed software.
+- backend-managed OIDC browser session and internal user ownership;
+- owner-isolated PostgreSQL inventory with concurrency, idempotency, history, migrations, OpenAPI, and operational tests;
+- profile, household context, preferences/restrictions, equipment, and completeness backend;
+- generated TypeScript API client;
+- production session and authenticated inventory frontend routes;
+- prototype/production isolation and blocking frontend/backend CI gates.
+
+The full initial release is **not** implemented. Public entry, contextual home, production profile UI, recipes, planning, shopping, guided cooking, reconciliation, AI Gateway, persistent jobs, notifications, privacy workflows, generated media, billing, and launch operations remain plan-driven future work.
+
+Do not interpret accepted architecture or prototype surfaces as completed production capability.
 
 ## Initial release direction
 
@@ -39,7 +48,7 @@ See [`docs/product/initial-release.md`](docs/product/initial-release.md).
 
 ## Accepted architecture
 
-- React and TypeScript frontend generated and evolved through Lovable;
+- React and TypeScript frontend under monorepo authority;
 - independent .NET 10 / ASP.NET Core backend;
 - modular monolith with separately scalable .NET workers;
 - REST and OpenAPI-generated TypeScript contracts;
@@ -59,7 +68,7 @@ Accepted decisions are indexed in [`docs/architecture/decisions/README.md`](docs
 
 ```text
 apps/                 Independently deployable applications
-  frontend/            React and TypeScript Lovable frontend
+  frontend/            React and TypeScript frontend
   backend/             ASP.NET Core API and worker solution
 packages/             Versioned contracts and reusable technical packages
 docs/                 Product, domain, architecture, AI, security, testing, operations, and plans
@@ -84,6 +93,8 @@ Before changing the repository, read [`AGENTS.md`](AGENTS.md), [`docs/README.md`
 The full 2026-07-28 discovery is preserved in [`docs/discovery/2026-07-28-stakeholder-discovery.md`](docs/discovery/2026-07-28-stakeholder-discovery.md). Future agents must not reconstruct requirements from chat history or silently replace accepted behavior with a smaller interpretation.
 
 Every nontrivial agent change is plan-driven. Before every agent-created commit, update the active plan and the central registry with the state produced by that commit.
+
+The final section of `AGENTS.md` contains mandatory hostname-specific GitHub App rules. Agents must read and follow that section before remote Git or GitHub operations.
 
 ## Language
 
