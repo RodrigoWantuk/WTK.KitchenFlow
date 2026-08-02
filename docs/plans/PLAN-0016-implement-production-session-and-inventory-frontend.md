@@ -228,15 +228,25 @@ Minimum retest coverage:
 ## Execution state
 
 - **Current run delivery target:** Remediate independent PLAN-0018 Fail findings (#21/#22 pointer; #26 isolation) then re-validate.
-- **Current checkpoint:** #26 ownership-before-precondition fix landed; Firefox pointer root cause diagnosis next.
+- **Current checkpoint:** #26 + Firefox #21/#22 root-cause fixes implemented; full backend/frontend/CI validation in progress.
 - **Last independently tested SHA:** `814af253814d0ec7f8b0adbbca9c50040b5bab07` (PLAN-0018 Fail — immutable)
-- **Last completed step:** #26 application ordering: owner-scoped load before If-Match; two-user nondisclosure regression + owner 428/412/200 preserved.
-- **Exact next action:** Diagnose Firefox native-zoom pointer hit-test (#21/#22) with headed Firefox + `elementFromPoint`; apply root-cause fix; fail-closed harness; full validation; then Validating handoff.
+- **Last completed step:** Firefox diagnosis + product/harness remediation; native zoom pointer+keyboard Passed locally (implementation evidence only).
+- **Exact next action:** Full backend + frontend gates + CI green on remediation tip; write evidence/handoff; move to Validating.
 - **Blockers:** None for coding. Owner merge blocked until independent retest Pass/Conditional Pass.
 - **Known failures or limitations:** #21/#22 pointer Failed at native 200% on `814af25`; #26 High isolation 412-vs-404 on `814af25`; PLAN-0005 Conditional Pass; PLAN-0011 Blocked; PR #23 untouched; issues remain open.
 - **Working tree state:** Uncommitted #26 backend changes; PLAN-0018 evidence must remain Fail.
 
 ## Progress log
+
+### 2026-08-02T03:50:00Z — agent:composer-plan-0016
+
+- **Checkpoint:** #21/#22 Firefox native-zoom pointer root cause + fix.
+- **#21 root cause:** Firefox full-page zoom elevates `devicePixelRatio` (1→2 at ~200%); Playwright `locator.click` mis-maps CSS centers so the pointer lands off-target (often on nearby chrome). `elementFromPoint(CSS center)` still hits the Cook CTA — product hit-test geometry is sound when the pointer lands correctly.
+- **#22 root cause:** Same DPR mapping defect, plus prototype `ScenarioBar` fixed FAB overlapped pantry card hit boxes when zoom induced the mobile breakpoint (`innerWidth < 768`).
+- **Product fix:** Move ScenarioBar into the sticky header (no fixed FAB overlay); keep no card hover transforms; strengthen scroll-margin for sticky header + bottom nav.
+- **Harness:** Fail-closed `yarn validate:firefox-native-zoom` — elementFromPoint gate + DPR-compensated real mouse click; pointer Fail exits non-zero; also updated `scripts/plan-0005/firefox-zoom-pointer-keyboard.cjs`.
+- **Local result matrix:** Cook pointer/keyboard Passed; Pantry pointer/keyboard Passed; `widthRatio=2.0`.
+- **Next action:** Full suite + CI; evidence under `docs/evidence/plan-0016/remediation-after-plan-0018/`.
 
 ### 2026-08-02T03:35:00Z — agent:composer-plan-0016
 

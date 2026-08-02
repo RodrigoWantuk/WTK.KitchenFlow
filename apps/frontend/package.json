@@ -82,7 +82,8 @@
     "typecheck:api-client": "yarn --cwd ../../packages/api-client typecheck",
     "smoke:browser": "node scripts/browser-smoke-matrix.js",
     "smoke:browser:install": "playwright install --with-deps chromium",
-    "smoke:browser:ci": "SMOKE_MANAGE_SERVER=1 SMOKE_TRACE=1 node scripts/browser-smoke-matrix.js"
+    "smoke:browser:ci": "SMOKE_MANAGE_SERVER=1 SMOKE_TRACE=1 node scripts/browser-smoke-matrix.js",
+    "validate:firefox-native-zoom": "node scripts/firefox-native-zoom-pointer-keyboard.cjs"
   },
   "browserslist": {
     "production": [

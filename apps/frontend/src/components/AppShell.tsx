@@ -116,6 +116,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <div className="ml-auto flex items-center gap-1">
             <LangSwitch />
             <ThemeToggle />
+            {/* Prototype ScenarioBar lives in the header — never as a fixed FAB over content. */}
+            {enableScenarioBar ? <ScenarioBar /> : null}
             <Button asChild variant="ghost" size="icon">
               <Link to="/app/ajustes" data-testid="nav-settings">
                 <SettingsIcon className="h-4 w-4" />
@@ -209,7 +211,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </div>
       </nav>
 
-      {enableScenarioBar ? <ScenarioBar /> : null}
       <Toaster />
     </div>
   );

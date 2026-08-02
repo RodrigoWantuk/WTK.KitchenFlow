@@ -98,8 +98,8 @@
   }
 
   /*
-   * Avoid hover transforms on interactive cards: Firefox native zoom ~200%
-   * mis-hit-tests transformed ancestors (Cook CTA / pantry links).
+   * No hover transforms on interactive cards: transformed ancestors diverge
+   * visual vs hit-test boxes under Firefox native zoom.
    */
   .card-hover {
     transition:
@@ -110,11 +110,15 @@
     box-shadow: 0 12px 30px -18px hsl(var(--foreground) / 0.18);
   }
 
-  /* Keep sticky/fixed chrome from covering focused/scrolled interactive targets. */
+  /*
+   * Scroll margins clear sticky header + mobile bottom nav when Firefox native
+   * zoom drops the layout viewport below the md breakpoint (bottom nav appears).
+   */
   [data-testid^="sugg-open-"],
   [data-testid^="pantry-item-link-"],
   [data-testid^="inventory-lot-link-"] {
-    scroll-margin-block: 6.5rem;
+    scroll-margin-top: 5.5rem;
+    scroll-margin-bottom: 6.5rem;
   }
 
   .pill {
