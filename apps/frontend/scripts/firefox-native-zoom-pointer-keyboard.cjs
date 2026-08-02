@@ -337,15 +337,21 @@ async function main() {
 
   const server = await startStaticServer(prototypeDir, port);
   const base = `http://127.0.0.1:${port}`;
+  const launchEnv = {
+    ...process.env,
+    HOME: process.env.PLAYWRIGHT_HOME || process.env.HOME || "/root",
+    DISPLAY: process.env.DISPLAY,
+  };
+  if (Object.prototype.hasOwnProperty.call(process.env, "PLAYWRIGHT_XAUTHORITY")) {
+    launchEnv.XAUTHORITY = process.env.PLAYWRIGHT_XAUTHORITY;
+  }
   const browser = await firefox.launch({
     headless: false,
     args: [`--width=${WINDOW.width}`, `--height=${WINDOW.height}`],
-    env: {
-      ...process.env,
-      HOME: process.env.PLAYWRIGHT_HOME || process.env.HOME || "/root",
-      XAUTHORITY: process.env.XAUTHORITY || "",
-      DISPLAY: process.env.DISPLAY,
+    firefoxUserPrefs: {
+      "security.sandbox.content.level": 0,
     },
+    env: launchEnv,
   });
   if (!String(browser.version()).length) {
     throw new Error("Firefox version unavailable — refusing Chromium substitute");

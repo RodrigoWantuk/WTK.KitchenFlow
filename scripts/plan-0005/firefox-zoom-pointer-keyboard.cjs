@@ -399,21 +399,32 @@ async function main() {
   }
 
   ensureBuild(prototypeDir, "prototype");
-  ensureBuild(productionDir, "production");
+  // Production build is not required for #21/#22 prototype surfaces; keep optional.
+  if (fs.existsSync(path.join(productionDir, "index.html"))) {
+    /* available for shared artifact layouts */
+  }
   fs.mkdirSync(path.join(evidenceDir, "reports"), { recursive: true });
 
   const server = await startStaticServer(prototypeDir, port);
   const base = `http://127.0.0.1:${port}`;
+  // Preserve xvfb-run XAUTHORITY by default. Set PLAYWRIGHT_XAUTHORITY="" only when the
+  // host XAUTHORITY file is unusable (e.g. owned by another user under sudo/root).
+  const launchEnv = {
+    ...process.env,
+    HOME: process.env.PLAYWRIGHT_HOME || process.env.HOME || "/root",
+    DISPLAY: process.env.DISPLAY,
+  };
+  if (Object.prototype.hasOwnProperty.call(process.env, "PLAYWRIGHT_XAUTHORITY")) {
+    launchEnv.XAUTHORITY = process.env.PLAYWRIGHT_XAUTHORITY;
+  }
   const browser = await firefox.launch({
     headless: false,
     args: [`--width=${WINDOW.width}`, `--height=${WINDOW.height}`],
-    env: {
-      ...process.env,
-      HOME: process.env.PLAYWRIGHT_HOME || process.env.HOME || "/root",
-      // Empty XAUTHORITY avoids Firefox refusing root when the file is owned by another user.
-      XAUTHORITY: process.env.PLAYWRIGHT_XAUTHORITY || "",
-      DISPLAY: process.env.DISPLAY
-    }
+    firefoxUserPrefs: {
+      // Avoid sandbox failures on some CI kernels (unshare EPERM).
+      "security.sandbox.content.level": 0,
+    },
+    env: launchEnv,
   });
   const context = await browser.newContext({ viewport: null });
   const page = await context.newPage();

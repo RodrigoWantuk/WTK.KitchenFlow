@@ -12,16 +12,18 @@ useDefault = true
 # Singular [allowlist] for compatibility with gitleaks-action's older bundled binary.
 # Do NOT add whole-commit allowlists; rewrite history instead of excepting leaked commits.
 [allowlist]
-description = "Allow only known Git object ID pin fields in PLAN-0005 evidence"
+description = "Allow only known Git object ID pin fields in PLAN-0005/PLAN-0018 evidence"
 regexTarget = "line"
 regexes = [
-  '''(?i)"openapi(Blob|ContractGitObjectId)"\s*:\s*"[a-f0-9]{40}"''',
+  '''(?i)"openapi(BlobSha|Blob|ContractGitObjectId)"\s*:\s*"[a-f0-9]{40}"''',
+  '''(?i)"(generated|mirror)SchemaBlobSha"\s*:\s*"[a-f0-9]{40}"''',
   '''(?i)"integratedMainSha"\s*:\s*"[a-f0-9]{40}"''',
   '''(?i)"headSha"\s*:\s*"[a-f0-9]{40}"''',
   '''(?i)"prHeadSha"\s*:\s*"[a-f0-9]{40}"''',
   '''(?i)"checkedOutCommitSha"\s*:\s*"[a-f0-9]{40}"''',
   '''(?i)"evidenceGenerationSha"\s*:\s*"[a-f0-9]{40}"''',
   '''(?i)"frontendImplementationSha"\s*:\s*"[a-f0-9]{40}"''',
+  '''(?i)"exactShaUnderTest"\s*:\s*"[a-f0-9]{40}"''',
   '''(?i)OpenAPI (blob|contract git object id):\s*`[a-f0-9]{40}`''',
   '''(?i)Integrated main SHA:\s*`[a-f0-9]{40}`''',
 ]

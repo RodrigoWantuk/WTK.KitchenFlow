@@ -146,6 +146,8 @@ print(json.dumps(report, indent=2))
 raise SystemExit(0 if status in {"Passed", "Blocked"} else 1)
 PY
   (cd apps/frontend && BUILD_PATH=build-prototype yarn build:prototype)
+  # Do not blank XAUTHORITY here — xvfb-run provides a valid authority cookie.
+  # Local root/sudo hosts may set PLAYWRIGHT_XAUTHORITY="" explicitly.
   node scripts/plan-0005/firefox-zoom-pointer-keyboard.cjs
 '
 

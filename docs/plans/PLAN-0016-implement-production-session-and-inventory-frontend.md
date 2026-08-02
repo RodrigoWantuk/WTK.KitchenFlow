@@ -238,6 +238,12 @@ Minimum retest coverage:
 
 ## Progress log
 
+### 2026-08-02T04:20:00Z — agent:composer-plan-0016
+
+- **Checkpoint:** CI remediation — gitleaks allowlist for PLAN-0018 Git blob SHA pins; Firefox harness preserves xvfb-run `XAUTHORITY` (CI `cannot open display` was from blanking authority).
+- **Prior CI:** Frontend green (`30730671764` / `30730670487`); Backend secret-scan failed on `openapiBlobSha`; PLAN-0005 P0 Firefox launch failed (`Authorization required` / blank XAUTHORITY).
+- **Next action:** Push fix; re-await Backend + PLAN-0005 + Frontend green; then Validating.
+
 ### 2026-08-02T04:05:00Z — agent:composer-plan-0016
 
 - **Checkpoint:** Local full validation + remediation evidence package (pre-CI).
