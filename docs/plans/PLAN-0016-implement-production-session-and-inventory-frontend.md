@@ -228,15 +228,25 @@ Minimum retest coverage:
 ## Execution state
 
 - **Current run delivery target:** Remediate independent PLAN-0018 Fail findings (#21/#22 pointer; #26 isolation) then re-validate.
-- **Current checkpoint:** #26 + Firefox #21/#22 root-cause fixes implemented; full backend/frontend/CI validation in progress.
+- **Current checkpoint:** Local full gates green for #26/#21/#22 remediation; awaiting GitHub Actions on pushed tip before **Validating**.
 - **Last independently tested SHA:** `814af253814d0ec7f8b0adbbca9c50040b5bab07` (PLAN-0018 Fail — immutable)
-- **Last completed step:** Firefox diagnosis + product/harness remediation; native zoom pointer+keyboard Passed locally (implementation evidence only).
-- **Exact next action:** Full backend + frontend gates + CI green on remediation tip; write evidence/handoff; move to Validating.
+- **Last completed step:** Evidence under `docs/evidence/plan-0016/remediation-after-plan-0018/`; independent retest handoff refreshed.
+- **Exact next action:** Push tip; confirm Frontend (+ relevant) workflows green; then mark Validating with workflow IDs; keep Draft; leave issues open.
 - **Blockers:** None for coding. Owner merge blocked until independent retest Pass/Conditional Pass.
 - **Known failures or limitations:** #21/#22 pointer Failed at native 200% on `814af25`; #26 High isolation 412-vs-404 on `814af25`; PLAN-0005 Conditional Pass; PLAN-0011 Blocked; PR #23 untouched; issues remain open.
 - **Working tree state:** Uncommitted #26 backend changes; PLAN-0018 evidence must remain Fail.
 
 ## Progress log
+
+### 2026-08-02T04:05:00Z — agent:composer-plan-0016
+
+- **Checkpoint:** Local full validation + remediation evidence package (pre-CI).
+- **Backend:** `dotnet test apps/backend/KitchenFlow.slnx -c Release` → 204 Passed (46/14/144).
+- **Frontend:** full gate list including smoke:browser:ci + validate:firefox-native-zoom → exit 0; matrix all Passed; widthRatio=2.0.
+- **API client:** double generate clean.
+- **Evidence:** `docs/evidence/plan-0016/remediation-after-plan-0018/`; handoff updated.
+- **Status:** still **In Progress** until GHA green on exact tip; then Validating.
+- **Next action:** Push; record workflow IDs; Validating.
 
 ### 2026-08-02T03:50:00Z — agent:composer-plan-0016
 

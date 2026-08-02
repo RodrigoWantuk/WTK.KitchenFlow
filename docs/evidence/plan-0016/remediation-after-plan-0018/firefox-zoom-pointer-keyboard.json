@@ -4,7 +4,7 @@
   "zoomTechnique": "native-ctrl-plus-xdotool",
   "cssZoomForbidden": true,
   "browserEngineRequired": "firefox",
-  "exactShaUnderTest": "818a068bd4a56186144114d0c8bf5cef3ffcb145",
+  "exactShaUnderTest": "ba812e4c486118eba4aa078abafa738555dabb33",
   "countingUnit": {
     "testId": "TEST-0005-109",
     "independentSubScenarios": [
@@ -16,7 +16,7 @@
     "note": "Each surface×modality is an independent sub-scenario; keyboard success does not upgrade pointer."
   },
   "note": "Pointer uses elementFromPoint gate + DPR-compensated Playwright mouse click (Firefox zoom raises devicePixelRatio). No locator.click, force, or keyboard fallback for pointer.",
-  "generatedAtUtc": "2026-08-02T03:20:45.668Z",
+  "generatedAtUtc": "2026-08-02T03:27:15.303Z",
   "zoomMeasurement": {
     "method": "native-ctrl-plus",
     "baselineInnerWidthAt100": 1162,
