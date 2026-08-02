@@ -1,14 +1,14 @@
 # PLAN-0016: Implement Production Session and Authenticated Inventory Frontend
 
-- **Status:** Validating
+- **Status:** Completed
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** agent:composer-plan-0016
 - **Created:** 2026-08-01
-- **Last updated:** 2026-08-02T13:10:00Z
-- **Exact tip SHA:** `85a1027a10d4b7e8caa64033bacf19666687852d`
+- **Last updated:** 2026-08-02T13:20:00Z
+- **Exact tip SHA:** 
 - **Branch:** `agent/plan-0016-production-inventory-frontend`
-- **Pull request:** [PR #25](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/25) (follow-up review remediation)
+- **Pull request:** [PR #25](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/25) (ready for review; awaiting owner merge)
 - **Related issues:** #20, #21, #22, #24, #26 (closed); PR #25 follow-up: semantic create fingerprint + persistent history-reload warning
 - **Related plans:** PLAN-0002, PLAN-0003, PLAN-0005 (Conditional Pass historical; residuals reconciled), PLAN-0011 (Ready), PLAN-0015 (Completed), PLAN-0018 (Fail immutable)
 - **Related ADRs:** ADR-0002 through ADR-0007
@@ -228,17 +228,25 @@ Minimum retest coverage:
 
 ## Execution state
 
-- **Current run delivery target:** Remediate PR #25 follow-up review findings (semantic create fingerprint; persistent history-reload warning) with regression tests and green CI.
-- **Current checkpoint:** **Validating** — local Backend 204, api-client, frontend gates (incl. Firefox zoom) green; awaiting exact-tip CI.
-- **Prior functional tip:** `df79be6493be07ed4a1ed9fd647a01c92a6c381c`
-- **Prior Fail SHA (immutable):** `814af253814d0ec7f8b0adbbca9c50040b5bab07` (PLAN-0018)
-- **Last completed step:** Normalized create-command fingerprint; independent lot/history reload that keeps `historyError` until history succeeds; regression tests green (28 inventory/catalog tests).
-- **Exact next action:** Push tip via agent-git-remote; await Backend/Frontend/PLAN-0005; mark Completed + update PR via agent-gh.
-- **Blockers:** Exact-tip CI pending. Do not keep Completed until follow-up validated.
-- **Known failures or limitations:** PLAN-0018 Fail evidence on `814af25` remains historical.
-- **Working tree state:** Follow-up remediation uncommitted.
+- **Current run delivery target:** Completed — PR #25 follow-up (semantic fingerprint + history reload) green on exact tip.
+- **Current checkpoint:** **Completed** at exact tip .
+- **Last independently validated remediation SHA:** 
+- **Prior Fail SHA (immutable):**  (PLAN-0018)
+- **Last completed step:** Semantic create fingerprint + persistent history-reload warning; CI green; PR ready for review.
+- **Exact next action:** Owner reviews and merges PR #25 (agents must not approve, auto-merge, or merge).
+- **Blockers:** None for PLAN-0016. Owner merge only.
+- **Known failures or limitations:** PLAN-0018 Fail evidence on  remains historical.
+- **Working tree state:** Exact tip .
 
 ## Progress log
+
+### 2026-08-02T13:20:00Z — agent:composer-plan-0016
+
+- **Checkpoint:** **Completed** after follow-up remediation CI green.
+- **Exact tip:** 
+- **CI:** Backend ; Frontend ; PLAN-0005 
+- **Evidence:** 
+- **Next action:** Owner merge only.
 
 ### 2026-08-02T13:00:00Z — agent:composer-plan-0016
 

@@ -22,9 +22,9 @@
 - Frontend: typecheck, lint, format, Jest, guards, production/prototype builds, isolation, audit
 - Firefox native zoom: Passed (Cook/Pantry pointer+keyboard)
 
-## Functional tip
+## Functional tip / Exact tip
 
-`85a1027a10d4b7e8caa64033bacf19666687852d`
+`0c6ac53cdd021bec343914214134721bb7a26fd6`
 
 ## Prior tip
 
@@ -33,3 +33,11 @@
 ## Non-regression
 
 Prior Pass coverage for #20/#21/#22/#24/#26 and mutation-vs-history separation remain; PLAN-0018 Fail on `814af25` immutable.
+
+## CI on exact tip
+
+| Workflow | Run | Conclusion |
+| --- | --- | --- |
+| Backend | https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30748795864 | success |
+| Frontend | https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30748795883 | success |
+| PLAN-0005 | https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30748795872 | success |
