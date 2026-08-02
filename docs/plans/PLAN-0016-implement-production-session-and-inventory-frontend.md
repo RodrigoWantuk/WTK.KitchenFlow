@@ -1,11 +1,11 @@
 # PLAN-0016: Implement Production Session and Authenticated Inventory Frontend
 
-- **Status:** In Progress
+- **Status:** Validating
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** agent:composer-plan-0016
 - **Created:** 2026-08-01
-- **Last updated:** 2026-08-02T01:55:00Z
+- **Last updated:** 2026-08-02T02:00:00Z
 - **Branch:** `agent/plan-0016-production-inventory-frontend`
 - **Pull request:** [Draft PR #25](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/25)
 - **Related issues:** #20 (High), #21 (Medium), #22 (Medium), #24 (coverage)
@@ -151,8 +151,8 @@ PLAN-0015 is Completed; its manual visual/NVDA/VoiceOver checks were deferred as
 
 ### Phase 5: Validation, remediation evidence, draft PR
 
-- [ ] Frontend CI fully green on exact PR head (prior run `30725997092` failed at `format:check`; remediation tip pending push/CI).
-- [x] Component/journey tests for list/form/detail + production route proof (126 Jest tests locally).
+- [x] Frontend CI fully green on exact PR head `4d2afd040e58d054ddef70aa25051b39f053b1f5` (runs `30727899304` and `30727897692`; prior failure `30725997092` superseded).
+- [x] Component/journey tests for list/form/detail + production route proof (126 Jest tests locally + CI).
 - [x] Independent retest handoff kept truthful; PLAN-0005 Conditional Pass; PLAN-0011 Blocked.
 
 ## Testing and validation plan
@@ -205,12 +205,12 @@ Document API base path (same-origin `/api/v1`), regeneration commands, and retes
 - [x] Locale decimals correct in `en`, `pt-BR`, `es`; printed dates timezone-independent (unit + form tests).
 - [x] Prototype fixtures/mock auth absent from production bundle (`inspect:production-bundle` local pass).
 - [ ] Firefox native-zoom pointer and keyboard checks pass independently for #21/#22.
-- [ ] Frontend quality gates pass on the exact PR head in GitHub Actions (local suite green; CI pending).
+- [x] Frontend quality gates pass on the exact PR head in GitHub Actions (`30727899304` / `30727897692` success on `4d2afd0`).
 - [x] Issues #20/#24 have concrete remediation implementation; #21/#22 have CSS remediation **hypothesis** only (not proven).
 - [x] PLAN-0005 remains Conditional Pass pending independent retest.
 - [x] PLAN-0011 remains Blocked with corrected dependencies.
 - [x] Exact independent-retest handoff exists (`docs/evidence/plan-0016/independent-retest-handoff.md`).
-- [ ] Draft PR body describes current evidence without overclaims (update after CI tip lands).
+- [x] Draft PR body describes current evidence without overclaims (refreshed with CI tip).
 
 ## Independent retest handoff
 
@@ -227,28 +227,38 @@ Minimum retest coverage:
 
 ## Execution state
 
-- **Current run delivery target:** Remediate PR #25 until Frontend CI is fully green; then mark **Validating** for independent PLAN-0005 retest.
-- **Current checkpoint:** Functional remediations implemented; local Frontend gates green; status remains **In Progress** until GitHub Frontend workflow is fully green on the pushed tip.
-- **Last completed step:** Format policy, full mutation/list/custom-location UI, fail-closed mapping, i18n catalog, component/session/route tests, local gate suite.
-- **Exact next action:** Commit + push remediation tip; await full green Frontend workflow; then set status **Validating** and refresh PR body.
-- **Blockers:** Integrated Keycloak/PostgreSQL stack not running in this agent environment (`docker compose` has no active project). Independent Firefox native-zoom still required.
-- **Partially modified areas:** None for coded remediations listed in the user brief. Remaining: CI tip proof; integrated E2E; #21/#22 Firefox native zoom.
-- **Documentation delivered:** Plan/registry truthful; evidence handoff + remediation notes updated for format policy and UX completeness.
-- **Validation performed (local, 2026-08-02):**
-  - Prior CI [30725997092](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30725997092) **failed** at `format:check` on generated mirror files; later steps skipped.
-  - `packages/api-client`: `yarn install --frozen-lockfile`, `yarn generate`, `yarn check:drift`, `yarn typecheck`, `yarn format:check`, second `yarn generate` → no additional tracked diff.
-  - `apps/frontend`: `check:api-client-drift`, `typecheck:api-client`, `typecheck`, `lint`, `format:check`, `format:check:api-client`, `test` (126 passed), guards, `build`, `inspect:production-bundle`, `build:prototype`, `build:production`, `inspect:production-bundle`, `audit:policy`, `smoke:browser:ci` — all exit 0.
-- **Known failures or limitations:** Frontend CI not yet re-proven on remediation tip; no integrated Keycloak E2E this run; #21/#22 hypothesis only; PLAN-0005 Conditional Pass; PLAN-0011 Blocked; PR #23 collision deferred to later PLAN-0017 renumber (untouched).
-- **Working tree state:** Dirty until remediation commit; then push pending CI.
+- **Current run delivery target:** Deliver remediation candidate ready for independent PLAN-0005 retest.
+- **Current checkpoint:** **Validating** — Frontend CI fully green on candidate tip; independent retest not yet run.
+- **Final candidate SHA:** `4d2afd040e58d054ddef70aa25051b39f053b1f5` (Validating metadata commit may follow; if so, reaffirm Frontend CI on the metadata tip).
+- **Last completed step:** Frontend workflow success on remediation tip; status moved to Validating; PR body refreshed.
+- **Exact next action:** Independent agent executes `docs/evidence/plan-0016/independent-retest-handoff.md` (integrated Keycloak + Firefox native zoom). Owner-only merge.
+- **Blockers:** Integrated Keycloak/PostgreSQL stack not available in this agent environment. Independent Firefox native-zoom still required. Issues #20/#21/#22/#24 remain open until independent verification/owner closes them.
+- **Partially modified areas:** None for coded remediations. Remaining independent work: Keycloak E2E; #21/#22 Firefox native zoom.
+- **Documentation delivered:** Plan/registry Validating; evidence handoff truthful; PR body without overclaims.
+- **Validation performed:**
+  - Prior CI [30725997092](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30725997092) **failed** at `format:check` (superseded).
+  - Local suite on remediation tip: api-client generate×2/drift/typecheck/format; frontend typecheck/lint/format/format:check:api-client/test(126)/guards/builds/inspect/audit/smoke — exit 0.
+  - Frontend CI success on `4d2afd0`: [30727899304](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30727899304) and [30727897692](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30727897692) (`quality` + `browser-smoke`).
+  - A green PLAN-0005 validation workflow does **not** replace Frontend CI.
+- **Known failures or limitations:** No integrated Keycloak E2E this run; #21/#22 hypothesis only; PLAN-0005 Conditional Pass; PLAN-0011 Blocked; PR #23 collision deferred to later PLAN-0017 renumber (untouched).
+- **Working tree state:** Clean after Validating sync commit (except ignored local build/smoke artifacts).
 
 ## Progress log
 
+### 2026-08-02T02:00:00Z — agent:composer-plan-0016
+
+- **Checkpoint:** Status **Validating**; Frontend CI green on `4d2afd0`; PR body refreshed.
+- **Changes included in the commit:** Plan/registry/PR body sync only after CI proof.
+- **Result:** Candidate ready for independent retest. Not owner-merged. #21/#22/#20/#24 not closed by this agent.
+- **Next action:** Independent PLAN-0005 retest handoff; owner review/merge authority.
+- **Blockers or handoff notes:** PR #23 → later PLAN-0017 elsewhere; leave untouched. Do not start PLAN-0011.
+
 ### 2026-08-02T01:55:00Z — agent:composer-plan-0016
 
-- **Checkpoint:** Remediation implementation + local full Frontend gate suite green; status still **In Progress** (CI tip pending).
+- **Checkpoint:** Remediation implementation + local full Frontend gate suite green; status **In Progress** pending CI.
 - **Changes included in the commit:** `.prettierignore` mirror exclusion; api-client owned-source format check; fail-closed `mapQuantity`; list draft/submit/filters/AbortController; full adjustment/delete/history UI; `Other` custom location; inventory i18n catalog; component/session/route tests; crypto polyfill for Jest; plan/registry/evidence updates.
-- **Result:** Local gates green; not yet independent-retest ready until Frontend CI fully green on tip.
-- **Next action:** Push; await Frontend workflow; move to Validating only after green CI; update PR body.
+- **Result:** Tip `4d2afd0` pushed; Frontend CI subsequently green (`30727899304` / `30727897692`).
+- **Next action:** Move to Validating; update PR body.
 - **Blockers or handoff notes:** PR #23 must later become PLAN-0017 elsewhere; leave untouched. Do not start PLAN-0011.
 
 ### 2026-08-02T01:50:00Z — agent:composer-plan-0016
