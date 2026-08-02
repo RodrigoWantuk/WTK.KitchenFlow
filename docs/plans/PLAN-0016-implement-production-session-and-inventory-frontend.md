@@ -224,7 +224,7 @@ Minimum retest coverage:
 - **Current run delivery target:** Full production session + inventory vertical slice with generated client, #21/#22 fixes, and draft PR.
 - **Current checkpoint:** Implementation candidate ready for draft PR / independent retest (Validating).
 - **Last completed step:** Live session + inventory + generated client + production UI + locale/zoom remediations + frontend gates.
-- **Exact next action:** Open draft PR; request independent PLAN-0005 retest per handoff.
+- **Exact next action:** Independent PLAN-0005 retest per `docs/evidence/plan-0016/independent-retest-handoff.md`; owner-only merge of Draft PR #25.
 - **Blockers:** Full same-origin Keycloak browser journey and Firefox native-zoom headed suite need independent/environment retest (Firefox zoom harness reported Unsupported in this agent environment).
 - **Partially modified areas:** None intentional beyond plan scope.
 - **Documentation delivered:** Frontend/contracts/api-client READMEs; `docs/evidence/plan-0016/*` handoff.
@@ -233,6 +233,13 @@ Minimum retest coverage:
 - **Working tree state:** Uncommitted implementation + docs for this checkpoint.
 
 ## Progress log
+
+### 2026-08-02T01:20:00Z — agent:composer-plan-0016
+
+- **Checkpoint:** Draft PR #25 opened; delivery metadata synced.
+- **Changes included in the commit:** Plan/registry PR link only.
+- **Result:** Validating candidate published as draft; no agent merge.
+- **Next action:** Independent PLAN-0005 retest; owner-only merge.
 
 ### 2026-08-02T01:10:00Z — agent:composer-plan-0016
 
