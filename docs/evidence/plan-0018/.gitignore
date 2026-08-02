@@ -1,0 +1,12 @@
+# Local runtime artifacts — never commit secrets or raw cookies/tokens.
+reports/*.pid
+reports/*.log
+reports/trx/
+reports/api-release.log
+reports/frontend-production-serve.log
+reports/same-origin-proxy.log
+artifacts/
+*.cookie
+*.token
+*.pem
+local/
