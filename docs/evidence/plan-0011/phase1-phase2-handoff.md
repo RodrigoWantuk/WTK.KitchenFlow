@@ -11,7 +11,7 @@ Production `/` renders outside `SessionProvider`. Session bootstrap occurs only 
 
 ## Functional tip
 
-Recorded after the hardening commit that lands this evidence package (see plan Progress log and PR head).
+`f7d516089a077b39bd9c95c7cc157f44443eaa7d`
 
 ## Local validation (commands)
 

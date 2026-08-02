@@ -241,20 +241,30 @@ Automated coverage must include:
 ## Execution state
 
 - **Current checkpoint:** Hardened Phase 1+2: public `/` outside SessionProvider; progressive source loading; per-source retry; empty-menu omission; request-scoped timezone override; chooser retry; expanded tests. Local gates + browser smoke Passed. Status **Validating**.
-- **Exact tip SHA (functional):** pending commit after this packaging update (will be HEAD after push).
+- **Exact tip SHA (functional):** `f7d516089a077b39bd9c95c7cc157f44443eaa7d`
+- **Packaging tip SHA:** `df2e077d9fc3ffda5578a8406a4549602be12cae`
 - **Run delivery target:** Phase 1 public entry + Phase 2 mock-backed contextual home with tests, isolation, docs, draft PR.
 - **Delivered outcome:** Public entry without session bootstrap; contextual home (mock/unavailable adapters); i18n; Jest; smoke; docs/evidence; draft PR #34 requesting RodrigoWantuk.
-- **Acceptance criteria resolved:** Amended Phase 1/2 product criteria satisfied locally; exact-head CI pending; owner review/merge still pending; live sources remain PLAN-0021.
+- **Acceptance criteria resolved:** Amended Phase 1/2 product criteria satisfied locally; exact-head CI pending on packaging tip; owner review/merge still pending; live sources remain PLAN-0021.
 - **Files or areas materially changed:** ProductionApp composition; PublicEntryPage; ContextualHomePage/QuickChooser/dayPart; mock scenarios; catalogs; tests; PLAN-0019 post-merge docs; redundant branch cleanup.
 - **Documentation delivered:** Frontend contextual-home README, evidence handoff, plan/registry, PLAN-0019 merge reconciliation, amendment baseline `444969c`.
 - **Validation performed:** `yarn typecheck|lint|format:check|test` (188 Passed); guards; builds; `inspect:production-bundle`; `audit:policy`; `smoke:browser:ci` Passed. Local Firefox zoom blocked by root/`XAUTHORITY` environment (defer to PLAN-0005 CI).
 - **Known failures or limitations:** Production home sources unavailable until PLAN-0021; local Firefox native zoom cannot launch as root; PR remains draft.
 - **Blockers:** None for amended Phase 1 + Phase 2.
 - **Partially modified areas:** None.
-- **Exact next action:** Push tip; confirm Frontend + PLAN-0005 green on exact head; keep draft PR #34; owner review only — no agent merge.
-- **Working tree state:** Uncommitted hardening + doc reconciliation about to commit.
+- **Exact next action:** Confirm Frontend + PLAN-0005 green on packaging tip `df2e077`; keep draft PR #34; owner review only — no agent merge.
+- **Working tree state:** Functional tip `f7d5160`; packaging tip `df2e077`.
 
 ## Progress log
+
+### 2026-08-02T16:36:30Z — Cursor agent (PLAN-0011)
+
+- **Checkpoint:** Recorded tip SHA `f7d516089a077b39bd9c95c7cc157f44443eaa7d` in plan/registry/evidence after hardening commit.
+- **Changes included in the commit:** Tip SHA packaging only.
+- **Validation performed:** Same local gates as hardening commit; CI pending on push.
+- **Next action:** Push and await exact-head CI.
+- **Blockers or handoff notes:** None.
+
 
 ### 2026-08-02T16:35:00Z — Cursor agent (PLAN-0011)
 
