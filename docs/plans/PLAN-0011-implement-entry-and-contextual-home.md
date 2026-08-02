@@ -1,18 +1,20 @@
 # PLAN-0011: Implement the Public Entry and Contextual Home Experience
 
-- **Status:** Ready
+- **Status:** In Progress
 - **Type:** Implementation
 - **Priority:** High
-- **Owner:** Unassigned frontend/product implementation agent
+- **Owner:** Cursor agent (PLAN-0011 Phase 1 + Phase 2)
 - **Created:** 2026-07-30
-- **Last updated:** 2026-08-02T12:05:00Z
+- **Last updated:** 2026-08-02T14:12:42Z
 - **Branch:** `agent/plan-0011-contextual-home`
-- **Pull request:** Not opened
+- **Pull request:** Draft to be opened on this branch
+- **Binding amendment:** [`PLAN-0011-amendment-2026-08-02-next-execution.md`](PLAN-0011-amendment-2026-08-02-next-execution.md)
 - **Related documentation plan:** PLAN-0010
 - **Related frontend plan:** PLAN-0014 (on main); remediation [PLAN-0015](PLAN-0015-remediate-frontend-baseline.md) (**Completed**; manual visual/NVDA/VoiceOver deferred as non-blocking)
-- **Related production integration plan:** [PLAN-0016](PLAN-0016-implement-production-session-and-inventory-frontend.md) (**Completed**; post-rebase Pass tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b`)
+- **Related production integration plan:** [PLAN-0016](PLAN-0016-implement-production-session-and-inventory-frontend.md) (**Completed**; merged via PR #25)
+- **Related live-sources plan:** [PLAN-0021](PLAN-0021-implement-contextual-home-live-sources.md) (owns former Phase 3/4)
 - **Related product document:** `docs/product/entry-and-contextual-home.md`
-- **Dependencies:** PLAN-0016 Completed with independent remediations Pass for #20/#21/#22/#24/#26; stable menu, profile, inventory-attention, and recommendation contracts for live phases
+- **Dependencies:** PLAN-0019 merged (`444969c`); PLAN-0016 on `main`; host `NOTEBOOK-DEB-RODRIGO` GitHub App workflow available. Live home contracts deferred to PLAN-0021.
 
 ## Objective
 
@@ -27,11 +29,7 @@ The implementation must preserve the accepted source priority:
 
 ## Blocking state
 
-PLAN-0014 imported the Emergent frontend onto `main`. PLAN-0015 remediation completed (PR #16 / evidence via PR #18); remaining PLAN-0015 manual visual/NVDA/VoiceOver checks were **deferred as non-blocking** and are **not** the current blocker.
-
-PLAN-0005 merged as **Conditional Pass** (PR #19 / `60d98dd…`) with residual High #20, Medium #21/#22, coverage #24, and later High #26. **PLAN-0016** remediations independently **Pass** on tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b` (execution tip `38e5edf`); residual issues reconciled closed. This plan is **Ready** to claim. Do not implement PLAN-0011 features on the PLAN-0016 branch.
-
-Live contextual-home source adapters remain blocked until their backend contracts are accepted and published.
+No blocker for the amended Phase 1 + Phase 2 scope. PLAN-0019 reconciled the roadmap and merged via PR #33 (`444969c`). PLAN-0016 production session/inventory is on `main`. Live source contracts and adapters remain owned by PLAN-0021 and are out of scope for this execution.
 
 ## Scope
 
@@ -242,20 +240,28 @@ Automated coverage must include:
 
 ## Execution state
 
-- **Current checkpoint:** Product behavior is accepted through PLAN-0010; implementation has not started. Status is **Ready**.
-- **Run delivery target:** Not started.
-- **Delivered outcome:** None.
-- **Acceptance criteria resolved:** None.
-- **Files or areas materially changed:** None.
-- **Documentation delivered:** This future implementation plan; dependency wording corrected 2026-08-02; unblocked after PLAN-0016 Completed.
-- **Validation performed:** PLAN-0015 Completed with deferred non-blocking manual checks; PLAN-0005 Conditional Pass merged; PLAN-0016 Completed with post-rebase Pass tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b`.
-- **Known failures or limitations:** Live contract shapes do not yet exist for every tier.
-- **Blockers:** Live menu/profile/recommendation contracts still required for live phases (not PLAN-0016).
+- **Current checkpoint:** Claimed on `agent/plan-0011-contextual-home` from `main` (`444969c`). Status **In Progress**. Implementing Phase 1 public entry + Phase 2 mock-backed contextual home.
+- **Run delivery target:** One reviewable frontend slice: public entry, mock-backed authenticated home with four ordered sources and quick chooser, localization (`en`/`pt-BR`/`es`), accessibility/responsive coverage, production isolation (no home fixtures in production), tests, docs, and draft PR. Exclude Phase 3/4 (PLAN-0021).
+- **Delivered outcome:** Plan claimed; branch created from current `main` after PR #33 merge confirmation.
+- **Acceptance criteria resolved:** None yet for Phase 1/2 product surfaces.
+- **Files or areas materially changed:** Plan + registry claim only in this commit.
+- **Documentation delivered:** Claim updates in this plan and `docs/plan-status.md`.
+- **Validation performed:** Confirmed hostname `NOTEBOOK-DEB-RODRIGO`; confirmed PR #33 merged; branch tracking `origin/main` at `444969c`.
+- **Known failures or limitations:** Live home adapters remain PLAN-0021.
+- **Blockers:** None for amended Phase 1 + Phase 2.
 - **Partially modified areas:** None.
-- **Exact next action:** Claim this plan and implement Phase 1 plus the mock-backed Phase 2 before designing live contracts.
-- **Working tree state:** No implementation branch claimed.
+- **Exact next action:** Implement presentation models, public entry, mock/unavailable home adapters, production + prototype wiring, catalogs, tests, then open draft PR.
+- **Working tree state:** Branch `agent/plan-0011-contextual-home` claimed; implementation pending next commits.
 
 ## Progress log
+
+### 2026-08-02T14:12:42Z — Cursor agent (PLAN-0011)
+
+- **Checkpoint:** Claimed **In Progress** after confirming PR #33 / PLAN-0019 on `main` (`444969c`) and host GitHub App workflow.
+- **Changes included in the commit:** Plan header, blocking state, execution state, progress log, and registry row. No feature code yet.
+- **Substantial run target:** Phase 1 + Phase 2 as one frontend delivery; live contracts deferred to PLAN-0021.
+- **Next action:** Implement public entry + mock-backed contextual home with tests and production isolation.
+- **Blockers or handoff notes:** None for amended scope.
 
 ### 2026-08-02T12:05:00Z — agent:composer-plan-0016
 
