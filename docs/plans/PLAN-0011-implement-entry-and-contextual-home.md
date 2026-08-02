@@ -1,11 +1,11 @@
 # PLAN-0011: Implement the Public Entry and Contextual Home Experience
 
-- **Status:** In Progress
+- **Status:** Completed
 - **Type:** Implementation
 - **Priority:** High
-- **Owner:** Cursor agent (PLAN-0011 final remediation)
+- **Owner:** Cursor agent (PLAN-0011 contract hardening)
 - **Created:** 2026-07-30
-- **Last updated:** 2026-08-02T19:30:00Z
+- **Last updated:** 2026-08-02T19:45:00Z
 - **Branch:** `agent/plan-0011-contextual-home`
 - **Pull request:** [PR #34](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/34) (draft)
 - **Binding amendment:** [`PLAN-0011-amendment-2026-08-02-next-execution.md`](PLAN-0011-amendment-2026-08-02-next-execution.md)
@@ -29,7 +29,7 @@ The implementation must preserve the accepted source priority:
 
 ## Blocking state
 
-Quick-chooser definition contract still permissive against tip `ca2dc3685dd4a4dec659724d6fe67e72a78cfd53`: available/unavailable combinations and question cardinality are not enforced by a discriminated union + runtime validation. Live sources remain PLAN-0021.
+None for PLAN-0011 Phase 1 + Phase 2 presentation scope. Live contextual-home sources remain PLAN-0021.
 
 ## Scope
 
@@ -240,16 +240,25 @@ Automated coverage must include:
 
 ## Execution state
 
-- **Current checkpoint:** Contract hardening published; awaiting exact-head Frontend + PLAN-0005 CI.
+- **Current checkpoint:** Contract hardening verified; PLAN-0011 returned to **Completed**.
 - **Exact tip SHA (functional implementation tip):** `9079887c7aa8d7d41691de6752381883346fabee`
+- **CI-validated tip:** `9017e7e0cf6f3243bd18f0a4fa5fce105e91f5f4`
 - **Review baseline:** `ca2dc3685dd4a4dec659724d6fe67e72a78cfd53`
-- **Run delivery target:** Discriminated `HomeQuickChooserDefinition`, runtime validation, exhaustive QuickChooser; exact-head CI; keep draft.
-- **Unresolved blockers:** None local — exact-head CI pending.
-- **Exact next action:** Await Frontend + PLAN-0005 on published tip; mark Completed when green.
-- **Blockers:** None external. Local Firefox zoom blocked by root/`$HOME` ownership (rely on PLAN-0005 CI).
-- **Working tree state:** Functional tip recorded; packaging commit may advance PR head.
+- **Run delivery target:** Discriminated definition + runtime validation + exhaustive QuickChooser; exact-head CI green; draft PR for owner review.
+- **Unresolved blockers:** None.
+- **Exact next action:** Owner review of draft PR #34 only — no agent merge.
+- **Blockers:** None.
+- **Working tree state:** Completion packaging commit advances PR head beyond the immutable CI-validated tip.
 
 ## Progress log
+
+### 2026-08-02T19:45:00Z — Cursor agent (PLAN-0011 contract hardening)
+
+- **Checkpoint:** Exact-head Frontend + PLAN-0005 green on `9017e7e`; PLAN-0011 returned to **Completed**.
+- **Changes included in the commit:** Plan/registry/evidence/amendment completion; PR body reconciliation.
+- **Validation performed:** Frontend run `30763598158` (quality + browser-smoke success); PLAN-0005 run `30763598175` (p0/p1/evidence-consistency success) on `9017e7e0cf6f3243bd18f0a4fa5fce105e91f5f4`. Branch 0 behind `main`, MERGEABLE, draft, reviewer `RodrigoWantuk`, no unresolved threads.
+- **Next action:** Owner review of draft PR #34 only — no agent merge.
+- **Blockers or handoff notes:** Next frontend plan PLAN-0020; live contextual-home PLAN-0021.
 
 ### 2026-08-02T19:40:00Z — Cursor agent (PLAN-0011 contract hardening)
 

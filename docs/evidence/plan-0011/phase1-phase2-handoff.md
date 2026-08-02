@@ -11,8 +11,8 @@ Live source contracts remain PLAN-0021.
 |---|---|
 | Review baseline | `ca2dc3685dd4a4dec659724d6fe67e72a78cfd53` |
 | Functional implementation tip | `9079887c7aa8d7d41691de6752381883346fabee` |
-| CI-validated tip | pending exact-head Frontend + PLAN-0005 |
-| Current PR head reported in PR metadata | published branch tip (advances with packaging commits) |
+| CI-validated tip | `9017e7e0cf6f3243bd18f0a4fa5fce105e91f5f4` |
+| Current PR head reported in PR metadata | published branch tip (completion packaging may advance SHA) |
 
 ## Contract hardening summary
 
@@ -22,10 +22,15 @@ Live source contracts remain PLAN-0021.
 4. Invalid definitions fail closed to temporary-unavailable + Retry.
 5. QuickChooser switches exhaustively on capabilityStatus.
 
+## Exact-head CI (CI-validated tip `9017e7e`)
+
+- Frontend: https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30763598158
+- PLAN-0005: https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30763598175
+
 ## Handoff
 
 ```text
-PR #34 remains draft until exact-head CI is green.
+PR #34 ready for owner review.
 Next frontend plan after merge: PLAN-0020.
 Future live contextual-home integration: PLAN-0021.
 ```

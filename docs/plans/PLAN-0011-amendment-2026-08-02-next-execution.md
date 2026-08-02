@@ -1,6 +1,6 @@
 # PLAN-0011 Amendment: Immediate Execution Scope After PLAN-0016 Merge
 
-- **Status:** In Progress (PR #34 chooser definition contract hardening)
+- **Status:** Completed (PR #34 draft; owner merge pending)
 - **Effective:** 2026-08-02
 - **Parent plan:** [`PLAN-0011`](PLAN-0011-implement-entry-and-contextual-home.md)
 - **Supersedes:** Parent-plan dependency, branch-state, execution-state, and exact-next-action text that predates PR #25 merge
@@ -91,4 +91,4 @@ PLAN-0021 must not start until the PLAN-0011 presentation models and states are 
 
 ## Exact next action
 
-Contract hardening implemented locally (discriminated union + runtime validation + exhaustive QuickChooser). Push; await exact-head CI; mark Completed only when green.
+Contract hardening Completed: discriminated union + runtime validation + exhaustive QuickChooser; exact-head Frontend `30763598158` and PLAN-0005 `30763598175` green on `9017e7e`. Draft PR #34 awaits owner review.
