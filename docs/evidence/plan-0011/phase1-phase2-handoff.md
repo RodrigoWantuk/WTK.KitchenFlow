@@ -13,6 +13,14 @@ Production `/` renders outside `SessionProvider`. Session bootstrap occurs only 
 
 `f7d516089a077b39bd9c95c7cc157f44443eaa7d`
 
+## CI on packaging tip `c895b4ce2282f6b8df6ca8bfc5fff64caea4f990`
+
+| Workflow | Run ID | Result |
+|---|---|---|
+| Frontend | [30757026924](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30757026924) | success |
+| Frontend (push) | [30757025677](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30757025677) | success |
+| PLAN-0005 | [30757026929](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30757026929) | success (after failed-job rerun of flaky ConcurrentAdjustment) |
+
 ## Local validation (commands)
 
 ```bash

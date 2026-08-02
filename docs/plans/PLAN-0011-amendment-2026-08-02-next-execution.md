@@ -1,6 +1,6 @@
 # PLAN-0011 Amendment: Immediate Execution Scope After PLAN-0016 Merge
 
-- **Status:** In Progress (binding for Phase 1 + Phase 2)
+- **Status:** Completed (amended Phase 1 + Phase 2; draft PR awaiting owner)
 - **Effective:** 2026-08-02
 - **Parent plan:** [`PLAN-0011`](PLAN-0011-implement-entry-and-contextual-home.md)
 - **Supersedes:** Parent-plan dependency, branch-state, execution-state, and exact-next-action text that predates PR #25 merge
@@ -84,11 +84,11 @@ PLAN-0021 must not start until the PLAN-0011 presentation models and states are 
 - [x] No hand-written live home contract is introduced.
 - [x] Existing production inventory/session behavior is preserved.
 - [x] Public and mock home behavior is truthful, accessible, localized, and isolated.
-- [ ] Full frontend gates pass on the final head (re-validate after public-session composition fix).
+- [x] Full frontend gates pass on the final head (Frontend + PLAN-0005 green on `c895b4c`).
 - [x] Plan and registry are updated before every developer commit.
 - [x] A draft PR requests `RodrigoWantuk` review.
 - [x] The agent does not approve, auto-merge, or merge.
 
 ## Exact next action
 
-Finish local/CI validation for the public-route SessionProvider composition fix and related Phase 1+2 hardening on `agent/plan-0011-contextual-home`, keep draft PR #34 updated, and hand off to owner review. Live sources remain PLAN-0021.
+Owner reviews draft PR #34; agent must not approve/merge. Next frontend: PLAN-0020. Live home: PLAN-0021.
