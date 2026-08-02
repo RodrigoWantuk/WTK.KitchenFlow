@@ -39,5 +39,4 @@
 
 ## Plan ID collision
 
-- Draft PR #23 also labeled “PLAN-0016” (AI recipe-protocol docs). Remains untouched from this branch.
-- Handoff: renumber PR #23 to PLAN-0017 on a separate branch/run later. Do not introduce PLAN-0017 files into PR #25.
+- Former PR #23 collision resolved by PLAN-0017 / PR #31 on main. PR #25 remains inventory-only.

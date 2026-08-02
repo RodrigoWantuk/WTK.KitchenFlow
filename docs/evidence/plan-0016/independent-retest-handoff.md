@@ -70,5 +70,5 @@ Same as prior handoff (`yarn` gates under `apps/frontend` and `packages/api-clie
 - Keep PLAN-0005 **Conditional Pass** until independent acceptance.
 - Keep PLAN-0011 **Blocked**.
 - Do not close #21/#22/#26/#20/#24 without owner/independent authority.
-- Do not edit PR #23; do not create PLAN-0017; do not rewrite PLAN-0018 Fail → Pass.
+- PLAN-0017 is already on main (PR #31); PR #23 is closed/superseded. Do not rewrite PLAN-0018 Fail → Pass.
 - Agents must not approve/merge PR #25 or enable auto-merge.

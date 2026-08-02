@@ -13,7 +13,7 @@
 - **Base at PLAN-0016 start:** `60d98dd9e2e7c460d670e701c027a44f25cdfedc`
 - **Related plans:** PLAN-0005 (Conditional Pass, unchanged), PLAN-0016 (returned to In Progress), PLAN-0011 (Blocked)
 - **Related issues:** #20, #21, #22, #24, **#26** (new)
-- **Plan ID collision:** PR #23 untouched; PLAN-0017 reserved; this plan is PLAN-0018 only.
+- **Plan ID collision:** At assessment time PR #23 was untouched and PLAN-0017 reserved; later resolved on main as PLAN-0017 via PR #31 (PR #23 closed/superseded). This plan remains PLAN-0018 only.
 
 ## Objective
 
@@ -70,7 +70,7 @@ Passed areas include generated client (#24), production isolation / live invento
 - **Checkpoint:** Assessment **Fail** completed; PLAN-0016 → In Progress; #26 opened.
 - **Validation:** Phase 1 gates Passed; Keycloak P0 12/12 Passed; inventory journey 20/21 Passed (isolation mutate Failed); Firefox pointer Failed / keyboard Passed; production isolation Passed.
 - **Next action:** Draft PR + PR #25 review.
-- **Notes:** PR #23 untouched.
+- **Notes:** At assessment time PR #23 was untouched; later superseded by PLAN-0017 PR #31.
 
 ### 2026-08-02T02:45:00Z — agent:independent-retest-plan-0018
 

@@ -12,7 +12,7 @@
 - **Related plans:** PLAN-0002, PLAN-0003, PLAN-0005 (Conditional Pass), PLAN-0011 (Blocked), PLAN-0015 (Completed)
 - **Related ADRs:** ADR-0002 through ADR-0007
 - **Dependencies:** PLAN-0005 merged Conditional Pass on main (`60d98dd9e2e7c460d670e701c027a44f25cdfedc`); committed OpenAPI `packages/contracts/openapi/kitchenflow-v1.json`
-- **Plan ID collision handoff:** Draft PR #23 also uses the string “PLAN-0016” for an unrelated AI recipe-protocol documentation plan. For this critical-path inventory work, PLAN-0016 remains assigned to PR #25. PR #23 must later be renumbered to PLAN-0017 on a separate branch/run. Do not merge, cherry-pick, or modify PR #23 from this branch; do not introduce PLAN-0017 files here.
+- **Plan ID collision handoff:** Former Draft PR #23 collision is resolved: AI recipe-protocol work shipped as [PLAN-0017](PLAN-0017-define-ai-recipe-artifact-protocol.md) via [PR #31](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/31) (PR #23 closed as superseded). PLAN-0016 remains exclusively PR #25.
 
 ## Objective
 
@@ -234,7 +234,7 @@ Minimum retest coverage:
 - **Last completed step:** #26/#21/#22 remediations + evidence + CI IDs recorded; PR #25 remains Draft.
 - **Exact next action:** Independent retest of tip `2f0d24a` (do not reuse implementation evidence as final authority); keep issues open; owner merge only after retest.
 - **Blockers:** None for coding. Owner merge blocked until independent retest Pass/Conditional Pass.
-- **Known failures or limitations:** PLAN-0018 Fail on `814af25` stands; PLAN-0005 Conditional Pass until independent acceptance; PLAN-0011 Blocked; #21/#22/#26/#20/#24 remain open; PR #23 untouched.
+- **Known failures or limitations:** PLAN-0018 Fail on `814af25` stands; PLAN-0005 Conditional Pass until independent acceptance; PLAN-0011 Blocked; #21/#22/#26/#20/#24 remain open; PR #23 closed/superseded by PLAN-0017 PR #31.
 - **Working tree state:** Remediation candidate pushed; PLAN-0018 Fail evidence immutable.
 
 ## Progress log
@@ -294,7 +294,7 @@ Minimum retest coverage:
 - **Evidence:** `docs/evidence/plan-0018/final-assessment.md`
 - **Result:** #20/#24 remediations look effective; #21/#22 pointer unresolved; #26 High isolation finding opened.
 - **Next action:** Implementation remediation on PLAN-0016 branch; re-run independent retest.
-- **Notes:** PR #23 untouched; PLAN-0017 unused.
+- **Notes:** PR #23 closed/superseded by PLAN-0017 PR #31 on main.
 
 ### 2026-08-02T02:00:00Z — agent:composer-plan-0016
 
@@ -302,7 +302,7 @@ Minimum retest coverage:
 - **Changes included in the commit:** Plan/registry/PR body sync only after CI proof.
 - **Result:** Candidate ready for independent retest. Not owner-merged. #21/#22/#20/#24 not closed by this agent.
 - **Next action:** Independent PLAN-0005 retest handoff; owner review/merge authority.
-- **Blockers or handoff notes:** PR #23 → later PLAN-0017 elsewhere; leave untouched. Do not start PLAN-0011.
+- **Blockers or handoff notes:** PLAN-0017 already on main via PR #31. Do not start PLAN-0011 until this retest completes.
 
 ### 2026-08-02T01:55:00Z — agent:composer-plan-0016
 
@@ -310,7 +310,7 @@ Minimum retest coverage:
 - **Changes included in the commit:** `.prettierignore` mirror exclusion; api-client owned-source format check; fail-closed `mapQuantity`; list draft/submit/filters/AbortController; full adjustment/delete/history UI; `Other` custom location; inventory i18n catalog; component/session/route tests; crypto polyfill for Jest; plan/registry/evidence updates.
 - **Result:** Tip `4d2afd0` pushed; Frontend CI subsequently green (`30727899304` / `30727897692`).
 - **Next action:** Move to Validating; update PR body.
-- **Blockers or handoff notes:** PR #23 must later become PLAN-0017 elsewhere; leave untouched. Do not start PLAN-0011.
+- **Blockers or handoff notes:** PLAN-0017 already on main via PR #31. Do not start PLAN-0011 until this retest completes.
 
 ### 2026-08-02T01:50:00Z — agent:composer-plan-0016
 
@@ -318,7 +318,7 @@ Minimum retest coverage:
 - **Changes included in the commit:** Plan/registry truth (superseded by remediation commit if combined).
 - **Result:** Candidate was not ready; remediation continued in the same run.
 - **Next action:** Finish remediations; prove double-generate clean; push; await full green Frontend workflow.
-- **Blockers or handoff notes:** PR #23 must later become PLAN-0017 elsewhere; leave untouched.
+- **Blockers or handoff notes:** PLAN-0017 already on main via PR #31.
 
 ### 2026-08-02T01:20:00Z — agent:composer-plan-0016
 
