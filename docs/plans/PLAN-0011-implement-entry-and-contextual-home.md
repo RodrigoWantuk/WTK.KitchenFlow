@@ -1,13 +1,13 @@
 # PLAN-0011: Implement the Public Entry and Contextual Home Experience
 
-- **Status:** In Progress
+- **Status:** Completed
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Cursor agent (PLAN-0011 final remediation)
 - **Created:** 2026-07-30
-- **Last updated:** 2026-08-02T18:30:00Z
+- **Last updated:** 2026-08-02T18:40:00Z
 - **Branch:** `agent/plan-0011-contextual-home`
-- **Pull request:** [PR #34](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/34) (draft)
+- **Pull request:** [PR #34](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/34) (draft; ready for owner review)
 - **Binding amendment:** [`PLAN-0011-amendment-2026-08-02-next-execution.md`](PLAN-0011-amendment-2026-08-02-next-execution.md)
 - **Related documentation plan:** PLAN-0010
 - **Related frontend plan:** PLAN-0014 (on main); remediation [PLAN-0015](PLAN-0015-remediate-frontend-baseline.md) (**Completed**; manual visual/NVDA/VoiceOver deferred as non-blocking)
@@ -29,7 +29,7 @@ The implementation must preserve the accepted source priority:
 
 ## Blocking state
 
-Final residual review gaps against tip `893b8a471feb71451ef4fe21d13c6c12261a4567`: transient chooser-definition failures treated as permanent; resolved failed suggestion results treated as completion; `titleKey`/`labelKey`-only model insufficient for PLAN-0021 literals; unknown reduced-motion fallback used smooth scrolling. Live source contracts remain PLAN-0021.
+None for Phase 1+2 residual remediations. Exact-head CI green on `f3fc22e6edbcbb422ae116c8afc46206ae3ec4e8`. Live sources remain PLAN-0021. Delivery awaits owner review/merge of draft PR #34.
 
 ## Scope
 
@@ -240,16 +240,26 @@ Automated coverage must include:
 
 ## Execution state
 
-- **Current checkpoint:** Residual remediations implemented locally; awaiting commit/push and exact-head CI.
-- **Exact tip SHA (functional implementation tip):** `b7c213be3bd326adea1b522ee60c4e0d63be564a`.
+- **Current checkpoint:** Residual remediations **Completed**; exact-head CI green on `f3fc22e6edbcbb422ae116c8afc46206ae3ec4e8`.
+- **Exact tip SHA (functional implementation tip):** `b7c213be3bd326adea1b522ee60c4e0d63be564a`
+- **CI-validated tip:** `f3fc22e6edbcbb422ae116c8afc46206ae3ec4e8`
 - **Review baseline:** `893b8a471feb71451ef4fe21d13c6c12261a4567`
-- **Run delivery target:** Push residual fixes; exact-head Frontend + PLAN-0005; keep draft; mark Completed when green.
-- **Unresolved blockers:** Exact-head CI pending.
-- **Exact next action:** Commit + push; await CI; reconcile PR; mark Completed when green.
-- **Blockers:** Local Firefox zoom blocked as root; PLAN-0005 CI covers.
-- **Working tree state:** Residual implementation ready to commit.
+- **Run delivery target:** Owner review of draft PR #34. No agent merge.
+- **Unresolved blockers:** None for Phase 1+2.
+- **Exact next action:** Owner reviews/merges draft PR #34. Next frontend plan: PLAN-0020. Live home: PLAN-0021.
+- **Blockers:** None. Local Firefox zoom blocked as root; PLAN-0005 CI covers.
+- **Working tree state:** Completion packaging may advance head after this update; re-verify CI if head moves.
 
 ## Progress log
+
+### 2026-08-02T18:40:00Z — Cursor agent (PLAN-0011 final remediation)
+
+- **Checkpoint:** Residual remediations verified; Frontend + PLAN-0005 exact-head CI green; PLAN-0011 returned to **Completed**.
+- **Changes included in the commit:** Plan/registry/evidence completion; PR body reconciliation.
+- **Validation performed:** Frontend run `30761370986` (quality + browser-smoke success); PLAN-0005 run `30761370988` (p0/p1/evidence-consistency success) on `f3fc22e6edbcbb422ae116c8afc46206ae3ec4e8`.
+- **Next action:** Owner review of draft PR #34 only — no agent merge.
+- **Blockers or handoff notes:** Next frontend plan PLAN-0020; live contextual-home PLAN-0021.
+
 
 ### 2026-08-02T18:40:00Z — Cursor agent (PLAN-0011 final remediation)
 
