@@ -151,7 +151,7 @@ PLAN-0015 is Completed; its manual visual/NVDA/VoiceOver checks were deferred as
 
 ### Phase 5: Validation, remediation evidence, draft PR
 
-- [x] Frontend CI fully green on exact PR head `4d2afd040e58d054ddef70aa25051b39f053b1f5` (runs `30727899304` and `30727897692`; prior failure `30725997092` superseded).
+- [x] Frontend CI fully green on remediation tip `4d2afd0` (`30727899304` / `30727897692`) and Validating tip `aab6162` (`30728066476` / `30728064641`); prior failure `30725997092` superseded.
 - [x] Component/journey tests for list/form/detail + production route proof (126 Jest tests locally + CI).
 - [x] Independent retest handoff kept truthful; PLAN-0005 Conditional Pass; PLAN-0011 Blocked.
 
@@ -205,7 +205,7 @@ Document API base path (same-origin `/api/v1`), regeneration commands, and retes
 - [x] Locale decimals correct in `en`, `pt-BR`, `es`; printed dates timezone-independent (unit + form tests).
 - [x] Prototype fixtures/mock auth absent from production bundle (`inspect:production-bundle` local pass).
 - [ ] Firefox native-zoom pointer and keyboard checks pass independently for #21/#22.
-- [x] Frontend quality gates pass on the exact PR head in GitHub Actions (`30727899304` / `30727897692` success on `4d2afd0`).
+- [x] Frontend quality gates pass on the exact PR head in GitHub Actions (`30728066476` / `30728064641` success on `aab6162`; remediation tip `4d2afd0` also green).
 - [x] Issues #20/#24 have concrete remediation implementation; #21/#22 have CSS remediation **hypothesis** only (not proven).
 - [x] PLAN-0005 remains Conditional Pass pending independent retest.
 - [x] PLAN-0011 remains Blocked with corrected dependencies.
@@ -229,16 +229,17 @@ Minimum retest coverage:
 
 - **Current run delivery target:** Deliver remediation candidate ready for independent PLAN-0005 retest.
 - **Current checkpoint:** **Validating** — Frontend CI fully green on candidate tip; independent retest not yet run.
-- **Final candidate SHA:** `4d2afd040e58d054ddef70aa25051b39f053b1f5` (Validating metadata commit may follow; if so, reaffirm Frontend CI on the metadata tip).
-- **Last completed step:** Frontend workflow success on remediation tip; status moved to Validating; PR body refreshed.
-- **Exact next action:** Independent agent executes `docs/evidence/plan-0016/independent-retest-handoff.md` (integrated Keycloak + Firefox native zoom). Owner-only merge.
+- **Final candidate SHA:** `aab61629764e7feecdb7b3343010991250fd948e` (Validating sync; remediation implementation at `4d2afd040e58d054ddef70aa25051b39f053b1f5`).
+- **Last completed step:** Frontend workflow success on Validating tip `aab6162`; status Validating; PR body refreshed.
+- **Exact next action:** Independent agent executes `docs/evidence/plan-0016/independent-retest-handoff.md` (integrated Keycloak + Firefox native zoom). Owner-only merge. Avoid further status-only commits that churn CI unless evidence changes.
 - **Blockers:** Integrated Keycloak/PostgreSQL stack not available in this agent environment. Independent Firefox native-zoom still required. Issues #20/#21/#22/#24 remain open until independent verification/owner closes them.
 - **Partially modified areas:** None for coded remediations. Remaining independent work: Keycloak E2E; #21/#22 Firefox native zoom.
 - **Documentation delivered:** Plan/registry Validating; evidence handoff truthful; PR body without overclaims.
 - **Validation performed:**
   - Prior CI [30725997092](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30725997092) **failed** at `format:check` (superseded).
   - Local suite on remediation tip: api-client generate×2/drift/typecheck/format; frontend typecheck/lint/format/format:check:api-client/test(126)/guards/builds/inspect/audit/smoke — exit 0.
-  - Frontend CI success on `4d2afd0`: [30727899304](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30727899304) and [30727897692](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30727897692) (`quality` + `browser-smoke`).
+  - Frontend CI success on remediation `4d2afd0`: [30727899304](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30727899304) / [30727897692](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30727897692).
+  - Frontend CI success on Validating tip `aab6162`: [30728066476](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30728066476) / [30728064641](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30728064641) (`quality` + `browser-smoke`).
   - A green PLAN-0005 validation workflow does **not** replace Frontend CI.
 - **Known failures or limitations:** No integrated Keycloak E2E this run; #21/#22 hypothesis only; PLAN-0005 Conditional Pass; PLAN-0011 Blocked; PR #23 collision deferred to later PLAN-0017 renumber (untouched).
 - **Working tree state:** Clean after Validating sync commit (except ignored local build/smoke artifacts).
