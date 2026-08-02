@@ -1,15 +1,15 @@
 # PLAN-0016: Implement Production Session and Authenticated Inventory Frontend
 
-- **Status:** Completed
+- **Status:** Validating
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** agent:composer-plan-0016
 - **Created:** 2026-08-01
-- **Last updated:** 2026-08-02T12:05:00Z
-- **Exact tip SHA:** `38e5edfb49407d895995e0cf1b49054dc7ce5c5b`
+- **Last updated:** 2026-08-02T12:20:00Z
+- **Exact tip SHA:** pending CI on remediation tip
 - **Branch:** `agent/plan-0016-production-inventory-frontend`
-- **Pull request:** [PR #25](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/25) (ready for review; awaiting owner merge)
-- **Related issues:** #20, #21, #22, #24, #26 (reconciled closed after post-rebase Pass)
+- **Pull request:** [PR #25](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/25) (Validating after final-review remediation)
+- **Related issues:** #20, #21, #22, #24, #26 (closed); PR #25 final-review P1/P2 remediated pending exact-tip CI
 - **Related plans:** PLAN-0002, PLAN-0003, PLAN-0005 (Conditional Pass historical; residuals reconciled), PLAN-0011 (Ready), PLAN-0015 (Completed), PLAN-0018 (Fail immutable)
 - **Related ADRs:** ADR-0002 through ADR-0007
 - **Dependencies:** PLAN-0005 merged Conditional Pass on main (`60d98dd9e2e7c460d670e701c027a44f25cdfedc`); committed OpenAPI `packages/contracts/openapi/kitchenflow-v1.json`
@@ -228,17 +228,32 @@ Minimum retest coverage:
 
 ## Execution state
 
-- **Current run delivery target:** Completed — rebased tip independently retested Pass; PR ready for owner review.
-- **Current checkpoint:** **Completed** at exact tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b`.
-- **Last independently tested SHA (Pass):** `38e5edfb49407d895995e0cf1b49054dc7ce5c5b` (retest commands + CI on product tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b`)
+- **Current run delivery target:** Remediate PR #25 final-review P1/P2 defects with regression tests and green CI on exact tip.
+- **Current checkpoint:** **Validating** — local Backend (204), api-client generate/drift/typecheck, frontend gates (134 tests), production isolation, Firefox native zoom Passed; awaiting GHA.
+- **Prior Pass packaging:** `1e50e54119d6a53a08be9a8dc1a63258f37b2eec` / validated tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b`
 - **Prior Fail SHA (immutable):** `814af253814d0ec7f8b0adbbca9c50040b5bab07` (PLAN-0018)
-- **Last completed step:** Post-rebase Pass evidence; PLAN-0016 Completed; issues reconciled; PR #25 ready for review.
-- **Exact next action:** Owner reviews and merges PR #25 (agents must not approve, auto-merge, or merge).
-- **Blockers:** None for PLAN-0016. Owner merge only.
-- **Known failures or limitations:** PLAN-0018 Fail evidence on `814af25` remains historical; manual NVDA/VoiceOver/visual remain deferred non-blocking; PLAN-0005 historical Conditional Pass not rewritten.
-- **Working tree state:** Completion packaging committed on tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b`.
+- **Last completed step:** P1/P2 code + Jest regressions; local gates green.
+- **Exact next action:** Push remediation tip; await Backend/Frontend/PLAN-0005 green; mark Completed with single exact tip SHA.
+- **Blockers:** Exact-tip CI pending.
+- **Known failures or limitations:** PLAN-0018 Fail evidence on `814af25` remains historical.
+- **Working tree state:** Remediation ready to commit.
 
 ## Progress log
+
+### 2026-08-02T12:20:00Z — agent:composer-plan-0016
+
+- **Checkpoint:** **Validating** after local gates.
+- **Local validation:** Backend 204 Passed; api-client double generate + drift + typecheck; frontend typecheck/lint/format/test(134)/guards/builds/isolation/audit; Firefox native zoom Passed.
+- **Next action:** Push; record workflow IDs; Completed on green exact tip.
+
+### 2026-08-02T12:15:00Z — agent:composer-plan-0016
+
+- **Checkpoint:** Returned to **In Progress** for PR #25 final-review remediation.
+- **P1:** Mutation success no longer treated as failure when `getHistory` fails (Consume/Discard/Correct/AvailabilityChanged); secondary history warning + reload actions; no auto-retry of mutation.
+- **P2:** Create idempotency key scoped to logical attempt (reuse on transport failure; new key on material change or after confirmed success; no browser storage).
+- **P2:** Edit mode explicit loading / not_found / session / error / ready with retry and blocked submit.
+- **Tests:** Detail + Form Jest regressions added; inventory catalog keys for history refresh + edit load.
+- **Next action:** Full local validation + CI on exact tip; then Completed.
 
 ### 2026-08-02T12:05:00Z — agent:composer-plan-0016
 

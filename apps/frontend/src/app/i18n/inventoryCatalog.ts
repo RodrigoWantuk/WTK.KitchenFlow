@@ -24,6 +24,7 @@ export const REQUIRED_INVENTORY_I18N_KEYS = [
   "inventory.actions.save",
   "inventory.actions.cancel",
   "inventory.actions.reloadReview",
+  "inventory.actions.reloadHistory",
   "inventory.actions.clearFilters",
   "inventory.filter.status",
   "inventory.filter.statusAll",
@@ -79,9 +80,11 @@ export const REQUIRED_INVENTORY_I18N_KEYS = [
   "inventory.form.editTitle",
   "inventory.error.loadList",
   "inventory.error.loadDetail",
+  "inventory.error.loadEdit",
   "inventory.error.notFound",
   "inventory.error.invalidDecimal",
   "inventory.error.adjust",
+  "inventory.error.historyRefresh",
   "inventory.error.delete",
   "inventory.error.staleVersion",
   "inventory.error.staleHint",
@@ -128,6 +131,7 @@ const en: Record<InventoryI18nKey, string> = {
   "inventory.actions.save": "Save",
   "inventory.actions.cancel": "Cancel",
   "inventory.actions.reloadReview": "Reload and review",
+  "inventory.actions.reloadHistory": "Reload history",
   "inventory.actions.clearFilters": "Clear filters",
   "inventory.filter.status": "Status",
   "inventory.filter.statusAll": "All statuses",
@@ -183,9 +187,12 @@ const en: Record<InventoryI18nKey, string> = {
   "inventory.form.editTitle": "Edit lot",
   "inventory.error.loadList": "Could not load inventory.",
   "inventory.error.loadDetail": "Could not load this lot.",
+  "inventory.error.loadEdit": "Could not load this lot for editing.",
   "inventory.error.notFound": "Lot not found.",
   "inventory.error.invalidDecimal": "Enter a valid amount for this locale.",
   "inventory.error.adjust": "Could not adjust quantity.",
+  "inventory.error.historyRefresh":
+    "The adjustment was saved, but history could not be refreshed.",
   "inventory.error.delete": "Could not delete lot.",
   "inventory.error.staleVersion":
     "This lot changed elsewhere. Reload before applying your change.",
@@ -238,6 +245,7 @@ const ptBR: Record<InventoryI18nKey, string> = {
   "inventory.actions.save": "Salvar",
   "inventory.actions.cancel": "Cancelar",
   "inventory.actions.reloadReview": "Recarregar e revisar",
+  "inventory.actions.reloadHistory": "Recarregar histórico",
   "inventory.actions.clearFilters": "Limpar filtros",
   "inventory.filter.status": "Status",
   "inventory.filter.statusAll": "Todos os status",
@@ -290,10 +298,14 @@ const ptBR: Record<InventoryI18nKey, string> = {
   "inventory.form.editTitle": "Editar lote",
   "inventory.error.loadList": "Não foi possível carregar o inventário.",
   "inventory.error.loadDetail": "Não foi possível carregar este lote.",
+  "inventory.error.loadEdit":
+    "Não foi possível carregar este lote para edição.",
   "inventory.error.notFound": "Lote não encontrado.",
   "inventory.error.invalidDecimal":
     "Informe uma quantidade válida para este idioma.",
   "inventory.error.adjust": "Não foi possível ajustar a quantidade.",
+  "inventory.error.historyRefresh":
+    "O ajuste foi salvo, mas o histórico não pôde ser atualizado.",
   "inventory.error.delete": "Não foi possível excluir o lote.",
   "inventory.error.staleVersion":
     "Este lote mudou em outro lugar. Recarregue antes de aplicar a alteração.",
@@ -347,6 +359,7 @@ const es: Record<InventoryI18nKey, string> = {
   "inventory.actions.save": "Guardar",
   "inventory.actions.cancel": "Cancelar",
   "inventory.actions.reloadReview": "Recargar y revisar",
+  "inventory.actions.reloadHistory": "Recargar historial",
   "inventory.actions.clearFilters": "Borrar filtros",
   "inventory.filter.status": "Estado",
   "inventory.filter.statusAll": "Todos los estados",
@@ -399,10 +412,13 @@ const es: Record<InventoryI18nKey, string> = {
   "inventory.form.editTitle": "Editar lote",
   "inventory.error.loadList": "No se pudo cargar el inventario.",
   "inventory.error.loadDetail": "No se pudo cargar este lote.",
+  "inventory.error.loadEdit": "No se pudo cargar este lote para editar.",
   "inventory.error.notFound": "Lote no encontrado.",
   "inventory.error.invalidDecimal":
     "Ingresa una cantidad válida para este idioma.",
   "inventory.error.adjust": "No se pudo ajustar la cantidad.",
+  "inventory.error.historyRefresh":
+    "El ajuste se guardó, pero no se pudo actualizar el historial.",
   "inventory.error.delete": "No se pudo eliminar el lote.",
   "inventory.error.staleVersion":
     "Este lote cambió en otro lugar. Recarga antes de aplicar el cambio.",

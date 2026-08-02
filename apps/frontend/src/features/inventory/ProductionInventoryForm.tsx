@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useInventoryRepository } from "./InventoryProvider";
 import {
@@ -17,6 +17,49 @@ import { Input } from "@/components/ui/input";
 type Mode = "measured" | "qualitative";
 const CUSTOM_LOCATION_MAX = 80;
 
+type EditLoadStatus =
+  | "idle"
+  | "loading"
+  | "ready"
+  | "not_found"
+  | "session"
+  | "error";
+
+type CreateAttempt = {
+  fingerprint: string;
+  idempotencyKey: string;
+};
+
+/**
+ * Builds a stable fingerprint of material create-form fields so idempotency
+ * keys represent a logical attempt, not an individual click.
+ */
+function buildCreateFingerprint(input: {
+  productName: string;
+  quantityMode: Mode;
+  amount: string;
+  unit: string;
+  availability: string;
+  storageLocation: StorageLocation;
+  customLocation: string;
+  packageState: PackageState | "";
+  printedDate: string;
+  notes: string;
+}): string {
+  return JSON.stringify({
+    productName: input.productName.trim(),
+    quantityMode: input.quantityMode,
+    amount: input.amount.trim(),
+    unit: input.unit,
+    availability: input.availability,
+    storageLocation: input.storageLocation,
+    customLocation: input.customLocation.trim(),
+    packageState: input.packageState,
+    printedDate: input.printedDate.trim(),
+    notes: input.notes.trim(),
+  });
+}
+
 /**
  * Create or edit inventory lot metadata / initial quantity.
  */
@@ -27,6 +70,9 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
   const { t, locale } = useProductionI18n();
   const navigate = useNavigate();
   const [existing, setExisting] = useState<InventoryLotView | null>(null);
+  const [editLoadStatus, setEditLoadStatus] = useState<EditLoadStatus>(
+    mode === "edit" ? "loading" : "idle",
+  );
   const [productName, setProductName] = useState("");
   const [quantityMode, setQuantityMode] = useState<Mode>("measured");
   const [amount, setAmount] = useState("");
@@ -44,11 +90,11 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [conflict, setConflict] = useState(false);
   const [busy, setBusy] = useState(false);
+  /** Logical create attempt — form lifetime only; never persisted to storage. */
+  const createAttemptRef = useRef<CreateAttempt | null>(null);
 
-  useEffect(() => {
-    if (mode !== "edit") return;
-    void (async () => {
-      const lot = await repo.getLot(lotId);
+  const applyLotToForm = useCallback(
+    (lot: InventoryLotView) => {
       setExisting(lot);
       setProductName(lot.productName);
       setStorageLocation(lot.storageLocation as StorageLocation);
@@ -66,14 +112,66 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
         setQuantityMode("qualitative");
         setAvailability(lot.quantity.availability);
       }
-    })();
-  }, [locale, lotId, mode, repo]);
+    },
+    [locale],
+  );
+
+  const loadExisting = useCallback(async () => {
+    if (mode !== "edit") return;
+    setEditLoadStatus("loading");
+    setFieldError(null);
+    setExisting(null);
+    try {
+      const lot = await repo.getLot(lotId);
+      applyLotToForm(lot);
+      setEditLoadStatus("ready");
+    } catch (err) {
+      setExisting(null);
+      if (err instanceof InventoryApiError) {
+        if (err.code === "not_found") {
+          setEditLoadStatus("not_found");
+          return;
+        }
+        if (err.code === "authentication_required") {
+          setEditLoadStatus("session");
+          return;
+        }
+      }
+      setEditLoadStatus("error");
+    }
+  }, [applyLotToForm, lotId, mode, repo]);
+
+  useEffect(() => {
+    void loadExisting();
+  }, [loadExisting]);
 
   function setStorage(next: StorageLocation) {
     setStorageLocation(next);
     if (next !== "Other") {
       setCustomLocation("");
     }
+  }
+
+  function resolveCreateIdempotencyKey(): string {
+    const fingerprint = buildCreateFingerprint({
+      productName,
+      quantityMode,
+      amount,
+      unit,
+      availability,
+      storageLocation,
+      customLocation,
+      packageState,
+      printedDate,
+      notes,
+    });
+    const current = createAttemptRef.current;
+    if (current && current.fingerprint === fingerprint) {
+      return current.idempotencyKey;
+    }
+    const idempotencyKey = crypto.randomUUID();
+    createAttemptRef.current = { fingerprint, idempotencyKey };
+    return idempotencyKey;
   }
 
   function mapBackendFieldErrors(errors: Record<string, string[]>) {
@@ -96,6 +194,12 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
     setFieldError(null);
     setFieldErrors({});
     setConflict(false);
+    if (mode === "edit") {
+      if (editLoadStatus !== "ready" || !existing) {
+        setFieldError(t("inventory.error.loadEdit"));
+        return;
+      }
+    }
     if (!productName.trim()) {
       setFieldError(t("inventory.error.productName"));
       return;
@@ -151,6 +255,7 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
             availability,
           };
         }
+        const idempotencyKey = resolveCreateIdempotencyKey();
         const created = await repo.createLot(
           {
             productName: productName.trim(),
@@ -163,14 +268,18 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
           },
           {
             csrfToken: session.csrfToken,
-            idempotencyKey: crypto.randomUUID(),
+            idempotencyKey,
           },
         );
+        createAttemptRef.current = null;
         navigate(`/app/despensa/${created.lotId}`);
         return;
       }
 
-      if (!existing) return;
+      if (!existing) {
+        setFieldError(t("inventory.error.loadEdit"));
+        return;
+      }
       const updated = await repo.updateLot(
         existing.lotId,
         {
@@ -205,12 +314,95 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
           setFieldError(err.message || t("inventory.error.validation"));
         }
       } else {
+        // Transport / ambiguous failure — keep createAttemptRef so retry reuses key.
         setFieldError(t("inventory.error.save"));
       }
     } finally {
       setBusy(false);
     }
   }
+
+  if (mode === "edit" && editLoadStatus === "loading") {
+    return (
+      <p role="status" data-testid="inventory-edit-loading">
+        {t("inventory.loading")}
+      </p>
+    );
+  }
+
+  if (mode === "edit" && editLoadStatus === "not_found") {
+    return (
+      <div
+        role="alert"
+        data-testid="inventory-edit-not-found"
+        className="mx-auto max-w-xl space-y-3"
+      >
+        <h1 className="font-display text-3xl">
+          {t("inventory.form.editTitle")}
+        </h1>
+        <p>{t("inventory.error.notFound")}</p>
+        <Button asChild variant="secondary">
+          <Link to="/app/despensa">{t("inventory.actions.back")}</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  if (mode === "edit" && editLoadStatus === "session") {
+    return (
+      <div
+        role="alert"
+        data-testid="inventory-edit-session"
+        className="mx-auto max-w-xl space-y-3"
+      >
+        <h1 className="font-display text-3xl">
+          {t("inventory.form.editTitle")}
+        </h1>
+        <p>{t("inventory.error.session")}</p>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            data-testid="inventory-edit-retry"
+            onClick={() => void loadExisting()}
+          >
+            {t("inventory.actions.retry")}
+          </Button>
+          <Button asChild variant="secondary">
+            <Link to="/app/despensa">{t("inventory.actions.back")}</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === "edit" && editLoadStatus === "error") {
+    return (
+      <div
+        role="alert"
+        data-testid="inventory-edit-error"
+        className="mx-auto max-w-xl space-y-3"
+      >
+        <h1 className="font-display text-3xl">
+          {t("inventory.form.editTitle")}
+        </h1>
+        <p>{t("inventory.error.loadEdit")}</p>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            data-testid="inventory-edit-retry"
+            onClick={() => void loadExisting()}
+          >
+            {t("inventory.actions.retry")}
+          </Button>
+          <Button asChild variant="secondary">
+            <Link to="/app/despensa">{t("inventory.actions.back")}</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const editReady = mode !== "edit" || editLoadStatus === "ready";
 
   return (
     <form
@@ -241,7 +433,7 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
         <Input
           data-testid="inventory-product-name"
           value={productName}
-          disabled={busy}
+          disabled={busy || !editReady}
           onChange={(event) => setProductName(event.target.value)}
           required
           aria-invalid={Boolean(fieldErrors.productName)}
@@ -334,7 +526,7 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
           data-testid="inventory-location"
           className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
           value={storageLocation}
-          disabled={busy}
+          disabled={busy || !editReady}
           onChange={(event) =>
             setStorage(event.target.value as StorageLocation)
           }
@@ -355,7 +547,7 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
           <Input
             data-testid="inventory-custom-location"
             value={customLocation}
-            disabled={busy}
+            disabled={busy || !editReady}
             maxLength={CUSTOM_LOCATION_MAX}
             onChange={(event) => setCustomLocation(event.target.value)}
             required
@@ -381,7 +573,7 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
         <select
           className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
           value={packageState}
-          disabled={busy}
+          disabled={busy || !editReady}
           onChange={(event) =>
             setPackageState(event.target.value as PackageState | "")
           }
@@ -401,7 +593,7 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
           inputMode="numeric"
           placeholder="YYYY-MM-DD"
           value={printedDate}
-          disabled={busy}
+          disabled={busy || !editReady}
           onChange={(event) => setPrintedDate(event.target.value)}
         />
         <span className="block text-xs text-muted-foreground">
@@ -413,7 +605,7 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
         <span>{t("inventory.fields.notes")}</span>
         <Input
           value={notes}
-          disabled={busy}
+          disabled={busy || !editReady}
           onChange={(event) => setNotes(event.target.value)}
         />
       </label>
@@ -428,7 +620,7 @@ export function ProductionInventoryForm({ mode }: { mode: "create" | "edit" }) {
         <Button
           type="submit"
           data-testid="inventory-save"
-          disabled={busy || !session.csrfToken}
+          disabled={busy || !session.csrfToken || !editReady}
         >
           {t("inventory.actions.save")}
         </Button>

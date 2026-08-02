@@ -49,13 +49,27 @@ export function ProductionInventoryDetail() {
   const [availability, setAvailability] =
     useState<AvailabilityState>("Available");
   const [adjustError, setAdjustError] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const historyTimeZone =
     session.timeZone && session.timeZone.trim() ? session.timeZone : "UTC";
 
+  const reloadHistory = useCallback(
+    async (targetLotId: string) => {
+      try {
+        setHistory(await repo.getHistory(targetLotId));
+        setHistoryError(null);
+      } catch {
+        setHistoryError(t("inventory.error.historyRefresh"));
+      }
+    },
+    [repo, t],
+  );
+
   const reload = useCallback(async () => {
     setStatus("loading");
     setError(null);
+    setHistoryError(null);
     setConflict(false);
     setMissingPrecondition(false);
     try {
@@ -121,16 +135,18 @@ export function ProductionInventoryDetail() {
   async function runMeasuredAdjustment() {
     if (!lot || lot.quantity.kind !== "measured") return;
     setAdjustError(null);
+    setHistoryError(null);
     const parsed = parseLocaleDecimal(adjustValue, locale);
     if (!parsed.ok) {
       setAdjustError(t("inventory.error.invalidDecimal"));
       return;
     }
     setBusy(true);
+    let nextLot: InventoryLotView | null = null;
     try {
       const csrfToken = requireCsrf();
       const type: AdjustmentType = measuredAction;
-      const next = await repo.adjustLot(
+      nextLot = await repo.adjustLot(
         lot.lotId,
         {
           type,
@@ -143,23 +159,30 @@ export function ProductionInventoryDetail() {
           idempotencyKey: crypto.randomUUID(),
         },
       );
-      setLot(next);
+      // Authoritative mutation succeeded — commit lot/ETag before auxiliary history.
+      setLot(nextLot);
       setAdjustValue("");
-      setHistory(await repo.getHistory(lot.lotId));
     } catch (err) {
       handleMutationError(err, "inventory.error.adjust");
+      return;
     } finally {
       setBusy(false);
+    }
+
+    if (nextLot) {
+      await reloadHistory(nextLot.lotId);
     }
   }
 
   async function runAvailabilityChange() {
     if (!lot || lot.quantity.kind !== "qualitative") return;
     setAdjustError(null);
+    setHistoryError(null);
     setBusy(true);
+    let nextLot: InventoryLotView | null = null;
     try {
       const csrfToken = requireCsrf();
-      const next = await repo.adjustLot(
+      nextLot = await repo.adjustLot(
         lot.lotId,
         {
           type: "AvailabilityChanged",
@@ -172,12 +195,17 @@ export function ProductionInventoryDetail() {
           idempotencyKey: crypto.randomUUID(),
         },
       );
-      setLot(next);
-      setHistory(await repo.getHistory(lot.lotId));
+      // Authoritative mutation succeeded — commit lot/ETag before auxiliary history.
+      setLot(nextLot);
     } catch (err) {
       handleMutationError(err, "inventory.error.adjust");
+      return;
     } finally {
       setBusy(false);
+    }
+
+    if (nextLot) {
+      await reloadHistory(nextLot.lotId);
     }
   }
 
@@ -429,6 +457,32 @@ export function ProductionInventoryDetail() {
 
       <section className="space-y-3">
         <h2 className="font-display text-xl">{t("inventory.history.title")}</h2>
+        {historyError && (
+          <div
+            role="status"
+            data-testid="inventory-history-refresh-error"
+            className="rounded-xl border border-warning/40 bg-warning/10 p-4"
+          >
+            <p>{historyError}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                type="button"
+                data-testid="inventory-reload-history"
+                onClick={() => void reloadHistory(lot.lotId)}
+              >
+                {t("inventory.actions.reloadHistory")}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                data-testid="inventory-reload-after-history"
+                onClick={() => void reload()}
+              >
+                {t("inventory.actions.reloadReview")}
+              </Button>
+            </div>
+          </div>
+        )}
         <ol data-testid="inventory-history" className="space-y-2">
           {history.map((entry) => (
             <li

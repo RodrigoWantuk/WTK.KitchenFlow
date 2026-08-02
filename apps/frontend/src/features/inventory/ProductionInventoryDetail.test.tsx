@@ -237,4 +237,114 @@ describe("ProductionInventoryDetail", () => {
     expect(screen.getByTestId("inventory-adjust-submit")).toBeDisabled();
     expect(screen.getByTestId("inventory-missing-csrf")).toBeInTheDocument();
   });
+
+  it("does not treat history refresh failure as adjust failure", async () => {
+    const user = userEvent.setup();
+    const adjustLot = jest.fn(async () => ({
+      ...sampleLot,
+      quantity: {
+        kind: "measured" as const,
+        value: 400,
+        unit: "Gram" as const,
+      },
+      etag: '"v2"',
+    }));
+    const getHistory = jest
+      .fn()
+      .mockResolvedValueOnce([
+        {
+          entryId: "dddddddd-dddd-dddd-dddd-dddddddddddd",
+          kind: "LifecycleTransaction",
+          type: "Consume",
+          reasonCode: "ui_consume",
+          changedFields: null,
+          occurredAt: "2026-08-01T12:00:00Z",
+        },
+      ])
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503));
+    const repo = createMockInventoryRepo({
+      getLot: jest.fn(async () => sampleLot),
+      getHistory,
+      adjustLot,
+    });
+    renderDetail(repo);
+    await screen.findByText("Rice");
+    await user.type(screen.getByTestId("inventory-adjust-value"), "100");
+    await user.click(screen.getByTestId("inventory-adjust-submit"));
+
+    expect(
+      await screen.findByTestId("inventory-history-refresh-error"),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("production-inventory-detail")).toHaveTextContent(
+      /400/,
+    );
+    expect(
+      screen.queryByText(/Could not adjust quantity/i),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("inventory-reload-history")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("inventory-reload-after-history"),
+    ).toBeInTheDocument();
+    expect(adjustLot).toHaveBeenCalledTimes(1);
+    expect(adjustLot).toHaveBeenCalledWith(
+      sampleLot.lotId,
+      expect.any(Object),
+      expect.objectContaining({ etag: '"v1"' }),
+    );
+
+    getHistory.mockResolvedValueOnce([]);
+    await user.type(screen.getByTestId("inventory-adjust-value"), "1");
+    await user.click(screen.getByTestId("inventory-adjust-submit"));
+    await waitFor(() => expect(adjustLot).toHaveBeenCalledTimes(2));
+    expect(adjustLot).toHaveBeenLastCalledWith(
+      sampleLot.lotId,
+      expect.any(Object),
+      expect.objectContaining({ etag: '"v2"' }),
+    );
+  });
+
+  it("keeps availability mutation success when history refresh fails", async () => {
+    const user = userEvent.setup();
+    const qualitative = {
+      ...sampleLot,
+      quantity: {
+        kind: "qualitative" as const,
+        availability: "Low" as const,
+      },
+    };
+    const adjustLot = jest.fn(async () => ({
+      ...qualitative,
+      quantity: {
+        kind: "qualitative" as const,
+        availability: "Available" as const,
+      },
+      etag: '"v9"',
+    }));
+    const getHistory = jest
+      .fn()
+      .mockResolvedValueOnce([])
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503));
+    const repo = createMockInventoryRepo({
+      getLot: jest.fn(async () => qualitative),
+      getHistory,
+      adjustLot,
+    });
+    renderDetail(repo);
+    await screen.findByText("Rice");
+    await user.selectOptions(
+      screen.getByTestId("inventory-availability"),
+      "Available",
+    );
+    await user.click(screen.getByTestId("inventory-availability-submit"));
+    expect(
+      await screen.findByTestId("inventory-history-refresh-error"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Could not adjust quantity/i),
+    ).not.toBeInTheDocument();
+    expect(adjustLot).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("production-inventory-detail")).toHaveTextContent(
+      /Available/i,
+    );
+  });
 });

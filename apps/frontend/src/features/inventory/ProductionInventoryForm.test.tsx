@@ -150,4 +150,128 @@ describe("ProductionInventoryForm", () => {
       "true",
     );
   });
+
+  it("reuses the same create idempotency key after transport failure", async () => {
+    const user = userEvent.setup();
+    const createLot = jest
+      .fn()
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503))
+      .mockResolvedValueOnce(sampleLot);
+    const repo = createMockInventoryRepo({ createLot });
+    renderForm("create", repo);
+
+    await user.type(screen.getByTestId("inventory-product-name"), "Arroz");
+    await user.type(screen.getByTestId("inventory-amount"), "1");
+    await user.click(screen.getByTestId("inventory-save"));
+    expect(
+      await screen.findByTestId("inventory-form-error"),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByTestId("inventory-save"));
+    await waitFor(() => expect(createLot).toHaveBeenCalledTimes(2));
+    const firstKey = createLot.mock.calls[0][1].idempotencyKey;
+    const secondKey = createLot.mock.calls[1][1].idempotencyKey;
+    expect(firstKey).toMatch(/^[0-9a-f-]{36}$/i);
+    expect(secondKey).toBe(firstKey);
+    expect(window.localStorage.length).toBe(0);
+    expect(window.sessionStorage.length).toBe(0);
+  });
+
+  it("issues a new create idempotency key after material form changes", async () => {
+    const user = userEvent.setup();
+    const createLot = jest
+      .fn()
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503))
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503));
+    const repo = createMockInventoryRepo({ createLot });
+    renderForm("create", repo);
+
+    await user.type(screen.getByTestId("inventory-product-name"), "Arroz");
+    await user.type(screen.getByTestId("inventory-amount"), "1");
+    await user.click(screen.getByTestId("inventory-save"));
+    await screen.findByTestId("inventory-form-error");
+
+    await user.clear(screen.getByTestId("inventory-amount"));
+    await user.type(screen.getByTestId("inventory-amount"), "2");
+    await user.click(screen.getByTestId("inventory-save"));
+    await waitFor(() => expect(createLot).toHaveBeenCalledTimes(2));
+    expect(createLot.mock.calls[0][1].idempotencyKey).not.toBe(
+      createLot.mock.calls[1][1].idempotencyKey,
+    );
+  });
+
+  it("does not reuse create idempotency key after confirmed success", async () => {
+    const user = userEvent.setup();
+    const createLot = jest
+      .fn()
+      .mockResolvedValueOnce({ ...sampleLot, lotId: "lot-a" })
+      .mockResolvedValueOnce({ ...sampleLot, lotId: "lot-b" });
+    const repo = createMockInventoryRepo({ createLot });
+    const { unmount } = renderForm("create", repo);
+
+    await user.type(screen.getByTestId("inventory-product-name"), "Arroz");
+    await user.type(screen.getByTestId("inventory-amount"), "1");
+    await user.click(screen.getByTestId("inventory-save"));
+    await waitFor(() => expect(createLot).toHaveBeenCalledTimes(1));
+    const firstKey = createLot.mock.calls[0][1].idempotencyKey;
+    unmount();
+
+    renderForm("create", repo);
+    await user.type(screen.getByTestId("inventory-product-name"), "Arroz");
+    await user.type(screen.getByTestId("inventory-amount"), "1");
+    await user.click(screen.getByTestId("inventory-save"));
+    await waitFor(() => expect(createLot).toHaveBeenCalledTimes(2));
+    expect(createLot.mock.calls[1][1].idempotencyKey).not.toBe(firstKey);
+  });
+
+  it("loads edit mode successfully and blocks submit before ready", async () => {
+    let resolveLot!: (lot: typeof sampleLot) => void;
+    const getLot = jest.fn(
+      () =>
+        new Promise<typeof sampleLot>((resolve) => {
+          resolveLot = resolve;
+        }),
+    );
+    const updateLot = jest.fn(async () => sampleLot);
+    const repo = createMockInventoryRepo({ getLot, updateLot });
+    renderForm("edit", repo);
+
+    expect(screen.getByTestId("inventory-edit-loading")).toBeInTheDocument();
+    expect(screen.queryByTestId("inventory-save")).not.toBeInTheDocument();
+
+    resolveLot(sampleLot);
+    expect(await screen.findByDisplayValue("Rice")).toBeInTheDocument();
+    expect(screen.getByTestId("inventory-save")).not.toBeDisabled();
+  });
+
+  it("shows not-found state for edit 404", async () => {
+    const repo = createMockInventoryRepo({
+      getLot: jest.fn(async () => {
+        throw new InventoryApiError("not_found", "missing", 404);
+      }),
+    });
+    renderForm("edit", repo);
+    expect(
+      await screen.findByTestId("inventory-edit-not-found"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("production-inventory-form"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows unavailable edit error and retries successfully", async () => {
+    const user = userEvent.setup();
+    const getLot = jest
+      .fn()
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503))
+      .mockResolvedValueOnce(sampleLot);
+    const repo = createMockInventoryRepo({ getLot });
+    renderForm("edit", repo);
+    expect(
+      await screen.findByTestId("inventory-edit-error"),
+    ).toBeInTheDocument();
+    await user.click(screen.getByTestId("inventory-edit-retry"));
+    expect(await screen.findByDisplayValue("Rice")).toBeInTheDocument();
+    expect(getLot).toHaveBeenCalledTimes(2);
+  });
 });
