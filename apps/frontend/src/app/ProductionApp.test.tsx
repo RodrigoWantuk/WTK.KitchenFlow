@@ -7,6 +7,22 @@ describe("ProductionApp landing controls", () => {
   beforeEach(() => {
     localStorage.removeItem(PRODUCTION_LOCALE_STORAGE_KEY);
     window.history.pushState({}, "", "/");
+    jest.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          errorCode: "authentication_required",
+          detail: "Authentication is required.",
+        }),
+        {
+          status: 401,
+          headers: { "content-type": "application/problem+json" },
+        },
+      ),
+    );
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it("uses asChild link CTA without nested button inside anchor", async () => {
@@ -21,8 +37,11 @@ describe("ProductionApp landing controls", () => {
 
     cta.focus();
     await user.keyboard("{Enter}");
+    expect(await screen.findByTestId("production-access")).toBeInTheDocument();
     expect(
-      await screen.findByText(/login gerenciado|Backend-managed/i),
+      screen.getByText(
+        /login gerenciado|Backend-managed|sesión del navegador/i,
+      ),
     ).toBeInTheDocument();
   });
 

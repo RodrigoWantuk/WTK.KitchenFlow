@@ -1,0 +1,4233 @@
+{
+  "generatedAtUtc": "2026-08-02T03:12:40.645Z",
+  "reports": [
+    {
+      "label": "cook-cta",
+      "route": "/app/hoje",
+      "selector": "[data-testid=\"sugg-open-r2\"]",
+      "zoom": {
+        "baselineInnerWidthAt100": 1162,
+        "zoomedInnerWidth": 581,
+        "widthRatio": 2,
+        "numberOfZoomInActions": 6
+      },
+      "before": {
+        "viewport": {
+          "innerWidth": 581,
+          "innerHeight": 287,
+          "scrollX": 0,
+          "scrollY": 490.5,
+          "devicePixelRatio": 2
+        },
+        "targetRect": {
+          "top": 127.5,
+          "left": 143,
+          "bottom": 159.5,
+          "right": 306.3333282470703,
+          "width": 163.3333282470703,
+          "height": 32
+        },
+        "targetStyle": {
+          "tag": "A",
+          "id": null,
+          "testId": "sugg-open-r2",
+          "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+          "pointerEvents": "auto",
+          "position": "static",
+          "zIndex": "auto",
+          "opacity": "1",
+          "overflow": "visible",
+          "transform": "none"
+        },
+        "samples": [
+          {
+            "name": "center",
+            "x": 224.66666412353516,
+            "y": 143.5,
+            "hitsTarget": true,
+            "top": {
+              "tag": "A",
+              "id": null,
+              "testId": "sugg-open-r2",
+              "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "sugg-open-r2",
+                "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-3 flex flex-wrap gap-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "p-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid grid-cols-[110px_1fr] gap-0 sm:grid-cols-[160px_1fr]",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "suggestion-r2",
+                "className": "rounded-xl border bg-card text-card-foreground shadow overflow-hidden card-hover",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "hidden",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "SECTION",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-8",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "tl",
+            "x": 147,
+            "y": 131.5,
+            "hitsTarget": true,
+            "top": {
+              "tag": "A",
+              "id": null,
+              "testId": "sugg-open-r2",
+              "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "sugg-open-r2",
+                "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-3 flex flex-wrap gap-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "p-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid grid-cols-[110px_1fr] gap-0 sm:grid-cols-[160px_1fr]",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "suggestion-r2",
+                "className": "rounded-xl border bg-card text-card-foreground shadow overflow-hidden card-hover",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "hidden",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "SECTION",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-8",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "tr",
+            "x": 302.3333282470703,
+            "y": 131.5,
+            "hitsTarget": true,
+            "top": {
+              "tag": "A",
+              "id": null,
+              "testId": "sugg-open-r2",
+              "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "sugg-open-r2",
+                "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-3 flex flex-wrap gap-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "p-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid grid-cols-[110px_1fr] gap-0 sm:grid-cols-[160px_1fr]",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "suggestion-r2",
+                "className": "rounded-xl border bg-card text-card-foreground shadow overflow-hidden card-hover",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "hidden",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "SECTION",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-8",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "bl",
+            "x": 147,
+            "y": 155.5,
+            "hitsTarget": true,
+            "top": {
+              "tag": "A",
+              "id": null,
+              "testId": "sugg-open-r2",
+              "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "sugg-open-r2",
+                "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-3 flex flex-wrap gap-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "p-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid grid-cols-[110px_1fr] gap-0 sm:grid-cols-[160px_1fr]",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "suggestion-r2",
+                "className": "rounded-xl border bg-card text-card-foreground shadow overflow-hidden card-hover",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "hidden",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "SECTION",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-8",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "br",
+            "x": 302.3333282470703,
+            "y": 155.5,
+            "hitsTarget": true,
+            "top": {
+              "tag": "A",
+              "id": null,
+              "testId": "sugg-open-r2",
+              "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "sugg-open-r2",
+                "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-3 flex flex-wrap gap-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "p-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid grid-cols-[110px_1fr] gap-0 sm:grid-cols-[160px_1fr]",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "suggestion-r2",
+                "className": "rounded-xl border bg-card text-card-foreground shadow overflow-hidden card-hover",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "hidden",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "SECTION",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-8",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "mid-left",
+            "x": 151,
+            "y": 143.5,
+            "hitsTarget": true,
+            "top": {
+              "tag": "A",
+              "id": null,
+              "testId": "sugg-open-r2",
+              "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "sugg-open-r2",
+                "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-3 flex flex-wrap gap-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "p-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid grid-cols-[110px_1fr] gap-0 sm:grid-cols-[160px_1fr]",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "suggestion-r2",
+                "className": "rounded-xl border bg-card text-card-foreground shadow overflow-hidden card-hover",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "hidden",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "SECTION",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-8",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "mid-right",
+            "x": 298.3333282470703,
+            "y": 143.5,
+            "hitsTarget": true,
+            "top": {
+              "tag": "A",
+              "id": null,
+              "testId": "sugg-open-r2",
+              "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "sugg-open-r2",
+                "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-3 flex flex-wrap gap-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "p-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid grid-cols-[110px_1fr] gap-0 sm:grid-cols-[160px_1fr]",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "suggestion-r2",
+                "className": "rounded-xl border bg-card text-card-foreground shadow overflow-hidden card-hover",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "hidden",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "SECTION",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-8",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          }
+        ],
+        "ancestors": [
+          {
+            "tag": "A",
+            "testId": "sugg-open-r2",
+            "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "mt-3 flex flex-wrap gap-2",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "p-4",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "grid grid-cols-[110px_1fr] gap-0 sm:grid-cols-[160px_1fr]",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": "suggestion-r2",
+            "className": "rounded-xl border bg-card text-card-foreground shadow overflow-hidden card-hover",
+            "overflow": "hidden",
+            "overflowY": "hidden",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "grid gap-3 md:grid-cols-2",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "SECTION",
+            "testId": null,
+            "className": "",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "space-y-8",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "MAIN",
+            "testId": null,
+            "className": "min-w-0 flex-1",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "mx-auto flex max-w-7xl gap-8 px-4 pb-32 pt-6 md:px-8 md:pb-10",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "min-h-screen bg-background text-foreground",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          }
+        ],
+        "fixedOrStickyOverlapping": [],
+        "fixedOrStickyAll": [
+          {
+            "tag": "HEADER",
+            "testId": null,
+            "className": "sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur",
+            "position": "sticky",
+            "zIndex": "40",
+            "pointerEvents": "auto",
+            "rect": {
+              "top": 0,
+              "left": 0,
+              "bottom": 65,
+              "right": 581,
+              "width": 581,
+              "height": 65
+            },
+            "overlapsCenter": false
+          },
+          {
+            "tag": "ASIDE",
+            "testId": null,
+            "className": "sticky top-24 hidden h-fit w-56 shrink-0 md:block",
+            "position": "sticky",
+            "zIndex": "auto",
+            "pointerEvents": "auto",
+            "rect": {
+              "top": 0,
+              "left": 0,
+              "bottom": 0,
+              "right": 0,
+              "width": 0,
+              "height": 0
+            },
+            "overlapsCenter": false
+          },
+          {
+            "tag": "NAV",
+            "testId": null,
+            "className": "fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur md:hidden safe-b",
+            "position": "fixed",
+            "zIndex": "40",
+            "pointerEvents": "auto",
+            "rect": {
+              "top": 209,
+              "left": 0,
+              "bottom": 286.5,
+              "right": 581,
+              "width": 581,
+              "height": 77.5
+            },
+            "overlapsCenter": false
+          },
+          {
+            "tag": "BUTTON",
+            "testId": "scenario-open",
+            "className": "fixed bottom-24 right-4 z-50 grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-lg md:bo",
+            "position": "fixed",
+            "zIndex": "50",
+            "pointerEvents": "auto",
+            "rect": {
+              "top": 146.5,
+              "left": 521,
+              "bottom": 190.5,
+              "right": 565,
+              "width": 44,
+              "height": 44
+            },
+            "overlapsCenter": false
+          }
+        ],
+        "mobileBreakpointLikely": true,
+        "bottomNavPresent": true,
+        "bottomNavRect": {
+          "top": 209,
+          "bottom": 286.5,
+          "height": 77.5
+        },
+        "scenarioFabPresent": true
+      },
+      "clickError": "locator.click: Timeout 2500ms exceeded.\nCall log:\n  - waiting for locator('[data-testid=\"sugg-open-r2\"]').first()\n    - locator resolved to <a data-discover=\"true\" href=\"/app/receitas/r2\" data-testid=\"sugg-open-r2\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-8 rounded-md px-3 text-xs\">…</a>\n  - attempting click action (trial run)\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scroll",
+      "afterNudge": {
+        "viewport": {
+          "innerWidth": 581,
+          "innerHeight": 287,
+          "scrollX": 0,
+          "scrollY": 491,
+          "devicePixelRatio": 2
+        },
+        "targetRect": {
+          "top": 127,
+          "left": 143,
+          "bottom": 159,
+          "right": 306.3333282470703,
+          "width": 163.3333282470703,
+          "height": 32
+        },
+        "targetStyle": {
+          "tag": "A",
+          "id": null,
+          "testId": "sugg-open-r2",
+          "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+          "pointerEvents": "auto",
+          "position": "static",
+          "zIndex": "auto",
+          "opacity": "1",
+          "overflow": "visible",
+          "transform": "none"
+        },
+        "samples": [
+          {
+            "name": "center",
+            "x": 224.66666412353516,
+            "y": 143,
+            "hitsTarget": true,
+            "top": {
+              "tag": "A",
+              "id": null,
+              "testId": "sugg-open-r2",
+              "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "sugg-open-r2",
+                "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-3 flex flex-wrap gap-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "p-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid grid-cols-[110px_1fr] gap-0 sm:grid-cols-[160px_1fr]",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "suggestion-r2",
+                "className": "rounded-xl border bg-card text-card-foreground shadow overflow-hidden card-hover",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "hidden",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "SECTION",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-8",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "tl",
+            "x": 147,
+            "y": 131,
+            "hitsTarget": true,
+            "top": {
+              "tag": "A",
+              "id": null,
+              "testId": "sugg-open-r2",
+              "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "sugg-open-r2",
+                "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-3 flex flex-wrap gap-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "p-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid grid-cols-[110px_1fr] gap-0 sm:grid-cols-[160px_1fr]",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "suggestion-r2",
+                "className": "rounded-xl border bg-card text-card-foreground shadow overflow-hidden card-hover",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "hidden",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "SECTION",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-8",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "tr",
+            "x": 302.3333282470703,
+            "y": 131,
+            "hitsTarget": true,
+            "top": {
+              "tag": "A",
+              "id": null,
+              "testId": "sugg-open-r2",
+              "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "sugg-open-r2",
+                "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-3 flex flex-wrap gap-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "p-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid grid-cols-[110px_1fr] gap-0 sm:grid-cols-[160px_1fr]",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "suggestion-r2",
+                "className": "rounded-xl border bg-card text-card-foreground shadow overflow-hidden card-hover",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "hidden",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "SECTION",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-8",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "bl",
+            "x": 147,
+            "y": 155,
+            "hitsTarget": true,
+            "top": {
+              "tag": "A",
+              "id": null,
+              "testId": "sugg-open-r2",
+              "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "sugg-open-r2",
+                "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-3 flex flex-wrap gap-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "p-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid grid-cols-[110px_1fr] gap-0 sm:grid-cols-[160px_1fr]",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "suggestion-r2",
+                "className": "rounded-xl border bg-card text-card-foreground shadow overflow-hidden card-hover",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "hidden",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "SECTION",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-8",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "br",
+            "x": 302.3333282470703,
+            "y": 155,
+            "hitsTarget": true,
+            "top": {
+              "tag": "A",
+              "id": null,
+              "testId": "sugg-open-r2",
+              "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "sugg-open-r2",
+                "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-3 flex flex-wrap gap-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "p-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid grid-cols-[110px_1fr] gap-0 sm:grid-cols-[160px_1fr]",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "suggestion-r2",
+                "className": "rounded-xl border bg-card text-card-foreground shadow overflow-hidden card-hover",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "hidden",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "SECTION",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-8",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "mid-left",
+            "x": 151,
+            "y": 143,
+            "hitsTarget": true,
+            "top": {
+              "tag": "A",
+              "id": null,
+              "testId": "sugg-open-r2",
+              "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "sugg-open-r2",
+                "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-3 flex flex-wrap gap-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "p-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid grid-cols-[110px_1fr] gap-0 sm:grid-cols-[160px_1fr]",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "suggestion-r2",
+                "className": "rounded-xl border bg-card text-card-foreground shadow overflow-hidden card-hover",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "hidden",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "SECTION",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-8",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "mid-right",
+            "x": 298.3333282470703,
+            "y": 143,
+            "hitsTarget": true,
+            "top": {
+              "tag": "A",
+              "id": null,
+              "testId": "sugg-open-r2",
+              "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "sugg-open-r2",
+                "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-3 flex flex-wrap gap-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "p-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid grid-cols-[110px_1fr] gap-0 sm:grid-cols-[160px_1fr]",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "suggestion-r2",
+                "className": "rounded-xl border bg-card text-card-foreground shadow overflow-hidden card-hover",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "hidden",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "SECTION",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-8",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          }
+        ],
+        "ancestors": [
+          {
+            "tag": "A",
+            "testId": "sugg-open-r2",
+            "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "mt-3 flex flex-wrap gap-2",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "p-4",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "grid grid-cols-[110px_1fr] gap-0 sm:grid-cols-[160px_1fr]",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": "suggestion-r2",
+            "className": "rounded-xl border bg-card text-card-foreground shadow overflow-hidden card-hover",
+            "overflow": "hidden",
+            "overflowY": "hidden",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "grid gap-3 md:grid-cols-2",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "SECTION",
+            "testId": null,
+            "className": "",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "space-y-8",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "MAIN",
+            "testId": null,
+            "className": "min-w-0 flex-1",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "mx-auto flex max-w-7xl gap-8 px-4 pb-32 pt-6 md:px-8 md:pb-10",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "min-h-screen bg-background text-foreground",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          }
+        ],
+        "fixedOrStickyOverlapping": [],
+        "fixedOrStickyAll": [
+          {
+            "tag": "HEADER",
+            "testId": null,
+            "className": "sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur",
+            "position": "sticky",
+            "zIndex": "40",
+            "pointerEvents": "auto",
+            "rect": {
+              "top": 0,
+              "left": 0,
+              "bottom": 65,
+              "right": 581,
+              "width": 581,
+              "height": 65
+            },
+            "overlapsCenter": false
+          },
+          {
+            "tag": "ASIDE",
+            "testId": null,
+            "className": "sticky top-24 hidden h-fit w-56 shrink-0 md:block",
+            "position": "sticky",
+            "zIndex": "auto",
+            "pointerEvents": "auto",
+            "rect": {
+              "top": 0,
+              "left": 0,
+              "bottom": 0,
+              "right": 0,
+              "width": 0,
+              "height": 0
+            },
+            "overlapsCenter": false
+          },
+          {
+            "tag": "NAV",
+            "testId": null,
+            "className": "fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur md:hidden safe-b",
+            "position": "fixed",
+            "zIndex": "40",
+            "pointerEvents": "auto",
+            "rect": {
+              "top": 209,
+              "left": 0,
+              "bottom": 286.5,
+              "right": 581,
+              "width": 581,
+              "height": 77.5
+            },
+            "overlapsCenter": false
+          },
+          {
+            "tag": "BUTTON",
+            "testId": "scenario-open",
+            "className": "fixed bottom-24 right-4 z-50 grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-lg md:bo",
+            "position": "fixed",
+            "zIndex": "50",
+            "pointerEvents": "auto",
+            "rect": {
+              "top": 146.5,
+              "left": 521,
+              "bottom": 190.5,
+              "right": 565,
+              "width": 44,
+              "height": 44
+            },
+            "overlapsCenter": false
+          }
+        ],
+        "mobileBreakpointLikely": true,
+        "bottomNavPresent": true,
+        "bottomNavRect": {
+          "top": 209,
+          "bottom": 286.5,
+          "height": 77.5
+        },
+        "scenarioFabPresent": true
+      },
+      "clickAfterNudge": "locator.click: Timeout 2500ms exceeded.\nCall log:\n  - waiting for locator('[data-testid=\"sugg-open-r2\"]').first()\n    - locator resolved to <a data-discover=\"true\" href=\"/app/receitas/r2\" data-testid=\"sugg-open-r2\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-"
+    },
+    {
+      "label": "pantry-item",
+      "route": "/app/despensa",
+      "selector": "[data-testid^=pantry-item-link-]",
+      "zoom": {
+        "baselineInnerWidthAt100": 1162,
+        "zoomedInnerWidth": 581,
+        "widthRatio": 2,
+        "numberOfZoomInActions": 6
+      },
+      "before": {
+        "viewport": {
+          "innerWidth": 581,
+          "innerHeight": 287,
+          "scrollX": 0,
+          "scrollY": 222,
+          "devicePixelRatio": 2
+        },
+        "targetRect": {
+          "top": 109.5,
+          "left": 33,
+          "bottom": 177.5,
+          "right": 548,
+          "width": 515,
+          "height": 68
+        },
+        "targetStyle": {
+          "tag": "A",
+          "id": null,
+          "testId": "pantry-item-link-p1",
+          "className": "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "pointerEvents": "auto",
+          "position": "static",
+          "zIndex": "auto",
+          "opacity": "1",
+          "overflow": "visible",
+          "transform": "none"
+        },
+        "samples": [
+          {
+            "name": "center",
+            "x": 290.5,
+            "y": 143.5,
+            "hitsTarget": true,
+            "top": {
+              "tag": "DIV",
+              "id": null,
+              "testId": null,
+              "className": "mt-1 text-sm text-muted-foreground",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-1 text-sm text-muted-foreground",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "min-w-0 flex-1",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "flex items-start gap-3",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "pantry-item-link-p1",
+                "className": "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "pantry-item-p1",
+                "className": "rounded-xl border bg-card text-card-foreground shadow p-4 card-hover space-y-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": "radix-:r2:-content-all",
+                "testId": null,
+                "className": "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "tl",
+            "x": 37,
+            "y": 113.5,
+            "hitsTarget": true,
+            "top": {
+              "tag": "SPAN",
+              "id": null,
+              "testId": null,
+              "className": "grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary/70 text-foreground/80",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "SPAN",
+                "id": null,
+                "testId": null,
+                "className": "grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary/70 text-foreground/80",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "flex items-start gap-3",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "pantry-item-link-p1",
+                "className": "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "pantry-item-p1",
+                "className": "rounded-xl border bg-card text-card-foreground shadow p-4 card-hover space-y-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": "radix-:r2:-content-all",
+                "testId": null,
+                "className": "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-6",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "tr",
+            "x": 544,
+            "y": 113.5,
+            "hitsTarget": true,
+            "top": {
+              "tag": "DIV",
+              "id": null,
+              "testId": null,
+              "className": "flex items-start justify-between gap-2",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "flex items-start justify-between gap-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "min-w-0 flex-1",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "flex items-start gap-3",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "pantry-item-link-p1",
+                "className": "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "pantry-item-p1",
+                "className": "rounded-xl border bg-card text-card-foreground shadow p-4 card-hover space-y-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": "radix-:r2:-content-all",
+                "testId": null,
+                "className": "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "bl",
+            "x": 37,
+            "y": 173.5,
+            "hitsTarget": true,
+            "top": {
+              "tag": "DIV",
+              "id": null,
+              "testId": null,
+              "className": "flex items-start gap-3",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "flex items-start gap-3",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "pantry-item-link-p1",
+                "className": "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "pantry-item-p1",
+                "className": "rounded-xl border bg-card text-card-foreground shadow p-4 card-hover space-y-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": "radix-:r2:-content-all",
+                "testId": null,
+                "className": "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-6",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "MAIN",
+                "id": null,
+                "testId": null,
+                "className": "min-w-0 flex-1",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "br",
+            "x": 544,
+            "y": 173.5,
+            "hitsTarget": false,
+            "top": {
+              "tag": "svg",
+              "id": null,
+              "testId": null,
+              "className": "[object SVGAnimatedString]",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "hidden",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "svg",
+                "id": null,
+                "testId": null,
+                "className": "[object SVGAnimatedString]",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "hidden",
+                "transform": "none"
+              },
+              {
+                "tag": "BUTTON",
+                "id": null,
+                "testId": "scenario-open",
+                "className": "fixed bottom-24 right-4 z-50 grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-lg md:bottom-6 md:right-6",
+                "pointerEvents": "auto",
+                "position": "fixed",
+                "zIndex": "50",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "min-w-0 flex-1",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "flex items-start gap-3",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "pantry-item-link-p1",
+                "className": "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "pantry-item-p1",
+                "className": "rounded-xl border bg-card text-card-foreground shadow p-4 card-hover space-y-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "mid-left",
+            "x": 41,
+            "y": 143.5,
+            "hitsTarget": true,
+            "top": {
+              "tag": "SPAN",
+              "id": null,
+              "testId": null,
+              "className": "grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary/70 text-foreground/80",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "SPAN",
+                "id": null,
+                "testId": null,
+                "className": "grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary/70 text-foreground/80",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "flex items-start gap-3",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "pantry-item-link-p1",
+                "className": "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "pantry-item-p1",
+                "className": "rounded-xl border bg-card text-card-foreground shadow p-4 card-hover space-y-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": "radix-:r2:-content-all",
+                "testId": null,
+                "className": "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-6",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "mid-right",
+            "x": 540,
+            "y": 143.5,
+            "hitsTarget": true,
+            "top": {
+              "tag": "DIV",
+              "id": null,
+              "testId": null,
+              "className": "mt-1 text-sm text-muted-foreground",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-1 text-sm text-muted-foreground",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "min-w-0 flex-1",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "flex items-start gap-3",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "pantry-item-link-p1",
+                "className": "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "pantry-item-p1",
+                "className": "rounded-xl border bg-card text-card-foreground shadow p-4 card-hover space-y-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": "radix-:r2:-content-all",
+                "testId": null,
+                "className": "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          }
+        ],
+        "ancestors": [
+          {
+            "tag": "A",
+            "testId": "pantry-item-link-p1",
+            "className": "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": "pantry-item-p1",
+            "className": "rounded-xl border bg-card text-card-foreground shadow p-4 card-hover space-y-2",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "grid gap-3 md:grid-cols-2",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "space-y-6",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "MAIN",
+            "testId": null,
+            "className": "min-w-0 flex-1",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "mx-auto flex max-w-7xl gap-8 px-4 pb-32 pt-6 md:px-8 md:pb-10",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "min-h-screen bg-background text-foreground",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "BODY",
+            "testId": null,
+            "className": "",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          }
+        ],
+        "fixedOrStickyOverlapping": [],
+        "fixedOrStickyAll": [
+          {
+            "tag": "HEADER",
+            "testId": null,
+            "className": "sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur",
+            "position": "sticky",
+            "zIndex": "40",
+            "pointerEvents": "auto",
+            "rect": {
+              "top": 0,
+              "left": 0,
+              "bottom": 65,
+              "right": 581,
+              "width": 581,
+              "height": 65
+            },
+            "overlapsCenter": false
+          },
+          {
+            "tag": "ASIDE",
+            "testId": null,
+            "className": "sticky top-24 hidden h-fit w-56 shrink-0 md:block",
+            "position": "sticky",
+            "zIndex": "auto",
+            "pointerEvents": "auto",
+            "rect": {
+              "top": 0,
+              "left": 0,
+              "bottom": 0,
+              "right": 0,
+              "width": 0,
+              "height": 0
+            },
+            "overlapsCenter": false
+          },
+          {
+            "tag": "NAV",
+            "testId": null,
+            "className": "fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur md:hidden safe-b",
+            "position": "fixed",
+            "zIndex": "40",
+            "pointerEvents": "auto",
+            "rect": {
+              "top": 209,
+              "left": 0,
+              "bottom": 286.5,
+              "right": 581,
+              "width": 581,
+              "height": 77.5
+            },
+            "overlapsCenter": false
+          },
+          {
+            "tag": "BUTTON",
+            "testId": "scenario-open",
+            "className": "fixed bottom-24 right-4 z-50 grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-lg md:bo",
+            "position": "fixed",
+            "zIndex": "50",
+            "pointerEvents": "auto",
+            "rect": {
+              "top": 146.5,
+              "left": 521,
+              "bottom": 190.5,
+              "right": 565,
+              "width": 44,
+              "height": 44
+            },
+            "overlapsCenter": false
+          }
+        ],
+        "mobileBreakpointLikely": true,
+        "bottomNavPresent": true,
+        "bottomNavRect": {
+          "top": 209,
+          "bottom": 286.5,
+          "height": 77.5
+        },
+        "scenarioFabPresent": true
+      },
+      "clickError": "locator.click: Timeout 2500ms exceeded.\nCall log:\n  - waiting for locator('[data-testid^=pantry-item-link-]').first()\n    - locator resolved to <a data-discover=\"true\" href=\"/app/despensa/p1\" data-testid=\"pantry-item-link-p1\" class=\"block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring\">…</a>\n  - attempting click action (trial run)\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - performing click action\n      - <button role=\"tab\" type=\"button\" tabindex=\"-1\" aria-selected=\"false\" data-state=\"inactive\" data-testid=\"tab-attention\" data-orientation=\"horizontal\" data-radix-collection-item=\"\" id=\"radix-:r2:-trigger-attention\" aria-con",
+      "afterNudge": {
+        "viewport": {
+          "innerWidth": 581,
+          "innerHeight": 287,
+          "scrollX": 0,
+          "scrollY": 222.5,
+          "devicePixelRatio": 2
+        },
+        "targetRect": {
+          "top": 109,
+          "left": 33,
+          "bottom": 177,
+          "right": 548,
+          "width": 515,
+          "height": 68
+        },
+        "targetStyle": {
+          "tag": "A",
+          "id": null,
+          "testId": "pantry-item-link-p1",
+          "className": "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "pointerEvents": "auto",
+          "position": "static",
+          "zIndex": "auto",
+          "opacity": "1",
+          "overflow": "visible",
+          "transform": "none"
+        },
+        "samples": [
+          {
+            "name": "center",
+            "x": 290.5,
+            "y": 143,
+            "hitsTarget": true,
+            "top": {
+              "tag": "DIV",
+              "id": null,
+              "testId": null,
+              "className": "mt-1 text-sm text-muted-foreground",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-1 text-sm text-muted-foreground",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "min-w-0 flex-1",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "flex items-start gap-3",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "pantry-item-link-p1",
+                "className": "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "pantry-item-p1",
+                "className": "rounded-xl border bg-card text-card-foreground shadow p-4 card-hover space-y-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": "radix-:r2:-content-all",
+                "testId": null,
+                "className": "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "tl",
+            "x": 37,
+            "y": 113,
+            "hitsTarget": true,
+            "top": {
+              "tag": "SPAN",
+              "id": null,
+              "testId": null,
+              "className": "grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary/70 text-foreground/80",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "SPAN",
+                "id": null,
+                "testId": null,
+                "className": "grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary/70 text-foreground/80",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "flex items-start gap-3",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "pantry-item-link-p1",
+                "className": "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "pantry-item-p1",
+                "className": "rounded-xl border bg-card text-card-foreground shadow p-4 card-hover space-y-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": "radix-:r2:-content-all",
+                "testId": null,
+                "className": "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-6",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "tr",
+            "x": 544,
+            "y": 113,
+            "hitsTarget": true,
+            "top": {
+              "tag": "DIV",
+              "id": null,
+              "testId": null,
+              "className": "flex items-start justify-between gap-2",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "flex items-start justify-between gap-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "min-w-0 flex-1",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "flex items-start gap-3",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "pantry-item-link-p1",
+                "className": "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "pantry-item-p1",
+                "className": "rounded-xl border bg-card text-card-foreground shadow p-4 card-hover space-y-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": "radix-:r2:-content-all",
+                "testId": null,
+                "className": "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "bl",
+            "x": 37,
+            "y": 173,
+            "hitsTarget": true,
+            "top": {
+              "tag": "DIV",
+              "id": null,
+              "testId": null,
+              "className": "flex items-start gap-3",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "flex items-start gap-3",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "pantry-item-link-p1",
+                "className": "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "pantry-item-p1",
+                "className": "rounded-xl border bg-card text-card-foreground shadow p-4 card-hover space-y-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": "radix-:r2:-content-all",
+                "testId": null,
+                "className": "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-6",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "MAIN",
+                "id": null,
+                "testId": null,
+                "className": "min-w-0 flex-1",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "br",
+            "x": 544,
+            "y": 173,
+            "hitsTarget": false,
+            "top": {
+              "tag": "svg",
+              "id": null,
+              "testId": null,
+              "className": "[object SVGAnimatedString]",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "hidden",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "svg",
+                "id": null,
+                "testId": null,
+                "className": "[object SVGAnimatedString]",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "hidden",
+                "transform": "none"
+              },
+              {
+                "tag": "BUTTON",
+                "id": null,
+                "testId": "scenario-open",
+                "className": "fixed bottom-24 right-4 z-50 grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-lg md:bottom-6 md:right-6",
+                "pointerEvents": "auto",
+                "position": "fixed",
+                "zIndex": "50",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "min-w-0 flex-1",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "flex items-start gap-3",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "pantry-item-link-p1",
+                "className": "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "pantry-item-p1",
+                "className": "rounded-xl border bg-card text-card-foreground shadow p-4 card-hover space-y-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "mid-left",
+            "x": 41,
+            "y": 143,
+            "hitsTarget": true,
+            "top": {
+              "tag": "SPAN",
+              "id": null,
+              "testId": null,
+              "className": "grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary/70 text-foreground/80",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "SPAN",
+                "id": null,
+                "testId": null,
+                "className": "grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary/70 text-foreground/80",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "flex items-start gap-3",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "pantry-item-link-p1",
+                "className": "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "pantry-item-p1",
+                "className": "rounded-xl border bg-card text-card-foreground shadow p-4 card-hover space-y-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": "radix-:r2:-content-all",
+                "testId": null,
+                "className": "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "space-y-6",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          },
+          {
+            "name": "mid-right",
+            "x": 540,
+            "y": 143,
+            "hitsTarget": true,
+            "top": {
+              "tag": "DIV",
+              "id": null,
+              "testId": null,
+              "className": "mt-1 text-sm text-muted-foreground",
+              "pointerEvents": "auto",
+              "position": "static",
+              "zIndex": "auto",
+              "opacity": "1",
+              "overflow": "visible",
+              "transform": "none"
+            },
+            "stack": [
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "mt-1 text-sm text-muted-foreground",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "min-w-0 flex-1",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "flex items-start gap-3",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "A",
+                "id": null,
+                "testId": "pantry-item-link-p1",
+                "className": "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": "pantry-item-p1",
+                "className": "rounded-xl border bg-card text-card-foreground shadow p-4 card-hover space-y-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "grid gap-3 md:grid-cols-2",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": "radix-:r2:-content-all",
+                "testId": null,
+                "className": "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-4",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              },
+              {
+                "tag": "DIV",
+                "id": null,
+                "testId": null,
+                "className": "",
+                "pointerEvents": "auto",
+                "position": "static",
+                "zIndex": "auto",
+                "opacity": "1",
+                "overflow": "visible",
+                "transform": "none"
+              }
+            ]
+          }
+        ],
+        "ancestors": [
+          {
+            "tag": "A",
+            "testId": "pantry-item-link-p1",
+            "className": "block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": "pantry-item-p1",
+            "className": "rounded-xl border bg-card text-card-foreground shadow p-4 card-hover space-y-2",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "grid gap-3 md:grid-cols-2",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "space-y-6",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "MAIN",
+            "testId": null,
+            "className": "min-w-0 flex-1",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "mx-auto flex max-w-7xl gap-8 px-4 pb-32 pt-6 md:px-8 md:pb-10",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "min-h-screen bg-background text-foreground",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "DIV",
+            "testId": null,
+            "className": "",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          },
+          {
+            "tag": "BODY",
+            "testId": null,
+            "className": "",
+            "overflow": "visible",
+            "overflowY": "visible",
+            "position": "static",
+            "zIndex": "auto",
+            "transform": "none",
+            "pointerEvents": "auto"
+          }
+        ],
+        "fixedOrStickyOverlapping": [],
+        "fixedOrStickyAll": [
+          {
+            "tag": "HEADER",
+            "testId": null,
+            "className": "sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur",
+            "position": "sticky",
+            "zIndex": "40",
+            "pointerEvents": "auto",
+            "rect": {
+              "top": 0,
+              "left": 0,
+              "bottom": 65,
+              "right": 581,
+              "width": 581,
+              "height": 65
+            },
+            "overlapsCenter": false
+          },
+          {
+            "tag": "ASIDE",
+            "testId": null,
+            "className": "sticky top-24 hidden h-fit w-56 shrink-0 md:block",
+            "position": "sticky",
+            "zIndex": "auto",
+            "pointerEvents": "auto",
+            "rect": {
+              "top": 0,
+              "left": 0,
+              "bottom": 0,
+              "right": 0,
+              "width": 0,
+              "height": 0
+            },
+            "overlapsCenter": false
+          },
+          {
+            "tag": "NAV",
+            "testId": null,
+            "className": "fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur md:hidden safe-b",
+            "position": "fixed",
+            "zIndex": "40",
+            "pointerEvents": "auto",
+            "rect": {
+              "top": 209,
+              "left": 0,
+              "bottom": 286.5,
+              "right": 581,
+              "width": 581,
+              "height": 77.5
+            },
+            "overlapsCenter": false
+          },
+          {
+            "tag": "BUTTON",
+            "testId": "scenario-open",
+            "className": "fixed bottom-24 right-4 z-50 grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-lg md:bo",
+            "position": "fixed",
+            "zIndex": "50",
+            "pointerEvents": "auto",
+            "rect": {
+              "top": 146.5,
+              "left": 521,
+              "bottom": 190.5,
+              "right": 565,
+              "width": 44,
+              "height": 44
+            },
+            "overlapsCenter": false
+          }
+        ],
+        "mobileBreakpointLikely": true,
+        "bottomNavPresent": true,
+        "bottomNavRect": {
+          "top": 209,
+          "bottom": 286.5,
+          "height": 77.5
+        },
+        "scenarioFabPresent": true
+      },
+      "clickAfterNudge": "locator.click: Timeout 2500ms exceeded.\nCall log:\n  - waiting for locator('[data-testid^=pantry-item-link-]').first()\n    - locator resolved to <a data-discover=\"true\" href=\"/app/despensa/p1\" data-testid=\"pantry-item-link-p1\" class=\"block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring\">…</a>\n  - attempting click action (trial run)\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into"
+    }
+  ]
+}

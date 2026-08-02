@@ -50,8 +50,11 @@ describe("production i18n", () => {
       /Backend-managed login/,
     );
     expect(translateProduction("en", "app.unavailable.detail")).toMatch(
-      /Live adapters are not integrated/,
+      /not wired yet|does not fall back/i,
     );
+    expect(translateProduction("en", "inventory.title")).toBe("Pantry");
+    expect(translateProduction("pt-BR", "inventory.title")).toBe("Despensa");
+    expect(translateProduction("es", "inventory.title")).toBe("Despensa");
     expect(translateProduction("es", "feature.serviceUnavailable")).toBe(
       "Servicio no disponible",
     );

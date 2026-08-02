@@ -97,15 +97,28 @@
     opacity: 0.35;
   }
 
+  /*
+   * No hover transforms on interactive cards: transformed ancestors diverge
+   * visual vs hit-test boxes under Firefox native zoom.
+   */
   .card-hover {
     transition:
-      transform 0.25s ease,
       box-shadow 0.25s ease,
       border-color 0.25s ease;
   }
   .card-hover:hover {
-    transform: translateY(-2px);
     box-shadow: 0 12px 30px -18px hsl(var(--foreground) / 0.18);
+  }
+
+  /*
+   * Scroll margins clear sticky header + mobile bottom nav when Firefox native
+   * zoom drops the layout viewport below the md breakpoint (bottom nav appears).
+   */
+  [data-testid^="sugg-open-"],
+  [data-testid^="pantry-item-link-"],
+  [data-testid^="inventory-lot-link-"] {
+    scroll-margin-top: 5.5rem;
+    scroll-margin-bottom: 6.5rem;
   }
 
   .pill {

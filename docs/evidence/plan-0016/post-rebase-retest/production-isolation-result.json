@@ -1,0 +1,16 @@
+{
+  "testId": "TEST-0016-production-isolation",
+  "exactShaUnderTest": "38e5edfb49407d895995e0cf1b49054dc7ce5c5b",
+  "packagingTipSha": "38e5edfb49407d895995e0cf1b49054dc7ce5c5b",
+  "startedAtUtc": "2026-08-02T11:46:00Z",
+  "commands": [
+    "yarn inspect:production-bundle"
+  ],
+  "workingDirectory": "apps/frontend",
+  "summary": {
+    "productionBundleIsolation": "Passed",
+    "mocksInProductionBundle": false
+  },
+  "status": "Passed",
+  "note": "Production composition must not fall back to prototype mocks; bundle inspector confirms isolation."
+}

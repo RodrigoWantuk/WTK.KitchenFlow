@@ -76,19 +76,41 @@ Reports land under `docs/browser-smoke/` (JSON + HTML; failure screenshots/trace
 | Path | Role |
 |---|---|
 | `src/adapters/mock/` | Fixture-backed presentation projections for **prototype/test** only |
-| `src/adapters/live/` | Explicit unavailable / future OpenAPI adapters for **production** |
+| `src/adapters/live/` | Live inventory repository and related production boundaries |
+| `src/generated/api-client/` | CRA mirror of `@kitchenflow/api-client` (do not edit; regenerate) |
 | `src/contracts/` | Presentation models |
-| `src/features/` | Shared UI for preparation route, pantry availability bar, shopping review, cook handoff |
-| `src/app/session/` | `SessionAdapter` boundary (mock vs unavailable) |
+| `src/features/inventory/` | Production inventory screens |
+| `src/app/session/` | `SessionAdapter` boundary (`createBffSessionAdapter` in production; mock in prototype) |
 
 Presentation components consume projections. They must **not** perform authoritative inventory, reservation, or unit-conversion arithmetic.
 
+## Generated OpenAPI client
+
+Canonical package: `packages/api-client` (generator `openapi-typescript` 7.9.1 + runtime `openapi-fetch` 0.14.0).
+
+```bash
+cd apps/frontend
+yarn generate:api-client   # regenerate + sync CRA mirror
+yarn check:api-client-drift
+yarn typecheck:api-client
+```
+
+CI fails when the OpenAPI snapshot, package output, or frontend mirror drift.
+
 ## Session and API seams
 
-- Browser auth remains BFF/session oriented (no token storage, no direct Keycloak admin).
-- Production mode does not treat `localStorage` `authed` as authentication.
-- AI providers are never called from the frontend.
-- Live backend wiring remains incomplete until inventory/home contracts stabilize; production shows controlled unavailable states instead of silent mocks.
+- Browser auth is BFF/session oriented via `POST /api/v1/auth/login`, `GET /api/v1/session`, `POST /api/v1/auth/logout`.
+- Cookies use `credentials: "include"`; OIDC tokens are never stored in JavaScript storage.
+- Production inventory routes live under `/app/despensa` (list/detail/create/edit/adjust/history).
+- Production does not fall back to mock pantry data or prototype `localStorage` auth.
+- Same-origin API base path: `/api/v1` (proxy or reverse-proxy in integrated environments).
+- Contextual home and other product areas may still show controlled unavailable states.
+
+### Local integrated run (production mode)
+
+1. Start backend + PostgreSQL + Keycloak per `apps/backend` / infrastructure docs.
+2. Serve the production build behind the same origin as the API (or configure a same-origin proxy).
+3. Open `/acesso` → backend-managed login → `/app/despensa`.
 
 ## Dependency triage
 

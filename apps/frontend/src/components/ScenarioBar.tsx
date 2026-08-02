@@ -11,19 +11,26 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
+/**
+ * Prototype-only scenario switcher.
+ * Rendered in the sticky header (not a fixed overlay) so it cannot intercept
+ * pointer hit-testing on pantry cards or Cook CTAs under Firefox native zoom,
+ * when the layout viewport falls below the `md` breakpoint.
+ */
 export default function ScenarioBar() {
   const { scenario, setScenario, tr } = useStore();
   const [open, setOpen] = useState(false);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <button
+        <Button
           data-testid="scenario-open"
-          className="fixed bottom-24 right-4 z-50 grid h-11 w-11 place-items-center rounded-full border border-border bg-card shadow-lg md:bottom-6 md:right-6"
+          variant="ghost"
+          size="icon"
           aria-label={tr("scenarios.title")}
         >
-          <FlaskConical className="h-5 w-5 text-accent" />
-        </button>
+          <FlaskConical className="h-4 w-4 text-accent" />
+        </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-full max-w-md">
         <SheetHeader>

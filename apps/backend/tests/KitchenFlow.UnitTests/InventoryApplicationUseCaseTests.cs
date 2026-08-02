@@ -25,9 +25,10 @@ public sealed class InventoryApplicationUseCaseTests
         Assert.Equal("validation_failed", list.Problem!.ErrorCode);
         Assert.Equal("resource_not_found", get.Problem!.ErrorCode);
         Assert.Equal("validation_failed", create.Problem!.ErrorCode);
-        Assert.Equal("domain_rule_violated", update.Problem!.ErrorCode);
+        // Ownership-scoped absence precedes metadata/precondition failures (nondisclosing 404).
+        Assert.Equal("resource_not_found", update.Problem!.ErrorCode);
         Assert.Equal("validation_failed", adjust.Problem!.ErrorCode);
-        Assert.Equal("precondition_required", delete.Problem!.ErrorCode);
+        Assert.Equal("resource_not_found", delete.Problem!.ErrorCode);
         Assert.Equal("resource_not_found", history.Problem!.ErrorCode);
     }
 

@@ -17,7 +17,9 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@kitchenflow/api-client": ["src/generated/api-client/index.ts"],
+      "@kitchenflow/api-client/*": ["src/generated/api-client/*"]
     }
   },
   "include": ["src"]

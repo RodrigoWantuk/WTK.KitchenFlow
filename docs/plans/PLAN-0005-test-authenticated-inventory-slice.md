@@ -7,10 +7,10 @@
 - **Created:** 2026-07-29
 - **Last updated:** 2026-08-01T20:30:00Z
 - **Branch:** `agent/plan-0005-test-inventory-slice`
-- **Pull request:** [Draft PR #19](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/19)
-- **Delivery:** Draft PR — awaiting owner review; agent must not merge
-- **System under test:** Integrated `main` after PR #18 merge (`b94abd9a83fe29d88b095e3e9a42f10d01c05414`)
-- **Related implementation plans:** PLAN-0003, PLAN-0014 (on main), PLAN-0015 (Completed via PR #18)
+- **Pull request:** [PR #19](https://github.com/RodrigoWantuk/WTK.KitchenFlow/pull/19) — **merged**
+- **Delivery:** Merged by owner at `60d98dd9e2e7c460d670e701c027a44f25cdfedc` (2026-08-01T20:25:11Z). Final outcome remains **Conditional Pass**. Residual findings High #20, Medium #21/#22, coverage #24, and High #26 were independently **Pass**-verified under PLAN-0016 tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b` and issues closed; this plan’s Conditional Pass string is not rewritten.
+- **System under test:** Integrated `main` after PR #18 merge (`b94abd9a83fe29d88b095e3e9a42f10d01c05414`); merge commit of this plan on main is `60d98dd9e2e7c460d670e701c027a44f25cdfedc`
+- **Related implementation plans:** PLAN-0003, PLAN-0014 (on main), PLAN-0015 (Completed via PR #18), PLAN-0016 (remediation; In Progress)
 - **Related issues:** #20 (High), #21 (Medium), #22 (Medium), #24 (coverage Blocked)
 - **Related ADRs:** ADR-0001 (historical), ADR-0007, ADR-0002 through ADR-0006
 - **Dependencies:** PLAN-0002 merged; PR #18 merged by owner; independent agent claim required
@@ -510,13 +510,20 @@ Do not fix implementation in the independent test branch unless explicitly reass
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0005 **Completed** / **Conditional Pass**. Evidence-generation head `cabd2c23addd3c8ab741b5075ec6d33f37f9e359` (clean raw-only artifacts).
-- **Last completed step:** Separated raw P0/P1 uploads from repository docs/historical files; pinned measured metrics from that tip.
-- **Exact next action:** Owner re-reviews Draft PR #19. Do not agent-merge. Do not start PLAN-0011.
+- **Current checkpoint:** PLAN-0005 **Completed** / **Conditional Pass**. Merged via PR #19 at `60d98dd9e2e7c460d670e701c027a44f25cdfedc`. Evidence-generation head `cabd2c23addd3c8ab741b5075ec6d33f37f9e359` (clean raw-only artifacts). Residual remediations independently Pass under PLAN-0016 tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b` (see `docs/evidence/plan-0016/post-rebase-retest/`); issues #20/#21/#22/#24/#26 closed.
+- **Last completed step:** Separated raw P0/P1 uploads from repository docs/historical files; pinned measured metrics from that tip; owner merged PR #19.
+- **Exact next action:** Independent retest after PLAN-0016 remediation candidate. Do not rewrite outcome to Pass from implementation-only evidence. Do not start PLAN-0011 until that retest accepts remediations.
 - **Defects:** Critical 0; High 1 (#20); Medium 2 (#21/#22); coverage #24.
 - **PLAN-0011:** Not started (Blocked).
 
 ## Progress log
+
+### 2026-08-02T00:15:00Z — agent:composer-plan-0016 (documentation reconciliation)
+
+- **Checkpoint:** Durable delivery state corrected after owner merge of PR #19.
+- **Changes included in the commit:** Record merge commit `60d98dd…`, final Conditional Pass, residual #20/#21/#22/#24; remove stale “awaiting owner review” claims.
+- **Result:** PLAN-0005 remains Conditional Pass pending independent retest of PLAN-0016 remediations.
+- **Next action:** No further PLAN-0005 execution on this branch; remediation owned by PLAN-0016.
 
 ### 2026-08-01T20:30:00Z — independent-agent:composer-plan-0005
 

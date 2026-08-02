@@ -1,5 +1,12 @@
-import type { ReactNode } from "react";
-import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
+import { useMemo, type ReactNode } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  Link,
+  useLocation,
+} from "react-router-dom";
 import { RuntimeProvider } from "@/app/runtime/RuntimeProvider";
 import { SessionProvider, useSession } from "@/app/session/SessionProvider";
 import { createProductionRuntime } from "@/app/runtime/createProductionRuntime";
@@ -11,8 +18,10 @@ import {
   useProductionI18n,
 } from "@/app/i18n/ProductionI18nProvider";
 import type { ProductionLocale } from "@/app/i18n/productionCatalog";
-
-const runtime = createProductionRuntime();
+import { InventoryProvider } from "@/features/inventory/InventoryProvider";
+import { ProductionInventoryList } from "@/features/inventory/ProductionInventoryList";
+import { ProductionInventoryDetail } from "@/features/inventory/ProductionInventoryDetail";
+import { ProductionInventoryForm } from "@/features/inventory/ProductionInventoryForm";
 
 function LocaleSwitcher() {
   const { locale, locales, setLocale, t } = useProductionI18n();
@@ -65,6 +74,7 @@ function LocaleSwitcher() {
  */
 function ProductionLanding() {
   const { t } = useProductionI18n();
+  const { isAuthenticated } = useSession();
   return (
     <div
       data-testid="production-landing"
@@ -80,7 +90,10 @@ function ProductionLanding() {
         <div className="flex items-center gap-2">
           <LocaleSwitcher />
           <Button asChild size="sm" className="rounded-full">
-            <Link to="/acesso" data-testid="production-landing-enter">
+            <Link
+              to={isAuthenticated ? "/app/despensa" : "/acesso"}
+              data-testid="production-landing-enter"
+            >
               {t("landing.enter")} <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
@@ -118,33 +131,107 @@ function ProductionLanding() {
 }
 
 function ProductionAccess() {
-  const { session } = useSession();
+  const { session, beginLogin } = useSession();
   const { t } = useProductionI18n();
+  const location = useLocation();
+  const returnUrl =
+    (location.state as { from?: string } | null)?.from ?? "/app/despensa";
+
+  if (session.status === "loading") {
+    return (
+      <div className="mx-auto flex min-h-screen max-w-lg items-center p-8">
+        <p role="status">{t("inventory.loading")}</p>
+      </div>
+    );
+  }
+
+  if (session.status === "authenticated") {
+    return <Navigate to="/app/despensa" replace />;
+  }
+
+  if (session.status === "unavailable") {
+    return (
+      <div className="mx-auto flex min-h-screen max-w-lg items-center p-8">
+        <FeatureUnavailable
+          feature="access"
+          title={t("feature.serviceUnavailable")}
+          detail={t("access.detail")}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="mx-auto flex min-h-screen max-w-lg items-center p-8">
-      <FeatureUnavailable
-        feature="access"
-        title={
-          session.status === "unavailable"
-            ? t("feature.serviceUnavailable")
-            : t("feature.integrationPending")
-        }
-        detail={t("access.detail")}
-      />
+    <div
+      data-testid="production-access"
+      className="mx-auto flex min-h-screen max-w-lg flex-col justify-center gap-4 p-8"
+    >
+      <h1 className="font-display text-3xl">{t("access.loginTitle")}</h1>
+      <p className="text-muted-foreground">{t("access.loginDetail")}</p>
+      {session.status === "expired" && (
+        <p role="status" className="text-sm text-warning-foreground">
+          {t("access.expired")}
+        </p>
+      )}
+      <Button
+        type="button"
+        data-testid="production-login"
+        onClick={() => beginLogin(returnUrl)}
+      >
+        {t("access.loginAction")}
+      </Button>
     </div>
   );
 }
 
 function ProductionAppShell({ children }: { children: ReactNode }) {
   const { t } = useProductionI18n();
+  const { session, logout, isAuthenticated } = useSession();
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border px-6 py-4">
-        <span className="font-display text-xl">{t("brand.name")}</span>
+      <header className="sticky top-0 z-40 border-b border-border bg-background/95 px-6 py-4 backdrop-blur">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+          <Link to="/app/despensa" className="font-display text-xl">
+            {t("brand.name")}
+          </Link>
+          <div className="flex items-center gap-2">
+            <LocaleSwitcher />
+            {isAuthenticated && (
+              <>
+                <span className="hidden text-sm text-muted-foreground sm:inline">
+                  {session.displayName || t("access.signedIn")}
+                </span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  data-testid="production-logout"
+                  onClick={() => void logout()}
+                >
+                  {t("access.logout")}
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
       </header>
       <main className="mx-auto max-w-3xl p-8">{children}</main>
     </div>
   );
+}
+
+function RequireAuth({ children }: { children: ReactNode }) {
+  const { session } = useSession();
+  const location = useLocation();
+  if (session.status === "loading") {
+    return <p role="status">…</p>;
+  }
+  if (session.status !== "authenticated") {
+    return (
+      <Navigate to="/acesso" replace state={{ from: location.pathname }} />
+    );
+  }
+  return <>{children}</>;
 }
 
 function ProductionAppRoutes() {
@@ -155,15 +242,57 @@ function ProductionAppRoutes() {
         <Route path="/" element={<ProductionLanding />} />
         <Route path="/acesso" element={<ProductionAccess />} />
         <Route
+          path="/app/despensa"
+          element={
+            <RequireAuth>
+              <ProductionAppShell>
+                <ProductionInventoryList />
+              </ProductionAppShell>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/app/despensa/novo"
+          element={
+            <RequireAuth>
+              <ProductionAppShell>
+                <ProductionInventoryForm mode="create" />
+              </ProductionAppShell>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/app/despensa/:lotId/editar"
+          element={
+            <RequireAuth>
+              <ProductionAppShell>
+                <ProductionInventoryForm mode="edit" />
+              </ProductionAppShell>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/app/despensa/:lotId"
+          element={
+            <RequireAuth>
+              <ProductionAppShell>
+                <ProductionInventoryDetail />
+              </ProductionAppShell>
+            </RequireAuth>
+          }
+        />
+        <Route
           path="/app/*"
           element={
-            <ProductionAppShell>
-              <FeatureUnavailable
-                feature="app"
-                title={t("feature.unavailable")}
-                detail={t("app.unavailable.detail")}
-              />
-            </ProductionAppShell>
+            <RequireAuth>
+              <ProductionAppShell>
+                <FeatureUnavailable
+                  feature="app"
+                  title={t("feature.unavailable")}
+                  detail={t("app.unavailable.detail")}
+                />
+              </ProductionAppShell>
+            </RequireAuth>
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -177,12 +306,16 @@ function ProductionAppRoutes() {
  * Must not import StoreProvider, mock fixtures, scenario tooling, or synthetic seeds.
  */
 export default function ProductionApp() {
+  // Compose once per mount so tests can stub globalThis.fetch before render.
+  const runtime = useMemo(() => createProductionRuntime(), []);
   return (
     <RuntimeProvider runtime={runtime}>
       <SessionProvider adapter={runtime.sessionAdapter}>
-        <ProductionI18nProvider>
-          <ProductionAppRoutes />
-        </ProductionI18nProvider>
+        <InventoryProvider repository={runtime.inventoryRepository}>
+          <ProductionI18nProvider>
+            <ProductionAppRoutes />
+          </ProductionI18nProvider>
+        </InventoryProvider>
       </SessionProvider>
     </RuntimeProvider>
   );

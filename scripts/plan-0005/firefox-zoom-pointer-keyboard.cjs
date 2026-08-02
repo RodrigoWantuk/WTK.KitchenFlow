@@ -213,13 +213,44 @@ async function applyNativeFirefoxZoom200(page) {
   };
 }
 
-async function pointerAttempt(locator) {
+/**
+ * Real pointer activation under Firefox native zoom.
+ * Full-page zoom elevates devicePixelRatio; Playwright locator.click mis-maps points.
+ * Gate on elementFromPoint(center), then mouse-click at CSS_center × dpr.
+ */
+async function pointerAttempt(page, locator) {
+  await locator.evaluate((el) => el.scrollIntoView({ block: "center", inline: "nearest" }));
+  await wait(250);
+  const probe = await locator.evaluate((el) => {
+    const r = el.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const top = document.elementFromPoint(cx, cy);
+    const hitsTarget = !!(top && (top === el || el.contains(top)));
+    return {
+      cx,
+      cy,
+      dpr: window.devicePixelRatio,
+      hitsTarget,
+      interceptor: top
+        ? { tag: top.tagName, testId: top.getAttribute("data-testid"), className: String(top.className || "").slice(0, 120) }
+        : null,
+    };
+  });
+  if (!probe.hitsTarget) {
+    return {
+      status: "Failed",
+      detail: "elementFromPoint(center) does not hit target",
+      interceptor: probe.interceptor,
+    };
+  }
   try {
-    await locator.evaluate((el) => el.scrollIntoView({ block: "center", inline: "nearest" }));
-    await wait(200);
-    await locator.click({ trial: true, timeout: 2500 });
-    await locator.click({ timeout: 2500, force: false });
-    return { status: "Passed", detail: "pointer click succeeded", interceptor: null };
+    await page.mouse.click(probe.cx * probe.dpr, probe.cy * probe.dpr);
+    return {
+      status: "Passed",
+      detail: `pointer mouse click at CSS center × dpr (${probe.dpr}) after elementFromPoint hit`,
+      interceptor: null,
+    };
   } catch (error) {
     const msg = String(error.message || error);
     return { status: "Failed", detail: msg.slice(0, 500), interceptor: msg.slice(0, 500) };
@@ -257,7 +288,7 @@ async function runCook(page, base, zoomMeasurement, browserVersion) {
   }
 
   const beforeUrl = page.url();
-  const pointer = await pointerAttempt(cta);
+  const pointer = await pointerAttempt(page, cta);
   await wait(700);
   const afterPointerUrl = page.url();
   const pointerStatus =
@@ -317,7 +348,7 @@ async function runPantry(page, base, zoomMeasurement, browserVersion) {
   }
 
   const beforeUrl = page.url();
-  const pointer = await pointerAttempt(link);
+  const pointer = await pointerAttempt(page, link);
   await wait(700);
   const afterPointerUrl = page.url();
   const pointerStatus =
@@ -368,20 +399,32 @@ async function main() {
   }
 
   ensureBuild(prototypeDir, "prototype");
-  ensureBuild(productionDir, "production");
+  // Production build is not required for #21/#22 prototype surfaces; keep optional.
+  if (fs.existsSync(path.join(productionDir, "index.html"))) {
+    /* available for shared artifact layouts */
+  }
   fs.mkdirSync(path.join(evidenceDir, "reports"), { recursive: true });
 
   const server = await startStaticServer(prototypeDir, port);
   const base = `http://127.0.0.1:${port}`;
+  // Preserve xvfb-run XAUTHORITY by default. Set PLAYWRIGHT_XAUTHORITY="" only when the
+  // host XAUTHORITY file is unusable (e.g. owned by another user under sudo/root).
+  const launchEnv = {
+    ...process.env,
+    HOME: process.env.PLAYWRIGHT_HOME || process.env.HOME || "/root",
+    DISPLAY: process.env.DISPLAY,
+  };
+  if (Object.prototype.hasOwnProperty.call(process.env, "PLAYWRIGHT_XAUTHORITY")) {
+    launchEnv.XAUTHORITY = process.env.PLAYWRIGHT_XAUTHORITY;
+  }
   const browser = await firefox.launch({
     headless: false,
     args: [`--width=${WINDOW.width}`, `--height=${WINDOW.height}`],
-    env: {
-      ...process.env,
-      HOME: process.env.PLAYWRIGHT_HOME || process.env.HOME || "/root",
-      XAUTHORITY: process.env.XAUTHORITY || "",
-      DISPLAY: process.env.DISPLAY
-    }
+    firefoxUserPrefs: {
+      // Avoid sandbox failures on some CI kernels (unshare EPERM).
+      "security.sandbox.content.level": 0,
+    },
+    env: launchEnv,
   });
   const context = await browser.newContext({ viewport: null });
   const page = await context.newPage();
@@ -419,15 +462,11 @@ async function main() {
   fs.writeFileSync(path.join(evidenceDir, "firefox-zoom-pointer-keyboard.json"), `${JSON.stringify(payload, null, 2)}\n`, "utf8");
   console.log(`Firefox native zoom pointer/keyboard report → ${reportPath}`);
 
-  const keyboardFail = results.some((r) => r.keyboard?.status === "Failed");
-  const pointerFail = results.some((r) => r.pointer?.status === "Failed");
-  if (keyboardFail) {
-    console.error("Firefox keyboard operability Failed — hard gate.");
+  const keyboardFail = results.some((r) => r.keyboard?.status !== "Passed");
+  const pointerFail = results.some((r) => r.pointer?.status !== "Passed");
+  if (keyboardFail || pointerFail) {
+    console.error("Firefox native-zoom pointer/keyboard Failed — hard gate (keyboard never upgrades pointer).");
     process.exit(1);
-  }
-  // Pointer failure is recorded; issue disposition happens after evidence review.
-  if (pointerFail) {
-    console.warn("Firefox native-zoom pointer Failed with keyboard Passed — see evidence for #21/#22 disposition.");
   }
   process.exit(0);
 }

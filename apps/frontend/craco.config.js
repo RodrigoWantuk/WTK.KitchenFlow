@@ -103,12 +103,16 @@ let webpackConfig = {
       jestConfig.moduleNameMapper = {
         ...jestConfig.moduleNameMapper,
         "^@/(.*)$": "<rootDir>/src/$1",
+        "^@kitchenflow/api-client$":
+          "<rootDir>/src/generated/api-client/index.ts",
+        "^@kitchenflow/api-client/(.*)$":
+          "<rootDir>/src/generated/api-client/$1",
         "^react-router-dom$": "<rootDir>/node_modules/react-router-dom/dist/index.js",
         "^react-router/dom$": "<rootDir>/node_modules/react-router/dist/development/dom-export.js",
         "^react-router$": "<rootDir>/node_modules/react-router/dist/development/index.js",
       };
       jestConfig.transformIgnorePatterns = [
-        "[/\\\\]node_modules[/\\\\](?!(react-router|react-router-dom|@remix-run)[/\\\\]).+",
+        "[/\\\\]node_modules[/\\\\](?!(react-router|react-router-dom|@remix-run|openapi-fetch|openapi-typescript-helpers)[/\\\\]).+",
       ];
       return jestConfig;
     },
@@ -116,6 +120,10 @@ let webpackConfig = {
   webpack: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      '@kitchenflow/api-client': path.resolve(
+        __dirname,
+        'src/generated/api-client/index.ts',
+      ),
     },
     configure: (webpackConfig) => {
 

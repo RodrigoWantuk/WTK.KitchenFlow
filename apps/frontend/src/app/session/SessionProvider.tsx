@@ -48,8 +48,8 @@ export function SessionProvider({
       session,
       refresh,
       beginLogin: (returnUrl?: string) => {
+        // Login uses a full-document BFF challenge navigation; do not race a refresh.
         adapter.beginLogin(returnUrl);
-        void refresh();
       },
       logout: async () => {
         await adapter.logout();

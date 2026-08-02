@@ -1,0 +1,18 @@
+{
+  "testId": "TEST-0016-026-two-user-isolation",
+  "issue": 26,
+  "exactShaUnderTest": "38e5edfb49407d895995e0cf1b49054dc7ce5c5b",
+  "packagingTipSha": "38e5edfb49407d895995e0cf1b49054dc7ce5c5b",
+  "startedAtUtc": "2026-08-02T11:39:02.790Z",
+  "endedAtUtc": "2026-08-02T11:39:08.276Z",
+  "source": "production-inventory-journey-result.json + Backend ForeignAndNonexistentLotMutationsAreNondisclosingForPreconditionVariants",
+  "summary": {
+    "foreignDetail": "404",
+    "foreignMutateFabricatedIfMatch": "404",
+    "ownerMissingIfMatch": "428",
+    "ownerStaleIfMatch": "412",
+    "foreignEqualsNonexistent": true
+  },
+  "status": "Passed",
+  "note": "PLAN-0018 Fail tip 814af25 returned 412 for foreign fabricated If-Match; remediations return nondisclosing 404."
+}

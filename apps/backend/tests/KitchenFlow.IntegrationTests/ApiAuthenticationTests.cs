@@ -674,6 +674,98 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         Assert.Empty(list.GetProperty("items").EnumerateArray());
     }
 
+    /// <summary>
+    /// PLAN-0018 #26: foreign/nonexistent lot mutations must not surface 412/428 from If-Match evaluation.
+    /// </summary>
+    [Fact]
+    public async Task ForeignAndNonexistentLotMutationsAreNondisclosingForPreconditionVariants()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var owner = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        using var other = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        other.DefaultRequestHeaders.Add("X-Test-Subject", "plan0018-user-b");
+        var ownerCsrf = await GetCsrfAsync(owner);
+        var otherCsrf = await GetCsrfAsync(other);
+        var created = await CreateAsync(owner, ownerCsrf, Guid.NewGuid().ToString(), "PLAN-0018 isolation lot");
+        var foreignLotId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("lotId").GetGuid();
+        var ownerEtag = created.Headers.ETag!.Tag;
+        var missingLotId = Guid.NewGuid();
+
+        async Task<(System.Net.HttpStatusCode Status, string ErrorCode, string? Detail)> CaptureProblemAsync(HttpResponseMessage response)
+        {
+            var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+            return (response.StatusCode, problem.GetProperty("errorCode").GetString()!, problem.GetProperty("detail").GetString());
+        }
+
+        async Task<List<(string Name, System.Net.HttpStatusCode Status, string ErrorCode, string? Detail)>> ProbeAsync(Guid lotId)
+        {
+            var detail = await other.GetAsync($"/api/v1/inventory/lots/{lotId}");
+            var fabricated = await AdjustmentAsync(other, otherCsrf, lotId, "\"v1\"", Guid.NewGuid().ToString(), new { type = "Consume", value = 1m, availabilityState = (string?)null, reasonCode = "meal", note = (string?)null });
+            var missingIfMatch = await AdjustmentAsync(other, otherCsrf, lotId, null, Guid.NewGuid().ToString(), new { type = "Consume", value = 1m, availabilityState = (string?)null, reasonCode = "meal", note = (string?)null });
+            var ownerEtagAdjust = await AdjustmentAsync(other, otherCsrf, lotId, ownerEtag, Guid.NewGuid().ToString(), new { type = "Consume", value = 1m, availabilityState = (string?)null, reasonCode = "meal", note = (string?)null });
+            var availability = await AdjustmentAsync(other, otherCsrf, lotId, "\"v1\"", Guid.NewGuid().ToString(), new { type = "AvailabilityChanged", value = (decimal?)null, availabilityState = "Low", reasonCode = "checked", note = (string?)null });
+            var updateMissing = await UpdateAsync(other, otherCsrf, lotId, null);
+            var updateFabricated = await UpdateAsync(other, otherCsrf, lotId, "\"v1\"");
+            var deleteMissing = await DeleteAsync(other, otherCsrf, lotId, null);
+            var deleteFabricated = await DeleteAsync(other, otherCsrf, lotId, "\"v1\"");
+            var history = await other.GetAsync($"/api/v1/inventory/lots/{lotId}/history");
+            var invalidCsrf = await AdjustmentAsync(other, "not-a-csrf-token", lotId, "\"v1\"", Guid.NewGuid().ToString(), new { type = "Consume", value = 1m, availabilityState = (string?)null, reasonCode = "meal", note = (string?)null });
+
+            var results = new List<(string, System.Net.HttpStatusCode, string, string?)>();
+            async Task AddAsync(string name, HttpResponseMessage response)
+            {
+                var captured = await CaptureProblemAsync(response);
+                results.Add((name, captured.Status, captured.ErrorCode, captured.Detail));
+            }
+
+            await AddAsync("detail", detail);
+            await AddAsync("adjust_fabricated", fabricated);
+            await AddAsync("adjust_missing_if_match", missingIfMatch);
+            await AddAsync("adjust_owner_etag", ownerEtagAdjust);
+            await AddAsync("adjust_availability", availability);
+            await AddAsync("update_missing_if_match", updateMissing);
+            await AddAsync("update_fabricated", updateFabricated);
+            await AddAsync("delete_missing_if_match", deleteMissing);
+            await AddAsync("delete_fabricated", deleteFabricated);
+            await AddAsync("history", history);
+
+            // CSRF failure is request-auth, not resource disclosure — still must not return 412 for foreign lots.
+            Assert.NotEqual(System.Net.HttpStatusCode.PreconditionFailed, invalidCsrf.StatusCode);
+            Assert.NotEqual(System.Net.HttpStatusCode.PreconditionRequired, invalidCsrf.StatusCode);
+            Assert.True(
+                invalidCsrf.StatusCode is System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.BadRequest or System.Net.HttpStatusCode.Unauthorized,
+                $"Unexpected CSRF status for foreign/missing lot: {(int)invalidCsrf.StatusCode}");
+
+            foreach (var item in results)
+            {
+                Assert.Equal(System.Net.HttpStatusCode.NotFound, item.Item2);
+                Assert.Equal("resource_not_found", item.Item3);
+            }
+
+            return results;
+        }
+
+        var foreignProbe = await ProbeAsync(foreignLotId);
+        var missingProbe = await ProbeAsync(missingLotId);
+        Assert.Equal(foreignProbe.Count, missingProbe.Count);
+        for (var i = 0; i < foreignProbe.Count; i++)
+        {
+            Assert.Equal(foreignProbe[i].Name, missingProbe[i].Name);
+            Assert.Equal(foreignProbe[i].Status, missingProbe[i].Status);
+            Assert.Equal(foreignProbe[i].ErrorCode, missingProbe[i].ErrorCode);
+            Assert.Equal(foreignProbe[i].Detail, missingProbe[i].Detail);
+        }
+
+        // Owner concurrency semantics remain intact after the isolation ordering fix.
+        var ownerMissing = await AdjustmentAsync(owner, ownerCsrf, foreignLotId, null, Guid.NewGuid().ToString(), new { type = "Consume", value = 1m, availabilityState = (string?)null, reasonCode = "meal", note = (string?)null });
+        var ownerStale = await AdjustmentAsync(owner, ownerCsrf, foreignLotId, "\"v1\"", Guid.NewGuid().ToString(), new { type = "Consume", value = 1m, availabilityState = (string?)null, reasonCode = "meal", note = (string?)null });
+        var ownerOk = await AdjustAsync(owner, ownerCsrf, foreignLotId, ownerEtag, Guid.NewGuid().ToString(), 1m);
+        await AssertProblemAsync(ownerMissing, System.Net.HttpStatusCode.PreconditionRequired, "precondition_required");
+        await AssertProblemAsync(ownerStale, System.Net.HttpStatusCode.PreconditionFailed, "precondition_failed");
+        Assert.Equal(System.Net.HttpStatusCode.OK, ownerOk.StatusCode);
+    }
+
     [Fact]
     public async Task ListSeparatesActiveDepletedAndDeletedLotsAcrossFilters()
     {

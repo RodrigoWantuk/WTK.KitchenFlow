@@ -1,0 +1,78 @@
+{
+  "plan": "PLAN-0018",
+  "generatedAtUtc": "2026-08-02T02:53:40Z",
+  "systemUnderTest": {
+    "repository": "RodrigoWantuk/WTK.Cocinaris",
+    "pullRequest": 25,
+    "sourceBranch": "agent/plan-0016-production-inventory-frontend",
+    "exactSha": "814af253814d0ec7f8b0adbbca9c50040b5bab07",
+    "plan0016PriorFinalCandidateNote": "aab6162 (documentation-only delta before 814af25; workflows green)",
+    "authoritativeFrontendCiRun": "30728413882",
+    "plan0005ValidationCiRun": "30728413915",
+    "staleCiIdNotCurrentHead": "30728412465",
+    "baseAtPlan0016Start": "60d98dd9e2e7c460d670e701c027a44f25cdfedc",
+    "testBranchHead": "86c76b02b13429e09ff6221345c8cc49a02d76ff"
+  },
+  "host": {
+    "os": "Debian GNU/Linux 13 (trixie)",
+    "kernel": "6.12.96+deb13-amd64",
+    "architecture": "x86_64",
+    "locale": "pt_BR.UTF-8",
+    "timezone": "America/Sao_Paulo"
+  },
+  "tooling": {
+    "docker": "Docker version 29.6.2, build dfc4efb",
+    "dockerCompose": "Docker Compose version v5.3.1",
+    "dotnetSdk": "10.0.302",
+    "node": "v24.18.0",
+    "yarn": "1.22.22",
+    "firefoxHost": "Mozilla Firefox 140.13.0esr",
+    "playwrightFirefox": "Playwright Firefox cache (apps/frontend)",
+    "googleChrome": "/usr/bin/google-chrome",
+    "xvfb": true,
+    "xdotool": true
+  },
+  "containers": {
+    "composeProject": "kitchenflow-plan0018",
+    "cleanNamedVolume": "kitchenflow-plan0018_kitchenflow-postgres",
+    "images": {
+      "postgres": {
+        "reference": "postgres:18.4",
+        "digest": "postgres@sha256:3a82e1f56c8f0f5616a11103ac3d47e632c3938698946a7ad26da0df1334744a"
+      },
+      "keycloak": {
+        "reference": "quay.io/keycloak/keycloak:26.7.0",
+        "digest": "quay.io/keycloak/keycloak@sha256:0f198be292568439d700cdbfb893e69a6009bb43a94a06a945b1d3d506c76b13"
+      }
+    }
+  },
+  "urls": {
+    "apiHttps": "https://localhost:7443",
+    "apiHttp": "http://127.0.0.1:7080",
+    "frontendProductionStatic": "http://127.0.0.1:4173",
+    "keycloak": "http://127.0.0.1:8080",
+    "proxyTopology": "API-origin browser auth/inventory journey; FE static on :4173 without same-origin cookie sharing (documented limitation for SPA click-path). Zoom harness on :4180 prototype build."
+  },
+  "syntheticUsers": [
+    "inventory-user-a",
+    "inventory-user-b"
+  ],
+  "migrationsApplied": [
+    "20260729013459_InitialInventorySlice",
+    "20260729123210_EnforceInventoryReferentialIntegrity",
+    "20260729193936_EnforceInventoryHistoryIntegrity",
+    "20260731021725_EnforceAppendOnlyHistory",
+    "20260731024742_TightenExpirationProvenance",
+    "20260731120209_AddInventoryLotConcurrencyToken",
+    "20260731185224_InitialProfilesSlice",
+    "20260801070903_EnforceUniqueProfileEquipmentStableCode"
+  ],
+  "openapiBlobSha": "0cc5050ced6c43daf69538ad1af3fee135871e58",
+  "generatedClientSchemaBlobSha": "560a6533ff7772c071324d7729530d00c2102127",
+  "aiProvider": "none",
+  "productionOrPersonalData": false,
+  "failClosedChecks": {
+    "notPrototypeModeForInventoryJourney": true,
+    "notMockAuthenticationForKeycloakP0": true
+  }
+}

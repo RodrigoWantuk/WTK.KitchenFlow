@@ -220,16 +220,22 @@ public sealed class InventoryLotApplicationWorkflow(
     }
 
     /// <summary>Corrects mutable metadata for an owner-scoped lot using optimistic concurrency.</summary>
-    public Task<InventoryApplicationResult<InventoryLotView>> UpdateAsync(UpdateInventoryLotCommand command, CancellationToken cancellationToken)
+    public async Task<InventoryApplicationResult<InventoryLotView>> UpdateAsync(UpdateInventoryLotCommand command, CancellationToken cancellationToken)
     {
+        // Owner scope before body validation or precondition evaluation (nondisclosing 404).
+        if (await FailIfNotOwnedActiveAsync(command.LotId, cancellationToken) is { } missing)
+        {
+            return missing;
+        }
+
         var validMetadata = ValidateMetadata(command.StorageLocation, command.CustomLocation, command.PackageState, command.Notes, out var metadataError);
         var validProductName = command.ProductName is null || ValidateProductName(command.ProductName, out _);
         if (!validMetadata || !validProductName)
         {
-            return Task.FromResult(Failure<InventoryLotView>("domain_rule_violated", metadataError ?? "The product name is invalid.", FieldErrors(!validMetadata ? MetadataField(metadataError) : "productName", metadataError ?? "The product name is invalid.")));
+            return Failure<InventoryLotView>("domain_rule_violated", metadataError ?? "The product name is invalid.", FieldErrors(!validMetadata ? MetadataField(metadataError) : "productName", metadataError ?? "The product name is invalid."));
         }
 
-        return MutateAsync(command.LotId, command.Precondition, command.CorrelationId, null, null, null, "inventory.lot.metadata_corrected", (lot, product) => JsonSerializer.Serialize(new { changedFields = MetadataChangedFields(lot, product, command) }), cancellationToken, (lot, product, now) =>
+        return await MutateAsync(command.LotId, command.Precondition, command.CorrelationId, null, null, null, "inventory.lot.metadata_corrected", (lot, product) => JsonSerializer.Serialize(new { changedFields = MetadataChangedFields(lot, product, command) }), cancellationToken, (lot, product, now) =>
         {
             lot.UpdateMetadata(ToStorage(command.StorageLocation!, command.CustomLocation), ToPackageState(command.PackageState), ToExpiration(command.PrintedExpirationDate), ToNotes(command.Notes), now);
             if (command.ProductName is not null)
@@ -249,6 +255,12 @@ public sealed class InventoryLotApplicationWorkflow(
             return Failure<InventoryLotView>("validation_failed", "A UUID Idempotency-Key header is required.", FieldErrors("Idempotency-Key", "A UUID Idempotency-Key header is required."));
         }
 
+        // Owner scope before adjustment-body validation or precondition evaluation (nondisclosing 404).
+        if (await FailIfNotOwnedActiveAsync(command.LotId, cancellationToken) is { } missing)
+        {
+            return missing;
+        }
+
         if (!InventoryAdjustmentCommand.TryCreate(command.Type, command.Value, command.AvailabilityState, command.ReasonCode, command.Note, out var adjustment, out var errors))
         {
             return Failure<InventoryLotView>("domain_rule_violated", errors.First().Value[0], errors);
@@ -266,8 +278,15 @@ public sealed class InventoryLotApplicationWorkflow(
     }
 
     /// <summary>Soft-deletes one active owner-scoped lot and records its immutable deletion transition.</summary>
-    public Task<InventoryApplicationResult<InventoryLotView>> DeleteAsync(DeleteInventoryLotCommand command, CancellationToken cancellationToken) =>
-        MutateAsync(command.LotId, command.Precondition, command.CorrelationId, null, null, null, "inventory.lot.deleted", static (_, _) => "{}", cancellationToken, (lot, _, now) => lifecycleUseCase.Delete(lot, now), InventoryApplicationSuccess.Deleted);
+    public async Task<InventoryApplicationResult<InventoryLotView>> DeleteAsync(DeleteInventoryLotCommand command, CancellationToken cancellationToken)
+    {
+        if (await FailIfNotOwnedActiveAsync(command.LotId, cancellationToken) is { } missing)
+        {
+            return missing;
+        }
+
+        return await MutateAsync(command.LotId, command.Precondition, command.CorrelationId, null, null, null, "inventory.lot.deleted", static (_, _) => "{}", cancellationToken, (lot, _, now) => lifecycleUseCase.Delete(lot, now), InventoryApplicationSuccess.Deleted);
+    }
 
     /// <summary>Lists immutable transaction history for one owner-scoped lot.</summary>
     public async Task<InventoryApplicationResult<IReadOnlyList<InventoryHistoryEntry>>> HistoryAsync(Guid lotId, CancellationToken cancellationToken)
@@ -279,14 +298,28 @@ public sealed class InventoryLotApplicationWorkflow(
             : InventoryApplicationResult<IReadOnlyList<InventoryHistoryEntry>>.Succeeded(transactions.Select(item => new InventoryHistoryEntry(item.EntryId, item.Kind, item.TransactionType, ToQuantity(item.PreviousMeasuredValue, item.PreviousMeasuredUnit, item.PreviousAvailabilityState), ToQuantity(item.ResultingMeasuredValue, item.ResultingMeasuredUnit, item.ResultingAvailabilityState), item.ReasonCode, item.ChangedFields, item.OccurredAt)).ToList());
     }
 
+    /// <summary>
+    /// Returns a nondisclosing not-found failure when the lot is absent from the caller's ownership scope.
+    /// Must run before precondition, validation-detail, and idempotency-conflict responses that would otherwise leak existence.
+    /// </summary>
+    private async Task<InventoryApplicationResult<InventoryLotView>?> FailIfNotOwnedActiveAsync(Guid lotId, CancellationToken cancellationToken)
+    {
+        var user = await currentUser.GetCurrentAsync(cancellationToken);
+        var state = await writeStore.LoadActiveAsync(user.Id, lotId, cancellationToken);
+        return state is null
+            ? Failure<InventoryLotView>("resource_not_found", "The inventory lot was not found.")
+            : null;
+    }
+
     private async Task<InventoryApplicationResult<InventoryLotView>> MutateAsync(Guid lotId, InventoryVersionPrecondition precondition, string correlationId, Guid? idempotencyKey, string? idempotencyScope, string? idempotencyHash, string auditEventName, Func<InventoryLot, Product, string> auditMetadata, CancellationToken cancellationToken, Func<InventoryLot, Product, DateTimeOffset, InventoryTransaction?> operation, InventoryApplicationSuccess success = InventoryApplicationSuccess.Succeeded)
     {
-        if (!precondition.IsPresent) { return Failure<InventoryLotView>("precondition_required", "If-Match is required."); }
-        if (!precondition.IsValid) { return Failure<InventoryLotView>("precondition_failed", "The inventory lot was modified."); }
-
+        // Ownership-scoped load precedes If-Match evaluation so foreign/missing lots never surface 412/428.
         var user = await currentUser.GetCurrentAsync(cancellationToken);
         var state = await writeStore.LoadActiveAsync(user.Id, lotId, cancellationToken);
         if (state is null) { return Failure<InventoryLotView>("resource_not_found", "The inventory lot was not found."); }
+
+        if (!precondition.IsPresent) { return Failure<InventoryLotView>("precondition_required", "If-Match is required."); }
+        if (!precondition.IsValid) { return Failure<InventoryLotView>("precondition_failed", "The inventory lot was modified."); }
         if (state.Lot.ConcurrencyToken != precondition.Token) { return Failure<InventoryLotView>("precondition_failed", "The inventory lot was modified."); }
 
         try

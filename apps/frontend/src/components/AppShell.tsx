@@ -116,6 +116,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <div className="ml-auto flex items-center gap-1">
             <LangSwitch />
             <ThemeToggle />
+            {/* Prototype ScenarioBar lives in the header — never as a fixed FAB over content. */}
+            {enableScenarioBar ? <ScenarioBar /> : null}
             <Button asChild variant="ghost" size="icon">
               <Link to="/app/ajustes" data-testid="nav-settings">
                 <SettingsIcon className="h-4 w-4" />
@@ -141,7 +143,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         )}
       </header>
 
-      <div className="mx-auto flex max-w-7xl gap-8 px-4 pb-28 pt-6 md:px-8 md:pb-10">
+      <div className="mx-auto flex max-w-7xl gap-8 px-4 pb-32 pt-6 md:px-8 md:pb-10">
         {/* Sidebar (desktop) */}
         <aside className="sticky top-24 hidden h-fit w-56 shrink-0 md:block">
           <nav className="flex flex-col gap-1">
@@ -209,7 +211,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </div>
       </nav>
 
-      {enableScenarioBar ? <ScenarioBar /> : null}
       <Toaster />
     </div>
   );

@@ -44,10 +44,23 @@ assertNotIncludes(
     "SEED_PANTRY",
     "SEED_PLAN",
     "createMockSessionAdapter",
+    "createUnavailableSessionAdapter",
     "cocinaris_state_v1",
   ],
   "production composition root",
 );
+
+const productionRuntime = read("src/app/runtime/createProductionRuntime.ts");
+if (!productionRuntime.includes("createBffSessionAdapter")) {
+  failures.push(
+    "production composition root must wire createBffSessionAdapter",
+  );
+}
+if (!productionRuntime.includes("createLiveInventoryRepository")) {
+  failures.push(
+    "production composition root must wire createLiveInventoryRepository",
+  );
+}
 
 assertNotIncludes(
   "src/features/preparation-route/PreparationRouteProvider.tsx",

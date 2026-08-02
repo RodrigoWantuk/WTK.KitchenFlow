@@ -3,6 +3,8 @@
  * Independent of prototype StoreProvider / cocinaris_state_v1.
  */
 
+import { inventoryCatalogs } from "./inventoryCatalog";
+
 export const PRODUCTION_LOCALES = ["pt-BR", "en", "es"] as const;
 export type ProductionLocale = (typeof PRODUCTION_LOCALES)[number];
 
@@ -26,10 +28,11 @@ const catalogs: Record<ProductionLocale, Catalog> = {
     "feature.integrationPending": "Integração pendente",
     "feature.serviceUnavailable": "Serviço indisponível",
     "app.unavailable.detail":
-      "Adapters live não estão integrados. A produção não faz fallback para dados mock de despensa, receitas, planejamento, compras ou cozinha.",
+      "Esta área ainda não está conectada. A produção não faz fallback para dados mock de receitas, planejamento, compras ou cozinha.",
     "home.unavailable.detail":
-      "Home autenticada, despensa, receitas, planejamento, compras e modo cozinhar não estão conectados neste build de produção.",
+      "A home contextual ainda não está conectada. A despensa autenticada está disponível em /app/despensa após o login.",
     "lang.label": "Idioma",
+    ...inventoryCatalogs["pt-BR"],
   },
   en: {
     "brand.name": "Cocinaris",
@@ -46,10 +49,11 @@ const catalogs: Record<ProductionLocale, Catalog> = {
     "feature.integrationPending": "Integration pending",
     "feature.serviceUnavailable": "Service unavailable",
     "app.unavailable.detail":
-      "Live adapters are not integrated. Production does not fall back to mock pantry, recipes, planning, shopping, or cook data.",
+      "This area is not wired yet. Production does not fall back to mock recipes, planning, shopping, or cook data.",
     "home.unavailable.detail":
-      "Authenticated home, pantry, recipes, planning, shopping, and cook mode are not wired in this production build.",
+      "Contextual home is not wired yet. Authenticated pantry is available at /app/despensa after sign-in.",
     "lang.label": "Language",
+    ...inventoryCatalogs.en,
   },
   es: {
     "brand.name": "Cocinaris",
@@ -66,10 +70,11 @@ const catalogs: Record<ProductionLocale, Catalog> = {
     "feature.integrationPending": "Integración pendiente",
     "feature.serviceUnavailable": "Servicio no disponible",
     "app.unavailable.detail":
-      "Los adapters live no están integrados. La producción no usa datos mock de despensa, recetas, planificación, compras o cocina.",
+      "Esta área aún no está conectada. La producción no usa datos mock de recetas, planificación, compras o cocina.",
     "home.unavailable.detail":
-      "La home autenticada, despensa, recetas, planificación, compras y modo cocinar no están conectados en esta build de producción.",
+      "La home contextual aún no está conectada. La despensa autenticada está disponible en /app/despensa tras iniciar sesión.",
     "lang.label": "Idioma",
+    ...inventoryCatalogs.es,
   },
 };
 

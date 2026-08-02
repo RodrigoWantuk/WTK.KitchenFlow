@@ -32,9 +32,11 @@ History returns immutable lifecycle transactions plus a `MetadataCorrection` pro
 projection contains only the stable names of fields that changed; it never contains product names,
 note contents, complete request bodies, credentials, or tokens.
 
-PLAN-0004 must pin the final PLAN-0003 candidate SHA before generating a production integration
-client. Until PLAN-0003 R10 passes, this checked-in snapshot remains technically validated but not
-the published stable frontend baseline.
+The production TypeScript client is generated from this snapshot by PLAN-0016 into
+`packages/api-client` (pinned `openapi-typescript` 7.9.1) and mirrored into
+`apps/frontend/src/generated/api-client` for CRA compilation. Regenerate with
+`cd packages/api-client && yarn generate`. Drift is enforced by
+`yarn check:drift` / frontend `yarn check:api-client-drift`.
 
 ## Rules
 

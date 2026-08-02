@@ -1,0 +1,107 @@
+{
+  "testId": "TEST-0018-002-frontend-quality-gates",
+  "exactShaUnderTest": "814af253814d0ec7f8b0adbbca9c50040b5bab07",
+  "executionHead": "86c76b02b13429e09ff6221345c8cc49a02d76ff",
+  "startedAtUtc": "2026-08-02T02:46:07Z",
+  "endedAtUtc": "2026-08-02T02:47:49Z",
+  "overallExit": 0,
+  "commands": [
+    {
+      "cmd": "install",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:46:07Z"
+    },
+    {
+      "cmd": "check_api_client_drift",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:46:08Z"
+    },
+    {
+      "cmd": "typecheck_api_client",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:46:09Z"
+    },
+    {
+      "cmd": "typecheck",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:46:15Z"
+    },
+    {
+      "cmd": "lint",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:46:19Z"
+    },
+    {
+      "cmd": "format_check",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:46:21Z"
+    },
+    {
+      "cmd": "format_check_api_client",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:46:21Z"
+    },
+    {
+      "cmd": "test",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:46:26Z"
+    },
+    {
+      "cmd": "guard_ts_only",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:46:26Z"
+    },
+    {
+      "cmd": "guard_interactive_nesting",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:46:26Z"
+    },
+    {
+      "cmd": "guard_build_mode",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:46:27Z"
+    },
+    {
+      "cmd": "guard_production_isolation",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:46:27Z"
+    },
+    {
+      "cmd": "build",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:46:35Z"
+    },
+    {
+      "cmd": "inspect1",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:46:35Z"
+    },
+    {
+      "cmd": "build_prototype",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:46:46Z"
+    },
+    {
+      "cmd": "build_production",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:46:55Z"
+    },
+    {
+      "cmd": "inspect2",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:46:55Z"
+    },
+    {
+      "cmd": "audit_policy",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:46:57Z"
+    },
+    {
+      "cmd": "smoke_browser_ci",
+      "exit": 0,
+      "endedAtUtc": "2026-08-02T02:47:49Z"
+    }
+  ],
+  "status": "Passed",
+  "notes": "Independent local execution; CI 30728413882 is baseline context only."
+}

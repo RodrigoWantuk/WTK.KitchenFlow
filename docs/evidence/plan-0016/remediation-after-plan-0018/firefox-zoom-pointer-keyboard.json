@@ -1,0 +1,159 @@
+{
+  "plan": "PLAN-0016",
+  "testId": "TEST-0005-109",
+  "zoomTechnique": "native-ctrl-plus-xdotool",
+  "cssZoomForbidden": true,
+  "browserEngineRequired": "firefox",
+  "exactShaUnderTest": "6a263359fe8306189079ca65f586354583e2dd67",
+  "countingUnit": {
+    "testId": "TEST-0005-109",
+    "independentSubScenarios": [
+      "Cook_pointer",
+      "Cook_keyboard",
+      "Pantry_pointer",
+      "Pantry_keyboard"
+    ],
+    "note": "Each surface×modality is an independent sub-scenario; keyboard success does not upgrade pointer."
+  },
+  "note": "Pointer uses elementFromPoint gate + DPR-compensated Playwright mouse click (Firefox zoom raises devicePixelRatio). No locator.click, force, or keyboard fallback for pointer.",
+  "generatedAtUtc": "2026-08-02T03:36:25.540Z",
+  "zoomMeasurement": {
+    "method": "native-ctrl-plus",
+    "baselineInnerWidthAt100": 1162,
+    "zoomedInnerWidth": 581,
+    "widthRatio": 2,
+    "calculatedZoomPercent": 200,
+    "numberOfZoomInActions": 6,
+    "numberOfZoomOutActions": 0,
+    "baselineDevicePixelRatio": 1,
+    "zoomedDevicePixelRatio": 2,
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "results": [
+    {
+      "scenario": "Cook_CTA",
+      "label": "Firefox native 200% — Cook CTA",
+      "browser": "firefox",
+      "browserVersion": "141.0",
+      "zoom": "native-approx-200pct",
+      "zoomMeasurement": {
+        "method": "native-ctrl-plus",
+        "baselineInnerWidthAt100": 1162,
+        "zoomedInnerWidth": 581,
+        "widthRatio": 2,
+        "calculatedZoomPercent": 200,
+        "numberOfZoomInActions": 6,
+        "numberOfZoomOutActions": 0,
+        "baselineDevicePixelRatio": 1,
+        "zoomedDevicePixelRatio": 2,
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        }
+      },
+      "pointer": {
+        "status": "Passed",
+        "detail": "pointer mouse click at CSS center × dpr (2) after elementFromPoint hit",
+        "interceptor": null,
+        "beforeUrl": "http://127.0.0.1:4180/app/hoje",
+        "afterUrl": "http://127.0.0.1:4180/app/receitas/r2",
+        "probe": {
+          "cx": 224.66666412353516,
+          "cy": 135.5,
+          "dpr": 2,
+          "hitsTarget": true,
+          "top": {
+            "tag": "A",
+            "testId": "sugg-open-r2",
+            "className": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none"
+          },
+          "rect": {
+            "top": 119.5,
+            "left": 143,
+            "width": 163.3333282470703,
+            "height": 32,
+            "bottom": 151.5,
+            "right": 306.3333282470703
+          },
+          "viewport": {
+            "innerWidth": 581,
+            "innerHeight": 287
+          }
+        }
+      },
+      "keyboard": {
+        "status": "Passed",
+        "detail": "keyboard Enter succeeded",
+        "beforeUrl": "http://127.0.0.1:4180/app/hoje",
+        "afterUrl": "http://127.0.0.1:4180/app/receitas/r2"
+      }
+    },
+    {
+      "scenario": "Pantry_item",
+      "label": "Firefox native 200% — Pantry item",
+      "browser": "firefox",
+      "browserVersion": "141.0",
+      "zoom": "native-approx-200pct",
+      "zoomMeasurement": {
+        "method": "native-ctrl-plus",
+        "baselineInnerWidthAt100": 1162,
+        "zoomedInnerWidth": 581,
+        "widthRatio": 2,
+        "calculatedZoomPercent": 200,
+        "numberOfZoomInActions": 6,
+        "numberOfZoomOutActions": 0,
+        "baselineDevicePixelRatio": 1,
+        "zoomedDevicePixelRatio": 2,
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        }
+      },
+      "pointer": {
+        "status": "Passed",
+        "detail": "pointer mouse click at CSS center × dpr (2) after elementFromPoint hit",
+        "interceptor": null,
+        "beforeUrl": "http://127.0.0.1:4180/app/despensa",
+        "afterUrl": "http://127.0.0.1:4180/app/despensa/p1",
+        "probe": {
+          "cx": 290.5,
+          "cy": 135.5,
+          "dpr": 2,
+          "hitsTarget": true,
+          "top": {
+            "tag": "DIV",
+            "testId": null,
+            "className": "mt-1 text-sm text-muted-foreground"
+          },
+          "rect": {
+            "top": 101.5,
+            "left": 33,
+            "width": 515,
+            "height": 68,
+            "bottom": 169.5,
+            "right": 548
+          },
+          "viewport": {
+            "innerWidth": 581,
+            "innerHeight": 287
+          }
+        }
+      },
+      "keyboard": {
+        "status": "Passed",
+        "detail": "keyboard Enter succeeded",
+        "beforeUrl": "http://127.0.0.1:4180/app/despensa",
+        "afterUrl": "http://127.0.0.1:4180/app/despensa/p1"
+      }
+    }
+  ],
+  "plan0016Interpretation": {
+    "Cook_pointer": "Passed",
+    "Cook_keyboard": "Passed",
+    "Pantry_pointer": "Passed",
+    "Pantry_keyboard": "Passed"
+  }
+}

@@ -57,6 +57,9 @@ packages/*
 !packages/contracts/**
 !packages/contracts/openapi/
 !packages/contracts/openapi/**
+!packages/api-client/
+!packages/api-client/**
+packages/api-client/node_modules/
 
 # Python
 __pycache__/

@@ -16,6 +16,8 @@ import {
   translateProduction,
 } from "./productionCatalog";
 
+export type { ProductionLocale };
+
 export interface ProductionI18nValue {
   locale: ProductionLocale;
   locales: readonly ProductionLocale[];

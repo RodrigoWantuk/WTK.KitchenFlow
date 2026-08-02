@@ -1,17 +1,18 @@
 # PLAN-0011: Implement the Public Entry and Contextual Home Experience
 
-- **Status:** Blocked
+- **Status:** Ready
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Unassigned frontend/product implementation agent
 - **Created:** 2026-07-30
-- **Last updated:** 2026-07-31T22:47:18Z
+- **Last updated:** 2026-08-02T12:05:00Z
 - **Branch:** `agent/plan-0011-contextual-home`
 - **Pull request:** Not opened
 - **Related documentation plan:** PLAN-0010
-- **Related frontend plan:** PLAN-0014 (on main); remediation [PLAN-0015](PLAN-0015-remediate-frontend-baseline.md)
+- **Related frontend plan:** PLAN-0014 (on main); remediation [PLAN-0015](PLAN-0015-remediate-frontend-baseline.md) (**Completed**; manual visual/NVDA/VoiceOver deferred as non-blocking)
+- **Related production integration plan:** [PLAN-0016](PLAN-0016-implement-production-session-and-inventory-frontend.md) (**Completed**; post-rebase Pass tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b`)
 - **Related product document:** `docs/product/entry-and-contextual-home.md`
-- **Dependencies:** Remaining PLAN-0015 manual frontend validation / owner decision that the remediated baseline is accepted; stable menu, profile, inventory-attention, and recommendation contracts for live phases
+- **Dependencies:** PLAN-0016 Completed with independent remediations Pass for #20/#21/#22/#24/#26; stable menu, profile, inventory-attention, and recommendation contracts for live phases
 
 ## Objective
 
@@ -26,9 +27,11 @@ The implementation must preserve the accepted source priority:
 
 ## Blocking state
 
-PLAN-0014 imported the Emergent frontend onto `main`, and PLAN-0015 remediation merged via PR #16. Remaining manual frontend validation under PLAN-0015 is still open, so this plan stays **Blocked** until that validation is accepted. Do not treat PR #16 merge alone as unblock.
+PLAN-0014 imported the Emergent frontend onto `main`. PLAN-0015 remediation completed (PR #16 / evidence via PR #18); remaining PLAN-0015 manual visual/NVDA/VoiceOver checks were **deferred as non-blocking** and are **not** the current blocker.
 
-The public landing page and mock-backed home can begin after that remaining validation is accepted. Live source adapters remain blocked until their backend contracts are accepted and published.
+PLAN-0005 merged as **Conditional Pass** (PR #19 / `60d98dd…`) with residual High #20, Medium #21/#22, coverage #24, and later High #26. **PLAN-0016** remediations independently **Pass** on tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b` (execution tip `38e5edf`); residual issues reconciled closed. This plan is **Ready** to claim. Do not implement PLAN-0011 features on the PLAN-0016 branch.
+
+Live contextual-home source adapters remain blocked until their backend contracts are accepted and published.
 
 ## Scope
 
@@ -239,20 +242,35 @@ Automated coverage must include:
 
 ## Execution state
 
-- **Current checkpoint:** Product behavior is accepted through PLAN-0010; implementation has not started.
+- **Current checkpoint:** Product behavior is accepted through PLAN-0010; implementation has not started. Status is **Ready**.
 - **Run delivery target:** Not started.
 - **Delivered outcome:** None.
 - **Acceptance criteria resolved:** None.
 - **Files or areas materially changed:** None.
-- **Documentation delivered:** This future implementation plan.
-- **Validation performed:** Plan cross-checked against the canonical entry/home specification and existing frontend/backend boundaries.
+- **Documentation delivered:** This future implementation plan; dependency wording corrected 2026-08-02; unblocked after PLAN-0016 Completed.
+- **Validation performed:** PLAN-0015 Completed with deferred non-blocking manual checks; PLAN-0005 Conditional Pass merged; PLAN-0016 Completed with post-rebase Pass tip `38e5edfb49407d895995e0cf1b49054dc7ce5c5b`.
 - **Known failures or limitations:** Live contract shapes do not yet exist for every tier.
-- **Blockers:** Remaining PLAN-0015 manual frontend validation / owner decision; live menu/profile/recommendation contracts.
+- **Blockers:** Live menu/profile/recommendation contracts still required for live phases (not PLAN-0016).
 - **Partially modified areas:** None.
-- **Exact next action:** After remaining PLAN-0015 manual validation is accepted, claim this plan and implement Phase 1 plus the mock-backed Phase 2 before designing live contracts.
-- **Working tree state:** No implementation branch exists.
+- **Exact next action:** Claim this plan and implement Phase 1 plus the mock-backed Phase 2 before designing live contracts.
+- **Working tree state:** No implementation branch claimed.
 
 ## Progress log
+
+### 2026-08-02T12:05:00Z — agent:composer-plan-0016
+
+- **Checkpoint:** Unblocked to **Ready** after PLAN-0016 Completed / post-rebase Pass (`38e5edfb49407d895995e0cf1b49054dc7ce5c5b`).
+- **Changes included in the commit:** Status, dependencies, execution state, and registry row. No PLAN-0011 feature work.
+- **Next action:** Claim and start Phase 1.
+- **Blockers or handoff notes:** Live contracts still required for later live phases.
+
+### 2026-08-02T00:15:00Z — agent:composer-plan-0016
+
+- **Checkpoint:** Blocker restated — PLAN-0015 Completed (manual deferred non-blocking); current prerequisite is PLAN-0016 + independent PLAN-0005 retest.
+- **Changes included in the commit:** Dependencies, blocking state, execution state, and registry row updated. No PLAN-0011 feature work.
+- **Result:** Plan remains Blocked.
+- **Next action:** Do not claim until PLAN-0016 remediation passes independent retest.
+- **Blockers or handoff notes:** Residual #20/#21/#22/#24.
 
 ### 2026-07-31T22:47:18Z — Cursor agent (PLAN-0015)
 
