@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useInventoryRepository } from "./InventoryProvider";
 import { formatQuantityLabel } from "./quantityDisplay";
@@ -53,13 +53,18 @@ export function ProductionInventoryDetail() {
   const [busy, setBusy] = useState(false);
   const historyTimeZone =
     session.timeZone && session.timeZone.trim() ? session.timeZone : "UTC";
+  const lotRef = useRef(lot);
+  lotRef.current = lot;
 
   const reloadHistory = useCallback(
     async (targetLotId: string) => {
       try {
-        setHistory(await repo.getHistory(targetLotId));
+        const hist = await repo.getHistory(targetLotId);
+        setHistory(hist);
         setHistoryError(null);
       } catch {
+        // Keep any prior history entries visible but never clear the warning
+        // until a successful refresh.
         setHistoryError(t("inventory.error.historyRefresh"));
       }
     },
@@ -67,29 +72,48 @@ export function ProductionInventoryDetail() {
   );
 
   const reload = useCallback(async () => {
-    setStatus("loading");
-    setError(null);
-    setHistoryError(null);
+    const hadLot = Boolean(lotRef.current);
+    if (!hadLot) {
+      setStatus("loading");
+      setError(null);
+    }
     setConflict(false);
     setMissingPrecondition(false);
+
+    let lotLoaded = false;
     try {
-      const [next, hist] = await Promise.all([
-        repo.getLot(lotId),
-        repo.getHistory(lotId),
-      ]);
+      const next = await repo.getLot(lotId);
       setLot(next);
-      setHistory(hist);
+      lotRef.current = next;
       if (next.quantity.kind === "qualitative") {
         setAvailability(next.quantity.availability);
       }
-      setStatus("ready");
+      setError(null);
+      lotLoaded = true;
     } catch (err) {
-      setStatus("error");
-      setError(
+      const message =
         err instanceof InventoryApiError && err.code === "not_found"
           ? t("inventory.error.notFound")
-          : t("inventory.error.loadDetail"),
-      );
+          : t("inventory.error.loadDetail");
+      if (!hadLot) {
+        setStatus("error");
+        setError(message);
+        return;
+      }
+      // Keep the previous lot projection; surface a lot-reload warning.
+      setError(message);
+    }
+
+    try {
+      const hist = await repo.getHistory(lotId);
+      setHistory(hist);
+      setHistoryError(null);
+    } catch {
+      setHistoryError(t("inventory.error.historyRefresh"));
+    }
+
+    if (lotLoaded || hadLot) {
+      setStatus("ready");
     }
   }, [lotId, repo, t]);
 
@@ -308,6 +332,24 @@ export function ProductionInventoryDetail() {
         </div>
       )}
 
+      {error && !conflict && !missingPrecondition && (
+        <div
+          role="alert"
+          data-testid="inventory-lot-reload-error"
+          className="rounded-xl border border-warning/40 bg-warning/10 p-4"
+        >
+          <p>{error}</p>
+          <Button
+            type="button"
+            className="mt-3"
+            data-testid="inventory-reload-lot"
+            onClick={() => void reload()}
+          >
+            {t("inventory.actions.retry")}
+          </Button>
+        </div>
+      )}
+
       <dl className="grid gap-3 text-sm sm:grid-cols-2">
         <div>
           <dt className="text-muted-foreground">
@@ -483,7 +525,11 @@ export function ProductionInventoryDetail() {
             </div>
           </div>
         )}
-        <ol data-testid="inventory-history" className="space-y-2">
+        <ol
+          data-testid="inventory-history"
+          data-history-stale={historyError ? "true" : "false"}
+          className="space-y-2"
+        >
           {history.map((entry) => (
             <li
               key={entry.entryId}

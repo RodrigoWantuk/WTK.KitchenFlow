@@ -347,4 +347,156 @@ describe("ProductionInventoryDetail", () => {
       /Available/i,
     );
   });
+
+  it("keeps history refresh warning visible after repeated reload failures", async () => {
+    const user = userEvent.setup();
+    const initialHistory = [
+      {
+        entryId: "dddddddd-dddd-dddd-dddd-dddddddddddd",
+        kind: "LifecycleTransaction" as const,
+        type: "Consume" as const,
+        reasonCode: "ui_consume",
+        changedFields: null,
+        occurredAt: "2026-08-01T12:00:00Z",
+      },
+    ];
+    const adjustLot = jest.fn(async () => ({
+      ...sampleLot,
+      quantity: {
+        kind: "measured" as const,
+        value: 400,
+        unit: "Gram" as const,
+      },
+      etag: '"v2"',
+    }));
+    const getHistory = jest
+      .fn()
+      .mockResolvedValueOnce(initialHistory)
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503))
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503))
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503));
+    const getLot = jest.fn(async () => sampleLot);
+    const repo = createMockInventoryRepo({
+      getLot,
+      getHistory,
+      adjustLot,
+    });
+    renderDetail(repo);
+    await screen.findByText("Rice");
+    expect(screen.getByTestId("inventory-history")).toHaveTextContent(
+      /Consume/,
+    );
+
+    await user.type(screen.getByTestId("inventory-adjust-value"), "100");
+    await user.click(screen.getByTestId("inventory-adjust-submit"));
+    expect(
+      await screen.findByTestId("inventory-history-refresh-error"),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("inventory-history")).toHaveAttribute(
+      "data-history-stale",
+      "true",
+    );
+    expect(screen.getByTestId("inventory-history")).toHaveTextContent(
+      /Consume/,
+    );
+    expect(adjustLot).toHaveBeenCalledTimes(1);
+
+    await user.click(screen.getByTestId("inventory-reload-after-history"));
+    expect(
+      await screen.findByTestId("inventory-history-refresh-error"),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("inventory-history")).toHaveAttribute(
+      "data-history-stale",
+      "true",
+    );
+    expect(screen.getByTestId("inventory-history")).toHaveTextContent(
+      /Consume/,
+    );
+    expect(adjustLot).toHaveBeenCalledTimes(1);
+
+    await user.click(screen.getByTestId("inventory-reload-history"));
+    expect(
+      await screen.findByTestId("inventory-history-refresh-error"),
+    ).toBeInTheDocument();
+    expect(adjustLot).toHaveBeenCalledTimes(1);
+  });
+
+  it("clears history refresh warning only after a successful history reload", async () => {
+    const user = userEvent.setup();
+    const initialHistory = [
+      {
+        entryId: "dddddddd-dddd-dddd-dddd-dddddddddddd",
+        kind: "LifecycleTransaction" as const,
+        type: "Consume" as const,
+        reasonCode: "ui_consume",
+        changedFields: null,
+        occurredAt: "2026-08-01T12:00:00Z",
+      },
+    ];
+    const refreshedHistory = [
+      {
+        entryId: "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+        kind: "LifecycleTransaction" as const,
+        type: "Discard" as const,
+        reasonCode: "ui_discard",
+        changedFields: null,
+        occurredAt: "2026-08-01T13:00:00Z",
+      },
+    ];
+    const adjustLot = jest.fn(async () => ({
+      ...sampleLot,
+      quantity: {
+        kind: "measured" as const,
+        value: 400,
+        unit: "Gram" as const,
+      },
+      etag: '"v2"',
+    }));
+    const getHistory = jest
+      .fn()
+      .mockResolvedValueOnce(initialHistory)
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503))
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503))
+      .mockResolvedValueOnce(refreshedHistory);
+    const repo = createMockInventoryRepo({
+      getLot: jest.fn(async () => ({
+        ...sampleLot,
+        quantity: {
+          kind: "measured" as const,
+          value: 400,
+          unit: "Gram" as const,
+        },
+        etag: '"v2"',
+      })),
+      getHistory,
+      adjustLot,
+    });
+    renderDetail(repo);
+    await screen.findByText("Rice");
+    await user.type(screen.getByTestId("inventory-adjust-value"), "100");
+    await user.click(screen.getByTestId("inventory-adjust-submit"));
+    expect(
+      await screen.findByTestId("inventory-history-refresh-error"),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByTestId("inventory-reload-history"));
+    expect(
+      await screen.findByTestId("inventory-history-refresh-error"),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByTestId("inventory-reload-history"));
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId("inventory-history-refresh-error"),
+      ).not.toBeInTheDocument(),
+    );
+    expect(screen.getByTestId("inventory-history")).toHaveAttribute(
+      "data-history-stale",
+      "false",
+    );
+    expect(screen.getByTestId("inventory-history")).toHaveTextContent(
+      /Discard/,
+    );
+    expect(adjustLot).toHaveBeenCalledTimes(1);
+  });
 });

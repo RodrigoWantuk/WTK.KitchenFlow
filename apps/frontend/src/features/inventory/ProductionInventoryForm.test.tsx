@@ -177,6 +177,137 @@ describe("ProductionInventoryForm", () => {
     expect(window.sessionStorage.length).toBe(0);
   });
 
+  it("reuses create key for equivalent pt-BR decimal text after ambiguous failure", async () => {
+    const user = userEvent.setup();
+    const createLot = jest
+      .fn()
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503))
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503));
+    const repo = createMockInventoryRepo({ createLot });
+    renderForm("create", repo, "pt-BR");
+
+    await user.type(screen.getByTestId("inventory-product-name"), "Arroz");
+    await user.type(screen.getByTestId("inventory-amount"), "1,0");
+    await user.click(screen.getByTestId("inventory-save"));
+    await screen.findByTestId("inventory-form-error");
+
+    await user.clear(screen.getByTestId("inventory-amount"));
+    await user.type(screen.getByTestId("inventory-amount"), "1,00");
+    await user.click(screen.getByTestId("inventory-save"));
+    await waitFor(() => expect(createLot).toHaveBeenCalledTimes(2));
+    expect(createLot.mock.calls[0][1].idempotencyKey).toBe(
+      createLot.mock.calls[1][1].idempotencyKey,
+    );
+    expect(createLot.mock.calls[0][0].quantity).toEqual({
+      kind: "measured",
+      value: 1,
+      unit: "Gram",
+    });
+    expect(createLot.mock.calls[1][0].quantity).toEqual({
+      kind: "measured",
+      value: 1,
+      unit: "Gram",
+    });
+  });
+
+  it("reuses create key for equivalent en decimal text after ambiguous failure", async () => {
+    const user = userEvent.setup();
+    const createLot = jest
+      .fn()
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503))
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503));
+    const repo = createMockInventoryRepo({ createLot });
+    renderForm("create", repo, "en");
+
+    await user.type(screen.getByTestId("inventory-product-name"), "Rice");
+    await user.type(screen.getByTestId("inventory-amount"), "1.0");
+    await user.click(screen.getByTestId("inventory-save"));
+    await screen.findByTestId("inventory-form-error");
+
+    await user.clear(screen.getByTestId("inventory-amount"));
+    await user.type(screen.getByTestId("inventory-amount"), "1.00");
+    await user.click(screen.getByTestId("inventory-save"));
+    await waitFor(() => expect(createLot).toHaveBeenCalledTimes(2));
+    expect(createLot.mock.calls[0][1].idempotencyKey).toBe(
+      createLot.mock.calls[1][1].idempotencyKey,
+    );
+  });
+
+  it("ignores inactive measured fields while qualitative create attempt is open", async () => {
+    const user = userEvent.setup();
+    const createLot = jest
+      .fn()
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503))
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503));
+    const repo = createMockInventoryRepo({ createLot });
+    renderForm("create", repo);
+
+    await user.type(screen.getByTestId("inventory-product-name"), "Herbs");
+    await user.type(screen.getByTestId("inventory-amount"), "5");
+    await user.click(
+      screen.getByRole("radio", { name: /qualitative|Qualitative/i }),
+    );
+    await user.click(screen.getByTestId("inventory-save"));
+    await screen.findByTestId("inventory-form-error");
+    const firstKey = createLot.mock.calls[0][1].idempotencyKey;
+
+    // Change measured fields while inactive, then return to qualitative.
+    await user.click(screen.getByRole("radio", { name: /measured|Measured/i }));
+    await user.clear(screen.getByTestId("inventory-amount"));
+    await user.type(screen.getByTestId("inventory-amount"), "999");
+    await user.click(
+      screen.getByRole("radio", { name: /qualitative|Qualitative/i }),
+    );
+    await user.click(screen.getByTestId("inventory-save"));
+    await waitFor(() => expect(createLot).toHaveBeenCalledTimes(2));
+    expect(createLot.mock.calls[1][1].idempotencyKey).toBe(firstKey);
+    expect(createLot.mock.calls[1][0].quantity).toEqual({
+      kind: "qualitative",
+      availability: "Available",
+    });
+  });
+
+  it("ignores inactive availability while measured create attempt is open", async () => {
+    const user = userEvent.setup();
+    const createLot = jest
+      .fn()
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503))
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503));
+    const repo = createMockInventoryRepo({ createLot });
+    renderForm("create", repo);
+
+    await user.click(
+      screen.getByRole("radio", { name: /qualitative|Qualitative/i }),
+    );
+    await user.selectOptions(
+      screen.getByLabelText(/Availability|Disponibilidad/i),
+      "Low",
+    );
+    await user.click(screen.getByRole("radio", { name: /measured|Measured/i }));
+    await user.type(screen.getByTestId("inventory-product-name"), "Rice");
+    await user.type(screen.getByTestId("inventory-amount"), "1");
+    await user.click(screen.getByTestId("inventory-save"));
+    await screen.findByTestId("inventory-form-error");
+    const firstKey = createLot.mock.calls[0][1].idempotencyKey;
+
+    await user.click(
+      screen.getByRole("radio", { name: /qualitative|Qualitative/i }),
+    );
+    await user.selectOptions(
+      screen.getByLabelText(/Availability|Disponibilidad/i),
+      "Unavailable",
+    );
+    await user.click(screen.getByRole("radio", { name: /measured|Measured/i }));
+    await user.click(screen.getByTestId("inventory-save"));
+    await waitFor(() => expect(createLot).toHaveBeenCalledTimes(2));
+    expect(createLot.mock.calls[1][1].idempotencyKey).toBe(firstKey);
+    expect(createLot.mock.calls[1][0].quantity).toEqual({
+      kind: "measured",
+      value: 1,
+      unit: "Gram",
+    });
+  });
+
   it("issues a new create idempotency key after material form changes", async () => {
     const user = userEvent.setup();
     const createLot = jest
@@ -198,6 +329,29 @@ describe("ProductionInventoryForm", () => {
     expect(createLot.mock.calls[0][1].idempotencyKey).not.toBe(
       createLot.mock.calls[1][1].idempotencyKey,
     );
+  });
+
+  it("does not rotate create key for trim-equivalent optional fields", async () => {
+    const user = userEvent.setup();
+    const createLot = jest
+      .fn()
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503))
+      .mockRejectedValueOnce(new InventoryApiError("unavailable", "down", 503));
+    const repo = createMockInventoryRepo({ createLot });
+    renderForm("create", repo);
+
+    await user.type(screen.getByTestId("inventory-product-name"), "  Rice  ");
+    await user.type(screen.getByTestId("inventory-amount"), "1");
+    await user.click(screen.getByTestId("inventory-save"));
+    await screen.findByTestId("inventory-form-error");
+    const firstKey = createLot.mock.calls[0][1].idempotencyKey;
+    expect(createLot.mock.calls[0][0].productName).toBe("Rice");
+
+    await user.clear(screen.getByTestId("inventory-product-name"));
+    await user.type(screen.getByTestId("inventory-product-name"), "Rice");
+    await user.click(screen.getByTestId("inventory-save"));
+    await waitFor(() => expect(createLot).toHaveBeenCalledTimes(2));
+    expect(createLot.mock.calls[1][1].idempotencyKey).toBe(firstKey);
   });
 
   it("does not reuse create idempotency key after confirmed success", async () => {
