@@ -11,9 +11,10 @@ This handoff covers the **new PLAN-0016 remediation candidate**. Implementation-
 - Draft PR: [#25](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/25) (keep Draft)
 - Base: `main`
 - Prior failed candidate: `814af253814d0ec7f8b0adbbca9c50040b5bab07`
-- Remediation tip (CI-green candidate): `68c04fc236f30d3cab0fdd444242cc5fdeecb251`
+- Remediation PR tip (Validating head): `2f0d24adc44bf5f1ba61f8e43402d38aa39e201f`
+- Product remediation tip (same code): `68c04fc236f30d3cab0fdd444242cc5fdeecb251`
 - Workflow IDs: `docs/evidence/plan-0016/remediation-after-plan-0018/workflow-ids.md`
-- Diff since PLAN-0018 tip: `git diff 814af253814d0ec7f8b0adbbca9c50040b5bab07...68c04fc236f30d3cab0fdd444242cc5fdeecb251`
+- Diff since PLAN-0018 tip: `git diff 814af253814d0ec7f8b0adbbca9c50040b5bab07...2f0d24adc44bf5f1ba61f8e43402d38aa39e201f`
 - PLAN-0018 Fail evidence (immutable): `docs/evidence/plan-0018/`
 
 ## Required independent coverage

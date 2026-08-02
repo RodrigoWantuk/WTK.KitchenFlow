@@ -228,11 +228,11 @@ Minimum retest coverage:
 ## Execution state
 
 - **Current run delivery target:** Remediate independent PLAN-0018 Fail findings (#21/#22 pointer; #26 isolation) then re-validate.
-- **Current checkpoint:** **Validating** — remediation tip `68c04fc` has green Backend, Frontend, and PLAN-0005 workflows (implementation CI only).
+- **Current checkpoint:** **Validating** — PR tip `2f0d24a` and product tip `68c04fc` have green Backend, Frontend, and PLAN-0005 workflows (implementation CI only).
 - **Last independently tested SHA:** `814af253814d0ec7f8b0adbbca9c50040b5bab07` (PLAN-0018 Fail — immutable)
-- **Remediation candidate SHA:** `68c04fc236f30d3cab0fdd444242cc5fdeecb251`
+- **Remediation candidate SHA:** `2f0d24adc44bf5f1ba61f8e43402d38aa39e201f` (PR head); product changes through `68c04fc`
 - **Last completed step:** #26/#21/#22 remediations + evidence + CI IDs recorded; PR #25 remains Draft.
-- **Exact next action:** Independent retest of tip `68c04fc` (do not reuse implementation evidence as final authority); keep issues open; owner merge only after retest.
+- **Exact next action:** Independent retest of tip `2f0d24a` (do not reuse implementation evidence as final authority); keep issues open; owner merge only after retest.
 - **Blockers:** None for coding. Owner merge blocked until independent retest Pass/Conditional Pass.
 - **Known failures or limitations:** PLAN-0018 Fail on `814af25` stands; PLAN-0005 Conditional Pass until independent acceptance; PLAN-0011 Blocked; #21/#22/#26/#20/#24 remain open; PR #23 untouched.
 - **Working tree state:** Remediation candidate pushed; PLAN-0018 Fail evidence immutable.
