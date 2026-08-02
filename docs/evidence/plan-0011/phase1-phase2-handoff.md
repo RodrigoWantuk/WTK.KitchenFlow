@@ -15,8 +15,8 @@ Production `/` renders outside `SessionProvider`. Session bootstrap occurs only 
 | Role | Value |
 |---|---|
 | Review baseline (pre-remediation) | `2bdcd4ff4357167ad2d55284ac30a81a9daaec43` |
-| Functional remediation tip | recorded after the remediation commit (see plan Progress log) |
-| Current PR head | same as published branch tip after push |
+| Functional remediation tip | `febbd5eb2642b77ed2e4848db721b77ac5e0caac` |
+| Current PR head | advances with packaging tip after this evidence update |
 | Exact-head CI | pending until Frontend + PLAN-0005 succeed on the published tip |
 
 Do not treat a packaging-only metadata commit as proof for an older functional SHA.
