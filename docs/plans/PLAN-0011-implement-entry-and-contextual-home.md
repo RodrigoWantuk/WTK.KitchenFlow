@@ -241,7 +241,7 @@ Automated coverage must include:
 ## Execution state
 
 - **Current checkpoint:** Residual remediations implemented locally; awaiting commit/push and exact-head CI.
-- **Exact tip SHA (functional implementation tip):** pending commit on this run (baseline `893b8a4`).
+- **Exact tip SHA (functional implementation tip):** `b7c213be3bd326adea1b522ee60c4e0d63be564a`.
 - **Review baseline:** `893b8a471feb71451ef4fe21d13c6c12261a4567`
 - **Run delivery target:** Push residual fixes; exact-head Frontend + PLAN-0005; keep draft; mark Completed when green.
 - **Unresolved blockers:** Exact-head CI pending.

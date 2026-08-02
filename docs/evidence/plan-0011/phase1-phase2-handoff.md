@@ -13,7 +13,7 @@ Live source contracts remain PLAN-0021.
 | Review baseline (pre-residual) | `893b8a471feb71451ef4fe21d13c6c12261a4567` |
 | Functional implementation tip |  |
 | CI-validated tip | pending exact-head Frontend + PLAN-0005 |
-| Current PR head reported in PR metadata | published branch tip after push |
+| Current PR head reported in PR metadata | `b78eb404fabd1114b2985451457a1d81cd6f381c` (exact-head CI pending on push) |
 
 ## Residual remediation summary
 
