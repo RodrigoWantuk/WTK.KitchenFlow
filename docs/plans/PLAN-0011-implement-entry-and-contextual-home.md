@@ -242,7 +242,7 @@ Automated coverage must include:
 
 - **Current checkpoint:** Hardened Phase 1+2: public `/` outside SessionProvider; progressive source loading; per-source retry; empty-menu omission; request-scoped timezone override; chooser retry; expanded tests. Local gates + browser smoke Passed. Status **Validating**.
 - **Exact tip SHA (functional):** `f7d516089a077b39bd9c95c7cc157f44443eaa7d`
-- **Packaging tip SHA:** branch HEAD after tip-metadata commit (functional product tip remains `f7d516089a077b39bd9c95c7cc157f44443eaa7d`)
+- **Packaging tip SHA:**  (functional product tip remains `f7d516089a077b39bd9c95c7cc157f44443eaa7d`)
 - **Run delivery target:** Phase 1 public entry + Phase 2 mock-backed contextual home with tests, isolation, docs, draft PR.
 - **Delivered outcome:** Public entry without session bootstrap; contextual home (mock/unavailable adapters); i18n; Jest; smoke; docs/evidence; draft PR #34 requesting RodrigoWantuk.
 - **Acceptance criteria resolved:** Amended Phase 1/2 product criteria satisfied locally; exact-head CI pending on packaging tip; owner review/merge still pending; live sources remain PLAN-0021.
