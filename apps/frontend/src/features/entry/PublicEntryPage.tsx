@@ -73,8 +73,16 @@ export function PublicEntryPage({
     telemetry.track({ name: "public_entry_viewed" });
   }, [telemetry]);
 
-  // Public CTA never depends on session state (assignment: no session inspection).
   const loginHref = "/acesso";
+
+  function scrollToDemo() {
+    const reduceMotion =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    demoRef.current?.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+    });
+  }
 
   return (
     <div
@@ -159,9 +167,7 @@ export function PublicEntryPage({
               variant="secondary"
               className="rounded-full px-6"
               data-testid="entry-cta-demo"
-              onClick={() => {
-                demoRef.current?.scrollIntoView({ behavior: "smooth" });
-              }}
+              onClick={scrollToDemo}
             >
               {t("entry.cta.secondary")}
             </Button>
@@ -171,6 +177,7 @@ export function PublicEntryPage({
         <section
           ref={demoRef}
           id="entry-demo"
+          data-testid="entry-demo"
           aria-labelledby="entry-demo-title"
           className="border-y border-border bg-secondary/30"
         >

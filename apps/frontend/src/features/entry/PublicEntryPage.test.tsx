@@ -84,4 +84,54 @@ describe("PublicEntryPage", () => {
     await user.click(screen.getByTestId("hero-enter"));
     expect(events.some((e) => e.name === "login_cta_selected")).toBe(true);
   });
+
+  it("uses smooth scrolling by default and auto when reduced motion is preferred", async () => {
+    const user = userEvent.setup();
+    const scrollSpy = jest.fn();
+    Element.prototype.scrollIntoView = scrollSpy;
+    const originalMatchMedia = window.matchMedia;
+
+    window.matchMedia = jest.fn().mockImplementation(() => ({
+      matches: false,
+      media: "(prefers-reduced-motion: reduce)",
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })) as unknown as typeof window.matchMedia;
+
+    renderEntry();
+    await user.click(screen.getByTestId("entry-cta-demo"));
+    expect(scrollSpy).toHaveBeenCalledWith({ behavior: "smooth" });
+
+    scrollSpy.mockClear();
+    window.matchMedia = jest.fn().mockImplementation((query: string) => ({
+      matches: query.includes("prefers-reduced-motion: reduce"),
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })) as unknown as typeof window.matchMedia;
+    await user.click(screen.getByTestId("entry-cta-demo"));
+    expect(scrollSpy).toHaveBeenCalledWith({ behavior: "auto" });
+    window.matchMedia = originalMatchMedia;
+  });
+
+  it("falls back safely when matchMedia is unavailable", async () => {
+    const user = userEvent.setup();
+    const scrollSpy = jest.fn();
+    Element.prototype.scrollIntoView = scrollSpy;
+    const original = window.matchMedia;
+    // @ts-expect-error intentional unsupported environment
+    window.matchMedia = undefined;
+    renderEntry();
+    await user.click(screen.getByTestId("entry-cta-demo"));
+    expect(scrollSpy).toHaveBeenCalledWith({ behavior: "smooth" });
+    window.matchMedia = original;
+  });
 });

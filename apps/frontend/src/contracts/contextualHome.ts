@@ -1,6 +1,9 @@
 /**
  * Stable presentation models for the public entry and contextual home.
  * Independent of future live OpenAPI DTOs (PLAN-0021).
+ *
+ * These models are presentation-only projections. React must not calculate
+ * inventory sufficiency, reservations, food safety, or mutate authoritative state.
  */
 
 /** Ordered suggestion-source tiers. Higher tiers must render before lower ones. */
@@ -44,6 +47,37 @@ export type HomeTimeZoneSource =
   | "unavailable"
   | "invalid";
 
+/** Shopping requirement projection (presentation codes only). */
+export type HomeShoppingState =
+  | "not_required"
+  | "optional"
+  | "required"
+  | "unknown";
+
+/**
+ * Product/requirement projection for display. Codes and label keys only —
+ * never raw pantry contents or private notes.
+ */
+export interface HomeRequirementProjection {
+  /** Stable synthetic code (not a live inventory lot id). */
+  code: string;
+  kind: "required" | "optional";
+  /** Localization key for the human-readable requirement label. */
+  labelKey: string;
+}
+
+/**
+ * Advance-preparation projection (thaw, prep ahead). Presentation only —
+ * React must not schedule inventory mutations.
+ */
+export interface HomePreparationProjection {
+  code: string;
+  kind: "thaw" | "advance" | "other";
+  labelKey: string;
+  /** Advisory lead time in hours when known; never authoritative. */
+  leadTimeHours?: number | null;
+}
+
 /**
  * Suggestion candidate shown in the home. Titles and reasons are localization
  * keys or stable codes — never raw private inventory/profile payloads.
@@ -53,14 +87,29 @@ export interface HomeSuggestionCandidate {
   id: string;
   /** Localization key for the candidate title. */
   titleKey: string;
+  /** Source tier for deterministic ordering and labels. */
+  sourceTier: HomeSourceTier;
   /** Localization key for the human-readable source label. */
   sourceLabelKey: string;
-  /** Stable reason code mapped to localized explanation copy. */
-  reasonCode: string;
-  /** Optional estimated total minutes for presentation only. */
-  estimatedTotalMinutes?: number | null;
-  /** Optional effort code (`low` | `medium` | `high`) for localized labels. */
+  /** Stable reason codes mapped to localized explanation copy. */
+  reasonCodes: readonly string[];
+  /** Presentation timing estimates — never authoritative cooking timers. */
+  timing?: {
+    activeMinutes?: number | null;
+    totalMinutes?: number | null;
+  };
+  /** Effort code (`low` | `medium` | `high`) for localized labels. */
   effortCode?: string | null;
+  /** Cleanup expectation code (`low` | `medium` | `high`). */
+  cleanupCode?: string | null;
+  /** Readiness code (`ready_now` | `needs_prep` | `needs_thaw` | `blocked`). */
+  readinessCode?: string | null;
+  availableRequirements?: readonly HomeRequirementProjection[];
+  missingRequirements?: readonly HomeRequirementProjection[];
+  preparationRequirements?: readonly HomePreparationProjection[];
+  shoppingState?: HomeShoppingState;
+  uncertaintyCodes?: readonly string[];
+  conflictCodes?: readonly string[];
   /** Whether inventory attention influenced this candidate (advisory). */
   attentionInfluenced?: boolean;
   /** Freshness marker; stale items must not appear as current. */
@@ -69,10 +118,18 @@ export interface HomeSuggestionCandidate {
 
 /**
  * Independent source projection. One failed/empty tier must not blank siblings.
+ *
+ * `retryable` distinguishes transient failures (Retry allowed) from permanent
+ * capability gaps such as production unavailable-until-PLAN-0021.
  */
 export interface HomeSourceResult {
   tier: HomeSourceTier;
   status: HomeSourceStatus;
+  /**
+   * When true, the UI may offer Retry for a recoverable transient failure.
+   * Permanent unavailable / empty / incomplete must set false.
+   */
+  retryable: boolean;
   /** Localization key explaining empty/unavailable/failed/incomplete states. */
   statusReasonKey?: string;
   items: HomeSuggestionCandidate[];
@@ -100,6 +157,11 @@ export interface HomeQuickChooserQuestion {
 export interface HomeQuickChooserDefinition {
   /** Capability for recommendation/AI-backed narrowing. */
   recommendationCapability: "available" | "unavailable";
+  /**
+   * Whether Retry is meaningful when capability is unavailable.
+   * Production permanent-unavailable adapters set false.
+   */
+  retryable: boolean;
   questions: HomeQuickChooserQuestion[];
 }
 
@@ -118,6 +180,7 @@ export interface HomeGreetingModel {
 
 /**
  * Query inputs for source adapters. Adapters must not persist answers.
+ * Optional AbortSignal lets callers cancel in-flight loads when context changes.
  */
 export interface ContextualHomeQuery {
   locale: string;
@@ -125,6 +188,8 @@ export interface ContextualHomeQuery {
   now: Date;
   /** Request-scoped quick-chooser answers keyed by question id. */
   quickChooserAnswers?: Readonly<Record<string, string>>;
+  /** Optional abort signal for stale-context cancellation. */
+  signal?: AbortSignal;
 }
 
 /**
@@ -173,4 +238,9 @@ export interface HomeTelemetryEvent {
  */
 export interface HomeTelemetry {
   track(event: HomeTelemetryEvent): void;
+}
+
+/** Helper: map tier to the localization key for its source label. */
+export function homeSourceLabelKey(tier: HomeSourceTier): string {
+  return `home.source.label.${tier}`;
 }

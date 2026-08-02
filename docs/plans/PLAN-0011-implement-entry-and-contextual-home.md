@@ -1,11 +1,11 @@
 # PLAN-0011: Implement the Public Entry and Contextual Home Experience
 
-- **Status:** Completed
+- **Status:** In Progress
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Cursor agent (PLAN-0011 Phase 1 + Phase 2)
 - **Created:** 2026-07-30
-- **Last updated:** 2026-08-02T16:52:10Z
+- **Last updated:** 2026-08-02T17:23:05Z
 - **Branch:** `agent/plan-0011-contextual-home`
 - **Pull request:** [PR #34](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/34) (draft)
 - **Binding amendment:** [`PLAN-0011-amendment-2026-08-02-next-execution.md`](PLAN-0011-amendment-2026-08-02-next-execution.md)
@@ -29,7 +29,7 @@ The implementation must preserve the accepted source priority:
 
 ## Blocking state
 
-No blocker for the amended Phase 1 + Phase 2 scope. PLAN-0019 reconciled the roadmap and merged via PR #33 (`444969c`). PLAN-0016 production session/inventory is on `main`. Live source contracts and adapters remain owned by PLAN-0021 and are out of scope for this execution.
+Remediation blockers open against draft PR #34 (review baseline `2bdcd4f`): incomplete suggestion presentation contract; incomplete modal chooser; stale async responses; non-deterministic scenario switching; misleading unavailable retries; public reduced-motion scroll. PLAN-0019 reconciled the roadmap and merged via PR #33 (`444969c`). PLAN-0016 production session/inventory is on `main`. Live source contracts and adapters remain owned by PLAN-0021 and are out of scope for this execution.
 
 ## Scope
 
@@ -240,22 +240,33 @@ Automated coverage must include:
 
 ## Execution state
 
-- **Current checkpoint:** Hardened Phase 1+2: public `/` outside SessionProvider; progressive source loading; per-source retry; empty-menu omission; request-scoped timezone override; chooser retry; expanded tests. Local gates + browser smoke Passed. Status **Completed** (amended Phase 1+2). Delivery remains draft PR awaiting owner merge.
-- **Exact tip SHA (functional):** `f7d516089a077b39bd9c95c7cc157f44443eaa7d`
-- **Packaging tip SHA:** `7d629045e8216184052276cb3c7e24844fc5bb7c` (functional product tip remains `f7d516089a077b39bd9c95c7cc157f44443eaa7d`)
-- **Run delivery target:** Phase 1 public entry + Phase 2 mock-backed contextual home with tests, isolation, docs, draft PR.
-- **Delivered outcome:** Public entry without session bootstrap; contextual home (mock/unavailable adapters); i18n; Jest; smoke; docs/evidence; draft PR #34 requesting RodrigoWantuk.
-- **Acceptance criteria resolved:** Amended Phase 1/2 product criteria satisfied locally; exact-head CI green; owner review/merge still pending; live sources remain PLAN-0021.
-- **Files or areas materially changed:** ProductionApp composition; PublicEntryPage; ContextualHomePage/QuickChooser/dayPart; mock scenarios; catalogs; tests; PLAN-0019 post-merge docs; redundant branch cleanup.
-- **Documentation delivered:** Frontend contextual-home README, evidence handoff, plan/registry, PLAN-0019 merge reconciliation, amendment baseline `444969c`.
-- **Validation performed:** `yarn typecheck|lint|format:check|test` (188 Passed); guards; builds; `inspect:production-bundle`; `audit:policy`; `smoke:browser:ci` Passed. Local Firefox zoom blocked by root/`XAUTHORITY` environment (defer to PLAN-0005 CI).
-- **Known failures or limitations:** Production home sources unavailable until PLAN-0021; local Firefox native zoom cannot launch as root; PR remains draft.
-- **Blockers:** None for amended Phase 1 + Phase 2.
-- **Partially modified areas:** None.
-- **Exact next action:** Owner reviews draft PR #34; agent must not approve/merge. Next: PLAN-0020; live home: PLAN-0021.
-- **Working tree state:** Functional tip `f7d5160`; packaging metadata on branch HEAD.
+- **Current checkpoint:** Remediations 1–6 implemented locally; awaiting commit, push, and exact-head CI on draft PR #34.
+- **Exact tip SHA (functional):** pending first remediation commit on `agent/plan-0011-contextual-home` (baseline was `2bdcd4f`).
+- **Run delivery target:** Land remediations with docs/tests; keep draft until Frontend + PLAN-0005 green on exact final head; then owner review.
+- **Unresolved blockers:** None remaining in product code; exact-head CI and owner review still required before Completed.
+- **Exact next action:** Commit remediation + docs; push; await CI; reconcile PR body/comment; mark Completed only after green exact head.
+- **Blockers:** None for implementation. Firefox native zoom cannot launch as root locally (`XAUTHORITY`); rely on PLAN-0005 CI.
+- **Working tree state:** Remediation implementation ready to commit.
 
 ## Progress log
+
+### 2026-08-02T17:40:00Z — Cursor agent (PLAN-0011 remediation)
+
+- **Checkpoint:** Implemented remediations 1–6 against review baseline `2bdcd4f`.
+- **Changes included in the commit:** Expanded `HomeSuggestionCandidate` presentation model + mock scenarios; Radix Dialog QuickChooser with abort/cancel/stale-attempt; generation-counter stale protection; deterministic immutable-per-scenario prototype route; `retryable` contract; reduced-motion public CTA; tests; smoke coverage; docs.
+- **Validation performed:** `yarn typecheck/lint/format:check/test` (197); guards; builds + production isolation; api-client drift; `yarn smoke:browser:ci` Passed (incl. public reduced-motion CTA). Local Firefox zoom blocked by environment.
+- **Next action:** Push draft PR #34; await exact-head Frontend + PLAN-0005 CI.
+- **Blockers or handoff notes:** Keep draft; no agent approve/merge. Next frontend plan after merge: PLAN-0020; live home: PLAN-0021.
+
+
+### 2026-08-02T17:23:05Z — Cursor agent (PLAN-0011 remediation)
+
+- **Checkpoint:** Restored **In Progress** after review found unresolved blockers on PR #34 tip `2bdcd4f`.
+- **Changes included in the commit:** Plan/registry remediation claim; begin remediations 1–6.
+- **Validation performed:** Host `NOTEBOOK-DEB-RODRIGO`; branch synced; PR #34 draft; CI was green on baseline but product blockers remain.
+- **Next action:** Implement expanded presentation model, Radix modal chooser, stale protection, deterministic scenarios, retryability, reduced motion.
+- **Blockers or handoff notes:** Keep draft until all blockers fixed and exact-head CI green.
+
 
 
 ### 2026-08-02T16:52:10Z — Cursor agent (PLAN-0011)

@@ -20,10 +20,39 @@ describe("contextual home adapters", () => {
     const chooser = await adapter.getQuickChooserDefinition(query);
     const suggestions = await adapter.loadQuickChooserSuggestions(query);
     expect(menu.status).toBe("unavailable");
+    expect(menu.retryable).toBe(false);
     expect(inventory.status).toBe("unavailable");
     expect(profile.status).toBe("unavailable");
     expect(suggestions.status).toBe("unavailable");
     expect(chooser.recommendationCapability).toBe("unavailable");
+    expect(chooser.retryable).toBe(false);
+  });
+
+  it("retry recovers after transient menu failures", async () => {
+    const adapter = createMockContextualHomeAdapter({
+      scenario: "transientMenuFailThenRecover",
+      menuFailTimes: 1,
+    });
+    expect((await adapter.loadMenuSource(query)).status).toBe("failed");
+    expect((await adapter.loadMenuSource(query)).status).toBe("ready");
+  });
+
+  it("rich scenarios expose missing, thaw, shopping and uncertainty projections", async () => {
+    const missing = await createMockContextualHomeAdapter({
+      scenario: "menuMissingRequired",
+    }).loadMenuSource(query);
+    expect(missing.items[0].missingRequirements?.length).toBeGreaterThan(0);
+    expect(missing.items[0].shoppingState).toBe("required");
+
+    const thaw = await createMockContextualHomeAdapter({
+      scenario: "menuNeedsThaw",
+    }).loadMenuSource(query);
+    expect(thaw.items[0].preparationRequirements?.[0].kind).toBe("thaw");
+
+    const uncertain = await createMockContextualHomeAdapter({
+      scenario: "withUncertainty",
+    }).loadInventorySource(query);
+    expect(uncertain.items[0].uncertaintyCodes).toContain("quantity_uncertain");
   });
 
   it("mock default scenario preserves tier order and labels", async () => {

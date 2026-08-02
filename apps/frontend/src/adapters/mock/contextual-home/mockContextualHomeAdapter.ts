@@ -4,7 +4,9 @@ import type {
   HomeQuickChooserDefinition,
   HomeSourceResult,
   HomeSuggestionCandidate,
+  HomeSourceTier,
 } from "@/contracts/contextualHome";
+import { homeSourceLabelKey } from "@/contracts/contextualHome";
 
 /**
  * Synthetic scenario identifiers for prototype/test only.
@@ -15,10 +17,16 @@ export type MockHomeScenarioId =
   | "newUser"
   | "noMenu"
   | "menuAvailable"
+  | "menuMissingRequired"
+  | "menuNeedsThaw"
   | "emptyInventory"
   | "inventoryAttention"
   | "incompleteProfile"
   | "confirmedProfile"
+  | "profileEffortCleanup"
+  | "shoppingOptional"
+  | "shoppingRequired"
+  | "withUncertainty"
   | "aiUnavailable"
   | "menuFailed"
   | "inventoryFailed"
@@ -27,17 +35,24 @@ export type MockHomeScenarioId =
   | "noCandidates"
   | "oneQuestion"
   | "twoQuestions"
-  | "allSourcesReady";
+  | "allSourcesReady"
+  | "transientMenuFailThenRecover";
 
 export const MOCK_HOME_SCENARIO_IDS: readonly MockHomeScenarioId[] = [
   "default",
   "newUser",
   "noMenu",
   "menuAvailable",
+  "menuMissingRequired",
+  "menuNeedsThaw",
   "emptyInventory",
   "inventoryAttention",
   "incompleteProfile",
   "confirmedProfile",
+  "profileEffortCleanup",
+  "shoppingOptional",
+  "shoppingRequired",
+  "withUncertainty",
   "aiUnavailable",
   "menuFailed",
   "inventoryFailed",
@@ -47,6 +62,7 @@ export const MOCK_HOME_SCENARIO_IDS: readonly MockHomeScenarioId[] = [
   "oneQuestion",
   "twoQuestions",
   "allSourcesReady",
+  "transientMenuFailThenRecover",
 ] as const;
 
 interface MockHomeScenario {
@@ -58,56 +74,176 @@ interface MockHomeScenario {
 }
 
 function candidate(
-  partial: Omit<HomeSuggestionCandidate, "sourceLabelKey"> & {
+  partial: Omit<HomeSuggestionCandidate, "sourceLabelKey" | "reasonCodes"> & {
     sourceLabelKey?: string;
+    reasonCodes?: readonly string[];
+    reasonCode?: string;
   },
 ): HomeSuggestionCandidate {
+  const reasonCodes =
+    partial.reasonCodes ??
+    (partial.reasonCode
+      ? [partial.reasonCode]
+      : (["planned_for_daypart"] as const));
+  const { reasonCode: _ignored, ...rest } = partial;
   return {
     freshness: "current",
-    sourceLabelKey: partial.sourceLabelKey ?? "home.source.label.menu",
-    ...partial,
+    shoppingState: "not_required",
+    sourceLabelKey:
+      partial.sourceLabelKey ?? homeSourceLabelKey(partial.sourceTier),
+    reasonCodes,
+    ...rest,
   };
 }
 
-const MENU_ITEM = candidate({
+const MENU_READY = candidate({
   id: "mock-menu-lentil-stew",
   titleKey: "home.fixture.menu.lentilStew",
-  sourceLabelKey: "home.source.label.menu",
-  reasonCode: "planned_for_daypart",
-  estimatedTotalMinutes: 35,
+  sourceTier: "menu",
+  reasonCodes: ["planned_for_daypart"],
+  timing: { activeMinutes: 20, totalMinutes: 35 },
   effortCode: "medium",
+  cleanupCode: "medium",
+  readinessCode: "ready_now",
+  availableRequirements: [
+    {
+      code: "lentils",
+      kind: "required",
+      labelKey: "home.requirement.lentils",
+    },
+  ],
 });
 
-const INVENTORY_ITEM = candidate({
+const MENU_MISSING = candidate({
+  id: "mock-menu-missing-garlic",
+  titleKey: "home.fixture.menu.missingGarlic",
+  sourceTier: "menu",
+  reasonCodes: ["planned_for_daypart"],
+  timing: { activeMinutes: 25, totalMinutes: 40 },
+  effortCode: "medium",
+  cleanupCode: "low",
+  readinessCode: "blocked",
+  availableRequirements: [
+    {
+      code: "pasta",
+      kind: "required",
+      labelKey: "home.requirement.pasta",
+    },
+  ],
+  missingRequirements: [
+    {
+      code: "garlic",
+      kind: "required",
+      labelKey: "home.requirement.garlic",
+    },
+  ],
+  shoppingState: "required",
+});
+
+const MENU_THAW = candidate({
+  id: "mock-menu-needs-thaw",
+  titleKey: "home.fixture.menu.needsThaw",
+  sourceTier: "menu",
+  reasonCodes: ["planned_for_daypart"],
+  timing: { activeMinutes: 15, totalMinutes: 30 },
+  effortCode: "low",
+  cleanupCode: "low",
+  readinessCode: "needs_thaw",
+  preparationRequirements: [
+    {
+      code: "thaw_chicken",
+      kind: "thaw",
+      labelKey: "home.prep.thawChicken",
+      leadTimeHours: 12,
+    },
+  ],
+});
+
+const INVENTORY_ATTENTION = candidate({
   id: "mock-inv-spinach-omelette",
   titleKey: "home.fixture.inventory.spinachOmelette",
-  sourceLabelKey: "home.source.label.inventory",
-  reasonCode: "uses_attention_product",
-  estimatedTotalMinutes: 15,
+  sourceTier: "inventory",
+  reasonCodes: ["uses_attention_product"],
+  timing: { activeMinutes: 10, totalMinutes: 15 },
   effortCode: "low",
+  cleanupCode: "low",
+  readinessCode: "ready_now",
   attentionInfluenced: true,
 });
 
-const PROFILE_ITEM = candidate({
+const PROFILE_FIT = candidate({
   id: "mock-profile-grain-bowl",
   titleKey: "home.fixture.profile.grainBowl",
-  sourceLabelKey: "home.source.label.profile",
-  reasonCode: "matches_confirmed_preferences",
-  estimatedTotalMinutes: 25,
+  sourceTier: "profile",
+  reasonCodes: ["matches_confirmed_preferences"],
+  timing: { activeMinutes: 15, totalMinutes: 25 },
   effortCode: "low",
+  cleanupCode: "low",
+  readinessCode: "ready_now",
+});
+
+const PROFILE_EFFORT = candidate({
+  id: "mock-profile-roast-tray",
+  titleKey: "home.fixture.profile.roastTray",
+  sourceTier: "profile",
+  reasonCodes: ["matches_confirmed_preferences"],
+  timing: { activeMinutes: 20, totalMinutes: 55 },
+  effortCode: "medium",
+  cleanupCode: "high",
+  readinessCode: "ready_now",
+});
+
+const SHOPPING_OPTIONAL = candidate({
+  id: "mock-menu-optional-herb",
+  titleKey: "home.fixture.menu.optionalHerb",
+  sourceTier: "menu",
+  reasonCodes: ["planned_for_daypart"],
+  timing: { activeMinutes: 18, totalMinutes: 30 },
+  effortCode: "low",
+  cleanupCode: "low",
+  readinessCode: "ready_now",
+  missingRequirements: [
+    {
+      code: "fresh_parsley",
+      kind: "optional",
+      labelKey: "home.requirement.parsley",
+    },
+  ],
+  shoppingState: "optional",
+});
+
+const SHOPPING_REQUIRED = candidate({
+  ...MENU_MISSING,
+  id: "mock-menu-shopping-required",
+});
+
+const UNCERTAIN = candidate({
+  id: "mock-inv-uncertain-stew",
+  titleKey: "home.fixture.inventory.uncertainStew",
+  sourceTier: "inventory",
+  reasonCodes: ["uses_attention_product"],
+  timing: { activeMinutes: 25, totalMinutes: 45 },
+  effortCode: "medium",
+  cleanupCode: "medium",
+  readinessCode: "needs_prep",
+  uncertaintyCodes: ["quantity_uncertain"],
+  attentionInfluenced: true,
 });
 
 const CHOOSER_ITEM = candidate({
   id: "mock-chooser-simple-soup",
   titleKey: "home.fixture.chooser.simpleSoup",
-  sourceLabelKey: "home.source.label.quickChooser",
-  reasonCode: "matches_request_answers",
-  estimatedTotalMinutes: 20,
+  sourceTier: "quickChooser",
+  reasonCodes: ["matches_request_answers"],
+  timing: { activeMinutes: 12, totalMinutes: 20 },
   effortCode: "low",
+  cleanupCode: "low",
+  readinessCode: "ready_now",
 });
 
 const ONE_QUESTION: HomeQuickChooserDefinition = {
   recommendationCapability: "available",
+  retryable: true,
   questions: [
     {
       id: "time_available",
@@ -123,6 +259,7 @@ const ONE_QUESTION: HomeQuickChooserDefinition = {
 
 const DEFAULT_QUESTIONS: HomeQuickChooserDefinition = {
   recommendationCapability: "available",
+  retryable: true,
   questions: [
     ...ONE_QUESTION.questions,
     {
@@ -137,17 +274,31 @@ const DEFAULT_QUESTIONS: HomeQuickChooserDefinition = {
 };
 
 function empty(
-  tier: HomeSourceResult["tier"],
+  tier: HomeSourceTier,
   statusReasonKey: string,
 ): HomeSourceResult {
-  return { tier, status: "empty", statusReasonKey, items: [] };
+  return {
+    tier,
+    status: "empty",
+    retryable: false,
+    statusReasonKey,
+    items: [],
+  };
 }
 
 function failed(
-  tier: HomeSourceResult["tier"],
+  tier: HomeSourceTier,
   statusReasonKey: string,
+  retryable = true,
 ): HomeSourceResult {
-  return { tier, status: "failed", statusReasonKey, items: [] };
+  return { tier, status: "failed", retryable, statusReasonKey, items: [] };
+}
+
+function ready(
+  tier: HomeSourceTier,
+  items: HomeSuggestionCandidate[],
+): HomeSourceResult {
+  return { tier, status: "ready", retryable: false, items };
 }
 
 /** Mock adapter with prototype scenario switching. */
@@ -159,36 +310,20 @@ export interface MockContextualHomeAdapter extends ContextualHomeAdapter {
 export function isMockContextualHomeAdapter(
   adapter: ContextualHomeAdapter,
 ): adapter is MockContextualHomeAdapter {
-  const candidate = adapter as Partial<MockContextualHomeAdapter>;
+  const candidateAdapter = adapter as Partial<MockContextualHomeAdapter>;
   return (
-    typeof candidate.setScenario === "function" &&
-    typeof candidate.getScenario === "function"
+    typeof candidateAdapter.setScenario === "function" &&
+    typeof candidateAdapter.getScenario === "function"
   );
 }
 
-function buildScenario(id: MockHomeScenarioId): MockHomeScenario {
+export function buildScenario(id: MockHomeScenarioId): MockHomeScenario {
   const base: MockHomeScenario = {
-    menu: {
-      tier: "menu",
-      status: "ready",
-      items: [MENU_ITEM],
-    },
-    inventory: {
-      tier: "inventory",
-      status: "ready",
-      items: [INVENTORY_ITEM],
-    },
-    profile: {
-      tier: "profile",
-      status: "ready",
-      items: [PROFILE_ITEM],
-    },
+    menu: ready("menu", [MENU_READY]),
+    inventory: ready("inventory", [INVENTORY_ATTENTION]),
+    profile: ready("profile", [PROFILE_FIT]),
     chooser: DEFAULT_QUESTIONS,
-    chooserSuggestions: {
-      tier: "quickChooser",
-      status: "ready",
-      items: [CHOOSER_ITEM],
-    },
+    chooserSuggestions: ready("quickChooser", [CHOOSER_ITEM]),
   };
 
   switch (id) {
@@ -200,6 +335,7 @@ function buildScenario(id: MockHomeScenarioId): MockHomeScenario {
         profile: {
           tier: "profile",
           status: "incomplete",
+          retryable: false,
           statusReasonKey: "home.source.incomplete.profile",
           items: [],
         },
@@ -210,33 +346,31 @@ function buildScenario(id: MockHomeScenarioId): MockHomeScenario {
         ),
       };
     case "noMenu":
-      return {
-        ...base,
-        menu: empty("menu", "home.source.empty.menu"),
-      };
+      return { ...base, menu: empty("menu", "home.source.empty.menu") };
+    case "menuMissingRequired":
+    case "shoppingRequired":
+      return { ...base, menu: ready("menu", [SHOPPING_REQUIRED]) };
+    case "menuNeedsThaw":
+      return { ...base, menu: ready("menu", [MENU_THAW]) };
+    case "shoppingOptional":
+      return { ...base, menu: ready("menu", [SHOPPING_OPTIONAL]) };
+    case "withUncertainty":
+      return { ...base, inventory: ready("inventory", [UNCERTAIN]) };
+    case "profileEffortCleanup":
+      return { ...base, profile: ready("profile", [PROFILE_EFFORT]) };
     case "oneQuestion":
-      return {
-        ...base,
-        chooser: ONE_QUESTION,
-      };
+      return { ...base, chooser: ONE_QUESTION };
     case "twoQuestions":
     case "menuAvailable":
     case "allSourcesReady":
     case "default":
+    case "confirmedProfile":
+    case "inventoryAttention":
       return base;
     case "emptyInventory":
       return {
         ...base,
         inventory: empty("inventory", "home.source.empty.inventory"),
-      };
-    case "inventoryAttention":
-      return {
-        ...base,
-        inventory: {
-          tier: "inventory",
-          status: "ready",
-          items: [INVENTORY_ITEM],
-        },
       };
     case "incompleteProfile":
       return {
@@ -244,22 +378,23 @@ function buildScenario(id: MockHomeScenarioId): MockHomeScenario {
         profile: {
           tier: "profile",
           status: "incomplete",
+          retryable: false,
           statusReasonKey: "home.source.incomplete.profile",
           items: [],
         },
       };
-    case "confirmedProfile":
-      return base;
     case "aiUnavailable":
       return {
         ...base,
         chooser: {
-          ...DEFAULT_QUESTIONS,
           recommendationCapability: "unavailable",
+          retryable: false,
+          questions: [],
         },
         chooserSuggestions: {
           tier: "quickChooser",
           status: "unavailable",
+          retryable: false,
           statusReasonKey: "home.source.unavailable.ai",
           items: [],
         },
@@ -267,17 +402,17 @@ function buildScenario(id: MockHomeScenarioId): MockHomeScenario {
     case "menuFailed":
       return {
         ...base,
-        menu: failed("menu", "home.source.failed.menu"),
+        menu: failed("menu", "home.source.failed.menu", true),
       };
     case "inventoryFailed":
       return {
         ...base,
-        inventory: failed("inventory", "home.source.failed.inventory"),
+        inventory: failed("inventory", "home.source.failed.inventory", true),
       };
     case "profileFailed":
       return {
         ...base,
-        profile: failed("profile", "home.source.failed.profile"),
+        profile: failed("profile", "home.source.failed.profile", true),
       };
     case "menuStale":
       return {
@@ -285,14 +420,16 @@ function buildScenario(id: MockHomeScenarioId): MockHomeScenario {
         menu: {
           tier: "menu",
           status: "stale",
+          retryable: true,
           statusReasonKey: "home.source.stale.menu",
-          items: [
-            {
-              ...MENU_ITEM,
-              freshness: "stale",
-            },
-          ],
+          items: [{ ...MENU_READY, freshness: "stale" }],
         },
+      };
+    case "transientMenuFailThenRecover":
+      // Handled by stateful factory; static snapshot is failed.
+      return {
+        ...base,
+        menu: failed("menu", "home.source.failed.menu", true),
       };
     default: {
       const _exhaustive: never = id;
@@ -305,40 +442,79 @@ function buildScenario(id: MockHomeScenarioId): MockHomeScenario {
 /**
  * Prototype/test contextual-home adapter backed by synthetic fixtures.
  * Must not be imported by production composition roots.
+ *
+ * Prefer creating a new adapter per scenario (immutable) for deterministic
+ * switching — see `createMockContextualHomeAdapter({ scenario })`.
  */
 export function createMockContextualHomeAdapter(options?: {
   scenario?: MockHomeScenarioId;
+  /** When set, menu fails on the first N calls then recovers (retry tests). */
+  menuFailTimes?: number;
 }): MockContextualHomeAdapter {
   let scenarioId: MockHomeScenarioId = options?.scenario ?? "default";
+  let menuFailuresRemaining = options?.menuFailTimes ?? 0;
 
   const adapter: MockContextualHomeAdapter = {
-    /** Prototype scenario switch used by ScenarioBar / tests. */
     setScenario(next: MockHomeScenarioId): void {
       scenarioId = next;
     },
     getScenario(): MockHomeScenarioId {
       return scenarioId;
     },
-    async loadMenuSource(): Promise<HomeSourceResult> {
+    async loadMenuSource(
+      query: ContextualHomeQuery,
+    ): Promise<HomeSourceResult> {
+      if (query.signal?.aborted) {
+        throw new DOMException("Aborted", "AbortError");
+      }
+      if (
+        scenarioId === "transientMenuFailThenRecover" ||
+        menuFailuresRemaining > 0
+      ) {
+        if (menuFailuresRemaining > 0) {
+          menuFailuresRemaining -= 1;
+          return failed("menu", "home.source.failed.menu", true);
+        }
+        if (scenarioId === "transientMenuFailThenRecover") {
+          return ready("menu", [MENU_READY]);
+        }
+      }
       return buildScenario(scenarioId).menu;
     },
-    async loadInventorySource(): Promise<HomeSourceResult> {
+    async loadInventorySource(
+      query: ContextualHomeQuery,
+    ): Promise<HomeSourceResult> {
+      if (query.signal?.aborted) {
+        throw new DOMException("Aborted", "AbortError");
+      }
       return buildScenario(scenarioId).inventory;
     },
-    async loadProfileSource(): Promise<HomeSourceResult> {
+    async loadProfileSource(
+      query: ContextualHomeQuery,
+    ): Promise<HomeSourceResult> {
+      if (query.signal?.aborted) {
+        throw new DOMException("Aborted", "AbortError");
+      }
       return buildScenario(scenarioId).profile;
     },
-    async getQuickChooserDefinition(): Promise<HomeQuickChooserDefinition> {
+    async getQuickChooserDefinition(
+      query: ContextualHomeQuery,
+    ): Promise<HomeQuickChooserDefinition> {
+      if (query.signal?.aborted) {
+        throw new DOMException("Aborted", "AbortError");
+      }
       return buildScenario(scenarioId).chooser;
     },
     async loadQuickChooserSuggestions(
       query: ContextualHomeQuery,
     ): Promise<HomeSourceResult> {
+      if (query.signal?.aborted) {
+        throw new DOMException("Aborted", "AbortError");
+      }
       const scenario = buildScenario(scenarioId);
       if (scenario.chooser.recommendationCapability === "unavailable") {
         return scenario.chooserSuggestions;
       }
-      // Answers remain request-scoped; presence only gates returning fixtures.
       if (
         !query.quickChooserAnswers ||
         Object.keys(query.quickChooserAnswers).length === 0

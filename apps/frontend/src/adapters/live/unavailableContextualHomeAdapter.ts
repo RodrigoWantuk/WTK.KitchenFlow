@@ -5,15 +5,21 @@ import type {
   HomeSourceResult,
 } from "@/contracts/contextualHome";
 
+/**
+ * Permanent capability-unavailable projection until PLAN-0021.
+ * `retryable: false` — retrying in the same deployed frontend cannot succeed.
+ */
 const unavailable = (tier: HomeSourceResult["tier"]): HomeSourceResult => ({
   tier,
   status: "unavailable",
+  retryable: false,
   statusReasonKey: "home.source.unavailable",
   items: [],
 });
 
 const UNAVAILABLE_CHOOSER: HomeQuickChooserDefinition = {
   recommendationCapability: "unavailable",
+  retryable: false,
   questions: [],
 };
 

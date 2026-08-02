@@ -656,6 +656,43 @@ async function run() {
         await page.getByTestId("chooser-cancel").click();
         await page.getByTestId("contextual-home").waitFor();
 
+        // Public entry demo CTA must respect reduced motion (no smooth scroll).
+        await page.goto(`${PRODUCTION_BASE}/`);
+        await page.getByTestId("production-landing").waitFor();
+        await page.evaluate(() => {
+          window.__kfScrollBehaviorSeen = null;
+          const original = Element.prototype.scrollIntoView;
+          Element.prototype.scrollIntoView = function scrollIntoViewPatched(
+            arg,
+          ) {
+            window.__kfScrollBehaviorSeen =
+              arg && typeof arg === "object" && "behavior" in arg
+                ? arg.behavior
+                : "auto";
+            return original.call(this, arg);
+          };
+          window.__kfRestoreScrollIntoView = () => {
+            Element.prototype.scrollIntoView = original;
+          };
+        });
+        await page.getByTestId("entry-cta-demo").click();
+        const scrollBehavior = await page.evaluate(() => {
+          const seen = window.__kfScrollBehaviorSeen;
+          if (typeof window.__kfRestoreScrollIntoView === "function") {
+            window.__kfRestoreScrollIntoView();
+          }
+          return seen;
+        });
+        if (scrollBehavior !== "auto") {
+          fail(
+            "prefers-reduced-motion",
+            `public demo CTA scroll behavior was ${scrollBehavior}, expected auto`,
+          );
+        }
+
+        // Return to prototype home before overlay motion sampling.
+        await enterHome(page, { scenario: "routeWithDeps" });
+
         // Open a real overlay (scenario Sheet) so reduced-motion covers an open panel.
         let overlayOpened = false;
         if ((await page.getByTestId("scenario-open").count()) > 0) {

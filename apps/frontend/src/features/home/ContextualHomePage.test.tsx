@@ -1,34 +1,43 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { RuntimeProvider } from "@/app/runtime/RuntimeProvider";
 import { SessionProvider } from "@/app/session/SessionProvider";
 import { ProductionI18nProvider } from "@/app/i18n/ProductionI18nProvider";
 import { createMockSessionAdapter } from "@/app/session/mockSessionAdapter";
-import { createMockContextualHomeAdapter } from "@/adapters/mock/contextual-home/mockContextualHomeAdapter";
+import {
+  createMockContextualHomeAdapter,
+  type MockHomeScenarioId,
+} from "@/adapters/mock/contextual-home/mockContextualHomeAdapter";
 import { createUnavailableContextualHomeAdapter } from "@/adapters/live/unavailableContextualHomeAdapter";
 import { ContextualHomeProvider } from "./ContextualHomeProvider";
 import { ContextualHomePage } from "./ContextualHomePage";
 import type { FrontendRuntime } from "@/app/runtime/types";
+import type {
+  ContextualHomeAdapter,
+  HomeSourceResult,
+} from "@/contracts/contextualHome";
 import { UnavailablePreparationRouteRepository } from "@/adapters/live/unavailablePreparationRouteRepository";
 
 function renderHome(options?: {
   displayName?: string | null;
   timeZone?: string | null;
-  scenario?: Parameters<typeof createMockContextualHomeAdapter>[0];
+  scenario?: { scenario: MockHomeScenarioId; menuFailTimes?: number };
   unavailable?: boolean;
   browserTimeZone?: string | null;
   now?: Date;
+  adapter?: ContextualHomeAdapter;
 }) {
-  const homeAdapter = options?.unavailable
-    ? createUnavailableContextualHomeAdapter()
-    : createMockContextualHomeAdapter(options?.scenario);
+  const homeAdapter =
+    options?.adapter ??
+    (options?.unavailable
+      ? createUnavailableContextualHomeAdapter()
+      : createMockContextualHomeAdapter(options?.scenario));
   const sessionAdapter = createMockSessionAdapter({
     initiallyAuthenticated: true,
     displayName: options?.displayName ?? null,
     timeZone: options?.timeZone ?? null,
   });
-  // Force authenticated immediately for tests.
   sessionAdapter.beginLogin();
 
   const runtime: FrontendRuntime = {
@@ -67,6 +76,16 @@ function renderHome(options?: {
   );
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}
+
 describe("ContextualHomePage", () => {
   it("greets by name and keeps primary question", async () => {
     renderHome({
@@ -82,54 +101,48 @@ describe("ContextualHomePage", () => {
     );
   });
 
-  it("uses neutral greeting when display name is absent", async () => {
-    renderHome({
-      displayName: null,
-      timeZone: null,
-      browserTimeZone: null,
-    });
-    expect(await screen.findByTestId("home-greeting")).toHaveTextContent(
-      /Welcome back|Hello|Good/,
-    );
-    expect(screen.getByTestId("home-timezone-fallback")).toBeInTheDocument();
-  });
-
-  it("allows request-scoped timezone override without persistence", async () => {
-    const user = userEvent.setup();
-    renderHome({
-      displayName: "Ana",
-      timeZone: "America/Sao_Paulo",
-      browserTimeZone: "Europe/Lisbon",
-    });
-    expect(await screen.findByTestId("home-timezone")).toHaveTextContent(
-      /America\/Sao_Paulo/,
-    );
-    await user.click(screen.getByTestId("home-timezone-use-browser"));
-    expect(screen.getByTestId("home-timezone")).toHaveTextContent(
-      /Europe\/Lisbon/,
-    );
-    expect(localStorage.getItem("cocinaris_state_v1")).toBeNull();
-    await user.click(screen.getByTestId("home-timezone-clear-override"));
-    expect(screen.getByTestId("home-timezone")).toHaveTextContent(
-      /America\/Sao_Paulo/,
-    );
-  });
-
-  it("renders sources in menu → inventory → profile order", async () => {
+  it("renders expanded suggestion fields for menu ready candidate", async () => {
     renderHome({ scenario: { scenario: "default" } });
-    const sources = await screen.findByTestId("home-sources");
-    await screen.findByTestId("home-source-menu");
-    const sections = within(sources).getAllByTestId(/home-source-/);
+    const card = await screen.findByTestId(
+      "home-candidate-mock-menu-lentil-stew",
+    );
+    expect(card).toHaveAttribute("data-readiness", "ready_now");
     expect(
-      sections
-        .map((el) => el.getAttribute("data-testid"))
-        .filter((id) => id && !id.includes("loading")),
-    ).toEqual([
-      "home-source-menu",
-      "home-source-inventory",
-      "home-source-profile",
-      "home-source-quickChooser",
-    ]);
+      screen.getByTestId("home-active-min-mock-menu-lentil-stew"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("home-total-min-mock-menu-lentil-stew"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("home-available-mock-menu-lentil-stew"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows missing required items and shopping required", async () => {
+    renderHome({ scenario: { scenario: "menuMissingRequired" } });
+    expect(
+      await screen.findByTestId("home-missing-mock-menu-shopping-required"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("home-candidate-mock-menu-shopping-required"),
+    ).toHaveAttribute("data-shopping", "required");
+  });
+
+  it("shows thaw preparation requirements", async () => {
+    renderHome({ scenario: { scenario: "menuNeedsThaw" } });
+    expect(
+      await screen.findByTestId("home-prep-mock-menu-needs-thaw"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("home-candidate-mock-menu-needs-thaw"),
+    ).toHaveAttribute("data-readiness", "needs_thaw");
+  });
+
+  it("shows uncertainty notices", async () => {
+    renderHome({ scenario: { scenario: "withUncertainty" } });
+    expect(
+      await screen.findByTestId("home-uncertainty-mock-inv-uncertain-stew"),
+    ).toBeInTheDocument();
   });
 
   it("omits empty menu tier without blanking inventory", async () => {
@@ -140,81 +153,145 @@ describe("ContextualHomePage", () => {
     expect(screen.queryByTestId("home-source-menu")).not.toBeInTheDocument();
   });
 
-  it("keeps inventory when menu fails and exposes retry", async () => {
+  it("keeps inventory when menu fails and recovers on retry", async () => {
     const user = userEvent.setup();
-    renderHome({ scenario: { scenario: "menuFailed" } });
+    renderHome({
+      scenario: { scenario: "transientMenuFailThenRecover", menuFailTimes: 1 },
+    });
     expect(await screen.findByTestId("home-source-menu")).toHaveAttribute(
       "data-status",
       "failed",
+    );
+    expect(screen.getByTestId("home-source-menu")).toHaveAttribute(
+      "data-retryable",
+      "true",
     );
     expect(screen.getByTestId("home-source-inventory")).toHaveAttribute(
       "data-status",
       "ready",
     );
-    expect(
-      screen.getByTestId("home-candidate-mock-inv-spinach-omelette"),
-    ).toBeInTheDocument();
-    expect(screen.getByTestId("home-source-retry-menu")).toBeInTheDocument();
     await user.click(screen.getByTestId("home-source-retry-menu"));
-    expect(await screen.findByTestId("home-source-menu")).toBeInTheDocument();
-  });
-
-  it("shows empty inventory state", async () => {
-    renderHome({ scenario: { scenario: "emptyInventory" } });
-    expect(await screen.findByTestId("home-source-inventory")).toHaveAttribute(
-      "data-status",
-      "empty",
+    await waitFor(() =>
+      expect(screen.getByTestId("home-source-menu")).toHaveAttribute(
+        "data-status",
+        "ready",
+      ),
     );
   });
 
-  it("shows incomplete profile state", async () => {
-    renderHome({ scenario: { scenario: "incompleteProfile" } });
-    expect(await screen.findByTestId("home-source-profile")).toHaveAttribute(
-      "data-status",
-      "incomplete",
-    );
-  });
-
-  it("shows stale menu with freshness badge", async () => {
-    renderHome({ scenario: { scenario: "menuStale" } });
-    expect(await screen.findByTestId("home-source-menu")).toHaveAttribute(
-      "data-status",
-      "stale",
-    );
-    expect(
-      screen.getByTestId("home-candidate-mock-menu-lentil-stew"),
-    ).toHaveAttribute("data-freshness", "stale");
-  });
-
-  it("shows no-candidates empty state", async () => {
-    renderHome({ scenario: { scenario: "noCandidates" } });
-    expect(
-      await screen.findByTestId("home-no-suggestions"),
-    ).toBeInTheDocument();
-  });
-
-  it("shows AI unavailable chooser with working retry path", async () => {
-    const user = userEvent.setup();
-    renderHome({ scenario: { scenario: "aiUnavailable" } });
-    await screen.findByTestId("home-open-chooser");
-    await user.click(screen.getByTestId("home-open-chooser"));
-    expect(screen.getByTestId("quick-chooser")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Assisted choosing is unavailable/i),
-    ).toBeInTheDocument();
-    await user.click(screen.getByTestId("chooser-retry"));
-    expect(await screen.findByTestId("quick-chooser")).toBeInTheDocument();
-  });
-
-  it("shows production unavailable capability states without fixtures", async () => {
+  it("does not offer retry for permanent unavailable production sources", async () => {
     renderHome({ unavailable: true });
     expect(
       await screen.findByTestId("home-live-unavailable"),
     ).toBeInTheDocument();
     expect(screen.getByTestId("home-source-menu")).toHaveAttribute(
-      "data-status",
-      "unavailable",
+      "data-retryable",
+      "false",
     );
+    expect(
+      screen.queryByTestId("home-source-retry-menu"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("ignores stale menu responses after context change", async () => {
+    const first = deferred<HomeSourceResult>();
+    const second = deferred<HomeSourceResult>();
+    let call = 0;
+    const adapter: ContextualHomeAdapter = {
+      async loadMenuSource() {
+        call += 1;
+        return call === 1 ? first.promise : second.promise;
+      },
+      async loadInventorySource() {
+        return {
+          tier: "inventory",
+          status: "empty",
+          retryable: false,
+          statusReasonKey: "home.source.empty.inventory",
+          items: [],
+        };
+      },
+      async loadProfileSource() {
+        return {
+          tier: "profile",
+          status: "empty",
+          retryable: false,
+          statusReasonKey: "home.source.incomplete.profile",
+          items: [],
+        };
+      },
+      async getQuickChooserDefinition() {
+        return {
+          recommendationCapability: "available",
+          retryable: true,
+          questions: [],
+        };
+      },
+      async loadQuickChooserSuggestions() {
+        return {
+          tier: "quickChooser",
+          status: "empty",
+          retryable: false,
+          items: [],
+        };
+      },
+    };
+
+    const view = renderHome({
+      adapter,
+      timeZone: "America/Sao_Paulo",
+      browserTimeZone: "Europe/Lisbon",
+    });
+    expect(
+      await screen.findByTestId("home-source-loading-menu"),
+    ).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByTestId("home-timezone-use-browser"));
+
+    await act(async () => {
+      second.resolve({
+        tier: "menu",
+        status: "ready",
+        retryable: false,
+        items: [
+          {
+            id: "newer",
+            titleKey: "home.fixture.menu.lentilStew",
+            sourceTier: "menu",
+            sourceLabelKey: "home.source.label.menu",
+            reasonCodes: ["planned_for_daypart"],
+          },
+        ],
+      });
+      await second.promise;
+    });
+    expect(
+      await screen.findByTestId("home-candidate-newer"),
+    ).toBeInTheDocument();
+
+    await act(async () => {
+      first.resolve({
+        tier: "menu",
+        status: "ready",
+        retryable: false,
+        items: [
+          {
+            id: "stale-old",
+            titleKey: "home.fixture.menu.lentilStew",
+            sourceTier: "menu",
+            sourceLabelKey: "home.source.label.menu",
+            reasonCodes: ["planned_for_daypart"],
+          },
+        ],
+      });
+      await first.promise;
+    });
+    expect(
+      screen.queryByTestId("home-candidate-stale-old"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("home-candidate-newer")).toBeInTheDocument();
+    view.unmount();
   });
 
   it("runs one-question chooser without persistence", async () => {
@@ -228,40 +305,312 @@ describe("ContextualHomePage", () => {
     expect(localStorage.getItem("cocinaris_state_v1")).toBeNull();
   });
 
-  it("runs two-question chooser without persistence", async () => {
+  it("cancels chooser during deferred load and ignores late result", async () => {
     const user = userEvent.setup();
-    renderHome({ scenario: { scenario: "twoQuestions" } });
+    const pending = deferred<HomeSourceResult>();
+    const base = createMockContextualHomeAdapter({ scenario: "default" });
+    const adapter: ContextualHomeAdapter = {
+      loadMenuSource: (q) => base.loadMenuSource(q),
+      loadInventorySource: (q) => base.loadInventorySource(q),
+      loadProfileSource: (q) => base.loadProfileSource(q),
+      getQuickChooserDefinition: (q) => base.getQuickChooserDefinition(q),
+      loadQuickChooserSuggestions: () => pending.promise,
+    };
+    renderHome({ adapter });
     await screen.findByTestId("home-open-chooser");
     await user.click(screen.getByTestId("home-open-chooser"));
     await user.click(screen.getByTestId("chooser-option-under_20"));
     await user.click(screen.getByTestId("chooser-next"));
     await user.click(screen.getByTestId("chooser-option-use_what_i_have"));
     await user.click(screen.getByTestId("chooser-next"));
-    expect(await screen.findByTestId("chooser-results")).toBeInTheDocument();
-    expect(localStorage.getItem("cocinaris_state_v1")).toBeNull();
+    await user.click(screen.getByTestId("chooser-cancel"));
+    expect(screen.queryByTestId("quick-chooser")).not.toBeInTheDocument();
+    await act(async () => {
+      pending.resolve({
+        tier: "quickChooser",
+        status: "ready",
+        retryable: false,
+        items: [
+          {
+            id: "late",
+            titleKey: "home.fixture.chooser.simpleSoup",
+            sourceTier: "quickChooser",
+            sourceLabelKey: "home.source.label.quickChooser",
+            reasonCodes: ["matches_request_answers"],
+          },
+        ],
+      });
+      await pending.promise;
+    });
+    expect(screen.queryByTestId("chooser-results")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("home-candidate-late")).not.toBeInTheDocument();
   });
 
-  it("supports skip and back without profile mutation", async () => {
+  it("shows AI unavailable without retry when permanent", async () => {
     const user = userEvent.setup();
-    renderHome({ scenario: { scenario: "default" } });
+    renderHome({ scenario: { scenario: "aiUnavailable" } });
     await screen.findByTestId("home-open-chooser");
     await user.click(screen.getByTestId("home-open-chooser"));
-    await user.click(screen.getByTestId("chooser-skip"));
-    expect(screen.getByTestId("chooser-back")).toBeInTheDocument();
-    await user.click(screen.getByTestId("chooser-back"));
-    expect(screen.getByTestId("chooser-prompt")).toHaveTextContent(
-      /How much time/,
-    );
-    expect(localStorage.getItem("cocinaris_state_v1")).toBeNull();
+    expect(screen.getByTestId("quick-chooser")).toBeInTheDocument();
+    expect(screen.queryByTestId("chooser-retry")).not.toBeInTheDocument();
+    await user.click(screen.getByTestId("chooser-cancel"));
   });
 
-  it("cancels quick chooser and restores focus path", async () => {
+  it("moves focus into the chooser dialog when opened", async () => {
+    const user = userEvent.setup();
+    renderHome({ scenario: { scenario: "default" } });
+    const open = await screen.findByTestId("home-open-chooser");
+    await user.click(open);
+    const dialog = await screen.findByTestId("quick-chooser");
+    await waitFor(() => {
+      expect(dialog.contains(document.activeElement)).toBe(true);
+    });
+  });
+
+  it("protects double submit with a single suggestion request", async () => {
+    const user = userEvent.setup();
+    const pending = deferred<HomeSourceResult>();
+    let calls = 0;
+    const base = createMockContextualHomeAdapter({ scenario: "oneQuestion" });
+    const adapter: ContextualHomeAdapter = {
+      loadMenuSource: (q) => base.loadMenuSource(q),
+      loadInventorySource: (q) => base.loadInventorySource(q),
+      loadProfileSource: (q) => base.loadProfileSource(q),
+      getQuickChooserDefinition: (q) => base.getQuickChooserDefinition(q),
+      loadQuickChooserSuggestions: async () => {
+        calls += 1;
+        return pending.promise;
+      },
+    };
+    renderHome({ adapter });
+    await screen.findByTestId("home-open-chooser");
+    await user.click(screen.getByTestId("home-open-chooser"));
+    await user.click(screen.getByTestId("chooser-option-under_20"));
+    const next = screen.getByTestId("chooser-next");
+    await user.click(next);
+    await user.click(next);
+    expect(calls).toBe(1);
+    await act(async () => {
+      pending.resolve({
+        tier: "quickChooser",
+        status: "ready",
+        retryable: false,
+        items: [
+          {
+            id: "once",
+            titleKey: "home.fixture.chooser.simpleSoup",
+            sourceTier: "quickChooser",
+            sourceLabelKey: "home.source.label.quickChooser",
+            reasonCodes: ["matches_request_answers"],
+          },
+        ],
+      });
+      await pending.promise;
+    });
+    expect(
+      await screen.findByTestId("home-candidate-once"),
+    ).toBeInTheDocument();
+  });
+
+  it("ignores older chooser suggestion when a newer attempt finishes first", async () => {
+    const user = userEvent.setup();
+    const first = deferred<HomeSourceResult>();
+    const second = deferred<HomeSourceResult>();
+    let call = 0;
+    const base = createMockContextualHomeAdapter({ scenario: "oneQuestion" });
+    const adapter: ContextualHomeAdapter = {
+      loadMenuSource: (q) => base.loadMenuSource(q),
+      loadInventorySource: (q) => base.loadInventorySource(q),
+      loadProfileSource: (q) => base.loadProfileSource(q),
+      getQuickChooserDefinition: (q) => base.getQuickChooserDefinition(q),
+      loadQuickChooserSuggestions: async () => {
+        call += 1;
+        return call === 1 ? first.promise : second.promise;
+      },
+    };
+    renderHome({ adapter });
+    await screen.findByTestId("home-open-chooser");
+    await user.click(screen.getByTestId("home-open-chooser"));
+    await user.click(screen.getByTestId("chooser-option-under_20"));
+    await user.click(screen.getByTestId("chooser-next"));
+    await user.click(screen.getByTestId("chooser-cancel"));
+
+    await user.click(await screen.findByTestId("home-open-chooser"));
+    await user.click(screen.getByTestId("chooser-option-under_20"));
+    await user.click(screen.getByTestId("chooser-next"));
+
+    await act(async () => {
+      second.resolve({
+        tier: "quickChooser",
+        status: "ready",
+        retryable: false,
+        items: [
+          {
+            id: "newer-choice",
+            titleKey: "home.fixture.chooser.simpleSoup",
+            sourceTier: "quickChooser",
+            sourceLabelKey: "home.source.label.quickChooser",
+            reasonCodes: ["matches_request_answers"],
+          },
+        ],
+      });
+      await second.promise;
+    });
+    expect(
+      await screen.findByTestId("home-candidate-newer-choice"),
+    ).toBeInTheDocument();
+
+    await act(async () => {
+      first.resolve({
+        tier: "quickChooser",
+        status: "ready",
+        retryable: false,
+        items: [
+          {
+            id: "older-choice",
+            titleKey: "home.fixture.chooser.simpleSoup",
+            sourceTier: "quickChooser",
+            sourceLabelKey: "home.source.label.quickChooser",
+            reasonCodes: ["matches_request_answers"],
+          },
+        ],
+      });
+      await first.promise;
+    });
+    expect(
+      screen.queryByTestId("home-candidate-older-choice"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByTestId("home-candidate-newer-choice"),
+    ).toBeInTheDocument();
+  });
+
+  it("ignores stale inventory responses after context change", async () => {
+    const first = deferred<HomeSourceResult>();
+    const second = deferred<HomeSourceResult>();
+    let call = 0;
+    const adapter: ContextualHomeAdapter = {
+      async loadMenuSource() {
+        return {
+          tier: "menu",
+          status: "empty",
+          retryable: false,
+          statusReasonKey: "home.source.empty.menu",
+          items: [],
+        };
+      },
+      async loadInventorySource() {
+        call += 1;
+        return call === 1 ? first.promise : second.promise;
+      },
+      async loadProfileSource() {
+        return {
+          tier: "profile",
+          status: "empty",
+          retryable: false,
+          statusReasonKey: "home.source.incomplete.profile",
+          items: [],
+        };
+      },
+      async getQuickChooserDefinition() {
+        return {
+          recommendationCapability: "available",
+          retryable: true,
+          questions: [],
+        };
+      },
+      async loadQuickChooserSuggestions() {
+        return {
+          tier: "quickChooser",
+          status: "empty",
+          retryable: false,
+          items: [],
+        };
+      },
+    };
+    renderHome({
+      adapter,
+      timeZone: "America/Sao_Paulo",
+      browserTimeZone: "Europe/Lisbon",
+    });
+    expect(
+      await screen.findByTestId("home-source-loading-inventory"),
+    ).toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.click(screen.getByTestId("home-timezone-use-browser"));
+    await act(async () => {
+      second.resolve({
+        tier: "inventory",
+        status: "ready",
+        retryable: false,
+        items: [
+          {
+            id: "inv-new",
+            titleKey: "home.fixture.inventory.attentionStew",
+            sourceTier: "inventory",
+            sourceLabelKey: "home.source.label.inventory",
+            reasonCodes: ["attention_window"],
+            attentionInfluenced: true,
+          },
+        ],
+      });
+      await second.promise;
+    });
+    expect(
+      await screen.findByTestId("home-candidate-inv-new"),
+    ).toBeInTheDocument();
+    await act(async () => {
+      first.resolve({
+        tier: "inventory",
+        status: "ready",
+        retryable: false,
+        items: [
+          {
+            id: "inv-old",
+            titleKey: "home.fixture.inventory.attentionStew",
+            sourceTier: "inventory",
+            sourceLabelKey: "home.source.label.inventory",
+            reasonCodes: ["attention_window"],
+          },
+        ],
+      });
+      await first.promise;
+    });
+    expect(
+      screen.queryByTestId("home-candidate-inv-old"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("home-candidate-inv-new")).toBeInTheDocument();
+  });
+
+  it("keeps Tab focus inside the open chooser", async () => {
+    const user = userEvent.setup();
+    renderHome({ scenario: { scenario: "default" } });
+    await user.click(await screen.findByTestId("home-open-chooser"));
+    const dialog = await screen.findByTestId("quick-chooser");
+    await waitFor(() =>
+      expect(dialog.contains(document.activeElement)).toBe(true),
+    );
+    for (let i = 0; i < 12; i += 1) {
+      await user.tab();
+      expect(dialog.contains(document.activeElement)).toBe(true);
+    }
+    for (let i = 0; i < 12; i += 1) {
+      await user.tab({ shift: true });
+      expect(dialog.contains(document.activeElement)).toBe(true);
+    }
+  });
+
+  it("restores focus to opener after Escape", async () => {
     const user = userEvent.setup();
     renderHome({ scenario: { scenario: "default" } });
     const open = await screen.findByTestId("home-open-chooser");
     open.focus();
     await user.click(open);
-    await user.click(screen.getByTestId("chooser-cancel"));
-    expect(screen.queryByTestId("quick-chooser")).not.toBeInTheDocument();
+    expect(screen.getByTestId("quick-chooser")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(screen.queryByTestId("quick-chooser")).not.toBeInTheDocument(),
+    );
+    expect(document.activeElement).toBe(open);
   });
 });

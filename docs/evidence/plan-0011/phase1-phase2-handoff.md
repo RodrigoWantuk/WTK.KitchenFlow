@@ -1,25 +1,34 @@
-# PLAN-0011 evidence — Phase 1 + Phase 2
+# PLAN-0011 evidence — Phase 1 + Phase 2 (+ PR #34 remediation)
 
 ## Scope
 
-Public entry (Phase 1) and mock-backed authenticated contextual home (Phase 2).
+Public entry (Phase 1) and mock-backed authenticated contextual home (Phase 2),
+including the 2026-08-02 owner-review remediations for PR #34.
 Live source contracts remain PLAN-0021.
 
 ## Public composition note
 
 Production `/` renders outside `SessionProvider`. Session bootstrap occurs only for `/acesso` and authenticated `/app/*` subtrees. Automated tests assert that rendering `/` does not call `fetch` / `/api/v1/session`.
 
-## Functional tip
+## SHA distinctions
 
-`f7d516089a077b39bd9c95c7cc157f44443eaa7d`
+| Role | Value |
+|---|---|
+| Review baseline (pre-remediation) | `2bdcd4ff4357167ad2d55284ac30a81a9daaec43` |
+| Functional remediation tip | recorded after the remediation commit (see plan Progress log) |
+| Current PR head | same as published branch tip after push |
+| Exact-head CI | pending until Frontend + PLAN-0005 succeed on the published tip |
 
-## CI on packaging tip `c895b4ce2282f6b8df6ca8bfc5fff64caea4f990`
+Do not treat a packaging-only metadata commit as proof for an older functional SHA.
 
-| Workflow | Run ID | Result |
-|---|---|---|
-| Frontend | [30757026924](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30757026924) | success |
-| Frontend (push) | [30757025677](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30757025677) | success |
-| PLAN-0005 | [30757026929](https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30757026929) | success (after failed-job rerun of flaky ConcurrentAdjustment) |
+## Remediation summary
+
+1. Expanded suggestion presentation contract (timing, effort, cleanup, readiness, requirements, prep, shopping, uncertainty, freshness).
+2. Radix Dialog quick chooser with focus trap, Escape, focus restore, abort/cancel, stale-attempt ignore.
+3. Generation-counter + AbortController stale-response protection per source.
+4. Deterministic immutable-per-scenario prototype adapter (`useMemo`).
+5. Explicit `retryable` on source/chooser results; production unavailable never offers Retry.
+6. Public demo CTA respects `prefers-reduced-motion`; browser smoke asserts `behavior: "auto"`.
 
 ## Local validation (commands)
 
@@ -45,7 +54,7 @@ yarn format:check:api-client
 yarn smoke:browser:ci
 ```
 
-Results: all Passed (188 Jest tests). Browser smoke: 14/14 Passed.
+Results: all Passed (197 Jest tests). Browser smoke Passed (incl. public reduced-motion CTA).
 
 Local `yarn validate:firefox-native-zoom` could not launch Firefox as root (`XAUTHORITY` owned by another user). Rely on PLAN-0005 CI for native zoom/pointer gates.
 
@@ -60,14 +69,15 @@ Local `yarn validate:firefox-native-zoom` could not launch Firefox as root (`XAU
 
 ## Production isolation
 
-- Production wires `createUnavailableContextualHomeAdapter`
+- Production wires `createUnavailableContextualHomeAdapter` with `retryable: false`
 - Guard + bundle inspect Passed (no mock fixtures in production bundle)
 
 ## Handoff
 
 ```text
-Next frontend plan: PLAN-0020
-Future live contextual-home integration: PLAN-0021
+PR #34 remains draft until exact-head CI is green.
+Next frontend plan after merge: PLAN-0020.
+Future live contextual-home integration: PLAN-0021.
 ```
 
-PR remains **draft**. Owner-only merge. Agents must not approve, enable auto-merge, or merge.
+Owner-only merge. Agents must not approve, enable auto-merge, or merge.
