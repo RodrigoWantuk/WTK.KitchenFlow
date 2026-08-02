@@ -228,15 +228,23 @@ Minimum retest coverage:
 ## Execution state
 
 - **Current run delivery target:** Remediate independent PLAN-0018 Fail findings (#21/#22 pointer; #26 isolation) then re-validate.
-- **Current checkpoint:** Remediation started on tip that includes merged PLAN-0018 evidence (`05db662`); #26 ownership-before-precondition fix in progress; Firefox pointer root cause not yet established.
+- **Current checkpoint:** #26 ownership-before-precondition fix landed; Firefox pointer root cause diagnosis next.
 - **Last independently tested SHA:** `814af253814d0ec7f8b0adbbca9c50040b5bab07` (PLAN-0018 Fail — immutable)
-- **Last completed step:** Phase 0 truth restore — confirmed PR #27 evidence on PLAN-0016 branch; #26 application ordering fix drafted with regression tests.
-- **Exact next action:** Commit #26 fix; diagnose Firefox native-zoom pointer hit-test (#21/#22) with headed Firefox + `elementFromPoint`; apply root-cause fix; fail-closed harness; full validation; then Validating handoff.
+- **Last completed step:** #26 application ordering: owner-scoped load before If-Match; two-user nondisclosure regression + owner 428/412/200 preserved.
+- **Exact next action:** Diagnose Firefox native-zoom pointer hit-test (#21/#22) with headed Firefox + `elementFromPoint`; apply root-cause fix; fail-closed harness; full validation; then Validating handoff.
 - **Blockers:** None for coding. Owner merge blocked until independent retest Pass/Conditional Pass.
 - **Known failures or limitations:** #21/#22 pointer Failed at native 200% on `814af25`; #26 High isolation 412-vs-404 on `814af25`; PLAN-0005 Conditional Pass; PLAN-0011 Blocked; PR #23 untouched; issues remain open.
 - **Working tree state:** Uncommitted #26 backend changes; PLAN-0018 evidence must remain Fail.
 
 ## Progress log
+
+### 2026-08-02T03:35:00Z — agent:composer-plan-0016
+
+- **Checkpoint:** #26 backend isolation — ownership before precondition.
+- **Root cause:** `MutateAsync` evaluated `If-Match` present/valid before owner-scoped `LoadActiveAsync`; fabricated `"v1"` yielded 412 before nondisclosing 404.
+- **Changes:** `InventoryLotApplicationWorkflow` loads owned active lot first; `FailIfNotOwnedActiveAsync` gates update/adjust/delete before body validation; integration test proves foreign≡nonexistent for adjust/update/delete/history/precondition variants; owner 428/412/OK unchanged.
+- **Validation:** `ForeignAndNonexistentLotMutationsAreNondisclosingForPreconditionVariants` Passed; inventory unit tests Passed.
+- **Next action:** Firefox #21/#22 pointer diagnosis (no speculative CSS).
 
 ### 2026-08-02T03:20:00Z — agent:composer-plan-0016
 
