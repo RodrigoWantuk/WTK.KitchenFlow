@@ -3,6 +3,8 @@ import { ProfileOverviewPage } from "./ProfileOverviewPage";
 import {
   createAbsentProfileSnapshot,
   createCompleteness,
+  createEmptyEquipmentSnapshot,
+  createEmptyPreferenceSnapshot,
   createMockProfileRepo,
   renderProfileTree,
 } from "./testUtils";
@@ -40,8 +42,16 @@ describe("ProfileOverviewPage", () => {
   });
 
   it("shows the not-started state when profileExists is false", async () => {
+    // A real backend never resolves a preferences/equipment version for an owner
+    // with no persisted profile; the workspace consistency check enforces this.
     const repo = createMockProfileRepo({
       getProfile: jest.fn(async () => createAbsentProfileSnapshot()),
+      getPreferences: jest.fn(async () =>
+        createEmptyPreferenceSnapshot({ version: null, etag: null }),
+      ),
+      getEquipment: jest.fn(async () =>
+        createEmptyEquipmentSnapshot({ version: null, etag: null }),
+      ),
       getCompleteness: jest.fn(async () =>
         createCompleteness({ profileExists: false, percentComplete: 0 }),
       ),

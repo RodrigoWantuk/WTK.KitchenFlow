@@ -8,10 +8,10 @@
 - **Last updated:** 2026-08-03T00:00:00Z
 - **Branch:** `agent/plan-0024-validate-plan-0020-profile` (when claimed)
 - **Pull request:** Not opened
-- **System under test:** Draft PR for PLAN-0020 / `agent/plan-0020-profile-frontend` (exact candidate SHA TBD at claim)
+- **System under test:** Draft PR #35 / `agent/plan-0020-profile-frontend` — exact candidate SHA **unpinned** until PLAN-0020 remediation is finalized (do not use superseded tips `5efcfb8` / `a50152c` as the validation SUT).
 - **Related implementation plan:** [PLAN-0020](PLAN-0020-implement-profile-household-equipment-frontend.md)
 - **Related plans:** PLAN-0012 (backend), PLAN-0016 (session/inventory frontend), PLAN-0005 (inventory validation baseline)
-- **Dependencies:** PLAN-0020 draft PR published with a stable candidate SHA; Frontend and applicable PLAN-0005 workflows green on that tip
+- **Dependencies:** PLAN-0020 remediation candidate published with green exact-head Frontend + PLAN-0005; then pin this plan to that SHA and move to Ready.
 
 ## Objective
 
@@ -60,12 +60,17 @@ Decision-ready Pass / Conditional Pass / Fail assessment against one pinned PLAN
 
 ## Execution state
 
-- **Current checkpoint:** Placeholder created during PLAN-0020 claim; not started.
-- **Exact next action:** After PLAN-0020 publishes a stable candidate SHA, claim this plan on a new branch, pin the SUT, and execute the independent campaign.
-- **Blockers:** PLAN-0020 candidate not yet finalized for independent validation.
+- **Current checkpoint:** Draft; candidate intentionally unpinned while PLAN-0020 remediates PR #35 acceptance findings.
+- **Exact next action:** After PLAN-0020 publishes a green remediation tip, pin that SHA here, set status Ready, and claim for independent execution.
+- **Blockers:** PLAN-0020 remediation incomplete (review baseline `a50152c` not acceptance-ready).
 - **Working tree state:** Draft placeholder only.
 
 ## Progress log
+
+### 2026-08-03T01:10:00Z — PLAN-0020 remediation reopen
+
+- **Checkpoint:** Removed premature candidate pin references (`5efcfb8`). PLAN-0024 remains Draft/unpinned.
+- **Next action:** Wait for remediation candidate; then Ready + claim.
 
 ### 2026-08-03T00:00:00Z — PLAN-0020 claim
 

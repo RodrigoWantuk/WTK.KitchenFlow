@@ -1,7 +1,9 @@
 import type { components } from "@kitchenflow/api-client";
 import {
   ProfileApiError,
+  isValidControlledValue,
   type AdultDeclarationSnapshot,
+  type ControlledFieldName,
   type CookingContextSnapshot,
   type EquipmentEntry,
   type EquipmentInput,
@@ -12,8 +14,8 @@ import {
   type PreferenceEntry,
   type PreferenceSnapshot,
   type ProfileCompleteness,
-  type ProfileFieldDurability,
   type ProfileFieldMutation,
+  type ProfileFieldProjectionDurability,
   type ProfileFieldPresence,
   type ProfilePatch,
   type ProgressiveProfileField,
@@ -49,7 +51,7 @@ const KNOWN_PRESENCE = new Set<ProfileFieldPresence>([
   "default",
 ]);
 
-const KNOWN_DURABILITY = new Set<ProfileFieldDurability>([
+const KNOWN_PROJECTION_DURABILITY = new Set<ProfileFieldProjectionDurability>([
   "durable",
   "temporary",
 ]);
@@ -83,13 +85,17 @@ function normalizePresence(raw: string): ProfileFieldPresence {
 }
 
 /**
- * Normalizes a durability value from the wire. The backend currently emits the
- * literal string `durable`; both `Durable` and `durable` casings are tolerated,
- * but any other value fails closed rather than being silently coerced.
+ * Normalizes a projected field's durability value from the wire (a `GET` response,
+ * not a mutation request). The backend currently emits the literal string `durable`
+ * and reserves `temporary` for values resolved from request-scoped context; both
+ * `Durable`/`Temporary` and lowercase casings are tolerated, but any other value
+ * fails closed rather than being silently coerced.
  */
-function normalizeDurability(raw: string): ProfileFieldDurability {
-  const lowered = raw.toLowerCase() as ProfileFieldDurability;
-  if (!KNOWN_DURABILITY.has(lowered)) {
+function normalizeProjectionDurability(
+  raw: string,
+): ProfileFieldProjectionDurability {
+  const lowered = raw.toLowerCase() as ProfileFieldProjectionDurability;
+  if (!KNOWN_PROJECTION_DURABILITY.has(lowered)) {
     malformed(`Unknown profile field durability "${raw}".`);
   }
   return lowered;
@@ -128,7 +134,7 @@ function mapField<T>(dto: {
     value: dto.value ?? null,
     presence: normalizePresence(dto.presence),
     defaultValue: dto.defaultValue ?? null,
-    durability: normalizeDurability(dto.durability),
+    durability: normalizeProjectionDurability(dto.durability),
   };
 }
 
@@ -137,7 +143,7 @@ function mapIntField(dto: FieldDtoOfInt): ProgressiveProfileField<number> {
     value: coerceNumber(dto.value),
     presence: normalizePresence(dto.presence),
     defaultValue: coerceNumber(dto.defaultValue),
-    durability: normalizeDurability(dto.durability),
+    durability: normalizeProjectionDurability(dto.durability),
   };
 }
 
@@ -147,34 +153,89 @@ function mapStringField(
   return mapField(dto);
 }
 
+/**
+ * Maps a closed-set ("controlled") household/cooking string field — see
+ * `@/contracts/profile/controlledCodes` — failing closed on any `value` or
+ * `defaultValue` that is not an exact member of that field's backend enum.
+ * A backend that starts emitting a new enum member the frontend does not yet
+ * know about must surface as `malformed` rather than being silently rendered
+ * or, worse, silently re-submitted on the next unrelated save.
+ */
+function mapControlledStringField(
+  dto: FieldDtoOfString,
+  field: ControlledFieldName,
+): ProgressiveProfileField<string> {
+  if (dto.value != null && !isValidControlledValue(field, dto.value)) {
+    malformed(`Unknown ${field} value "${dto.value}".`);
+  }
+  if (
+    dto.defaultValue != null &&
+    !isValidControlledValue(field, dto.defaultValue)
+  ) {
+    malformed(`Unknown ${field} default value "${dto.defaultValue}".`);
+  }
+  return mapField(dto);
+}
+
 function mapHousehold(dto: HouseholdDto): HouseholdSnapshot {
   return {
     defaultAdultCount: mapIntField(dto.defaultAdultCount),
     defaultChildCount: mapIntField(dto.defaultChildCount),
     defaultServingCount: mapIntField(dto.defaultServingCount),
-    language: mapStringField(dto.language),
-    region: mapStringField(dto.region),
-    currency: mapStringField(dto.currency),
-    measurementSystem: mapStringField(dto.measurementSystem),
+    language: mapControlledStringField(dto.language, "language"),
+    region: mapControlledStringField(dto.region, "region"),
+    currency: mapControlledStringField(dto.currency, "currency"),
+    measurementSystem: mapControlledStringField(
+      dto.measurementSystem,
+      "measurementSystem",
+    ),
+    // Open-ended validated string (IanaTimeZoneId), not a closed enum.
     timeZone: mapStringField(dto.timeZone),
-    planningCadence: mapStringField(dto.planningCadence),
-    shoppingCadence: mapStringField(dto.shoppingCadence),
+    planningCadence: mapControlledStringField(
+      dto.planningCadence,
+      "planningCadence",
+    ),
+    shoppingCadence: mapControlledStringField(
+      dto.shoppingCadence,
+      "shoppingCadence",
+    ),
   };
 }
 
 function mapCookingContext(dto: CookingContextDto): CookingContextSnapshot {
   return {
-    overallSkill: mapStringField(dto.overallSkill),
-    confidence: mapStringField(dto.confidence),
-    preferredInstructionDetail: mapStringField(dto.preferredInstructionDetail),
+    overallSkill: mapControlledStringField(dto.overallSkill, "overallSkill"),
+    confidence: mapControlledStringField(dto.confidence, "confidence"),
+    preferredInstructionDetail: mapControlledStringField(
+      dto.preferredInstructionDetail,
+      "preferredInstructionDetail",
+    ),
     ordinaryPrepMinutes: mapIntField(dto.ordinaryPrepMinutes),
     exceptionalPrepMinutes: mapIntField(dto.exceptionalPrepMinutes),
-    effortTolerance: mapStringField(dto.effortTolerance),
-    cleanupTolerance: mapStringField(dto.cleanupTolerance),
-    repeatMealPreference: mapStringField(dto.repeatMealPreference),
-    reheatingPreference: mapStringField(dto.reheatingPreference),
-    leftoverPreference: mapStringField(dto.leftoverPreference),
-    freezingPreference: mapStringField(dto.freezingPreference),
+    effortTolerance: mapControlledStringField(
+      dto.effortTolerance,
+      "effortTolerance",
+    ),
+    cleanupTolerance: mapControlledStringField(
+      dto.cleanupTolerance,
+      "cleanupTolerance",
+    ),
+    repeatMealPreference: mapControlledStringField(
+      dto.repeatMealPreference,
+      "repeatMealPreference",
+    ),
+    reheatingPreference: mapControlledStringField(
+      dto.reheatingPreference,
+      "reheatingPreference",
+    ),
+    leftoverPreference: mapControlledStringField(
+      dto.leftoverPreference,
+      "leftoverPreference",
+    ),
+    freezingPreference: mapControlledStringField(
+      dto.freezingPreference,
+      "freezingPreference",
+    ),
   };
 }
 
@@ -211,7 +272,9 @@ export function mapProfileResponse(
     abandonmentReasons: [...dto.abandonmentReasons],
     profileExists: dto.profileExists,
     version: dto.version ?? null,
-    etag: dto.profileExists ? (etag ?? dto.version ?? null) : null,
+    // Never invent an ETag from the body version — missing headers stay null so
+    // workspace consistency can fail closed on header/body disagreement.
+    etag: dto.profileExists ? etag : null,
     createdAt: dto.createdAt ?? null,
     updatedAt: dto.updatedAt ?? null,
   };
@@ -236,7 +299,7 @@ export function mapPreferencesCollection(
   const version = dto.version ?? null;
   return {
     version,
-    etag: version === null ? null : (etag ?? version),
+    etag: version === null ? null : etag,
     entries: dto.entries.map(mapPreferenceEntry),
   };
 }
@@ -262,7 +325,7 @@ export function mapEquipmentCollection(
   const version = dto.version ?? null;
   return {
     version,
-    etag: version === null ? null : (etag ?? version),
+    etag: version === null ? null : etag,
     entries: dto.entries.map(mapEquipmentEntry),
   };
 }
@@ -286,11 +349,29 @@ export function mapCompleteness(
 }
 
 /**
- * Converts one presentation field mutation to its wire shape. The generated request
- * type documents `durability` as accepting only `"durable"`, but the backend workflow
- * also recognizes `"temporary"` as a forward-compatible no-op (the field is left
- * untouched); the cast below is the single, contained place that bridges that gap.
+ * Validates and narrows a mutation's requested durability to the single wire literal
+ * the generated `ProfileFieldDurability` schema accepts (`"durable"`). There is
+ * currently no request-scoped temporary write path: an omitted durability maps to
+ * `undefined` (the backend defaults to `durable`), and any other value — in
+ * particular a `"temporary"` that reached this far from untrusted runtime input
+ * rather than being rejected earlier by the contract's own `ProfileMutationDurability`
+ * type — fails closed instead of being cast onto the wire.
  */
+function toWireMutationDurability(
+  durability: ProfileFieldMutation<unknown>["durability"],
+): "durable" | undefined {
+  if (durability === undefined) {
+    return undefined;
+  }
+  if (durability !== "durable") {
+    malformed(
+      `Profile field mutations only accept "durable" durability; received "${String(durability)}".`,
+    );
+  }
+  return durability;
+}
+
+/** Converts one presentation field mutation to its wire shape. */
 function toStringMutationDto(
   mutation: ProfileFieldMutation<string> | undefined,
 ): FieldMutationDtoOfString | null {
@@ -300,7 +381,7 @@ function toStringMutationDto(
   return {
     action: mutation.action,
     value: mutation.value ?? null,
-    durability: mutation.durability as FieldMutationDtoOfString["durability"],
+    durability: toWireMutationDurability(mutation.durability),
   };
 }
 
@@ -313,7 +394,7 @@ function toIntMutationDto(
   return {
     action: mutation.action,
     value: mutation.value ?? null,
-    durability: mutation.durability as FieldMutationDtoOfInt["durability"],
+    durability: toWireMutationDurability(mutation.durability),
   };
 }
 

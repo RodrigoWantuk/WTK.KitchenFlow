@@ -25,16 +25,19 @@ export type ProfileFieldPresence =
   | "default";
 
 /**
- * Whether a persisted profile value is durable profile state or a request-scoped
- * temporary context override. Only `durable` mutations are currently accepted by the
- * backend profile endpoints; `temporary` is reserved for future request-scoped context
- * and is preserved here so mappers fail closed instead of silently dropping it.
+ * Whether a value *projected from the backend* (a field already stored/resolved on
+ * the profile) is durable profile state or a request-scoped temporary context
+ * override. This is read-only wire information describing what the backend is
+ * currently showing for that field; it is not a permission to write `temporary`
+ * back on a mutation — see {@link ProfileMutationDurability} for what a mutation may
+ * submit.
  */
-export type ProfileFieldDurability = "durable" | "temporary";
+export type ProfileFieldProjectionDurability = "durable" | "temporary";
 
 /**
  * One progressive profile field: a value that may be absent, defaulted, confirmed, or
- * explicitly removed, alongside the durability of that value.
+ * explicitly removed, alongside the durability of that value as projected from the
+ * backend.
  */
 export interface ProgressiveProfileField<T> {
   /** Resolved value for the current presence; `null` when absent or removed. */
@@ -42,7 +45,7 @@ export interface ProgressiveProfileField<T> {
   presence: ProfileFieldPresence;
   /** Progressive default the backend would apply while presence is `default`; `null` when none exists. */
   defaultValue: T | null;
-  durability: ProfileFieldDurability;
+  durability: ProfileFieldProjectionDurability;
 }
 
 /**
@@ -200,13 +203,23 @@ export interface ProfileWorkspace {
  */
 export type FieldMutationAction = "confirm" | "remove" | "absent";
 
+/**
+ * Durability a mutation may submit for a field. The backend mutation endpoints only
+ * ever accept `durable` (see the generated `ProfileFieldDurability` wire schema,
+ * which is the single literal `"durable"`); there is currently no request-scoped
+ * temporary write path, so this type intentionally excludes
+ * {@link ProfileFieldProjectionDurability}'s `"temporary"` member rather than
+ * widening to it.
+ */
+export type ProfileMutationDurability = "durable";
+
 /** One field-level mutation submitted to the profile mutation endpoints. */
 export interface ProfileFieldMutation<T> {
   action: FieldMutationAction;
   /** Required when `action` is `confirm`; ignored otherwise. */
   value?: T | null;
-  /** Defaults to `durable` server-side when omitted; only `durable` is currently accepted. */
-  durability?: ProfileFieldDurability;
+  /** Defaults to `durable` server-side when omitted; only `durable` is accepted. */
+  durability?: ProfileMutationDurability;
 }
 
 /** Adult declaration mutation; acceptance is only recorded through this explicit command. */
@@ -291,7 +304,14 @@ export type ProfileApiErrorCode =
   | "unavailable"
   | "cancelled"
   | "malformed"
-  | "unexpected";
+  | "unexpected"
+  /**
+   * Client-side only: never returned by the backend. Thrown by `ProfileProvider`
+   * when a mutation is attempted while the shared workspace is not `ready` (still
+   * loading, in `version_conflict`, or blocked by a failed post-mutation
+   * refresh) — see `ProfileProvider.tsx`.
+   */
+  | "workspace_not_ready";
 
 /**
  * Thrown by profile repositories and mappers for every failure path. Deterministic

@@ -1,168 +1,83 @@
 # PLAN-0020: Implement Profile, Household, Preferences, and Equipment Frontend
 
-- **Status:** Completed
+- **Status:** In Progress
 - **Type:** Implementation
 - **Priority:** High
-- **Owner:** Cursor agent (PLAN-0020 profile frontend)
+- **Owner:** Cursor agent (PLAN-0020 profile frontend remediation)
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-03T00:35:00Z
+- **Last updated:** 2026-08-03T01:10:00Z
 - **Branch:** `agent/plan-0020-profile-frontend`
 - **Pull request:** [Draft PR #35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35)
 - **Dependencies:** PLAN-0012 and PLAN-0016 merged; PLAN-0011 merged via PR #34 (`eb9e92c`); generated OpenAPI client available
 - **Related product:** `docs/product/audience-and-profile.md`
 - **Related backend:** `docs/plans/PLAN-0012-implement-profile-household-equipment-backend.md`
-- **Related plans:** PLAN-0011 (merged), PLAN-0021 (live home), PLAN-0024 (independent validation placeholder)
+- **Related plans:** PLAN-0011 (merged), PLAN-0021 (live home), PLAN-0024 (independent validation — Draft until remediation candidate finalized)
 - **Starting SHA:** `eb9e92c21ac817e497235168786daeb3f35c30cd`
+- **Review baseline:** `a50152c78e872685b9f760db53c05984308174d8`
 
 ## Objective
 
 Deliver a production frontend for the already implemented owner-scoped profile backend so an authenticated adult can review and edit household context, locale/timezone/measurement settings, cooking context, preferences/restrictions, equipment, and progressive completeness without exposing sensitive fields in session projections or inventing frontend authority.
 
-## User outcome
+## Remediation scope (PR #35 review)
 
-An authenticated user can configure enough durable context to improve later recommendations while remaining free to skip nonessential fields, correct information, remove entries, and understand which data is confirmed.
+Against review baseline `a50152c`:
 
-## Included scope
+1. Complete workspace presence/version/ETag consistency (fail closed; mutation guard; post-save refresh failure).
+2. Separate read durability (`durable`|`temporary`) from write durability (`durable` only).
+3. Typed localized controls for closed enum fields.
+4. Stop coercing invalid numeric input to zero; capacity validation.
+5. Surface Problem Details field errors accessibly.
+6. Custom preference semantics (`note` as label for `custom_*`).
+7. Accessible Radix sensitive confirmation dialog.
+8. Unsaved-change protection with accessible confirm.
+9. Restrict `ProfileProvider` to `/app/perfil*` only.
+10. Overview completeness projection + truthful adult policy presentation.
+11. Harden equipment editing (validation, focus, live region).
+12. Authenticated browser coverage via Playwright interception.
 
-- production routes for profile overview and editing;
-- household/default serving and cadence fields exposed by the accepted API;
-- language, region, IANA timezone, currency, and measurement settings supported by the backend contract;
-- cooking context, skill/confidence, time, effort, cleanup, reheating, leftover, freezing, and planning preferences represented by accepted fields;
-- explicit preference/restriction categories;
-- allergy and medical restriction entry only through explicit user action;
-- equipment list editing and ordering;
-- profile completeness presentation and progressive next-step prompts;
-- ETag/`If-Match`, CSRF, Problem Details, 409/412/428, retry, and stale-review UX;
-- generated OpenAPI client use through application-owned adapters;
-- `en`, `pt-BR`, and `es`;
-- responsive, keyboard, screen-reader, reduced-motion, and 200% zoom behavior;
-- production isolation and comprehensive tests;
-- durable documentation and TSDoc/JSDoc.
-
-## Excluded scope
-
-- AI-based profile inference or natural-language onboarding;
-- multi-member household accounts, invitations, or permissions;
-- billing, subscription, notifications, marketing consent implementation, or final legal copy;
-- silent durable learning from quick-chooser answers or behavior;
-- changing backend profile semantics inside React;
-- direct Keycloak SDK or token storage;
-- recommendation generation;
-- inventing production terms/privacy version identifiers for adult declaration.
-
-## Architecture and contract rules
-
-- Use the generated client for:
-  - `GET/PUT/PATCH /api/v1/profile`;
-  - `GET/PUT /api/v1/profile/preferences`;
-  - `GET/PUT /api/v1/profile/equipment`;
-  - `GET /api/v1/profile/completeness`;
-  - safe `GET /api/v1/session` fields.
-- Presentation models must not expose raw generated DTOs throughout the component tree.
-- Backend owns stable codes, validation, concurrency, authorization, completeness, and sensitive-history redaction.
-- Session data must not grow to include allergies, medical restrictions, or private notes merely for convenience.
-- Treat an absent profile differently from an empty field (`profileExists: false` scaffold, not 404).
-- Preserve `null`, absent, confirmed, removed, default (wire), temporary, and durable semantics from PLAN-0012.
-- Ordinary forms use PATCH; PUT replace remains repository-level only.
-- Do not use localStorage/sessionStorage as authoritative profile storage.
-- Do not translate stable codes in API payloads; localize at presentation boundaries.
-
-## Delivery phases
-
-### Phase 1 — Contract and adapter baseline
-
-- regenerate and verify the API client;
-- define application/presentation models;
-- implement production repository/adapters;
-- add adapter contract tests and drift checks;
-- presentation catalogs and opaque custom-code helpers;
-- adult-declaration policy boundary (production unavailable by default).
-
-### Phase 2 — Profile overview and core editing
-
-- routes, loading/error/session states;
-- household and locale/timezone/measurement editing via PATCH;
-- ETag concurrency and review/retry;
-- browser IANA suggestion without silent persist.
-
-### Phase 3 — Preferences, restrictions, and equipment
-
-- explicit category-aware preference/restriction UX;
-- heightened communication for allergy/medical data without medical claims;
-- equipment add/remove/reorder flows;
-- validation, duplicate stable-code handling, and accessible errors.
-
-### Phase 4 — Completeness and progressive setup
-
-- completeness summary;
-- optional next-step prompts;
-- clear skip/cancel behavior;
-- no blocking of inventory or home use because optional profile fields are incomplete.
-
-### Phase 5 — Hardening
-
-- full locale/accessibility/responsive tests;
-- session/privacy/telemetry review;
-- production-isolation proof;
-- browser smoke and documentation.
-
-## Testing requirements
-
-- absent profile and first save;
-- successful GET/PATCH (PUT covered at repository level only);
-- replace versus partial-update semantics;
-- `400`, `401`, `403`, `409`, `412`, and `428`;
-- stale ETag review and retry;
-- concurrent preference/equipment edits;
-- duplicate equipment stable codes;
-- explicit allergy/medical entry and removal;
-- no sensitive values in session or telemetry;
-- timezone and locale behavior;
-- localization resource completeness;
-- keyboard/focus/live-region behavior;
-- 360/768/1280/intermediate widths and 200% zoom;
-- production bundle contains no prototype profile fixtures;
-- generated client drift remains zero.
-
-## Concurrency and merge order
-
-Started from post-PR #34 `main` (`eb9e92c`). No concurrent PLAN-0011 branch work.
+Prior green tip `5efcfb8` / packaging `a50152c` are superseded by this remediation candidate once published.
 
 ## Acceptance criteria
 
-- [x] All accepted profile backend capabilities have truthful production UI or an explicit documented exclusion (adult declaration mutation gated by policy).
-- [x] Sensitive categories require explicit user action.
-- [x] No profile data is inferred or silently persisted.
-- [x] ETag concurrency, CSRF, and Problem Details are handled.
-- [x] Generated contracts remain canonical.
-- [x] Supported locales and accessibility gates pass (local/CI pending on published tip).
-- [x] Production contains no mock fallback.
-- [x] Documentation and code-level comments are complete.
-- [x] Independent review is requested before merge (draft PR pending).
+- [ ] Workspace presence/version/ETag invariants fail closed; mutation impossible outside ready consistent workspace.
+- [ ] Post-mutation reload failure blocks subsequent writes without misreporting the save.
+- [ ] Write durability permits only durable; controlled fields use localized typed options.
+- [ ] Invalid numeric input is never converted to zero; field errors reach accessible controls.
+- [ ] Custom preference labels round-trip; allergy/medical use accessible modal.
+- [ ] Unsaved changes protected; ProfileProvider scoped to profile routes.
+- [ ] Overview uses completeness section data and adult policy truthfully.
+- [ ] Equipment validation and keyboard behavior complete.
+- [ ] Authenticated profile browser scenarios pass (intercepted harness).
+- [ ] Locales complete; production isolation; generated client drift zero.
+- [ ] Frontend and PLAN-0005 pass on the final published head.
+- [ ] PLAN-0024 pinned Ready only after remediation candidate is stable.
 
 ## Execution state
 
-- **Current checkpoint:** Exact-head Frontend + PLAN-0005 green; PLAN-0020 **Completed**.
-- **Functional tip:** `4ddc87475b156ccb984cd7fe879a2f1086c9c1d5`
-- **CI-validated tip:** `5efcfb8b5f70a1389e9e2c709afe7edf51d016ba`
-- **Exact next action:** Owner review of draft PR #35 only — no agent merge.
-- **Blockers:** None.
-- **Working tree state:** Completion packaging may advance PR head beyond CI-validated tip.
+- **Current checkpoint:** Returned to **In Progress** for PR #35 remediation against baseline `a50152c`. Local remediation implementation in progress.
+- **Review baseline:** `a50152c78e872685b9f760db53c05984308174d8`
+- **Functional tip (pre-remediation, superseded):** `4ddc87475b156ccb984cd7fe879a2f1086c9c1d5`
+- **Prior CI tip (superseded):** `5efcfb8b5f70a1389e9e2c709afe7edf51d016ba` / packaging `a50152c`
+- **Remediation functional tip:** pending commit
+- **Exact next action:** Land remediation commits; local gates; push; exact-head CI; pin PLAN-0024 when green.
+- **Blockers:** None external.
+- **Working tree state:** Uncommitted remediations R1–R12 on branch.
 
 ## Progress log
 
+### 2026-08-03T01:10:00Z — Cursor agent (PLAN-0020 remediation reopen)
+
+- **Checkpoint:** Restored **In Progress**; review baseline `a50152c`; remediation R1–R12 implemented locally (pending commit/validation).
+- **Changes included in the commit:** Plan/registry restore + remediation implementation (see subsequent commits).
+- **Validation performed:** Host `NOTEBOOK-DEB-RODRIGO`; branch synced to review baseline; core provider/mapper tests Passed during remediation.
+- **Next action:** Commit remediations; full local gates; push draft PR #35; exact-head CI.
+- **Blockers or handoff notes:** Keep draft; PLAN-0024 remains Draft unpinned until remediation candidate finalized.
+
+
 ### 2026-08-03T00:35:00Z — Cursor agent (PLAN-0020 completion)
 
-- **Checkpoint:** Frontend `30774513344` + PLAN-0005 `30774513343` Passed on `5efcfb8`; PLAN-0020 returned to **Completed**.
-- **Changes included in the commit:** Plan/registry/evidence completion; PR body reconciliation.
-- **Validation performed:** Exact-head Frontend quality+browser-smoke and PLAN-0005 p0/p1/evidence-consistency on published tip `5efcfb8b5f70a1389e9e2c709afe7edf51d016ba`. Draft, MERGEABLE, reviewer `RodrigoWantuk`.
-- **Next action:** Owner review only — independent validation via PLAN-0024.
-- **Blockers or handoff notes:** PLAN-0021 remains blocked until profile and other live-source prerequisites merge.
-
-### 2026-08-03T00:30:00Z — Cursor agent (PLAN-0020 claim + vertical slice)
-
-- **Checkpoint:** Claimed from post-merge `main` (`eb9e92c`); PLAN-0011 delivery reconciled; PLAN-0024 placeholder created; profile vertical slice implemented and locally validated.
-- **Changes included in the commit:** Contracts/adapters/catalogs; ProfileProvider; overview/dados/preferencias/equipamentos; shell nav; i18n; guards; smoke gate; docs/evidence.
-- **Validation performed:** `yarn install --frozen-lockfile`, `typecheck`, `lint`, `format:check`, `test` (40/276), `guard:*`, `build`/`build:prototype`/`build:production`, `inspect:production-bundle`, `audit:policy`, `generate:api-client` + drift/typecheck/format, `smoke:browser:ci` Passed. `validate:firefox-native-zoom` Failed locally (Firefox root/`$HOME`).
-- **Next action:** Push; open draft PR; await exact-head Frontend (+ PLAN-0005).
-- **Blockers or handoff notes:** Adult policy unavailable in production by design; free-text ordered-list labels deferred; independent validation PLAN-0024.
+- **Checkpoint:** Frontend `30774513344` + PLAN-0005 `30774513343` Passed on `5efcfb8`; PLAN-0020 returned to **Completed** (later reopened for remediation).
+- **Validation performed:** Exact-head CI on `5efcfb8`; packaging tip `a50152c` also green after PLAN-0005 p0 flake rerun.
+- **Next action:** Owner review — superseded by remediation assignment.
+- **Blockers or handoff notes:** Historical tip only; not acceptance-ready per review findings.

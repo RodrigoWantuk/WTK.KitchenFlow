@@ -4,34 +4,29 @@
 
 - PLAN-0011 / PR #34 merged at `eb9e92c21ac817e497235168786daeb3f35c30cd` on `main`.
 
-## Scope delivered
+## Review remediation
 
-Production profile overview and editing routes, live repository adapters, shared workspace concurrency, preference/equipment management, progressive completeness, session refresh for safe fields, localization (`en` / `pt-BR` / `es`), production isolation, and automated tests.
+| Role | Value |
+|---|---|
+| Review baseline (pre-remediation) | `a50152c78e872685b9f760db53c05984308174d8` |
+| Superseded functional tip | `4ddc87475b156ccb984cd7fe879a2f1086c9c1d5` |
+| Superseded CI tip | `5efcfb8b5f70a1389e9e2c709afe7edf51d016ba` |
+| Remediation functional tip | pending |
+| CI-validated remediation tip | pending |
+
+## Scope delivered (remediation)
+
+Contract/concurrency hardening, typed controls, numeric validation, field errors, custom preference semantics, accessible sensitive dialog, unsaved-change protection, ProfileProvider scoped to `/app/perfil*`, overview/adult policy truthfulness, equipment hardening, intercepted authenticated browser smoke.
 
 ## Known limitations
 
 - Adult declaration acceptance mutation unavailable in production until accepted policy versions are configured.
 - Technique/goal/abandonment free-text labels not round-tripped (catalog + unknown-code fallback only).
-- Independent validation tracked by PLAN-0024 (placeholder).
-
-## SHA distinctions
-
-| Role | Value |
-|---|---|
-| Branch start / PLAN-0011 merge | `eb9e92c21ac817e497235168786daeb3f35c30cd` |
-| Functional implementation tip | `4ddc87475b156ccb984cd7fe879a2f1086c9c1d5` |
-| CI-validated tip | `5efcfb8b5f70a1389e9e2c709afe7edf51d016ba` |
-| Current PR head | PR metadata (completion packaging may advance SHA) |
-
-## Exact-head CI (CI-validated tip `5efcfb8`)
-
-- Frontend: https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30774513344
-- PLAN-0005: https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30774513343
+- Independent validation tracked by PLAN-0024 (remains Draft until remediation tip is pinned).
 
 ## Handoff
 
 ```text
-PR ready for owner review.
-Independent PLAN-0020 validation may begin against the exact candidate SHA (PLAN-0024).
-PLAN-0021 remains blocked until profile and other live-source prerequisites are merged.
+PR #35 remediation in progress.
+PLAN-0024 stays Draft/unpinned until the remediation candidate is finalized.
 ```
