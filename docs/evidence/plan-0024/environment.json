@@ -3,7 +3,7 @@
   "generatedAtUtc": "2026-08-03T11:39:55Z",
   "phase": "claim",
   "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
-  "evidenceBranchHead": "PENDING_FINAL_COMMIT",
+  "evidenceBranchHead": "d5e60560e2555df4625a9b18354a320ebe78e016",
   "repository": "RodrigoWantuk/WTK.Cocinaris",
   "localCloneRemote": "https://github.com/RodrigoWantuk/WTK.KitchenFlow.git",
   "implementationPr": 35,
@@ -214,5 +214,6 @@
     "total": 24,
     "passed": 24,
     "report": "docs/evidence/plan-0024/reports/browser-smoke-report.json"
-  }
+  },
+  "blockingIssue": 37
 }
