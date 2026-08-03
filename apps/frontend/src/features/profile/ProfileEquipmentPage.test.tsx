@@ -6,6 +6,7 @@ import type {
   EquipmentSnapshot,
   ProfileMutationContext,
 } from "@/contracts/profile";
+import { ProfileApiError } from "@/contracts/profile";
 import {
   createEmptyEquipmentSnapshot,
   createMockProfileRepo,
@@ -279,5 +280,82 @@ describe("ProfileEquipmentPage", () => {
         screen.getByTestId("profile-equipment-catalog-select"),
       ).toHaveFocus(),
     );
+  });
+
+  it("maps stable-code validation errors to the equipment entry and retains the draft without retrying", async () => {
+    const replaceEquipment = jest.fn<
+      Promise<EquipmentSnapshot>,
+      [EquipmentInput[], ProfileMutationContext]
+    >(async () => {
+      throw new ProfileApiError(
+        "validation_failed",
+        "The server rejected this input.",
+        400,
+        {
+          fieldErrors: {
+            "entries[0].stableCode": ["Equipment identifier is invalid."],
+          },
+        },
+      );
+    });
+    const repo = createMockProfileRepo({
+      getEquipment: jest.fn(async () => seededEquipment()),
+      replaceEquipment,
+    });
+    const user = userEvent.setup();
+
+    render(
+      renderProfileTree({
+        repository: repo,
+        children: <ProfileEquipmentPage />,
+      }),
+    );
+    await screen.findByTestId("profile-equipment");
+
+    await user.click(screen.getByTestId("profile-equipment-remove-eq-blender"));
+    await user.click(screen.getByTestId("profile-equipment-save"));
+
+    await waitFor(() => expect(replaceEquipment).toHaveBeenCalledTimes(1));
+    expect(
+      screen.getByTestId("profile-equipment-error-summary"),
+    ).toHaveTextContent("Equipment identifier is invalid.");
+    expect(
+      document.getElementById("profile-equipment-entry-eq-oven"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("profile-equipment-entry-eq-oven"),
+    ).toHaveTextContent("Equipment identifier is invalid.");
+    await user.click(
+      screen.getByTestId(
+        "profile-equipment-error-summary-jump-profile-equipment-entry-eq-oven",
+      ),
+    );
+    expect(screen.getByTestId("profile-equipment-entry-eq-oven")).toHaveFocus();
+    expect(screen.getByTestId("profile-equipment-save")).not.toBeDisabled();
+    expect(replaceEquipment).toHaveBeenCalledTimes(1);
+  });
+
+  it("provides visible, contextual names for equipment controls", async () => {
+    const repo = createMockProfileRepo({
+      getEquipment: jest.fn(async () => seededEquipment()),
+    });
+
+    render(
+      renderProfileTree({
+        repository: repo,
+        children: <ProfileEquipmentPage />,
+      }),
+    );
+    await screen.findByTestId("profile-equipment");
+
+    expect(
+      screen.getByRole("combobox", { name: /add equipment from catalog/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /capacity unit — oven/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /constraint note — oven/i }),
+    ).toBeInTheDocument();
   });
 });

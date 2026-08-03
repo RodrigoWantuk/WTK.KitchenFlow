@@ -377,24 +377,38 @@ export function ProfilePreferencesPage() {
                 </p>
               )}
               <div className="flex flex-wrap items-center gap-2">
-                <Input
-                  data-testid={`profile-preferences-note-${entry.entryId}`}
-                  className="max-w-xs"
-                  maxLength={NOTE_MAX_LENGTH}
-                  placeholder={
-                    isCustom
-                      ? t("profile.preferences.customPlaceholder")
-                      : t("profile.preferences.notePlaceholder")
-                  }
-                  value={noteDrafts[entry.entryId] ?? entry.note ?? ""}
-                  disabled={!canMutate}
-                  onChange={(event) =>
-                    setNoteDrafts((prev) => ({
-                      ...prev,
-                      [entry.entryId]: event.target.value,
-                    }))
-                  }
-                />
+                <div className="space-y-1">
+                  <label
+                    htmlFor={`profile-preferences-note-${entry.entryId}`}
+                    className="block text-xs"
+                  >
+                    {t(
+                      isCustom
+                        ? "profile.preferences.entryCustomName"
+                        : "profile.preferences.entryNote",
+                      { name: primaryLabel },
+                    )}
+                  </label>
+                  <Input
+                    id={`profile-preferences-note-${entry.entryId}`}
+                    data-testid={`profile-preferences-note-${entry.entryId}`}
+                    className="max-w-xs"
+                    maxLength={NOTE_MAX_LENGTH}
+                    placeholder={
+                      isCustom
+                        ? t("profile.preferences.customPlaceholder")
+                        : t("profile.preferences.notePlaceholder")
+                    }
+                    value={noteDrafts[entry.entryId] ?? entry.note ?? ""}
+                    disabled={!canMutate}
+                    onChange={(event) =>
+                      setNoteDrafts((prev) => ({
+                        ...prev,
+                        [entry.entryId]: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
                 <Button
                   type="button"
                   variant="secondary"
@@ -421,29 +435,47 @@ export function ProfilePreferencesPage() {
           {t("profile.preferences.addFromCatalog")}
         </h2>
         <div className="flex flex-wrap items-center gap-2">
-          <select
-            data-testid="profile-preferences-catalog-select"
-            className="flex h-9 rounded-md border border-input bg-transparent px-3 text-sm"
-            value={catalogCode}
-            disabled={!canMutate}
-            onChange={(event) => setCatalogCode(event.target.value)}
-          >
-            <option value="">{t("profile.actions.add")}</option>
-            {catalogOptions.map((code) => (
-              <option key={code} value={code}>
-                {resolveLabel(locale, category, code)}
-              </option>
-            ))}
-          </select>
-          <Input
-            data-testid="profile-preferences-catalog-note"
-            className="max-w-xs"
-            maxLength={NOTE_MAX_LENGTH}
-            placeholder={t("profile.preferences.notePlaceholder")}
-            value={catalogNote}
-            disabled={!canMutate}
-            onChange={(event) => setCatalogNote(event.target.value)}
-          />
+          <div className="space-y-1">
+            <label
+              htmlFor="profile-preferences-catalog-select"
+              className="block text-xs"
+            >
+              {t("profile.preferences.catalogSelect")}
+            </label>
+            <select
+              id="profile-preferences-catalog-select"
+              data-testid="profile-preferences-catalog-select"
+              className="flex h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+              value={catalogCode}
+              disabled={!canMutate}
+              onChange={(event) => setCatalogCode(event.target.value)}
+            >
+              <option value="">{t("profile.actions.add")}</option>
+              {catalogOptions.map((code) => (
+                <option key={code} value={code}>
+                  {resolveLabel(locale, category, code)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label
+              htmlFor="profile-preferences-catalog-note"
+              className="block text-xs"
+            >
+              {t("profile.preferences.catalogNote")}
+            </label>
+            <Input
+              id="profile-preferences-catalog-note"
+              data-testid="profile-preferences-catalog-note"
+              className="max-w-xs"
+              maxLength={NOTE_MAX_LENGTH}
+              placeholder={t("profile.preferences.notePlaceholder")}
+              value={catalogNote}
+              disabled={!canMutate}
+              onChange={(event) => setCatalogNote(event.target.value)}
+            />
+          </div>
           <Button
             type="button"
             disabled={
@@ -466,23 +498,32 @@ export function ProfilePreferencesPage() {
           {t("profile.preferences.customEntryHint")}
         </p>
         <div className="flex flex-wrap items-center gap-2">
-          <Input
-            data-testid="profile-preferences-custom-label"
-            className="max-w-xs"
-            maxLength={NOTE_MAX_LENGTH}
-            placeholder={t("profile.preferences.customPlaceholder")}
-            value={customLabel}
-            disabled={!canMutate}
-            aria-invalid={
-              customLabel.length > NOTE_MAX_LENGTH ? true : undefined
-            }
-            aria-describedby={
-              customLabel.length > NOTE_MAX_LENGTH
-                ? "profile-preferences-custom-label-error"
-                : undefined
-            }
-            onChange={(event) => setCustomLabel(event.target.value)}
-          />
+          <div className="space-y-1">
+            <label
+              htmlFor="profile-preferences-custom-label"
+              className="block text-xs"
+            >
+              {t("profile.preferences.customLabel")}
+            </label>
+            <Input
+              id="profile-preferences-custom-label"
+              data-testid="profile-preferences-custom-label"
+              className="max-w-xs"
+              maxLength={NOTE_MAX_LENGTH}
+              placeholder={t("profile.preferences.customPlaceholder")}
+              value={customLabel}
+              disabled={!canMutate}
+              aria-invalid={
+                customLabel.length > NOTE_MAX_LENGTH ? true : undefined
+              }
+              aria-describedby={
+                customLabel.length > NOTE_MAX_LENGTH
+                  ? "profile-preferences-custom-label-error"
+                  : undefined
+              }
+              onChange={(event) => setCustomLabel(event.target.value)}
+            />
+          </div>
           <Button
             type="button"
             disabled={

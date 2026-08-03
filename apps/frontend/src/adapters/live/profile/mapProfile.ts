@@ -108,18 +108,76 @@ function normalizeCategory(raw: string): PreferenceCategory {
   return raw as PreferenceCategory;
 }
 
+/** OpenAPI int32 wire pattern for integer-or-string numeric fields. */
+const INT32_WIRE_PATTERN = /^-?(?:0|[1-9]\d*)$/;
+const INT32_MIN = -2147483648;
+const INT32_MAX = 2147483647;
+
 /**
- * Coerces a `number | string | null` wire value to a finite number or `null`.
- * The generated schema types several decimal/int fields as `number | string`
- * because of upstream OpenAPI decimal handling; this normalizes both shapes.
+ * Parses an optional finite number from the wire. `null`/`undefined` stay `null`.
+ * A present empty/whitespace string, NaN, Infinity, or non-numeric value fails closed
+ * rather than becoming `0` via `Number("")`.
  */
-function coerceNumber(raw: number | string | null | undefined): number | null {
+function mapOptionalFiniteNumber(
+  raw: number | string | null | undefined,
+  path: string,
+): number | null {
   if (raw === null || raw === undefined) {
     return null;
   }
-  const value = typeof raw === "number" ? raw : Number(raw);
-  if (!Number.isFinite(value)) {
-    malformed(`Non-finite numeric projection value "${String(raw)}".`);
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (trimmed === "") {
+      malformed(`Malformed optional numeric value at ${path}.`);
+    }
+    const value = Number(trimmed);
+    if (!Number.isFinite(value)) {
+      malformed(`Malformed optional numeric value at ${path}.`);
+    }
+    return value;
+  }
+  if (typeof raw !== "number" || !Number.isFinite(raw)) {
+    malformed(`Malformed optional numeric value at ${path}.`);
+  }
+  return raw;
+}
+
+/**
+ * Parses a required finite integer from the wire. Rejects nullish, blank strings,
+ * non-integers, non-numeric strings, NaN/Infinity, and values outside optional bounds.
+ * Never uses `Number("")` → `0` coercion.
+ */
+function mapRequiredFiniteInteger(
+  raw: number | string | null | undefined,
+  path: string,
+  bounds?: { min?: number; max?: number },
+): number {
+  if (raw === null || raw === undefined) {
+    malformed(`Missing required integer at ${path}.`);
+  }
+  let value: number;
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (trimmed === "" || !INT32_WIRE_PATTERN.test(trimmed)) {
+      malformed(`Malformed required integer at ${path}.`);
+    }
+    value = Number(trimmed);
+  } else if (typeof raw === "number") {
+    value = raw;
+  } else {
+    malformed(`Malformed required integer at ${path}.`);
+  }
+  if (!Number.isFinite(value) || !Number.isInteger(value)) {
+    malformed(`Malformed required integer at ${path}.`);
+  }
+  if (value < INT32_MIN || value > INT32_MAX) {
+    malformed(`Required integer out of int32 range at ${path}.`);
+  }
+  if (bounds?.min != null && value < bounds.min) {
+    malformed(`Required integer below minimum at ${path}.`);
+  }
+  if (bounds?.max != null && value > bounds.max) {
+    malformed(`Required integer above maximum at ${path}.`);
   }
   return value;
 }
@@ -138,11 +196,17 @@ function mapField<T>(dto: {
   };
 }
 
-function mapIntField(dto: FieldDtoOfInt): ProgressiveProfileField<number> {
+function mapIntField(
+  dto: FieldDtoOfInt,
+  path: string,
+): ProgressiveProfileField<number> {
   return {
-    value: coerceNumber(dto.value),
+    value: mapOptionalFiniteNumber(dto.value, `${path}.value`),
     presence: normalizePresence(dto.presence),
-    defaultValue: coerceNumber(dto.defaultValue),
+    defaultValue: mapOptionalFiniteNumber(
+      dto.defaultValue,
+      `${path}.defaultValue`,
+    ),
     durability: normalizeProjectionDurability(dto.durability),
   };
 }
@@ -179,9 +243,18 @@ function mapControlledStringField(
 
 function mapHousehold(dto: HouseholdDto): HouseholdSnapshot {
   return {
-    defaultAdultCount: mapIntField(dto.defaultAdultCount),
-    defaultChildCount: mapIntField(dto.defaultChildCount),
-    defaultServingCount: mapIntField(dto.defaultServingCount),
+    defaultAdultCount: mapIntField(
+      dto.defaultAdultCount,
+      "household.defaultAdultCount",
+    ),
+    defaultChildCount: mapIntField(
+      dto.defaultChildCount,
+      "household.defaultChildCount",
+    ),
+    defaultServingCount: mapIntField(
+      dto.defaultServingCount,
+      "household.defaultServingCount",
+    ),
     language: mapControlledStringField(dto.language, "language"),
     region: mapControlledStringField(dto.region, "region"),
     currency: mapControlledStringField(dto.currency, "currency"),
@@ -210,8 +283,14 @@ function mapCookingContext(dto: CookingContextDto): CookingContextSnapshot {
       dto.preferredInstructionDetail,
       "preferredInstructionDetail",
     ),
-    ordinaryPrepMinutes: mapIntField(dto.ordinaryPrepMinutes),
-    exceptionalPrepMinutes: mapIntField(dto.exceptionalPrepMinutes),
+    ordinaryPrepMinutes: mapIntField(
+      dto.ordinaryPrepMinutes,
+      "cookingContext.ordinaryPrepMinutes",
+    ),
+    exceptionalPrepMinutes: mapIntField(
+      dto.exceptionalPrepMinutes,
+      "cookingContext.exceptionalPrepMinutes",
+    ),
     effortTolerance: mapControlledStringField(
       dto.effortTolerance,
       "effortTolerance",
@@ -287,7 +366,9 @@ function mapPreferenceEntry(dto: PreferenceResponseDto): PreferenceEntry {
     stableCode: dto.stableCode,
     note: dto.note ?? null,
     presence: normalizePresence(dto.presence),
-    sortOrder: coerceNumber(dto.sortOrder) ?? 0,
+    sortOrder: mapRequiredFiniteInteger(dto.sortOrder, "preferences.sortOrder", {
+      min: 0,
+    }),
   };
 }
 
@@ -309,11 +390,13 @@ function mapEquipmentEntry(dto: EquipmentResponseDto): EquipmentEntry {
     entryId: dto.entryId,
     stableCode: dto.stableCode,
     customName: dto.customName ?? null,
-    capacity: coerceNumber(dto.capacity),
+    capacity: mapOptionalFiniteNumber(dto.capacity, "equipment.capacity"),
     capacityUnit: dto.capacityUnit ?? null,
     constraintNote: dto.constraintNote ?? null,
     isActive: dto.isActive,
-    sortOrder: coerceNumber(dto.sortOrder) ?? 0,
+    sortOrder: mapRequiredFiniteInteger(dto.sortOrder, "equipment.sortOrder", {
+      min: 0,
+    }),
   };
 }
 
@@ -336,12 +419,28 @@ export function mapCompleteness(
 ): ProfileCompleteness {
   const sectionCounts: Record<string, number> = {};
   for (const [key, value] of Object.entries(dto.sectionCounts)) {
-    sectionCounts[key] = coerceNumber(value) ?? 0;
+    sectionCounts[key] = mapRequiredFiniteInteger(
+      value,
+      `completeness.sectionCounts.${key}`,
+      { min: 0 },
+    );
   }
   return {
-    percentComplete: coerceNumber(dto.percentComplete) ?? 0,
-    completedSections: coerceNumber(dto.completedSections) ?? 0,
-    totalSections: coerceNumber(dto.totalSections) ?? 0,
+    percentComplete: mapRequiredFiniteInteger(
+      dto.percentComplete,
+      "completeness.percentComplete",
+      { min: 0, max: 100 },
+    ),
+    completedSections: mapRequiredFiniteInteger(
+      dto.completedSections,
+      "completeness.completedSections",
+      { min: 0 },
+    ),
+    totalSections: mapRequiredFiniteInteger(
+      dto.totalSections,
+      "completeness.totalSections",
+      { min: 0 },
+    ),
     sectionCounts,
     adultDeclarationState: dto.adultDeclarationState,
     profileExists: dto.profileExists,

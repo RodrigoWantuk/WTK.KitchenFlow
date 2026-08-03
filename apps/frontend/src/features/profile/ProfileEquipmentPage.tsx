@@ -35,6 +35,7 @@ interface DraftItem {
 }
 
 interface DraftItemErrors {
+  stableCode?: string;
   customName?: string;
   capacity?: string;
   capacityUnit?: string;
@@ -211,15 +212,29 @@ export function ProfileEquipmentPage() {
     ([key, fieldErrors]) =>
       (Object.entries(fieldErrors) as [keyof DraftItemErrors, string][])
         .filter(([field]) => field !== "duplicateCode")
-        .map(([field, message]) => ({
-          id: `profile-equipment-${field}-${key}`,
-          label: `${resolveLabel(
+        .map(([field, message]) => {
+          const item = items.find((candidate) => candidate.key === key);
+          const label = resolveLabel(
             locale,
             "equipment",
-            items.find((item) => item.key === key)?.stableCode ?? "",
-          )} — ${t(`profile.equipment.${field === "customName" ? "customNamePlaceholder" : field}` as never)}`,
-          message,
-        })),
+            item?.stableCode ?? "",
+          );
+          const fieldLabel =
+            field === "stableCode"
+              ? t("profile.equipment.stableCodeInvalid")
+              : t(
+                  `profile.equipment.${field === "customName" ? "customNamePlaceholder" : field}` as never,
+                );
+
+          return {
+            id:
+              field === "stableCode"
+                ? `profile-equipment-entry-${key}`
+                : `profile-equipment-${field}-${key}`,
+            label: `${label} — ${fieldLabel}`,
+            message,
+          };
+        }),
   );
   useFocusFirstFieldError(errorItems);
 
@@ -452,6 +467,8 @@ export function ProfileEquipmentPage() {
           return (
             <li
               key={item.key}
+              id={`profile-equipment-entry-${item.key}`}
+              tabIndex={-1}
               data-testid={`profile-equipment-entry-${item.key}`}
               className="space-y-2 rounded-lg border border-border p-3"
             >
@@ -500,9 +517,22 @@ export function ProfileEquipmentPage() {
                   {fieldErrors.duplicateCode}
                 </p>
               )}
+              {fieldErrors.stableCode && (
+                <p role="alert" className="text-xs text-destructive">
+                  {fieldErrors.stableCode}
+                </p>
+              )}
               <div className="flex flex-wrap items-center gap-2">
                 {isCustom && (
                   <div className="space-y-1">
+                    <label
+                      htmlFor={`profile-equipment-customName-${item.key}`}
+                      className="text-xs"
+                    >
+                      {t("profile.equipment.field.customName", {
+                        name: primaryLabel,
+                      })}
+                    </label>
                     <Input
                       id={`profile-equipment-customName-${item.key}`}
                       data-testid={`profile-equipment-custom-name-${item.key}`}
@@ -532,8 +562,15 @@ export function ProfileEquipmentPage() {
                     )}
                   </div>
                 )}
-                <label className="flex items-center gap-1 text-xs">
-                  {t("profile.equipment.capacity")}
+                <div className="space-y-1">
+                  <label
+                    htmlFor={`profile-equipment-capacity-${item.key}`}
+                    className="block text-xs"
+                  >
+                    {t("profile.equipment.field.capacity", {
+                      name: primaryLabel,
+                    })}
+                  </label>
                   <Input
                     id={`profile-equipment-capacity-${item.key}`}
                     data-testid={`profile-equipment-capacity-${item.key}`}
@@ -552,9 +589,16 @@ export function ProfileEquipmentPage() {
                       updateItem(item.key, { capacity: event.target.value })
                     }
                   />
-                </label>
-                <label className="flex items-center gap-1 text-xs">
-                  {t("profile.equipment.capacityUnit")}
+                </div>
+                <div className="space-y-1">
+                  <label
+                    htmlFor={`profile-equipment-capacityUnit-${item.key}`}
+                    className="block text-xs"
+                  >
+                    {t("profile.equipment.field.capacityUnit", {
+                      name: primaryLabel,
+                    })}
+                  </label>
                   <Input
                     id={`profile-equipment-capacityUnit-${item.key}`}
                     data-testid={`profile-equipment-capacity-unit-${item.key}`}
@@ -574,27 +618,37 @@ export function ProfileEquipmentPage() {
                       })
                     }
                   />
-                </label>
-                <Input
-                  id={`profile-equipment-constraintNote-${item.key}`}
-                  data-testid={`profile-equipment-constraint-${item.key}`}
-                  className="max-w-xs"
-                  maxLength={CONSTRAINT_NOTE_MAX_LENGTH}
-                  placeholder={t("profile.equipment.constraintNote")}
-                  value={item.constraintNote}
-                  disabled={!canMutate}
-                  aria-invalid={fieldErrors.constraintNote ? true : undefined}
-                  aria-describedby={
-                    fieldErrors.constraintNote
-                      ? `profile-equipment-constraintNote-error-${item.key}`
-                      : undefined
-                  }
-                  onChange={(event) =>
-                    updateItem(item.key, {
-                      constraintNote: event.target.value,
-                    })
-                  }
-                />
+                </div>
+                <div className="space-y-1">
+                  <label
+                    htmlFor={`profile-equipment-constraintNote-${item.key}`}
+                    className="block text-xs"
+                  >
+                    {t("profile.equipment.field.constraintNote", {
+                      name: primaryLabel,
+                    })}
+                  </label>
+                  <Input
+                    id={`profile-equipment-constraintNote-${item.key}`}
+                    data-testid={`profile-equipment-constraint-${item.key}`}
+                    className="max-w-xs"
+                    maxLength={CONSTRAINT_NOTE_MAX_LENGTH}
+                    placeholder={t("profile.equipment.constraintNote")}
+                    value={item.constraintNote}
+                    disabled={!canMutate}
+                    aria-invalid={fieldErrors.constraintNote ? true : undefined}
+                    aria-describedby={
+                      fieldErrors.constraintNote
+                        ? `profile-equipment-constraintNote-error-${item.key}`
+                        : undefined
+                    }
+                    onChange={(event) =>
+                      updateItem(item.key, {
+                        constraintNote: event.target.value,
+                      })
+                    }
+                  />
+                </div>
               </div>
               {(fieldErrors.capacity ||
                 fieldErrors.capacityUnit ||
@@ -638,21 +692,29 @@ export function ProfileEquipmentPage() {
         className="flex flex-wrap items-center gap-2 rounded-xl border border-border p-4"
         data-testid="profile-equipment-add-catalog"
       >
-        <select
-          id="profile-equipment-catalog-select"
-          data-testid="profile-equipment-catalog-select"
-          className="flex h-9 rounded-md border border-input bg-transparent px-3 text-sm"
-          value={pendingCode}
-          disabled={!canMutate}
-          onChange={(event) => setPendingCode(event.target.value)}
-        >
-          <option value="">{t("profile.equipment.addFromCatalog")}</option>
-          {catalogOptions.map((code) => (
-            <option key={code} value={code}>
-              {resolveLabel(locale, "equipment", code)}
-            </option>
-          ))}
-        </select>
+        <div className="space-y-1">
+          <label
+            htmlFor="profile-equipment-catalog-select"
+            className="block text-xs"
+          >
+            {t("profile.equipment.catalogSelect")}
+          </label>
+          <select
+            id="profile-equipment-catalog-select"
+            data-testid="profile-equipment-catalog-select"
+            className="flex h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+            value={pendingCode}
+            disabled={!canMutate}
+            onChange={(event) => setPendingCode(event.target.value)}
+          >
+            <option value="">{t("profile.equipment.addFromCatalog")}</option>
+            {catalogOptions.map((code) => (
+              <option key={code} value={code}>
+                {resolveLabel(locale, "equipment", code)}
+              </option>
+            ))}
+          </select>
+        </div>
         <Button
           type="button"
           variant="secondary"
@@ -662,15 +724,24 @@ export function ProfileEquipmentPage() {
         >
           {t("profile.actions.add")}
         </Button>
-        <Input
-          data-testid="profile-equipment-custom-input"
-          className="max-w-xs"
-          maxLength={CUSTOM_NAME_MAX_LENGTH}
-          placeholder={t("profile.equipment.customNamePlaceholder")}
-          value={customName}
-          disabled={!canMutate}
-          onChange={(event) => setCustomName(event.target.value)}
-        />
+        <div className="space-y-1">
+          <label
+            htmlFor="profile-equipment-custom-input"
+            className="block text-xs"
+          >
+            {t("profile.equipment.newCustomName")}
+          </label>
+          <Input
+            id="profile-equipment-custom-input"
+            data-testid="profile-equipment-custom-input"
+            className="max-w-xs"
+            maxLength={CUSTOM_NAME_MAX_LENGTH}
+            placeholder={t("profile.equipment.customNamePlaceholder")}
+            value={customName}
+            disabled={!canMutate}
+            onChange={(event) => setCustomName(event.target.value)}
+          />
+        </div>
         <Button
           type="button"
           variant="secondary"

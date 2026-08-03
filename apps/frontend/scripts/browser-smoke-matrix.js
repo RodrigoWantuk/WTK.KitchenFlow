@@ -1209,6 +1209,68 @@ async function run() {
           "primary Inventory navigation discarded the draft and left profile",
         );
 
+        // Dirty logout Stay / Discard (pointer)
+        await page.goto(PRODUCTION_BASE + "/app/perfil/dados", {
+          waitUntil: "domcontentloaded",
+        });
+        await page.getByTestId("profile-data").waitFor({ timeout: 15000 });
+        await page.getByTestId("profile-data-input-displayName").fill("");
+        await page
+          .getByTestId("profile-data-input-displayName")
+          .pressSequentially("Ada Logout Stay", { delay: 5 });
+        await page.getByTestId("production-logout").click();
+        await page
+          .getByTestId("profile-unsaved-dialog")
+          .waitFor({ timeout: 10000 });
+        await page.getByTestId("profile-unsaved-stay").click();
+        await page.getByTestId("profile-data").waitFor({ timeout: 5000 });
+        if (
+          !(await page
+            .getByTestId("profile-data-input-displayName")
+            .inputValue())
+            .includes("Ada Logout Stay")
+        ) {
+          fail(
+            "production profile intercepted: dirty logout Stay",
+            "draft was not preserved after Stay",
+          );
+        }
+        record(
+          "production profile intercepted: dirty logout Stay",
+          "Passed",
+          "Logout opened confirmation; Stay kept Profile Data draft",
+        );
+
+        // Keyboard dirty logout Stay (still dirty)
+        await page.getByTestId("production-logout").focus();
+        await page.keyboard.press("Enter");
+        await page
+          .getByTestId("profile-unsaved-dialog")
+          .waitFor({ timeout: 10000 });
+        await page.getByTestId("profile-unsaved-stay").focus();
+        await page.keyboard.press("Enter");
+        await page.getByTestId("profile-data").waitFor({ timeout: 5000 });
+        record(
+          "production profile intercepted: dirty logout keyboard Stay",
+          "Passed",
+          "Keyboard Logout+Stay preserved draft",
+        );
+
+        await page.getByTestId("production-logout").click();
+        await page
+          .getByTestId("profile-unsaved-dialog")
+          .waitFor({ timeout: 10000 });
+        await page.getByTestId("profile-unsaved-discard").click();
+        await page
+          .getByTestId("profile-unsaved-dialog")
+          .waitFor({ state: "hidden", timeout: 5000 })
+          .catch(() => undefined);
+        record(
+          "production profile intercepted: dirty logout Discard",
+          "Passed",
+          "Logout Discard confirmed once without reopen loop",
+        );
+
         await page.goto(PRODUCTION_BASE + "/app/perfil/dados", {
           waitUntil: "domcontentloaded",
         });

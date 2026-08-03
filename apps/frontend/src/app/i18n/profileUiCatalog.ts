@@ -201,6 +201,18 @@ export const REQUIRED_PROFILE_I18N_KEYS = [
   "profile.warning.sessionRefreshFailed",
   "profile.warning.sessionRefreshFailedDetail",
   "profile.actions.retrySession",
+  "profile.equipment.stableCodeInvalid",
+  "profile.equipment.field.customName",
+  "profile.equipment.field.capacity",
+  "profile.equipment.field.capacityUnit",
+  "profile.equipment.field.constraintNote",
+  "profile.equipment.catalogSelect",
+  "profile.equipment.newCustomName",
+  "profile.preferences.catalogSelect",
+  "profile.preferences.catalogNote",
+  "profile.preferences.customLabel",
+  "profile.preferences.entryNote",
+  "profile.preferences.entryCustomName",
 ] as const;
 
 export type ProfileI18nKey = (typeof REQUIRED_PROFILE_I18N_KEYS)[number];
@@ -244,6 +256,19 @@ const en: Record<ProfileI18nKey, string> = {
   "profile.warning.sessionRefreshFailedDetail":
     "Display name, language, timezone, measurement system, completeness, or adult declaration shown in the shell may be temporarily stale.",
   "profile.actions.retrySession": "Retry session refresh",
+  "profile.equipment.stableCodeInvalid":
+    "This equipment identifier is invalid.",
+  "profile.equipment.field.customName": "Custom name — {{name}}",
+  "profile.equipment.field.capacity": "Capacity — {{name}}",
+  "profile.equipment.field.capacityUnit": "Capacity unit — {{name}}",
+  "profile.equipment.field.constraintNote": "Constraint note — {{name}}",
+  "profile.equipment.catalogSelect": "Add equipment from catalog",
+  "profile.equipment.newCustomName": "New custom equipment name",
+  "profile.preferences.catalogSelect": "Add from catalog",
+  "profile.preferences.catalogNote": "Optional note for catalog entry",
+  "profile.preferences.customLabel": "Custom entry label",
+  "profile.preferences.entryNote": "Note — {{name}}",
+  "profile.preferences.entryCustomName": "Custom name — {{name}}",
   "profile.overview.title": "Your profile",
   "profile.overview.subtitle":
     "Household, cooking preferences, restrictions, and equipment that shape your meals.",
@@ -485,6 +510,19 @@ const ptBR: Record<ProfileI18nKey, string> = {
   "profile.warning.sessionRefreshFailedDetail":
     "Nome de exibição, idioma, fuso, sistema de medidas, completude ou declaração adulta no shell podem estar temporariamente desatualizados.",
   "profile.actions.retrySession": "Tentar atualizar a sessão",
+  "profile.equipment.stableCodeInvalid":
+    "Este identificador de equipamento é inválido.",
+  "profile.equipment.field.customName": "Nome personalizado — {{name}}",
+  "profile.equipment.field.capacity": "Capacidade — {{name}}",
+  "profile.equipment.field.capacityUnit": "Unidade de capacidade — {{name}}",
+  "profile.equipment.field.constraintNote": "Nota de restrição — {{name}}",
+  "profile.equipment.catalogSelect": "Adicionar equipamento do catálogo",
+  "profile.equipment.newCustomName": "Nome do novo equipamento personalizado",
+  "profile.preferences.catalogSelect": "Adicionar do catálogo",
+  "profile.preferences.catalogNote": "Nota opcional para entrada do catálogo",
+  "profile.preferences.customLabel": "Rótulo da entrada personalizada",
+  "profile.preferences.entryNote": "Nota — {{name}}",
+  "profile.preferences.entryCustomName": "Nome personalizado — {{name}}",
   "profile.overview.title": "Seu perfil",
   "profile.overview.subtitle":
     "Dados de família, preferências de cozinha, restrições e equipamentos que moldam suas refeições.",
@@ -733,6 +771,21 @@ const es: Record<ProfileI18nKey, string> = {
   "profile.warning.sessionRefreshFailedDetail":
     "El nombre, idioma, zona horaria, sistema de medidas, completitud o declaración adulta en el shell pueden estar temporalmente desactualizados.",
   "profile.actions.retrySession": "Reintentar actualización de sesión",
+  "profile.equipment.stableCodeInvalid":
+    "Este identificador de equipamiento no es válido.",
+  "profile.equipment.field.customName": "Nombre personalizado — {{name}}",
+  "profile.equipment.field.capacity": "Capacidad — {{name}}",
+  "profile.equipment.field.capacityUnit": "Unidad de capacidad — {{name}}",
+  "profile.equipment.field.constraintNote": "Nota de restricción — {{name}}",
+  "profile.equipment.catalogSelect": "Agregar equipamiento del catálogo",
+  "profile.equipment.newCustomName":
+    "Nombre del nuevo equipamiento personalizado",
+  "profile.preferences.catalogSelect": "Agregar del catálogo",
+  "profile.preferences.catalogNote":
+    "Nota opcional para la entrada del catálogo",
+  "profile.preferences.customLabel": "Etiqueta de la entrada personalizada",
+  "profile.preferences.entryNote": "Nota — {{name}}",
+  "profile.preferences.entryCustomName": "Nombre personalizado — {{name}}",
   "profile.overview.title": "Tu perfil",
   "profile.overview.subtitle":
     "Datos del hogar, preferencias de cocina, restricciones y equipamiento que moldean tus comidas.",

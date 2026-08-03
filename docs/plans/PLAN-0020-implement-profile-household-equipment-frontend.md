@@ -81,15 +81,21 @@ Against review baseline `a50152c`:
 
 ## Execution state
 
-- **Current checkpoint:** Reopened **In Progress** after PLAN-0024 Fail. Remediation of F-0024-01…05 underway on PR #35.
+- **Current checkpoint:** Functional remediations for F-0024-01…05 implemented with regression tests and dirty-logout browser smoke coverage; local gates pending before candidate publication.
 - **Failed SUT:** `5733bb4de957b53469a28bc60c472a90f0955907`
 - **Evidence:** PR #36 @ `b549a97ff91acc0236121556e8edc81fcea82156`
-- **Exact next action:** Implement fail-closed numeric mapping, protected logout, equipment error focus, accessible names, and strict custom stable codes; then gates + PLAN-0025.
-- **Blockers:** Independent validation Fail (#37) until remediations land and PLAN-0025 retests.
-- **Working tree state:** Docs reopen commit pending; product remediations next.
+- **Exact next action:** Run full frontend gates; push; await exact-head Frontend + PLAN-0005; create PLAN-0025; set Validating.
+- **Blockers:** #37 pending remediation CI + independent retest.
+- **Working tree state:** Remediation code ready to commit.
 
 
 ## Progress log
+
+### 2026-08-03T22:20:00Z — Remediate F-0024-01…05
+
+- **Checkpoint:** Fail-closed required numerics; logout via unsaved coordinator; equipment stableCode entry focus; accessible names; exact custom UUID codes; regression + smoke dirty-logout scenarios.
+- **Next action:** Full local gates and publish candidate.
+- **Blockers or handoff notes:** Keep draft; do not close #37.
 
 ### 2026-08-03T22:02:03Z — Reopen after PLAN-0024 Fail
 

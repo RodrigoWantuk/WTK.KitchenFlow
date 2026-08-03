@@ -317,4 +317,46 @@ describe("ProfilePreferencesPage", () => {
       screen.queryByTestId("profile-preferences-sensitive-confirm"),
     ).not.toBeInTheDocument();
   });
+
+  it("provides visible, contextual names for preference controls", async () => {
+    const repo = createMockProfileRepo({
+      getPreferences: jest.fn(async () =>
+        createEmptyPreferenceSnapshot({
+          entries: [
+            {
+              entryId: "entry-spicy",
+              category: "Preference",
+              stableCode: "spicy_food",
+              note: "Keep it mild",
+              presence: "confirmed",
+              sortOrder: 0,
+            },
+          ],
+        }),
+      ),
+    });
+
+    render(
+      renderProfileTree({
+        repository: repo,
+        children: <ProfilePreferencesPage />,
+      }),
+    );
+    await screen.findByTestId("profile-preferences");
+
+    expect(
+      screen.getByRole("combobox", { name: /add from catalog/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", {
+        name: /optional note for catalog entry/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /custom entry label/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /^note — /i }),
+    ).toBeInTheDocument();
+  });
 });

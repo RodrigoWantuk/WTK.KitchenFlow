@@ -1,5 +1,11 @@
 import type { components } from "@kitchenflow/api-client";
-import { mapProfilePatchToRequest, mapProfileResponse } from "./mapProfile";
+import {
+  mapCompleteness,
+  mapEquipmentCollection,
+  mapPreferencesCollection,
+  mapProfilePatchToRequest,
+  mapProfileResponse,
+} from "./mapProfile";
 import {
   ProfileApiError,
   type ProfileFieldMutation,
@@ -187,6 +193,173 @@ describe("mapProfile — mutation durability (write side)", () => {
 
     expect(() =>
       mapProfilePatchToRequest({ defaultAdultCount: untrusted }),
+    ).toThrow(ProfileApiError);
+  });
+});
+
+describe("mapProfile — required and optional numeric fail-closed mapping", () => {
+  it("accepts valid zero and positive required integers", () => {
+    expect(
+      mapCompleteness({
+        percentComplete: 0,
+        completedSections: 0,
+        totalSections: 5,
+        sectionCounts: { household: 0 },
+        adultDeclarationState: "NotDeclared",
+        profileExists: true,
+      }).percentComplete,
+    ).toBe(0);
+    expect(
+      mapPreferencesCollection(
+        {
+          version: "v1",
+          entries: [
+            {
+              entryId: "22222222-2222-2222-2222-222222222222",
+              category: "Preference",
+              stableCode: "pref_demo",
+              note: null,
+              presence: "confirmed",
+              sortOrder: "0",
+            },
+          ],
+        },
+        '"v1"',
+      ).entries[0].sortOrder,
+    ).toBe(0);
+  });
+
+  it.each([
+    ["null", null],
+    ["undefined", undefined],
+    ["empty string", ""],
+    ["whitespace", "  "],
+    ["NaN", Number.NaN],
+    ["Infinity", Number.POSITIVE_INFINITY],
+    ["fractional", 1.5],
+    ["non-numeric string", "abc"],
+  ])(
+    "fails closed when completeness.percentComplete is %s",
+    (_label, raw) => {
+      expect(() =>
+        mapCompleteness({
+          percentComplete: raw as number,
+          completedSections: 1,
+          totalSections: 5,
+          sectionCounts: {},
+          adultDeclarationState: "NotDeclared",
+          profileExists: true,
+        }),
+      ).toThrow(ProfileApiError);
+    },
+  );
+
+  it("fails closed when completeness.percentComplete is out of 0..100", () => {
+    expect(() =>
+      mapCompleteness({
+        percentComplete: 101,
+        completedSections: 1,
+        totalSections: 5,
+        sectionCounts: {},
+        adultDeclarationState: "NotDeclared",
+        profileExists: true,
+      }),
+    ).toThrow(ProfileApiError);
+  });
+
+  it("fails closed on nullish or blank preference and equipment sortOrder", () => {
+    expect(() =>
+      mapPreferencesCollection(
+        {
+          version: "v1",
+          entries: [
+            {
+              entryId: "22222222-2222-2222-2222-222222222222",
+              category: "Preference",
+              stableCode: "pref_demo",
+              note: null,
+              presence: "confirmed",
+              sortOrder: null as unknown as number,
+            },
+          ],
+        },
+        '"v1"',
+      ),
+    ).toThrow(ProfileApiError);
+    expect(() =>
+      mapEquipmentCollection(
+        {
+          version: "v1",
+          entries: [
+            {
+              entryId: "33333333-3333-3333-3333-333333333333",
+              stableCode: "oven",
+              customName: null,
+              capacity: null,
+              capacityUnit: null,
+              constraintNote: null,
+              isActive: true,
+              sortOrder: "" as unknown as number,
+            },
+          ],
+        },
+        '"v1"',
+      ),
+    ).toThrow(ProfileApiError);
+  });
+
+  it("fails closed on malformed sectionCounts values", () => {
+    expect(() =>
+      mapCompleteness({
+        percentComplete: 20,
+        completedSections: 1,
+        totalSections: 5,
+        sectionCounts: { household: null as unknown as number },
+        adultDeclarationState: "NotDeclared",
+        profileExists: true,
+      }),
+    ).toThrow(ProfileApiError);
+  });
+
+  it("keeps optional capacity null and rejects a present malformed capacity", () => {
+    const ok = mapEquipmentCollection(
+      {
+        version: "v1",
+        entries: [
+          {
+            entryId: "33333333-3333-3333-3333-333333333333",
+            stableCode: "oven",
+            customName: null,
+            capacity: null,
+            capacityUnit: null,
+            constraintNote: null,
+            isActive: true,
+            sortOrder: 0,
+          },
+        ],
+      },
+      '"v1"',
+    );
+    expect(ok.entries[0].capacity).toBeNull();
+    expect(() =>
+      mapEquipmentCollection(
+        {
+          version: "v1",
+          entries: [
+            {
+              entryId: "33333333-3333-3333-3333-333333333333",
+              stableCode: "oven",
+              customName: null,
+              capacity: "" as unknown as number,
+              capacityUnit: null,
+              constraintNote: null,
+              isActive: true,
+              sortOrder: 0,
+            },
+          ],
+        },
+        '"v1"',
+      ),
     ).toThrow(ProfileApiError);
   });
 });

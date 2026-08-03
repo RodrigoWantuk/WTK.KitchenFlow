@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from "react";
+import { useCallback, useMemo, useRef, type ReactNode } from "react";
 import {
   createBrowserRouter,
   RouterProvider,
@@ -29,7 +29,10 @@ import { ProfileOverviewPage } from "@/features/profile/ProfileOverviewPage";
 import { ProfileDataPage } from "@/features/profile/ProfileDataPage";
 import { ProfilePreferencesPage } from "@/features/profile/ProfilePreferencesPage";
 import { ProfileEquipmentPage } from "@/features/profile/ProfileEquipmentPage";
-import { UnsavedChangesCoordinatorProvider } from "@/features/profile/UnsavedChangesCoordinator";
+import {
+  UnsavedChangesCoordinatorProvider,
+  useOptionalUnsavedChangesCoordinator,
+} from "@/features/profile/UnsavedChangesCoordinator";
 import { ProfileWorkspaceStatusBanner } from "@/features/profile/ProfileWorkspaceStatusBanner";
 
 function LocaleSwitcher() {
@@ -177,6 +180,25 @@ function PrimaryNav() {
 function ProductionAppShell({ children }: { children: ReactNode }) {
   const { t } = useProductionI18n();
   const { session, logout, isAuthenticated } = useSession();
+  const coordinator = useOptionalUnsavedChangesCoordinator();
+  const logoutInFlightRef = useRef(false);
+
+  const performLogout = useCallback(() => {
+    if (logoutInFlightRef.current) return;
+    logoutInFlightRef.current = true;
+    void Promise.resolve(logout()).finally(() => {
+      logoutInFlightRef.current = false;
+    });
+  }, [logout]);
+
+  const requestLogout = useCallback(() => {
+    if (coordinator) {
+      coordinator.requestNavigation(performLogout);
+      return;
+    }
+    performLogout();
+  }, [coordinator, performLogout]);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 px-6 py-4 backdrop-blur">
@@ -209,7 +231,7 @@ function ProductionAppShell({ children }: { children: ReactNode }) {
                   size="sm"
                   variant="secondary"
                   data-testid="production-logout"
-                  onClick={() => void logout()}
+                  onClick={requestLogout}
                 >
                   {t("access.logout")}
                 </Button>
