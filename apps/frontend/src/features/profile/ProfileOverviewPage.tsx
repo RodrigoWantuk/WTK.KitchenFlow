@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useProfileWorkspace } from "./ProfileProvider";
 import { useProductionI18n } from "@/app/i18n/ProductionI18nProvider";
-import { ProfileApiError } from "@/contracts/profile";
+import { describeProfileMutationError } from "./describeProfileMutationError";
 import { Button } from "@/components/ui/button";
 
 /** Backend `AdultDeclarationState` values this page renders distinct copy for. */
@@ -74,7 +74,7 @@ export function ProfileOverviewPage() {
     reload,
     adultPolicy,
     patchProfile,
-    isMutating,
+    canMutate,
     lastMutationError,
     clearMutationError,
   } = useProfileWorkspace();
@@ -134,13 +134,7 @@ export function ProfileOverviewPage() {
   const canDeclare = adultKind !== "declared" && adultPolicy.available;
 
   function describeDeclarationError(err: unknown): string {
-    if (err instanceof ProfileApiError) {
-      if (err.code === "precondition_failed")
-        return t("profile.error.precondition412");
-      if (err.code === "validation_failed")
-        return err.message || t("profile.error.validation");
-    }
-    return t("profile.error.save");
+    return describeProfileMutationError(err, t);
   }
 
   async function submitDeclaration(adultDeclared: boolean) {
@@ -324,7 +318,7 @@ export function ProfileOverviewPage() {
             <Button
               type="button"
               size="sm"
-              disabled={isMutating}
+              disabled={!canMutate}
               data-testid="profile-overview-adult-accept"
               onClick={() => void submitDeclaration(true)}
             >
@@ -334,7 +328,7 @@ export function ProfileOverviewPage() {
               type="button"
               size="sm"
               variant="secondary"
-              disabled={isMutating}
+              disabled={!canMutate}
               data-testid="profile-overview-adult-decline"
               onClick={() => void submitDeclaration(false)}
             >

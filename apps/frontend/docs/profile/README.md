@@ -43,8 +43,16 @@ Read-side progressive fields report a `durability` of `durable` (persisted) or `
 
 ## Unsaved changes and precondition-failed handling
 
-- `useUnsavedChangesGuard` (`src/features/profile/useUnsavedChangesGuard.tsx`) protects in-app navigation links (via `GuardedLink`), the browser back/forward buttons (via a `popstate`/`history.pushState` trap), and tab close/reload (`beforeunload`, which is the one path browsers force to use their own native prompt — everything else uses the accessible `UnsavedChangesDialog` Radix `AlertDialog` instead of `window.confirm`).
-- A `412 precondition_failed` on save (a concurrent edit elsewhere changed the aggregate) retains the user's in-progress draft rather than discarding it, and surfaces a server-value comparison so the user can decide how to reconcile before retrying.
+- `UnsavedChangesCoordinatorProvider` mounts on the `/app/perfil*` layout (data router via `createBrowserRouter` so `useBlocker` is available). Active editors register `{ isDirty, discard }`; shell brand/Home/Inventory/Profile links, in-profile Links, `navigate()`, and browser Back/Forward are blocked while dirty through one accessible Radix confirmation (`profile-unsaved-*` test ids). Pages do not need a special link component for ordinary same-tab navigation.
+- Modified clicks (Ctrl/Cmd/Shift/middle, `target=_blank`) are not intercepted: the new context opens and the original tab keeps its draft until save/cancel/confirm leave.
+- `beforeunload` still arms the browser-native prompt for tab close/reload (browsers forbid custom markup there).
+- A `412 precondition_failed` on save retains the user's in-progress draft and surfaces a server-value comparison where supported.
+
+## Post-save synchronization
+
+- `saveRefreshFailed`: mutation accepted, mandatory workspace reload did not reach `ready`. Banner (`role="status"`) states the save succeeded and asks the user to Reload before further edits; `canMutate` stays false; warning clears only after a successful reload (not when a reload attempt starts).
+- `sessionRefreshWarning`: mutation and workspace reload succeeded, but BFF session refresh failed. Separate banner with Retry; does not misreport the profile save; shell projections (display name, language, timezone, measurement, completeness, adult state) may be temporarily stale.
+- Pages disable mutation controls from shared `canMutate` (`ready` + workspace + !isMutating + !saveRefreshFailed). `workspace_not_ready` maps to localized actionable copy, not the generic save error.
 
 ## Architecture
 
@@ -55,7 +63,8 @@ Read-side progressive fields report a `durability` of `durable` (persisted) or `
 - Controlled/localized field control: `src/features/profile/ControlledFieldControl.tsx`
 - Progressive text/numeric field control: `src/features/profile/ProgressiveFieldControl.tsx`
 - Field-error summary/focus utilities: `src/features/profile/fieldErrors.tsx`
-- Unsaved-changes guard/dialog: `src/features/profile/useUnsavedChangesGuard.tsx`
+- Unsaved-changes guard/dialog: `src/features/profile/UnsavedChangesCoordinator.tsx` (+ dialog helper in `useUnsavedChangesGuard.tsx`)
+- Post-save banners: `src/features/profile/ProfileWorkspaceStatusBanner.tsx`
 - UI strings: `src/app/i18n/profileUiCatalog.ts`
 
 ## Provider route scope

@@ -1,8 +1,7 @@
 import { useMemo, type ReactNode } from "react";
 import {
-  BrowserRouter,
-  Routes,
-  Route,
+  createBrowserRouter,
+  RouterProvider,
   Navigate,
   Link,
   Outlet,
@@ -30,6 +29,8 @@ import { ProfileOverviewPage } from "@/features/profile/ProfileOverviewPage";
 import { ProfileDataPage } from "@/features/profile/ProfileDataPage";
 import { ProfilePreferencesPage } from "@/features/profile/ProfilePreferencesPage";
 import { ProfileEquipmentPage } from "@/features/profile/ProfileEquipmentPage";
+import { UnsavedChangesCoordinatorProvider } from "@/features/profile/UnsavedChangesCoordinator";
+import { ProfileWorkspaceStatusBanner } from "@/features/profile/ProfileWorkspaceStatusBanner";
 
 function LocaleSwitcher() {
   const { locale, locales, setLocale, t } = useProductionI18n();
@@ -181,7 +182,17 @@ function ProductionAppShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 px-6 py-4 backdrop-blur">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-4">
-            <Link to="/app/hoje" className="font-display text-xl">
+            {/*
+              Brand and primary nav use ordinary React Router Links. While a profile
+              editor is dirty, UnsavedChangesCoordinatorProvider's useBlocker intercepts
+              same-tab navigations (including these). Modified clicks open a new context
+              and leave the draft in the original tab.
+            */}
+            <Link
+              to="/app/hoje"
+              data-testid="production-brand-link"
+              className="font-display text-xl"
+            >
               {t("brand.name")}
             </Link>
             {isAuthenticated && <PrimaryNav />}
@@ -279,128 +290,136 @@ function ProfileScopedRoutes({ children }: { children: ReactNode }) {
   );
 }
 
-function ProductionAppRoutes() {
+function ProfileLayout() {
+  return (
+    <ProfileScopedRoutes>
+      <RequireAuth>
+        <UnsavedChangesCoordinatorProvider>
+          <ProductionAppShell>
+            <ProfileWorkspaceStatusBanner />
+            <Outlet />
+          </ProductionAppShell>
+        </UnsavedChangesCoordinatorProvider>
+      </RequireAuth>
+    </ProfileScopedRoutes>
+  );
+}
+
+function AppUnavailable() {
   const { t } = useProductionI18n();
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public: no SessionProvider — must not call /api/v1/session. */}
-        <Route path="/" element={<PublicEntryPage />} />
-        <Route
-          path="/acesso"
-          element={
-            <SessionScopedRoutes>
-              <ProductionAccess />
-            </SessionScopedRoutes>
-          }
-        />
-        <Route
-          path="/app/hoje"
-          element={
-            <SessionScopedRoutes>
-              <RequireAuth>
-                <ProductionAppShell>
-                  <HomeRoute />
-                </ProductionAppShell>
-              </RequireAuth>
-            </SessionScopedRoutes>
-          }
-        />
-        <Route
-          path="/app"
-          element={
-            <SessionScopedRoutes>
-              <RequireAuth>
-                <Navigate to="/app/hoje" replace />
-              </RequireAuth>
-            </SessionScopedRoutes>
-          }
-        />
-        <Route
-          path="/app/despensa"
-          element={
-            <SessionScopedRoutes>
-              <RequireAuth>
-                <ProductionAppShell>
-                  <ProductionInventoryList />
-                </ProductionAppShell>
-              </RequireAuth>
-            </SessionScopedRoutes>
-          }
-        />
-        <Route
-          path="/app/despensa/novo"
-          element={
-            <SessionScopedRoutes>
-              <RequireAuth>
-                <ProductionAppShell>
-                  <ProductionInventoryForm mode="create" />
-                </ProductionAppShell>
-              </RequireAuth>
-            </SessionScopedRoutes>
-          }
-        />
-        <Route
-          path="/app/despensa/:lotId/editar"
-          element={
-            <SessionScopedRoutes>
-              <RequireAuth>
-                <ProductionAppShell>
-                  <ProductionInventoryForm mode="edit" />
-                </ProductionAppShell>
-              </RequireAuth>
-            </SessionScopedRoutes>
-          }
-        />
-        <Route
-          path="/app/despensa/:lotId"
-          element={
-            <SessionScopedRoutes>
-              <RequireAuth>
-                <ProductionAppShell>
-                  <ProductionInventoryDetail />
-                </ProductionAppShell>
-              </RequireAuth>
-            </SessionScopedRoutes>
-          }
-        />
-        <Route
-          path="/app/perfil"
-          element={
-            <ProfileScopedRoutes>
-              <RequireAuth>
-                <ProductionAppShell>
-                  <Outlet />
-                </ProductionAppShell>
-              </RequireAuth>
-            </ProfileScopedRoutes>
-          }
-        >
-          <Route index element={<ProfileOverviewPage />} />
-          <Route path="dados" element={<ProfileDataPage />} />
-          <Route path="preferencias" element={<ProfilePreferencesPage />} />
-          <Route path="equipamentos" element={<ProfileEquipmentPage />} />
-        </Route>
-        <Route
-          path="/app/*"
-          element={
-            <SessionScopedRoutes>
-              <RequireAuth>
-                <ProductionAppShell>
-                  <FeatureUnavailable
-                    feature="app"
-                    title={t("feature.unavailable")}
-                    detail={t("app.unavailable.detail")}
-                  />
-                </ProductionAppShell>
-              </RequireAuth>
-            </SessionScopedRoutes>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <SessionScopedRoutes>
+      <RequireAuth>
+        <ProductionAppShell>
+          <FeatureUnavailable
+            feature="app"
+            title={t("feature.unavailable")}
+            detail={t("app.unavailable.detail")}
+          />
+        </ProductionAppShell>
+      </RequireAuth>
+    </SessionScopedRoutes>
   );
+}
+
+/**
+ * Data router so profile unsaved-change blocking can use `useBlocker` (not available
+ * under legacy `BrowserRouter`). Public `/` stays outside SessionProvider.
+ */
+function createProductionRouter() {
+  return createBrowserRouter([
+    { path: "/", element: <PublicEntryPage /> },
+    {
+      path: "/acesso",
+      element: (
+        <SessionScopedRoutes>
+          <ProductionAccess />
+        </SessionScopedRoutes>
+      ),
+    },
+    {
+      path: "/app/hoje",
+      element: (
+        <SessionScopedRoutes>
+          <RequireAuth>
+            <ProductionAppShell>
+              <HomeRoute />
+            </ProductionAppShell>
+          </RequireAuth>
+        </SessionScopedRoutes>
+      ),
+    },
+    {
+      path: "/app",
+      element: (
+        <SessionScopedRoutes>
+          <RequireAuth>
+            <Navigate to="/app/hoje" replace />
+          </RequireAuth>
+        </SessionScopedRoutes>
+      ),
+    },
+    {
+      path: "/app/despensa",
+      element: (
+        <SessionScopedRoutes>
+          <RequireAuth>
+            <ProductionAppShell>
+              <ProductionInventoryList />
+            </ProductionAppShell>
+          </RequireAuth>
+        </SessionScopedRoutes>
+      ),
+    },
+    {
+      path: "/app/despensa/novo",
+      element: (
+        <SessionScopedRoutes>
+          <RequireAuth>
+            <ProductionAppShell>
+              <ProductionInventoryForm mode="create" />
+            </ProductionAppShell>
+          </RequireAuth>
+        </SessionScopedRoutes>
+      ),
+    },
+    {
+      path: "/app/despensa/:lotId/editar",
+      element: (
+        <SessionScopedRoutes>
+          <RequireAuth>
+            <ProductionAppShell>
+              <ProductionInventoryForm mode="edit" />
+            </ProductionAppShell>
+          </RequireAuth>
+        </SessionScopedRoutes>
+      ),
+    },
+    {
+      path: "/app/despensa/:lotId",
+      element: (
+        <SessionScopedRoutes>
+          <RequireAuth>
+            <ProductionAppShell>
+              <ProductionInventoryDetail />
+            </ProductionAppShell>
+          </RequireAuth>
+        </SessionScopedRoutes>
+      ),
+    },
+    {
+      path: "/app/perfil",
+      element: <ProfileLayout />,
+      children: [
+        { index: true, element: <ProfileOverviewPage /> },
+        { path: "dados", element: <ProfileDataPage /> },
+        { path: "preferencias", element: <ProfilePreferencesPage /> },
+        { path: "equipamentos", element: <ProfileEquipmentPage /> },
+      ],
+    },
+    { path: "/app/*", element: <AppUnavailable /> },
+    { path: "*", element: <Navigate to="/" replace /> },
+  ]);
 }
 
 /**
@@ -411,10 +430,11 @@ function ProductionAppRoutes() {
 export default function ProductionApp() {
   // Compose once per mount so tests can stub globalThis.fetch before render.
   const runtime = useMemo(() => createProductionRuntime(), []);
+  const router = useMemo(() => createProductionRouter(), []);
   return (
     <RuntimeProvider runtime={runtime}>
       <ProductionI18nProvider>
-        <ProductionAppRoutes />
+        <RouterProvider router={router} />
       </ProductionI18nProvider>
     </RuntimeProvider>
   );

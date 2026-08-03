@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { createMemoryRouter, RouterProvider, Outlet } from "react-router-dom";
 import { ProfileProvider } from "./ProfileProvider";
+import { UnsavedChangesCoordinatorProvider } from "./UnsavedChangesCoordinator";
 import {
   createUnavailableAdultDeclarationPolicy,
   type AdultDeclarationPolicy,
@@ -201,18 +202,39 @@ export function renderProfileTree({
   initialPath?: string;
   children: ReactNode;
 }) {
+  const router = createMemoryRouter(
+    [
+      {
+        path: "/app/perfil",
+        element: (
+          <UnsavedChangesCoordinatorProvider>
+            <Outlet />
+          </UnsavedChangesCoordinatorProvider>
+        ),
+        children: [
+          { index: true, element: children },
+          { path: "dados", element: children },
+          { path: "preferencias", element: children },
+          { path: "equipamentos", element: children },
+        ],
+      },
+      {
+        path: "/app/hoje",
+        element: <div data-testid="nav-home-destination">home</div>,
+      },
+      {
+        path: "/app/despensa",
+        element: <div data-testid="nav-inventory-destination">inventory</div>,
+      },
+    ],
+    { initialEntries: [initialPath] },
+  );
+
   return (
     <ProductionI18nProvider initialLocale="en">
       <SessionProvider adapter={sessionAdapter}>
         <ProfileProvider repository={repository} adultPolicy={adultPolicy}>
-          <MemoryRouter initialEntries={[initialPath]}>
-            <Routes>
-              <Route path="/app/perfil" element={children} />
-              <Route path="/app/perfil/dados" element={children} />
-              <Route path="/app/perfil/preferencias" element={children} />
-              <Route path="/app/perfil/equipamentos" element={children} />
-            </Routes>
-          </MemoryRouter>
+          <RouterProvider router={router} />
         </ProfileProvider>
       </SessionProvider>
     </ProductionI18nProvider>

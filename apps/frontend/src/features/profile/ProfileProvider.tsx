@@ -93,13 +93,28 @@ export interface ProfileWorkspaceContextValue {
    * a fresh version conflict, or a session problem). The mutation itself must not be
    * reported as failed in this case — the save succeeded — but the provider cannot
    * guarantee the version/`ETag` it holds is current, so further mutations are
-   * rejected with `workspace_not_ready` until an explicit {@link reload} clears this
-   * flag (successful or not: `reload()` always clears it as a fresh attempt).
+   * rejected with `workspace_not_ready` until an explicit {@link reload} produces a
+   * ready workspace. Starting a reload does **not** clear this flag; only success does.
    */
   saveRefreshFailed: boolean;
+  /**
+   * True when the profile mutation and workspace reload succeeded but refreshing the
+   * BFF session projection failed. Profile data was saved; shell-facing fields
+   * (display name, language, timezone, measurement, completeness, adult state) may be
+   * temporarily stale until {@link retrySessionRefresh} succeeds.
+   */
+  sessionRefreshWarning: boolean;
+  /**
+   * Shared mutation-readiness for pages: ready consistent workspace, not mutating,
+   * and not stuck after a save-without-refresh. The provider still enforces this
+   * authoritatively inside `runMutation`.
+   */
+  canMutate: boolean;
   adultPolicy: AdultDeclarationPolicy;
   /** Re-fetches profile, preferences, equipment, and completeness as one unit. */
   reload: () => Promise<void>;
+  /** Retries session projection refresh after {@link sessionRefreshWarning}. */
+  retrySessionRefresh: () => Promise<void>;
   patchProfile: (patch: ProfilePatch) => Promise<ProfileSnapshot>;
   mutatePreferences: (
     commands: PreferenceCommand[],
@@ -215,7 +230,7 @@ export function ProfileProvider({
   adultPolicy: AdultDeclarationPolicy;
   children: ReactNode;
 }) {
-  const { session, refresh: refreshSession } = useSession();
+  const { session, refreshSoft: refreshSessionSoft } = useSession();
   const [status, setStatus] = useState<ProfileWorkspaceStatus>("idle");
   const [workspace, setWorkspace] = useState<ProfileWorkspace | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -223,6 +238,7 @@ export function ProfileProvider({
   const [lastMutationError, setLastMutationError] =
     useState<ProfileApiError | null>(null);
   const [saveRefreshFailed, setSaveRefreshFailed] = useState(false);
+  const [sessionRefreshWarning, setSessionRefreshWarning] = useState(false);
 
   const generationRef = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
@@ -240,9 +256,9 @@ export function ProfileProvider({
    * post-mutation resync in `runMutation`) can react without this function ever
    * throwing.
    *
-   * - `mode: "initial"` (mount, or an explicit `reload()`): resets `error` and clears
-   *   `saveRefreshFailed` up front, since an explicit reload is the documented way to
-   *   recover from a prior stuck state.
+   * - `mode: "initial"` (mount, or an explicit `reload()`): resets `error` up front.
+   *   Does **not** clear `saveRefreshFailed` until the load succeeds — a failed retry
+   *   must keep the saved-but-not-refreshed warning visible.
    * - `mode: "resync"` (only called internally, right after a mutation succeeds):
    *   deliberately leaves the previous workspace/error in place while the fetch is in
    *   flight (status still flows through `loading`) so pages do not flash a blank
@@ -259,7 +275,6 @@ export function ProfileProvider({
       setStatus("loading");
       if (mode === "initial") {
         setError(null);
-        setSaveRefreshFailed(false);
       }
       try {
         let next = await fetchWorkspaceOnce(repository, controller.signal);
@@ -273,6 +288,7 @@ export function ProfileProvider({
         if (isWorkspaceConsistent(next)) {
           setWorkspace(next);
           setStatus("ready");
+          setSaveRefreshFailed(false);
           return true;
         }
         // Still inconsistent after one retry: never expose the racy snapshot as the
@@ -324,8 +340,19 @@ export function ProfileProvider({
     setWorkspace(null);
     setError(null);
     setSaveRefreshFailed(false);
+    // Keep `sessionRefreshWarning` when the BFF returns `unavailable` after a
+    // successful profile save — that is how the warning is detected. Clear it on
+    // explicit sign-out / expiry so a later login starts clean.
+    if (session.status === "signedOut" || session.status === "expired") {
+      setSessionRefreshWarning(false);
+    }
     return undefined;
   }, [session.status, load]);
+
+  const retrySessionRefresh = useCallback(async () => {
+    const result = await refreshSessionSoft();
+    setSessionRefreshWarning(!result.ok);
+  }, [refreshSessionSoft]);
 
   const runMutation = useCallback(
     <T,>(fn: (csrfToken: string) => Promise<T>): Promise<T> => {
@@ -372,12 +399,16 @@ export function ProfileProvider({
           // once `load` moves status away from `ready`) until an explicit reload.
           const refreshed = await load("resync");
           setSaveRefreshFailed(!refreshed);
-          try {
-            await refreshSession();
-          } catch {
-            // Session refresh (display name/locale/completeness mirrored on the
-            // session) is best-effort and independent of the profile save result;
-            // its failure must not be reported as a profile mutation failure either.
+          if (refreshed) {
+            try {
+              const result = await refreshSessionSoft();
+              // Soft refresh preserves an authenticated shell when the BFF returns
+              // unavailable/signedOut transiently, and reports ok:false so we can
+              // warn without ejecting the user from profile routes.
+              setSessionRefreshWarning(!result.ok);
+            } catch {
+              setSessionRefreshWarning(true);
+            }
           }
           return result;
         } catch (err) {
@@ -406,7 +437,7 @@ export function ProfileProvider({
       );
       return chained;
     },
-    [session.csrfToken, load, refreshSession],
+    [session.csrfToken, load, refreshSessionSoft],
   );
 
   const patchProfile = useCallback(
@@ -444,6 +475,12 @@ export function ProfileProvider({
 
   const clearMutationError = useCallback(() => setLastMutationError(null), []);
 
+  const canMutate =
+    status === "ready" &&
+    workspace !== null &&
+    !isMutating &&
+    !saveRefreshFailed;
+
   const value = useMemo<ProfileWorkspaceContextValue>(
     () => ({
       status,
@@ -453,8 +490,11 @@ export function ProfileProvider({
       lastMutationError,
       clearMutationError,
       saveRefreshFailed,
+      sessionRefreshWarning,
+      canMutate,
       adultPolicy,
       reload,
+      retrySessionRefresh,
       patchProfile,
       mutatePreferences,
       replaceEquipment,
@@ -467,8 +507,11 @@ export function ProfileProvider({
       lastMutationError,
       clearMutationError,
       saveRefreshFailed,
+      sessionRefreshWarning,
+      canMutate,
       adultPolicy,
       reload,
+      retrySessionRefresh,
       patchProfile,
       mutatePreferences,
       replaceEquipment,

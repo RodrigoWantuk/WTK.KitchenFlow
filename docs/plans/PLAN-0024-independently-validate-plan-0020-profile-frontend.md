@@ -1,17 +1,17 @@
 # PLAN-0024: Independently Validate PLAN-0020 Profile Frontend
 
-- **Status:** Ready
+- **Status:** Draft
 - **Type:** Testing
 - **Priority:** High
 - **Owner:** Unassigned independent testing agent
 - **Created:** 2026-08-03
-- **Last updated:** 2026-08-03T02:20:00Z
+- **Last updated:** 2026-08-03T03:00:00Z
 - **Branch:** `agent/plan-0024-validate-plan-0020-profile` (when claimed)
 - **Pull request:** Not opened
-- **System under test:** Draft [PR #35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35) / `agent/plan-0020-profile-frontend` @ `f59606e3958d7db71cd6c7ff900d41111160c39c`
+- **System under test:** Draft [PR #35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35) / `agent/plan-0020-profile-frontend` — **unpinned** until residual remediation candidate is finalized (prior pin `f59606e` superseded)
 - **Related implementation plan:** [PLAN-0020](PLAN-0020-implement-profile-household-equipment-frontend.md)
 - **Related plans:** PLAN-0012 (backend), PLAN-0016 (session/inventory frontend), PLAN-0005 (inventory validation baseline)
-- **Dependencies:** PLAN-0020 remediation candidate green (Frontend `30778578106`, PLAN-0005 `30778578095`)
+- **Dependencies:** PLAN-0020 residual remediation candidate green (exact-head Frontend + PLAN-0005)
 
 ## Objective
 
@@ -52,7 +52,7 @@ Independently determine whether the PLAN-0020 production profile frontend satisf
 
 ## Substantial test-run target
 
-Decision-ready Pass / Conditional Pass / Fail assessment against pinned SHA `f59606e3958d7db71cd6c7ff900d41111160c39c`, with evidence under `docs/evidence/plan-0024/`.
+Decision-ready Pass / Conditional Pass / Fail assessment against the residual-remediation pinned SHA (to be set when Ready), with evidence under `docs/evidence/plan-0024/`.
 
 ## Acceptance criteria
 
@@ -64,12 +64,18 @@ Decision-ready Pass / Conditional Pass / Fail assessment against pinned SHA `f59
 
 ## Execution state
 
-- **Current checkpoint:** Ready — pinned to remediation CI tip `f59606e3958d7db71cd6c7ff900d41111160c39c`.
-- **Exact next action:** Independent testing agent claims the plan, creates branch from the pinned SHA (or reviews PR #35 at that tip), and executes the campaign.
-- **Blockers:** None for claim.
-- **Working tree state:** Ready placeholder.
+- **Current checkpoint:** Draft — prior pin `f59606e` superseded by residual remediation; wait for new candidate.
+- **Exact next action:** After PLAN-0020 residual tip is CI-green, pin Ready to that exact SHA and claim independently.
+- **Blockers:** Waiting for residual remediation candidate.
+- **Working tree state:** Placeholder; do not validate against superseded tips.
+
 
 ## Progress log
+
+### 2026-08-03T03:00:00Z — PLAN-0020 residual remediation reopen
+
+- **Checkpoint:** Returned to **Draft**; removed pin to `f59606e` (superseded).
+- **Next action:** Wait for residual remediation candidate.
 
 ### 2026-08-03T02:20:00Z — PLAN-0020 remediation complete
 

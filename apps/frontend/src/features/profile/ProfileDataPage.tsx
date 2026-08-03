@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useProfileWorkspace } from "./ProfileProvider";
 import {
   ProgressiveFieldControl,
@@ -17,11 +17,8 @@ import {
   useFocusFirstFieldError,
   type FieldErrorItem,
 } from "./fieldErrors";
-import {
-  useUnsavedChangesGuard,
-  UnsavedChangesDialog,
-  GuardedLink,
-} from "./useUnsavedChangesGuard";
+import { useRegisterUnsavedChanges } from "./UnsavedChangesCoordinator";
+import { describeProfileMutationError } from "./describeProfileMutationError";
 import { CodeListEditor } from "./CodeListEditor";
 import {
   GOAL_CODES,
@@ -114,14 +111,13 @@ export function ProfileDataPage() {
   const {
     status,
     workspace,
-    isMutating,
+    canMutate,
     lastMutationError,
     clearMutationError,
     patchProfile,
     reload,
   } = useProfileWorkspace();
   const { t, locale, setLocale } = useProductionI18n();
-  const navigate = useNavigate();
 
   const [householdModes, setHouseholdModes] = useState<FieldModeMap>({});
   const [cookingModes, setCookingModes] = useState<FieldModeMap>({});
@@ -163,7 +159,25 @@ export function ProfileDataPage() {
     isSectionDirty(householdModes) ||
     isSectionDirty(cookingModes) ||
     listsDirty;
-  const guard = useUnsavedChangesGuard(pageDirty);
+  const discardDraft = useCallback(() => {
+    setHouseholdModes({});
+    setCookingModes({});
+    setKnownTechniques(null);
+    setTechniquesToLearn(null);
+    setGoals(null);
+    setAbandonmentReasons(null);
+    setHouseholdError(null);
+    setCookingError(null);
+    setListsError(null);
+    setHouseholdFieldErrors({});
+    setCookingFieldErrors({});
+    setListsFieldErrors({});
+    setHouseholdUnknownErrors(0);
+    setCookingUnknownErrors(0);
+    setHouseholdServerComparison(false);
+    setCookingServerComparison(false);
+  }, []);
+  useRegisterUnsavedChanges(pageDirty, discardDraft);
 
   const householdErrorItems: FieldErrorItem[] = Object.entries(
     householdFieldErrors,
@@ -218,22 +232,6 @@ export function ProfileDataPage() {
   const goalsValue = goals ?? workspace.profile.goals;
   const abandonmentReasonsValue =
     abandonmentReasons ?? workspace.profile.abandonmentReasons;
-
-  function describeMutationError(err: unknown): string {
-    if (err instanceof ProfileApiError) {
-      if (err.code === "precondition_failed")
-        return t("profile.error.precondition412");
-      if (err.code === "precondition_required")
-        return t("profile.error.precondition428");
-      if (err.code === "profile_already_exists" || err.code === "conflict") {
-        return t("profile.error.conflict409");
-      }
-      if (err.code === "validation_failed") {
-        return err.message || t("profile.error.validation");
-      }
-    }
-    return t("profile.error.save");
-  }
 
   async function saveHousehold(event: React.FormEvent) {
     event.preventDefault();
@@ -305,7 +303,7 @@ export function ProfileDataPage() {
         setHouseholdFieldErrors(known);
         setHouseholdUnknownErrors(unknownCount);
         if (Object.keys(known).length === 0 && unknownCount === 0) {
-          setHouseholdError(describeMutationError(err));
+          setHouseholdError(describeProfileMutationError(err, t));
         }
         return;
       }
@@ -315,7 +313,7 @@ export function ProfileDataPage() {
       ) {
         setHouseholdServerComparison(true);
       }
-      setHouseholdError(describeMutationError(err));
+      setHouseholdError(describeProfileMutationError(err, t));
     }
   }
 
@@ -372,7 +370,7 @@ export function ProfileDataPage() {
         setCookingFieldErrors(known);
         setCookingUnknownErrors(unknownCount);
         if (Object.keys(known).length === 0 && unknownCount === 0) {
-          setCookingError(describeMutationError(err));
+          setCookingError(describeProfileMutationError(err, t));
         }
         return;
       }
@@ -382,7 +380,7 @@ export function ProfileDataPage() {
       ) {
         setCookingServerComparison(true);
       }
-      setCookingError(describeMutationError(err));
+      setCookingError(describeProfileMutationError(err, t));
     }
   }
 
@@ -419,19 +417,12 @@ export function ProfileDataPage() {
         );
         setListsFieldErrors(known);
       }
-      setListsError(describeMutationError(err));
+      setListsError(describeProfileMutationError(err, t));
     }
   }
 
   return (
     <div data-testid="profile-data" className="mx-auto max-w-2xl space-y-8">
-      <UnsavedChangesDialog
-        open={guard.isPromptOpen}
-        onConfirm={guard.confirmDiscard}
-        onCancel={guard.cancelNavigation}
-        t={t}
-        testIdPrefix="profile-data"
-      />
       <div className="flex items-center justify-between gap-2">
         <div>
           <h1 className="font-display text-3xl">{t("profile.data.title")}</h1>
@@ -439,15 +430,13 @@ export function ProfileDataPage() {
             {t("profile.data.subtitle")}
           </p>
         </div>
-        <GuardedLink
+        <Link
           to="/app/perfil"
-          requestNavigation={guard.requestNavigation}
-          navigate={navigate}
           data-testid="profile-data-back"
           className={buttonVariants({ variant: "secondary" })}
         >
           {t("profile.actions.back")}
-        </GuardedLink>
+        </Link>
       </div>
 
       {blocked && (
@@ -461,7 +450,7 @@ export function ProfileDataPage() {
 
       {lastMutationError && (
         <p role="alert" data-testid="profile-data-mutation-error">
-          {describeMutationError(lastMutationError)}
+          {describeProfileMutationError(lastMutationError, t)}
         </p>
       )}
 
@@ -495,7 +484,7 @@ export function ProfileDataPage() {
           onModeChange={(mode) =>
             setHouseholdModes((prev) => ({ ...prev, displayName: mode }))
           }
-          disabled={blocked || isMutating}
+          disabled={!canMutate}
           errorMessage={householdFieldErrors.displayName}
           t={t}
           testIdPrefix="profile-data"
@@ -511,7 +500,7 @@ export function ProfileDataPage() {
               onModeChange={(mode) =>
                 setHouseholdModes((prev) => ({ ...prev, [key]: mode }))
               }
-              disabled={blocked || isMutating}
+              disabled={!canMutate}
               errorMessage={householdFieldErrors[key]}
               t={t}
               testIdPrefix="profile-data"
@@ -538,7 +527,7 @@ export function ProfileDataPage() {
               onModeChange={(mode) =>
                 setHouseholdModes((prev) => ({ ...prev, [key]: mode }))
               }
-              disabled={blocked || isMutating}
+              disabled={!canMutate}
               errorMessage={householdFieldErrors[key]}
               t={t}
               testIdPrefix="profile-data"
@@ -571,7 +560,7 @@ export function ProfileDataPage() {
             onModeChange={(mode) =>
               setHouseholdModes((prev) => ({ ...prev, timeZone: mode }))
             }
-            disabled={blocked || isMutating}
+            disabled={!canMutate}
             errorMessage={householdFieldErrors.timeZone}
             t={t}
             testIdPrefix="profile-data"
@@ -589,7 +578,7 @@ export function ProfileDataPage() {
                 variant="ghost"
                 size="sm"
                 data-testid="profile-data-timezone-suggest"
-                disabled={blocked || isMutating}
+                disabled={!canMutate}
                 onClick={() =>
                   setHouseholdModes((prev) => ({
                     ...prev,
@@ -611,7 +600,7 @@ export function ProfileDataPage() {
           <Button
             type="submit"
             data-testid="profile-data-household-save"
-            disabled={blocked || isMutating || !isSectionDirty(householdModes)}
+            disabled={!canMutate || !isSectionDirty(householdModes)}
           >
             {t("profile.actions.save")}
           </Button>
@@ -620,7 +609,7 @@ export function ProfileDataPage() {
               type="button"
               variant="secondary"
               data-testid="profile-data-household-cancel"
-              disabled={isMutating}
+              disabled={!canMutate}
               onClick={() => {
                 setHouseholdModes({});
                 setHouseholdFieldErrors({});
@@ -675,7 +664,7 @@ export function ProfileDataPage() {
               onModeChange={(mode) =>
                 setCookingModes((prev) => ({ ...prev, [key]: mode }))
               }
-              disabled={blocked || isMutating}
+              disabled={!canMutate}
               errorMessage={cookingFieldErrors[key]}
               t={t}
               testIdPrefix="profile-data"
@@ -703,7 +692,7 @@ export function ProfileDataPage() {
               onModeChange={(mode) =>
                 setCookingModes((prev) => ({ ...prev, [key]: mode }))
               }
-              disabled={blocked || isMutating}
+              disabled={!canMutate}
               errorMessage={cookingFieldErrors[key]}
               t={t}
               testIdPrefix="profile-data"
@@ -729,7 +718,7 @@ export function ProfileDataPage() {
           <Button
             type="submit"
             data-testid="profile-data-cooking-save"
-            disabled={blocked || isMutating || !isSectionDirty(cookingModes)}
+            disabled={!canMutate || !isSectionDirty(cookingModes)}
           >
             {t("profile.actions.save")}
           </Button>
@@ -738,7 +727,7 @@ export function ProfileDataPage() {
               type="button"
               variant="secondary"
               data-testid="profile-data-cooking-cancel"
-              disabled={isMutating}
+              disabled={!canMutate}
               onClick={() => {
                 setCookingModes({});
                 setCookingFieldErrors({});
@@ -768,7 +757,7 @@ export function ProfileDataPage() {
           value={knownTechniquesValue}
           onChange={setKnownTechniques}
           locale={locale}
-          disabled={blocked || isMutating}
+          disabled={!canMutate}
           errorMessage={listsFieldErrors.knownTechniques}
           t={t}
         />
@@ -780,7 +769,7 @@ export function ProfileDataPage() {
           value={techniquesToLearnValue}
           onChange={setTechniquesToLearn}
           locale={locale}
-          disabled={blocked || isMutating}
+          disabled={!canMutate}
           errorMessage={listsFieldErrors.techniquesToLearn}
           t={t}
         />
@@ -792,7 +781,7 @@ export function ProfileDataPage() {
           value={goalsValue}
           onChange={setGoals}
           locale={locale}
-          disabled={blocked || isMutating}
+          disabled={!canMutate}
           errorMessage={listsFieldErrors.goals}
           t={t}
         />
@@ -804,7 +793,7 @@ export function ProfileDataPage() {
           value={abandonmentReasonsValue}
           onChange={setAbandonmentReasons}
           locale={locale}
-          disabled={blocked || isMutating}
+          disabled={!canMutate}
           errorMessage={listsFieldErrors.abandonmentReasons}
           t={t}
         />
@@ -817,7 +806,7 @@ export function ProfileDataPage() {
           <Button
             type="submit"
             data-testid="profile-data-lists-save"
-            disabled={blocked || isMutating || !listsDirty}
+            disabled={!canMutate || !listsDirty}
           >
             {t("profile.actions.save")}
           </Button>
@@ -826,7 +815,7 @@ export function ProfileDataPage() {
               type="button"
               variant="secondary"
               data-testid="profile-data-lists-cancel"
-              disabled={isMutating}
+              disabled={!canMutate}
               onClick={() => {
                 setKnownTechniques(null);
                 setTechniquesToLearn(null);

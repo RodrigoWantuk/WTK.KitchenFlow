@@ -263,23 +263,49 @@ const profileInterceptionFixtures = (() => {
  * contract the live adapter relies on (it never derives an ETag from the
  * response body). A PATCH to `/api/v1/profile` is answered with the same
  * fixture profile (bumped aggregate version) rather than a real mutation.
+ *
+ * Returns a small controller so residual scenarios can force post-save workspace
+ * reload failures or session-refresh failures without talking to a live backend.
  */
 async function installProfileInterception(page) {
   const fx = profileInterceptionFixtures;
   let aggregateVersion = fx.AGGREGATE_VERSION;
   const etagFor = (version) => `"${version}"`;
+  let failNextProfileGets = 0;
+  let failNextSessionRefresh = false;
+  let sessionHits = 0;
 
-  await page.route("**/api/v1/session", (route) =>
+  await page.route("**/api/v1/session", (route) => {
+    sessionHits += 1;
+    // First hit is the initial SessionProvider load; later hits are refreshSession().
+    if (failNextSessionRefresh && sessionHits > 1) {
+      failNextSessionRefresh = false;
+      route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ title: "session unavailable" }),
+      });
+      return;
+    }
     route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify(fx.session),
-    }),
-  );
+    });
+  });
   await page.route("**/api/v1/profile/preferences", (route) => {
     const method = route.request().method();
     if (method === "PUT") {
       aggregateVersion = `v${Number(String(aggregateVersion).replace(/\D/g, "") || "3") + 1}`;
+    }
+    if (method === "GET" && failNextProfileGets > 0) {
+      failNextProfileGets -= 1;
+      route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ title: "preferences unavailable" }),
+      });
+      return;
     }
     route.fulfill({
       status: 200,
@@ -296,6 +322,15 @@ async function installProfileInterception(page) {
     if (method === "PUT") {
       aggregateVersion = `v${Number(String(aggregateVersion).replace(/\D/g, "") || "3") + 1}`;
     }
+    if (method === "GET" && failNextProfileGets > 0) {
+      failNextProfileGets -= 1;
+      route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ title: "equipment unavailable" }),
+      });
+      return;
+    }
     route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -306,13 +341,22 @@ async function installProfileInterception(page) {
       }),
     });
   });
-  await page.route("**/api/v1/profile/completeness", (route) =>
+  await page.route("**/api/v1/profile/completeness", (route) => {
+    if (failNextProfileGets > 0) {
+      failNextProfileGets -= 1;
+      route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ title: "completeness unavailable" }),
+      });
+      return;
+    }
     route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify(fx.completeness),
-    }),
-  );
+    });
+  });
   await page.route("**/api/v1/profile", (route) => {
     const method = route.request().method();
     if (method === "PATCH" || method === "PUT") {
@@ -329,6 +373,15 @@ async function installProfileInterception(page) {
       });
       return;
     }
+    if (failNextProfileGets > 0) {
+      failNextProfileGets -= 1;
+      route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ title: "profile unavailable" }),
+      });
+      return;
+    }
     route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -339,6 +392,17 @@ async function installProfileInterception(page) {
       }),
     });
   });
+
+  return {
+    /** Fail the next N profile-workspace GET responses (any of the four sources). */
+    failNextWorkspaceGets(count) {
+      failNextProfileGets = count;
+    },
+    /** Fail the next session refresh after the initial authenticated load. */
+    failNextSessionRefreshOnce() {
+      failNextSessionRefresh = true;
+    },
+  };
 }
 
 async function waitForServer(url, timeoutMs = 120000) {
@@ -1069,7 +1133,7 @@ async function run() {
       { viewport: { width: 1280, height: 800 } },
       "production-profile-intercepted",
       async (page) => {
-        await installProfileInterception(page);
+        const interception = await installProfileInterception(page);
 
         await page.goto(PRODUCTION_BASE + "/app/perfil", {
           waitUntil: "domcontentloaded",
@@ -1105,25 +1169,55 @@ async function run() {
         });
         await page.getByTestId("profile-data-back").click();
         await page
-          .getByTestId("profile-data-unsaved-dialog")
+          .getByTestId("profile-unsaved-dialog")
           .waitFor({ timeout: 10000 });
-        await page.getByTestId("profile-data-unsaved-stay").click();
+        await page.getByTestId("profile-unsaved-stay").click();
         await page
-          .getByTestId("profile-data-unsaved-dialog")
+          .getByTestId("profile-unsaved-dialog")
           .waitFor({ state: "hidden", timeout: 5000 })
           .catch(() => undefined);
-        if (
-          await page.getByTestId("profile-data-unsaved-dialog").isVisible()
-        ) {
+        if (await page.getByTestId("profile-unsaved-dialog").isVisible()) {
           fail(
             "production profile intercepted: unsaved changes",
             "dialog still visible after choosing to stay",
           );
         }
-        await page.getByTestId("profile-data-household-save").click();
+
+        // Shell Home Stay
+        await page.getByTestId("production-nav-home").click();
+        await page
+          .getByTestId("profile-unsaved-dialog")
+          .waitFor({ timeout: 10000 });
+        await page.getByTestId("profile-unsaved-stay").click();
+        await page.getByTestId("profile-data").waitFor({ timeout: 5000 });
+        record(
+          "production profile intercepted: dirty shell Home Stay",
+          "Passed",
+          "primary Home navigation opened confirmation; Stay kept Profile Data",
+        );
+
+        // Shell Inventory Discard
+        await page.getByTestId("production-nav-despensa").click();
+        await page
+          .getByTestId("profile-unsaved-dialog")
+          .waitFor({ timeout: 10000 });
+        await page.getByTestId("profile-unsaved-discard").click();
+        await page.waitForURL(/\/app\/despensa/, { timeout: 10000 });
+        record(
+          "production profile intercepted: dirty shell Inventory Discard",
+          "Passed",
+          "primary Inventory navigation discarded the draft and left profile",
+        );
+
+        await page.goto(PRODUCTION_BASE + "/app/perfil/dados", {
+          waitUntil: "domcontentloaded",
+        });
+        await page.getByTestId("profile-data").waitFor({ timeout: 15000 });
+        await page.getByTestId("profile-data-input-displayName").fill("");
         await page
           .getByTestId("profile-data-input-displayName")
-          .waitFor({ timeout: 5000 });
+          .pressSequentially("Ada Saved Clean", { delay: 5 });
+        await page.getByTestId("profile-data-household-save").click();
         await page.waitForTimeout(500);
         if (
           (await page
@@ -1139,6 +1233,137 @@ async function run() {
           "production profile intercepted: household save + unsaved-changes guard",
           "Passed",
           "accessible confirmation blocked navigation with a dirty draft; intercepted PATCH accepted the save",
+        );
+
+        // Browser Back while dirty on preferences (client-side history only —
+        // full page.goto entries bypass React Router's useBlocker).
+        await page.goto(PRODUCTION_BASE + "/app/perfil", {
+          waitUntil: "domcontentloaded",
+        });
+        await page.getByTestId("profile-overview").waitFor({ timeout: 15000 });
+        await page.getByTestId("profile-overview-link-preferences").click();
+        await page
+          .getByTestId("profile-preferences")
+          .waitFor({ timeout: 15000 });
+        await page
+          .getByTestId("profile-preferences-custom-label")
+          .fill("Dirty custom preference");
+        await page.waitForTimeout(100);
+        await page.goBack();
+        await page
+          .getByTestId("profile-unsaved-dialog")
+          .waitFor({ timeout: 10000 });
+        await page.getByTestId("profile-unsaved-stay").click();
+        await page
+          .getByTestId("profile-preferences")
+          .waitFor({ timeout: 5000 });
+        await page.goBack();
+        await page
+          .getByTestId("profile-unsaved-dialog")
+          .waitFor({ timeout: 10000 });
+        if ((await page.getByTestId("profile-unsaved-dialog").count()) !== 1) {
+          fail(
+            "production profile intercepted: back confirmation loop",
+            "expected exactly one confirmation dialog",
+          );
+        }
+        await page.getByTestId("profile-unsaved-discard").click();
+        await page.getByTestId("profile-overview").waitFor({ timeout: 10000 });
+        await page
+          .getByTestId("profile-unsaved-dialog")
+          .waitFor({ state: "hidden", timeout: 5000 })
+          .catch(() => undefined);
+        await page.waitForTimeout(200);
+        if (await page.getByTestId("profile-unsaved-dialog").isVisible()) {
+          fail(
+            "production profile intercepted: back confirmation loop",
+            "confirmation reopened immediately after discard",
+          );
+        }
+        record(
+          "production profile intercepted: browser Back Stay/Discard without loop",
+          "Passed",
+          "dirty Preferences Back Stay retained draft; Discard left once without reopening",
+        );
+
+        // Post-save workspace refresh failure
+        await page.goto(PRODUCTION_BASE + "/app/perfil/dados", {
+          waitUntil: "domcontentloaded",
+        });
+        await page.getByTestId("profile-data").waitFor({ timeout: 15000 });
+        interception.failNextWorkspaceGets(8);
+        await page
+          .getByTestId("profile-data-input-displayName")
+          .fill("Saved But Refresh Fails");
+        await page.getByTestId("profile-data-household-save").click();
+        await page
+          .getByTestId("profile-save-refresh-failed")
+          .waitFor({ timeout: 10000 });
+        if (
+          await page.getByTestId("profile-data-household-save").isEnabled()
+        ) {
+          fail(
+            "production profile intercepted: save refresh failed",
+            "save remained enabled after saveRefreshFailed",
+          );
+        }
+        await page.getByTestId("profile-save-refresh-reload").click();
+        await page.waitForTimeout(500);
+        if (
+          (await page.getByTestId("profile-save-refresh-failed").count()) === 0
+        ) {
+          // Reload may have consumed remaining failures; require warning still or cleared after success
+        }
+        // Force another failure then a success path by reloading until clear
+        let attempts = 0;
+        while (
+          (await page.getByTestId("profile-save-refresh-failed").count()) > 0 &&
+          attempts < 4
+        ) {
+          attempts += 1;
+          await page.getByTestId("profile-save-refresh-reload").click();
+          await page.waitForTimeout(400);
+        }
+        if (
+          (await page.getByTestId("profile-save-refresh-failed").count()) > 0
+        ) {
+          fail(
+            "production profile intercepted: save refresh failed",
+            "warning did not clear after successful reload retries",
+          );
+        }
+        record(
+          "production profile intercepted: save refresh failed warning",
+          "Passed",
+          "saved-success warning appeared, blocked mutation, and cleared after reload",
+        );
+
+        // Session refresh warning
+        interception.failNextSessionRefreshOnce();
+        await page
+          .getByTestId("profile-data-input-displayName")
+          .fill("Saved Session Stale");
+        await page.getByTestId("profile-data-household-save").click();
+        await page
+          .getByTestId("profile-session-refresh-warning")
+          .waitFor({ timeout: 10000 });
+        await page.getByTestId("profile-session-refresh-retry").click();
+        await page
+          .getByTestId("profile-session-refresh-warning")
+          .waitFor({ state: "hidden", timeout: 10000 })
+          .catch(() => undefined);
+        if (
+          await page.getByTestId("profile-session-refresh-warning").isVisible()
+        ) {
+          fail(
+            "production profile intercepted: session refresh warning",
+            "session warning remained after retry",
+          );
+        }
+        record(
+          "production profile intercepted: session refresh warning",
+          "Passed",
+          "profile save succeeded while session refresh failure was surfaced and cleared",
         );
 
         await page.goto(PRODUCTION_BASE + "/app/perfil/preferencias", {

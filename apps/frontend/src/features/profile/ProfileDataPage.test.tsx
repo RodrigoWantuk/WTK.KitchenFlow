@@ -240,7 +240,11 @@ describe("ProfileDataPage", () => {
     const user = userEvent.setup();
 
     render(
-      renderProfileTree({ repository: repo, children: <ProfileDataPage /> }),
+      renderProfileTree({
+        repository: repo,
+        initialPath: "/app/perfil/dados",
+        children: <ProfileDataPage />,
+      }),
     );
     const displayNameInput = await screen.findByTestId(
       "profile-data-input-displayName",
@@ -251,14 +255,14 @@ describe("ProfileDataPage", () => {
     await user.click(screen.getByTestId("profile-data-back"));
 
     expect(
-      await screen.findByTestId("profile-data-unsaved-dialog"),
+      await screen.findByTestId("profile-unsaved-dialog"),
     ).toBeInTheDocument();
     // Still on the same page: navigation was not performed yet.
     expect(screen.getByTestId("profile-data")).toBeInTheDocument();
 
-    await user.click(screen.getByTestId("profile-data-unsaved-stay"));
+    await user.click(screen.getByTestId("profile-unsaved-stay"));
     expect(
-      screen.queryByTestId("profile-data-unsaved-dialog"),
+      screen.queryByTestId("profile-unsaved-dialog"),
     ).not.toBeInTheDocument();
     expect(screen.getByTestId("profile-data-input-displayName")).toHaveValue(
       "Changed",

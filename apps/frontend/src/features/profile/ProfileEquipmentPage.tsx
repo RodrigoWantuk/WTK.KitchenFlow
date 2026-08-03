@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useProfileWorkspace } from "./ProfileProvider";
 import { createCustomStableCode, isCustomStableCode } from "./customCodes";
 import { EQUIPMENT_CODES } from "./catalog/profileCatalogCodes";
@@ -10,11 +10,8 @@ import {
   useFocusFirstFieldError,
   type FieldErrorItem,
 } from "./fieldErrors";
-import {
-  useUnsavedChangesGuard,
-  UnsavedChangesDialog,
-  GuardedLink,
-} from "./useUnsavedChangesGuard";
+import { useRegisterUnsavedChanges } from "./UnsavedChangesCoordinator";
+import { describeProfileMutationError } from "./describeProfileMutationError";
 import { useProductionI18n } from "@/app/i18n/ProductionI18nProvider";
 import { ProfileApiError, type EquipmentInput } from "@/contracts/profile";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -169,14 +166,13 @@ export function ProfileEquipmentPage() {
   const {
     status,
     workspace,
-    isMutating,
+    canMutate,
     lastMutationError,
     clearMutationError,
     replaceEquipment,
     reload,
   } = useProfileWorkspace();
   const { t, locale } = useProductionI18n();
-  const navigate = useNavigate();
 
   const [draft, setDraft] = useState<DraftItem[] | null>(null);
   const [pendingCode, setPendingCode] = useState("");
@@ -192,7 +188,13 @@ export function ProfileEquipmentPage() {
   const submittedOrderRef = useRef<string[]>([]);
 
   const isDirty = draft !== null;
-  const guard = useUnsavedChangesGuard(isDirty);
+  const discardDraft = useCallback(() => {
+    setDraft(null);
+    setItemErrors({});
+    setActionError(null);
+    setUnknownErrorCount(0);
+  }, []);
+  useRegisterUnsavedChanges(isDirty, discardDraft);
 
   useEffect(() => {
     if (!focusAfterRemoveRef.current) return;
@@ -251,18 +253,6 @@ export function ProfileEquipmentPage() {
   const blocked = status === "version_conflict";
   const usedCodes = new Set(items.map((item) => item.stableCode));
   const catalogOptions = EQUIPMENT_CODES.filter((code) => !usedCodes.has(code));
-
-  function describeError(err: unknown): string {
-    if (err instanceof ProfileApiError) {
-      if (err.code === "precondition_failed")
-        return t("profile.error.precondition412");
-      if (err.code === "precondition_required")
-        return t("profile.error.precondition428");
-      if (err.code === "validation_failed")
-        return err.message || t("profile.error.validation");
-    }
-    return t("profile.error.save");
-  }
 
   function ensureDraft(): DraftItem[] {
     return draft ?? toDraftItems(workspace!.equipment.entries);
@@ -383,11 +373,11 @@ export function ProfileEquipmentPage() {
         setItemErrors(mapped);
         setUnknownErrorCount(unknownCount);
         if (Object.keys(mapped).length === 0 && unknownCount === 0) {
-          setActionError(describeError(err));
+          setActionError(describeProfileMutationError(err, t));
         }
         return;
       }
-      setActionError(describeError(err));
+      setActionError(describeProfileMutationError(err, t));
     }
   }
 
@@ -396,13 +386,6 @@ export function ProfileEquipmentPage() {
       data-testid="profile-equipment"
       className="mx-auto max-w-2xl space-y-6"
     >
-      <UnsavedChangesDialog
-        open={guard.isPromptOpen}
-        onConfirm={guard.confirmDiscard}
-        onCancel={guard.cancelNavigation}
-        t={t}
-        testIdPrefix="profile-equipment"
-      />
       <div
         aria-live="polite"
         className="sr-only"
@@ -419,15 +402,13 @@ export function ProfileEquipmentPage() {
             {t("profile.equipment.subtitle")}
           </p>
         </div>
-        <GuardedLink
+        <Link
           to="/app/perfil"
-          requestNavigation={guard.requestNavigation}
-          navigate={navigate}
           data-testid="profile-equipment-back"
           className={buttonVariants({ variant: "secondary" })}
         >
           {t("profile.actions.back")}
-        </GuardedLink>
+        </Link>
       </div>
 
       {blocked && (
@@ -442,7 +423,9 @@ export function ProfileEquipmentPage() {
       {(actionError || lastMutationError) && (
         <p role="alert" data-testid="profile-equipment-error-message">
           {actionError ??
-            (lastMutationError ? describeError(lastMutationError) : "")}
+            (lastMutationError
+              ? describeProfileMutationError(lastMutationError, t)
+              : "")}
         </p>
       )}
 
@@ -479,7 +462,7 @@ export function ProfileEquipmentPage() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    disabled={blocked || isMutating || index === 0}
+                    disabled={!canMutate || index === 0}
                     data-testid={`profile-equipment-move-up-${item.key}`}
                     onClick={() => moveItem(item.key, -1)}
                   >
@@ -489,9 +472,7 @@ export function ProfileEquipmentPage() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    disabled={
-                      blocked || isMutating || index === items.length - 1
-                    }
+                    disabled={!canMutate || index === items.length - 1}
                     data-testid={`profile-equipment-move-down-${item.key}`}
                     onClick={() => moveItem(item.key, 1)}
                   >
@@ -501,7 +482,7 @@ export function ProfileEquipmentPage() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    disabled={blocked || isMutating}
+                    disabled={!canMutate}
                     data-testid={`profile-equipment-remove-${item.key}`}
                     onClick={() => removeItem(item.key)}
                   >
@@ -529,7 +510,7 @@ export function ProfileEquipmentPage() {
                       maxLength={CUSTOM_NAME_MAX_LENGTH}
                       placeholder={t("profile.equipment.customNamePlaceholder")}
                       value={item.customName}
-                      disabled={blocked || isMutating}
+                      disabled={!canMutate}
                       aria-invalid={fieldErrors.customName ? true : undefined}
                       aria-describedby={
                         fieldErrors.customName
@@ -560,7 +541,7 @@ export function ProfileEquipmentPage() {
                     min={0}
                     className="w-24"
                     value={item.capacity}
-                    disabled={blocked || isMutating}
+                    disabled={!canMutate}
                     aria-invalid={fieldErrors.capacity ? true : undefined}
                     aria-describedby={
                       fieldErrors.capacity
@@ -580,7 +561,7 @@ export function ProfileEquipmentPage() {
                     className="w-24"
                     maxLength={CAPACITY_UNIT_MAX_LENGTH}
                     value={item.capacityUnit}
-                    disabled={blocked || isMutating}
+                    disabled={!canMutate}
                     aria-invalid={fieldErrors.capacityUnit ? true : undefined}
                     aria-describedby={
                       fieldErrors.capacityUnit
@@ -601,7 +582,7 @@ export function ProfileEquipmentPage() {
                   maxLength={CONSTRAINT_NOTE_MAX_LENGTH}
                   placeholder={t("profile.equipment.constraintNote")}
                   value={item.constraintNote}
-                  disabled={blocked || isMutating}
+                  disabled={!canMutate}
                   aria-invalid={fieldErrors.constraintNote ? true : undefined}
                   aria-describedby={
                     fieldErrors.constraintNote
@@ -662,7 +643,7 @@ export function ProfileEquipmentPage() {
           data-testid="profile-equipment-catalog-select"
           className="flex h-9 rounded-md border border-input bg-transparent px-3 text-sm"
           value={pendingCode}
-          disabled={blocked || isMutating}
+          disabled={!canMutate}
           onChange={(event) => setPendingCode(event.target.value)}
         >
           <option value="">{t("profile.equipment.addFromCatalog")}</option>
@@ -675,7 +656,7 @@ export function ProfileEquipmentPage() {
         <Button
           type="button"
           variant="secondary"
-          disabled={blocked || isMutating || !pendingCode}
+          disabled={!canMutate || !pendingCode}
           data-testid="profile-equipment-catalog-submit"
           onClick={addFromCatalog}
         >
@@ -687,13 +668,13 @@ export function ProfileEquipmentPage() {
           maxLength={CUSTOM_NAME_MAX_LENGTH}
           placeholder={t("profile.equipment.customNamePlaceholder")}
           value={customName}
-          disabled={blocked || isMutating}
+          disabled={!canMutate}
           onChange={(event) => setCustomName(event.target.value)}
         />
         <Button
           type="button"
           variant="secondary"
-          disabled={blocked || isMutating || !customName.trim()}
+          disabled={!canMutate || !customName.trim()}
           data-testid="profile-equipment-custom-submit"
           onClick={addCustom}
         >
@@ -704,7 +685,7 @@ export function ProfileEquipmentPage() {
       <div className="flex gap-2">
         <Button
           type="button"
-          disabled={blocked || isMutating || !isDirty}
+          disabled={!canMutate || !isDirty}
           data-testid="profile-equipment-save"
           onClick={() => void save()}
         >
@@ -714,7 +695,7 @@ export function ProfileEquipmentPage() {
           <Button
             type="button"
             variant="secondary"
-            disabled={isMutating}
+            disabled={!canMutate}
             data-testid="profile-equipment-cancel"
             onClick={() => {
               setDraft(null);

@@ -1,17 +1,13 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useState } from "react";
+import { Link } from "react-router-dom";
 import { useProfileWorkspace } from "./ProfileProvider";
 import { createCustomStableCode, isCustomStableCode } from "./customCodes";
 import { PREFERENCE_ENTRY_CODES } from "./catalog/profileCatalogCodes";
 import { resolveLabel } from "./catalog/profileCatalog";
-import {
-  useUnsavedChangesGuard,
-  UnsavedChangesDialog,
-  GuardedLink,
-} from "./useUnsavedChangesGuard";
+import { useRegisterUnsavedChanges } from "./UnsavedChangesCoordinator";
+import { describeProfileMutationError } from "./describeProfileMutationError";
 import { useProductionI18n } from "@/app/i18n/ProductionI18nProvider";
 import {
-  ProfileApiError,
   type PreferenceCategory,
   type PreferenceEntry,
 } from "@/contracts/profile";
@@ -77,6 +73,7 @@ export function ProfilePreferencesPage() {
   const {
     status,
     workspace,
+    canMutate,
     isMutating,
     lastMutationError,
     clearMutationError,
@@ -84,7 +81,6 @@ export function ProfilePreferencesPage() {
     reload,
   } = useProfileWorkspace();
   const { t, locale } = useProductionI18n();
-  const navigate = useNavigate();
 
   const [category, setCategory] = useState<PreferenceCategory>("Preference");
   const [catalogCode, setCatalogCode] = useState("");
@@ -105,7 +101,15 @@ export function ProfilePreferencesPage() {
     catalogCode.trim() !== "" ||
     catalogNote.trim() !== "" ||
     customLabel.trim() !== "";
-  const guard = useUnsavedChangesGuard(pageDirty);
+  const discardDraft = useCallback(() => {
+    setCatalogCode("");
+    setCatalogNote("");
+    setCustomLabel("");
+    setNoteDrafts({});
+    setPendingAdd(null);
+    setActionError(null);
+  }, []);
+  useRegisterUnsavedChanges(pageDirty, discardDraft);
 
   if (status === "session") {
     return (
@@ -143,18 +147,6 @@ export function ProfilePreferencesPage() {
     (code) => !existingCodes.has(code),
   );
 
-  function describeError(err: unknown): string {
-    if (err instanceof ProfileApiError) {
-      if (err.code === "precondition_failed")
-        return t("profile.error.precondition412");
-      if (err.code === "precondition_required")
-        return t("profile.error.precondition428");
-      if (err.code === "validation_failed")
-        return err.message || t("profile.error.validation");
-    }
-    return t("profile.error.save");
-  }
-
   async function submitAdd(
     kind: "catalog" | "custom",
     stableCode: string,
@@ -180,7 +172,7 @@ export function ProfilePreferencesPage() {
         setCustomLabel("");
       }
     } catch (err) {
-      setActionError(describeError(err));
+      setActionError(describeProfileMutationError(err, t));
     }
   }
 
@@ -215,7 +207,7 @@ export function ProfilePreferencesPage() {
         },
       ]);
     } catch (err) {
-      setActionError(describeError(err));
+      setActionError(describeProfileMutationError(err, t));
     }
   }
 
@@ -233,7 +225,7 @@ export function ProfilePreferencesPage() {
         },
       ]);
     } catch (err) {
-      setActionError(describeError(err));
+      setActionError(describeProfileMutationError(err, t));
     }
   }
 
@@ -242,13 +234,6 @@ export function ProfilePreferencesPage() {
       data-testid="profile-preferences"
       className="mx-auto max-w-2xl space-y-6"
     >
-      <UnsavedChangesDialog
-        open={guard.isPromptOpen}
-        onConfirm={guard.confirmDiscard}
-        onCancel={guard.cancelNavigation}
-        t={t}
-        testIdPrefix="profile-preferences"
-      />
       <div className="flex items-center justify-between gap-2">
         <div>
           <h1 className="font-display text-3xl">
@@ -258,15 +243,13 @@ export function ProfilePreferencesPage() {
             {t("profile.preferences.subtitle")}
           </p>
         </div>
-        <GuardedLink
+        <Link
           to="/app/perfil"
-          requestNavigation={guard.requestNavigation}
-          navigate={navigate}
           data-testid="profile-preferences-back"
           className={buttonVariants({ variant: "secondary" })}
         >
           {t("profile.actions.back")}
-        </GuardedLink>
+        </Link>
       </div>
 
       {blocked && (
@@ -281,7 +264,9 @@ export function ProfilePreferencesPage() {
       {(actionError || lastMutationError) && (
         <p role="alert" data-testid="profile-preferences-error-message">
           {actionError ??
-            (lastMutationError ? describeError(lastMutationError) : "")}
+            (lastMutationError
+              ? describeProfileMutationError(lastMutationError, t)
+              : "")}
         </p>
       )}
 
@@ -336,7 +321,7 @@ export function ProfilePreferencesPage() {
             </AlertDialogCancel>
             <AlertDialogAction
               data-testid="profile-preferences-sensitive-confirm-add"
-              disabled={isMutating}
+              disabled={!canMutate}
               onClick={(event) => {
                 event.preventDefault();
                 void confirmPendingAdd();
@@ -374,7 +359,7 @@ export function ProfilePreferencesPage() {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  disabled={blocked || isMutating}
+                  disabled={!canMutate}
                   data-testid={`profile-preferences-remove-${entry.entryId}`}
                   onClick={() => void removeEntry(entry)}
                 >
@@ -402,7 +387,7 @@ export function ProfilePreferencesPage() {
                       : t("profile.preferences.notePlaceholder")
                   }
                   value={noteDrafts[entry.entryId] ?? entry.note ?? ""}
-                  disabled={blocked || isMutating}
+                  disabled={!canMutate}
                   onChange={(event) =>
                     setNoteDrafts((prev) => ({
                       ...prev,
@@ -414,7 +399,7 @@ export function ProfilePreferencesPage() {
                   type="button"
                   variant="secondary"
                   size="sm"
-                  disabled={blocked || isMutating}
+                  disabled={!canMutate}
                   data-testid={`profile-preferences-update-note-${entry.entryId}`}
                   onClick={() => void updateNote(entry)}
                 >
@@ -440,7 +425,7 @@ export function ProfilePreferencesPage() {
             data-testid="profile-preferences-catalog-select"
             className="flex h-9 rounded-md border border-input bg-transparent px-3 text-sm"
             value={catalogCode}
-            disabled={blocked || isMutating}
+            disabled={!canMutate}
             onChange={(event) => setCatalogCode(event.target.value)}
           >
             <option value="">{t("profile.actions.add")}</option>
@@ -456,16 +441,13 @@ export function ProfilePreferencesPage() {
             maxLength={NOTE_MAX_LENGTH}
             placeholder={t("profile.preferences.notePlaceholder")}
             value={catalogNote}
-            disabled={blocked || isMutating}
+            disabled={!canMutate}
             onChange={(event) => setCatalogNote(event.target.value)}
           />
           <Button
             type="button"
             disabled={
-              blocked ||
-              isMutating ||
-              !catalogCode ||
-              catalogNote.length > NOTE_MAX_LENGTH
+              !canMutate || !catalogCode || catalogNote.length > NOTE_MAX_LENGTH
             }
             data-testid="profile-preferences-catalog-submit"
             onClick={() => requestAdd("catalog", catalogCode, catalogNote)}
@@ -490,7 +472,7 @@ export function ProfilePreferencesPage() {
             maxLength={NOTE_MAX_LENGTH}
             placeholder={t("profile.preferences.customPlaceholder")}
             value={customLabel}
-            disabled={blocked || isMutating}
+            disabled={!canMutate}
             aria-invalid={
               customLabel.length > NOTE_MAX_LENGTH ? true : undefined
             }
@@ -504,8 +486,7 @@ export function ProfilePreferencesPage() {
           <Button
             type="button"
             disabled={
-              blocked ||
-              isMutating ||
+              !canMutate ||
               !customLabel.trim() ||
               customLabel.length > NOTE_MAX_LENGTH
             }

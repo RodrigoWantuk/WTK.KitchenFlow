@@ -195,6 +195,12 @@ export const REQUIRED_PROFILE_I18N_KEYS = [
   "profile.equipment.error.constraintNoteTooLong",
   "profile.equipment.reorderAnnouncement",
   "profile.preferences.customSubmit",
+  "profile.error.workspaceNotReady",
+  "profile.warning.saveRefreshFailed",
+  "profile.warning.saveRefreshFailedDetail",
+  "profile.warning.sessionRefreshFailed",
+  "profile.warning.sessionRefreshFailedDetail",
+  "profile.actions.retrySession",
 ] as const;
 
 export type ProfileI18nKey = (typeof REQUIRED_PROFILE_I18N_KEYS)[number];
@@ -227,6 +233,17 @@ const en: Record<ProfileI18nKey, string> = {
     "Your profile was already created elsewhere. Reloading the latest version.",
   "profile.error.validation": "The server rejected this input.",
   "profile.error.save": "Could not save this change.",
+  "profile.error.workspaceNotReady":
+    "The profile is not ready for changes. Reload before making another change.",
+  "profile.warning.saveRefreshFailed":
+    "Your changes were saved, but the latest profile data could not be loaded.",
+  "profile.warning.saveRefreshFailedDetail":
+    "Reload before making another change. Do not resubmit the same edit.",
+  "profile.warning.sessionRefreshFailed":
+    "Profile saved, but the signed-in session view could not be refreshed.",
+  "profile.warning.sessionRefreshFailedDetail":
+    "Display name, language, timezone, measurement system, completeness, or adult declaration shown in the shell may be temporarily stale.",
+  "profile.actions.retrySession": "Retry session refresh",
   "profile.overview.title": "Your profile",
   "profile.overview.subtitle":
     "Household, cooking preferences, restrictions, and equipment that shape your meals.",
@@ -457,6 +474,17 @@ const ptBR: Record<ProfileI18nKey, string> = {
     "Seu perfil já foi criado em outro lugar. Recarregando a versão mais recente.",
   "profile.error.validation": "O servidor rejeitou estes dados.",
   "profile.error.save": "Não foi possível salvar esta alteração.",
+  "profile.error.workspaceNotReady":
+    "O perfil não está pronto para alterações. Recarregue antes de fazer outra mudança.",
+  "profile.warning.saveRefreshFailed":
+    "Suas alterações foram salvas, mas não foi possível carregar os dados mais recentes do perfil.",
+  "profile.warning.saveRefreshFailedDetail":
+    "Recarregue antes de fazer outra alteração. Não reenvie a mesma edição.",
+  "profile.warning.sessionRefreshFailed":
+    "Perfil salvo, mas a visão da sessão não pôde ser atualizada.",
+  "profile.warning.sessionRefreshFailedDetail":
+    "Nome de exibição, idioma, fuso, sistema de medidas, completude ou declaração adulta no shell podem estar temporariamente desatualizados.",
+  "profile.actions.retrySession": "Tentar atualizar a sessão",
   "profile.overview.title": "Seu perfil",
   "profile.overview.subtitle":
     "Dados de família, preferências de cozinha, restrições e equipamentos que moldam suas refeições.",
@@ -694,6 +722,17 @@ const es: Record<ProfileI18nKey, string> = {
     "Tu perfil ya se creó en otro lugar. Recargando la versión más reciente.",
   "profile.error.validation": "El servidor rechazó estos datos.",
   "profile.error.save": "No se pudo guardar este cambio.",
+  "profile.error.workspaceNotReady":
+    "El perfil no está listo para cambios. Recargue antes de hacer otro cambio.",
+  "profile.warning.saveRefreshFailed":
+    "Sus cambios se guardaron, pero no se pudieron cargar los datos más recientes del perfil.",
+  "profile.warning.saveRefreshFailedDetail":
+    "Recargue antes de hacer otro cambio. No vuelva a enviar la misma edición.",
+  "profile.warning.sessionRefreshFailed":
+    "Perfil guardado, pero no se pudo actualizar la vista de la sesión.",
+  "profile.warning.sessionRefreshFailedDetail":
+    "El nombre, idioma, zona horaria, sistema de medidas, completitud o declaración adulta en el shell pueden estar temporalmente desactualizados.",
+  "profile.actions.retrySession": "Reintentar actualización de sesión",
   "profile.overview.title": "Tu perfil",
   "profile.overview.subtitle":
     "Datos del hogar, preferencias de cocina, restricciones y equipamiento que moldean tus comidas.",

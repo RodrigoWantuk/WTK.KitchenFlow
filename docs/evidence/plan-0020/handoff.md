@@ -4,36 +4,39 @@
 
 - PLAN-0011 / PR #34 merged at `eb9e92c21ac817e497235168786daeb3f35c30cd` on `main`.
 
-## Review remediation
+## Residual remediation (in progress)
 
 | Role | Value |
 |---|---|
-| Review baseline (pre-remediation) | `a50152c78e872685b9f760db53c05984308174d8` |
-| Superseded functional tip | `4ddc87475b156ccb984cd7fe879a2f1086c9c1d5` |
-| Superseded CI tip | `5efcfb8b5f70a1389e9e2c709afe7edf51d016ba` |
-| Remediation functional tip | `6215b89147ffd53cc132fea87687a549a475ce07` |
-| CI-validated remediation tip | `f59606e3958d7db71cd6c7ff900d41111160c39c` |
-| Current PR head | PR metadata (completion packaging may advance SHA) |
+| Residual review baseline | `9df4ec980c6de1d9d27454ac84499df0aa45ef8d` |
+| Superseded major-remediation functional tip | `6215b89147ffd53cc132fea87687a549a475ce07` |
+| Superseded major-remediation CI tip | `f59606e3958d7db71cd6c7ff900d41111160c39c` |
+| Superseded packaging tip | `9df4ec980c6de1d9d27454ac84499df0aa45ef8d` |
+| Residual functional tip | pending |
+| Residual CI-validated tip | pending |
 
-## Scope delivered (remediation)
+## Prior major remediation (historical; superseded for acceptance)
 
-Contract/concurrency hardening, typed controls, numeric validation, field errors, custom preference semantics, accessible sensitive dialog, unsaved-change protection, ProfileProvider scoped to `/app/perfil*`, overview/adult policy truthfulness, equipment hardening, intercepted authenticated browser smoke.
+| Role | Value |
+|---|---|
+| Pre-remediation review baseline | `a50152c78e872685b9f760db53c05984308174d8` |
+| Functional tip | `6215b89147ffd53cc132fea87687a549a475ce07` |
+| CI tip | `f59606e3958d7db71cd6c7ff900d41111160c39c` |
+
+## Scope delivered (residual)
+
+Route-level unsaved-change coordination (`useBlocker` + profile layout registration), shell/brand/history protection without prompt loops, explicit `saveRefreshFailed` and `sessionRefreshWarning` banners, shared `canMutate`, localized `workspace_not_ready`, extended intercepted browser coverage.
 
 ## Known limitations
 
 - Adult declaration acceptance mutation unavailable in production until accepted policy versions are configured.
 - Technique/goal/abandonment free-text labels not round-tripped (catalog + unknown-code fallback only).
-- Independent validation tracked by PLAN-0024 (remains Draft until remediation tip is pinned).
-
-## Exact-head CI (CI-validated tip `f59606e`)
-
-- Frontend: https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30778578106
-- PLAN-0005: https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30778578095
+- Independent validation tracked by PLAN-0024 (Draft/unpinned until residual tip is finalized).
 
 ## Handoff
 
 ```text
-PR #35 remediation complete and ready for owner review.
-PLAN-0024 is ready for independent validation against exact candidate f59606e3958d7db71cd6c7ff900d41111160c39c.
+PLAN-0020 residual remediation in progress against baseline 9df4ec9.
+PLAN-0024 remains Draft until the residual candidate is CI-green and pinned.
 No agent approval, auto-merge, or merge was performed.
 ```
