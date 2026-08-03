@@ -1,11 +1,11 @@
 # PLAN-0020: Implement Profile, Household, Preferences, and Equipment Frontend
 
-- **Status:** In Progress
+- **Status:** Completed
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Cursor agent (PLAN-0020 profile frontend remediation)
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-03T03:00:00Z
+- **Last updated:** 2026-08-03T03:15:00Z
 - **Branch:** `agent/plan-0020-profile-frontend`
 - **Pull request:** [Draft PR #35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35)
 - **Dependencies:** PLAN-0012 and PLAN-0016 merged; PLAN-0011 merged via PR #34 (`eb9e92c`); generated OpenAPI client available
@@ -65,21 +65,29 @@ Prior green tip `5efcfb8` / packaging `a50152c` are superseded by this remediati
 - [x] Locales complete; production isolation; generated client drift zero.
 - [x] Frontend and PLAN-0005 pass on the final published head.
 - [x] PLAN-0024 pinned Ready after remediation candidate is stable.
-- [ ] Route-level unsaved-change coordination protects shell, brand, profile links, and history without prompt loops.
-- [ ] `saveRefreshFailed` and `sessionRefreshWarning` are visibly presented; `canMutate` is truthful on every page.
-- [ ] Residual authenticated browser scenarios pass; Frontend and PLAN-0005 green on the new candidate; PLAN-0024 repinned.
+- [x] Route-level unsaved-change coordination protects shell, brand, profile links, and history without prompt loops.
+- [x] `saveRefreshFailed` and `sessionRefreshWarning` are visibly presented; `canMutate` is truthful on every page.
+- [x] Residual authenticated browser scenarios pass; Frontend and PLAN-0005 green on the new candidate; PLAN-0024 repinned.
 
 ## Execution state
 
-- **Current checkpoint:** Residual remediation implemented and locally validated; awaiting push + exact-head CI.
+- **Current checkpoint:** Residual remediation **Completed**; exact-head CI green.
 - **Review baseline (residual):** `9df4ec980c6de1d9d27454ac84499df0aa45ef8d`
-- **Superseded prior tips:** functional `6215b89` / CI `f59606e` / packaging `9df4ec9`
-- **Exact next action:** Commit, push draft PR #35, obtain green Frontend + PLAN-0005 on exact head; then Complete + pin PLAN-0024.
+- **Residual functional tip / CI tip:** `5733bb4de957b53469a28bc60c472a90f0955907`
+- **Exact next action:** Owner review of draft PR #35; independent validation via PLAN-0024.
 - **Blockers:** None.
-- **Working tree state:** Residual changes ready to commit.
+- **Working tree state:** Completion packaging may advance PR head.
 
 
 ## Progress log
+
+### 2026-08-03T03:15:00Z — Cursor agent (PLAN-0020 residual remediation complete)
+
+- **Checkpoint:** Exact-head Frontend `30780915229` + PLAN-0005 `30780915260` Passed on `5733bb4`; PLAN-0020 **Completed**; PLAN-0024 Ready and pinned.
+- **Changes included in the commit:** Plan/registry/evidence completion; PLAN-0024 Ready pin; PR body reconciliation.
+- **Validation performed:** Frontend + PLAN-0005 green on published tip `5733bb4de957b53469a28bc60c472a90f0955907`. Draft, MERGEABLE, reviewer `RodrigoWantuk`.
+- **Next action:** Owner review; PLAN-0024 independent validation may begin.
+- **Blockers or handoff notes:** No agent merge.
 
 ### 2026-08-03T03:20:00Z — Cursor agent (PLAN-0020 residual remediation)
 

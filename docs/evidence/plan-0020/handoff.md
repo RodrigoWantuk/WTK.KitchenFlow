@@ -4,39 +4,34 @@
 
 - PLAN-0011 / PR #34 merged at `eb9e92c21ac817e497235168786daeb3f35c30cd` on `main`.
 
-## Residual remediation (in progress)
+## Residual remediation (complete)
 
 | Role | Value |
 |---|---|
 | Residual review baseline | `9df4ec980c6de1d9d27454ac84499df0aa45ef8d` |
 | Superseded major-remediation functional tip | `6215b89147ffd53cc132fea87687a549a475ce07` |
 | Superseded major-remediation CI tip | `f59606e3958d7db71cd6c7ff900d41111160c39c` |
-| Superseded packaging tip | `9df4ec980c6de1d9d27454ac84499df0aa45ef8d` |
-| Residual functional tip | pending |
-| Residual CI-validated tip | pending |
-
-## Prior major remediation (historical; superseded for acceptance)
-
-| Role | Value |
-|---|---|
-| Pre-remediation review baseline | `a50152c78e872685b9f760db53c05984308174d8` |
-| Functional tip | `6215b89147ffd53cc132fea87687a549a475ce07` |
-| CI tip | `f59606e3958d7db71cd6c7ff900d41111160c39c` |
+| Residual functional / CI tip | `5733bb4de957b53469a28bc60c472a90f0955907` |
+| Current PR head | PR metadata (completion packaging may advance SHA) |
 
 ## Scope delivered (residual)
 
-Route-level unsaved-change coordination (`useBlocker` + profile layout registration), shell/brand/history protection without prompt loops, explicit `saveRefreshFailed` and `sessionRefreshWarning` banners, shared `canMutate`, localized `workspace_not_ready`, extended intercepted browser coverage.
+Route-level unsaved-change coordination (`useBlocker` + profile layout registration), shell/brand/history protection without prompt loops, explicit `saveRefreshFailed` and soft `sessionRefreshWarning` banners, shared `canMutate`, localized `workspace_not_ready`, extended intercepted browser coverage.
+
+## Exact-head CI
+
+- Frontend: https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30780915229
+- PLAN-0005: https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30780915260
 
 ## Known limitations
 
 - Adult declaration acceptance mutation unavailable in production until accepted policy versions are configured.
 - Technique/goal/abandonment free-text labels not round-tripped (catalog + unknown-code fallback only).
-- Independent validation tracked by PLAN-0024 (Draft/unpinned until residual tip is finalized).
 
 ## Handoff
 
 ```text
-PLAN-0020 residual remediation in progress against baseline 9df4ec9.
-PLAN-0024 remains Draft until the residual candidate is CI-green and pinned.
-No agent approval, auto-merge, or merge was performed.
+PR #35 residual remediation complete.
+PLAN-0024 is Ready for an independent agent against exact candidate 5733bb4de957b53469a28bc60c472a90f0955907.
+Do not merge until the PLAN-0024 assessment is reviewed by the owner.
 ```
