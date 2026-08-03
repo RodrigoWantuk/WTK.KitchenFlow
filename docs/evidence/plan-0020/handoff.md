@@ -17,7 +17,25 @@
 | P2 | F-0024-03, F-0024-04 |
 | P3 | F-0024-05 |
 
-Do not rewrite PLAN-0024 evidence. A new remediation candidate requires PLAN-0025 independent retest.
+Do not rewrite PLAN-0024 evidence. Remediation candidate requires PLAN-0025 independent retest.
+
+## Remediation candidate (awaiting PLAN-0025)
+
+| Role | Value |
+|---|---|
+| Functional / CI tip | `06bd95baacaabaa099170de1ba41187a8e885dea` |
+| Exact-head Frontend (PR) | https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30857947860 |
+| Exact-head PLAN-0005 | https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30857947726 |
+| PLAN-0020 status | **Validating** |
+| Successor retest | [PLAN-0025](../../plans/PLAN-0025-independently-retest-plan-0020-profile-remediation.md) Ready |
+
+### Remediated findings (implementation claim — pending independent retest)
+
+- **F-0024-01** — Required numeric projections fail closed via `mapRequiredFiniteInteger` / `mapOptionalFiniteNumber`; blank strings no longer become zero.
+- **F-0024-02** — Shell logout routes through `useOptionalUnsavedChangesCoordinator().requestNavigation`.
+- **F-0024-03** — Equipment `stableCode` field errors target focusable `profile-equipment-entry-<key>` rows with localized copy.
+- **F-0024-04** — Preferences/Equipment controls use persistent visible labels / accessible names in en, pt-BR, es.
+- **F-0024-05** — `isCustomStableCode` matches exact minted `custom_<uuid-v4>` shape.
 
 ## Residual remediation (historical — failed independent validation)
 
@@ -45,8 +63,20 @@ Route-level unsaved-change coordination (`useBlocker` + profile layout registrat
 ## Handoff
 
 ```text
-PLAN-0020 reopened In Progress after PLAN-0024 Fail against 5733bb4.
-Remediate F-0024-01…05 on draft PR #35; publish a new exact green candidate for PLAN-0025.
-Do not merge until independent retest Passes.
+PLAN-0020 remediation complete against PLAN-0024 findings.
+
+New exact candidate:
+06bd95baacaabaa099170de1ba41187a8e885dea
+
+Exact-head CI:
+Frontend 30857947860 — Passed
+PLAN-0005 30857947726 — Passed
+
+PLAN-0020 is Validating.
+PLAN-0024 remains the immutable historical Fail against 5733bb4.
+PLAN-0025 is Ready for an independent agent against 06bd95b.
 Issue #37 remains open pending retest.
+
+PR #35 remains draft.
+No agent approval, auto-merge or merge was performed.
 ```

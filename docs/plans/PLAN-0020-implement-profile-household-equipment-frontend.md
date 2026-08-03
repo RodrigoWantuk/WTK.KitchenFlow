@@ -1,22 +1,23 @@
 # PLAN-0020: Implement Profile, Household, Preferences, and Equipment Frontend
 
-- **Status:** In Progress
+- **Status:** Validating
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** PLAN-0020 remediation agent
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-03T22:02:03Z
+- **Last updated:** 2026-08-03T22:25:00Z
 - **Branch:** `agent/plan-0020-profile-frontend`
 - **Pull request:** [Draft PR #35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35)
 - **Dependencies:** PLAN-0012 and PLAN-0016 merged; PLAN-0011 merged via PR #34 (`eb9e92c`); generated OpenAPI client available
 - **Related product:** `docs/product/audience-and-profile.md`
 - **Related backend:** `docs/plans/PLAN-0012-implement-profile-household-equipment-backend.md`
-- **Related plans:** PLAN-0011 (merged), PLAN-0021 (live home), PLAN-0024 (**Completed — Fail** at `5733bb4`, evidence PR #36), PLAN-0025 (successor independent retest — after remediation candidate)
+- **Related plans:** PLAN-0011 (merged), PLAN-0021 (live home), PLAN-0024 (**Completed — Fail** at `5733bb4`, evidence PR #36), PLAN-0025 (**Ready**, pinned to remediation candidate)
 - **Starting SHA:** `eb9e92c21ac817e497235168786daeb3f35c30cd`
 - **Review baseline:** `a50152c78e872685b9f760db53c05984308174d8`
 - **Failed independent SUT:** `5733bb4de957b53469a28bc60c472a90f0955907`
 - **Independent validation:** PLAN-0024 / [PR #36](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/36) @ `b549a97ff91acc0236121556e8edc81fcea82156` — **Fail**
 - **Blocking issue:** [#37](https://github.com/RodrigoWantuk/WTK.Cocinaris/issues/37)
+- **Remediation candidate:** `06bd95baacaabaa099170de1ba41187a8e885dea`
 
 ## Objective
 
@@ -74,22 +75,29 @@ Against review baseline `a50152c`:
 - [x] Equipment validation and keyboard behavior complete.
 - [x] Authenticated profile browser scenarios pass (intercepted harness).
 - [x] Locales complete; production isolation; generated client drift zero.
-- [ ] F-0024-01 through F-0024-05 remediated with canonical regression tests.
-- [ ] Frontend and PLAN-0005 pass on the new remediation candidate.
-- [ ] PLAN-0025 Ready and pinned; PLAN-0024 remains immutable Completed/Fail.
+- [x] F-0024-01 through F-0024-05 remediated with canonical regression tests (implementation claim).
+- [x] Frontend and PLAN-0005 pass on the new remediation candidate `06bd95b`.
+- [x] PLAN-0025 Ready and pinned; PLAN-0024 remains immutable Completed/Fail.
 - [ ] Issue #37 updated (remediated, awaiting independent retest) but not closed by this agent.
+- [ ] PLAN-0025 independent retest Passes before marking PLAN-0020 Completed.
 
 ## Execution state
 
-- **Current checkpoint:** F-0024-01…05 remediations plus expanded logout regressions, Prettier, and dependency audit resolutions (`postcss` 8.5.25, `fast-uri` 3.1.5) ready to publish; awaiting push and exact-head CI.
+- **Current checkpoint:** **Validating**. Remediation candidate `06bd95baacaabaa099170de1ba41187a8e885dea` has exact-head Frontend `30857947860` + PLAN-0005 `30857947726` Passed. PLAN-0025 Ready.
 - **Failed SUT:** `5733bb4de957b53469a28bc60c472a90f0955907`
 - **Evidence:** PR #36 @ `b549a97ff91acc0236121556e8edc81fcea82156`
-- **Exact next action:** Push branch; await exact-head Frontend + PLAN-0005; set Validating; Ready PLAN-0025; comment #37.
-- **Blockers:** #37 pending remediation CI + independent retest.
-- **Working tree state:** Regression/audit fixes staged for commit.
+- **Exact next action:** Independent agent executes PLAN-0025 against `06bd95b`; keep PR #35 draft; leave #37 open until retest.
+- **Blockers:** Independent retest pending (#37).
+- **Working tree state:** Candidate published; Validating.
 
 
 ## Progress log
+
+### 2026-08-03T22:25:00Z — Publish candidate for PLAN-0025 retest
+
+- **Checkpoint:** PLAN-0020 **Validating**. Candidate `06bd95b`. Frontend `30857947860` + PLAN-0005 `30857947726` Passed. PLAN-0025 Ready and pinned.
+- **Next action:** Independent PLAN-0025 retest; do not mark Completed.
+- **Blockers or handoff notes:** Issue #37 remains open; PR #35 remains draft.
 
 ### 2026-08-03T22:35:00Z — Regressions, audit resolutions, and dirty-logout coverage
 
