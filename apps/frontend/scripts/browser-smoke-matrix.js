@@ -113,8 +113,7 @@ function meta() {
   const eventName = process.env.GITHUB_EVENT_NAME || "local";
   const githubSha = process.env.GITHUB_SHA || "";
   const prHeadSha = process.env.SMOKE_PR_HEAD_SHA || "";
-  const syntheticMergeSha =
-    eventName === "pull_request" ? githubSha || "" : "";
+  const syntheticMergeSha = eventName === "pull_request" ? githubSha || "" : "";
   const testedCodeSha =
     process.env.SMOKE_TESTED_CODE_SHA ||
     prHeadSha ||
@@ -322,7 +321,10 @@ async function run() {
     }
     if (baseline.isActive) {
       await page.evaluate(() => {
-        if (document.activeElement && document.activeElement !== document.body) {
+        if (
+          document.activeElement &&
+          document.activeElement !== document.body
+        ) {
           document.activeElement.blur();
         }
       });
@@ -732,7 +734,9 @@ async function run() {
               const transitionDuration = parseCssTimeSeconds(
                 s.transitionDuration,
               );
-              const animationDuration = parseCssTimeSeconds(s.animationDuration);
+              const animationDuration = parseCssTimeSeconds(
+                s.animationDuration,
+              );
               if (transitionDuration === 0 && animationDuration === 0) continue;
               out.push({
                 id:
@@ -789,8 +793,8 @@ async function run() {
             `documentElement.lang expected en, got ${lang}`,
           );
         }
-        const stored = await page.evaluate(
-          () => localStorage.getItem("kitchenflow_production_locale"),
+        const stored = await page.evaluate(() =>
+          localStorage.getItem("kitchenflow_production_locale"),
         );
         if (stored !== "en") {
           fail(
@@ -820,6 +824,51 @@ async function run() {
           "production locale mobile 360",
           "Passed",
           "select visible; en persisted; lang updated",
+        );
+      },
+    );
+
+    // No live backend/Keycloak is available to this smoke harness (PRODUCTION_BASE
+    // serves the static SPA bundle only), so this cannot exercise an authenticated
+    // profile session end-to-end. It instead proves the production `/app/perfil*`
+    // routes are registered and access-gated: a direct navigation while
+    // unauthenticated must redirect to `/acesso` rather than exposing profile data,
+    // crashing, or silently falling through to the generic `/app/*` unavailable
+    // catch-all. Full authenticated profile coverage (load/save/conflict) is
+    // exercised by Jest component tests in `src/features/profile/*.test.tsx` and
+    // `src/app/ProductionProfileRoutes.test.tsx`.
+    await withPage(
+      { viewport: { width: 1280, height: 800 } },
+      "production-profile-route-gate",
+      async (page) => {
+        for (const path of [
+          "/app/perfil",
+          "/app/perfil/dados",
+          "/app/perfil/preferencias",
+          "/app/perfil/equipamentos",
+        ]) {
+          await page.goto(PRODUCTION_BASE + path, {
+            waitUntil: "domcontentloaded",
+            timeout: 30000,
+          });
+          await page.waitForURL(/\/acesso/, { timeout: 15000 }).catch(() => {});
+          if (!/\/acesso/.test(page.url())) {
+            fail(
+              "production profile route gate",
+              `unauthenticated ${path} did not redirect to /acesso (url=${page.url()})`,
+            );
+          }
+          if ((await page.getByTestId("profile-overview").count()) > 0) {
+            fail(
+              "production profile route gate",
+              `${path} exposed profile-overview while unauthenticated`,
+            );
+          }
+        }
+        record(
+          "production profile route gate",
+          "Passed",
+          "unauthenticated /app/perfil* redirects to /acesso; no live-backend authenticated coverage in this harness",
         );
       },
     );

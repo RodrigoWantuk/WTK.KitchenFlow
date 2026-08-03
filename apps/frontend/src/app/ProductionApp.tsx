@@ -24,6 +24,11 @@ import { ProductionInventoryForm } from "@/features/inventory/ProductionInventor
 import { PublicEntryPage } from "@/features/entry/PublicEntryPage";
 import { ContextualHomePage } from "@/features/home/ContextualHomePage";
 import { ContextualHomeProvider } from "@/features/home/ContextualHomeProvider";
+import { ProfileProvider } from "@/features/profile/ProfileProvider";
+import { ProfileOverviewPage } from "@/features/profile/ProfileOverviewPage";
+import { ProfileDataPage } from "@/features/profile/ProfileDataPage";
+import { ProfilePreferencesPage } from "@/features/profile/ProfilePreferencesPage";
+import { ProfileEquipmentPage } from "@/features/profile/ProfileEquipmentPage";
 
 function LocaleSwitcher() {
   const { locale, locales, setLocale, t } = useProductionI18n();
@@ -125,16 +130,61 @@ function ProductionAccess() {
   );
 }
 
+const PRIMARY_NAV_ITEMS = [
+  { to: "/app/hoje", key: "home", testId: "production-nav-home" },
+  { to: "/app/despensa", key: "inventory", testId: "production-nav-despensa" },
+  { to: "/app/perfil", key: "profile", testId: "production-nav-perfil" },
+] as const;
+
+function PrimaryNav() {
+  const { t } = useProductionI18n();
+  const location = useLocation();
+  const labels: Record<(typeof PRIMARY_NAV_ITEMS)[number]["key"], string> = {
+    home: t("nav.home"),
+    inventory: t("inventory.title"),
+    profile: t("nav.profile"),
+  };
+  return (
+    <nav
+      aria-label={t("nav.primary")}
+      data-testid="production-primary-nav"
+      className="flex flex-wrap gap-1"
+    >
+      {PRIMARY_NAV_ITEMS.map((item) => {
+        const active = location.pathname.startsWith(item.to);
+        return (
+          <Link
+            key={item.key}
+            to={item.to}
+            data-testid={item.testId}
+            aria-current={active ? "page" : undefined}
+            className={`rounded-md px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              active
+                ? "bg-secondary font-medium"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            }`}
+          >
+            {labels[item.key] || item.key}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 function ProductionAppShell({ children }: { children: ReactNode }) {
   const { t } = useProductionI18n();
   const { session, logout, isAuthenticated } = useSession();
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 px-6 py-4 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
-          <Link to="/app/hoje" className="font-display text-xl">
-            {t("brand.name")}
-          </Link>
+        <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-4">
+            <Link to="/app/hoje" className="font-display text-xl">
+              {t("brand.name")}
+            </Link>
+            {isAuthenticated && <PrimaryNav />}
+          </div>
           <div className="flex items-center gap-2">
             <LocaleSwitcher />
             {isAuthenticated && (
@@ -195,7 +245,12 @@ function SessionScopedRoutes({ children }: { children: ReactNode }) {
   return (
     <SessionProvider adapter={runtime.sessionAdapter}>
       <InventoryProvider repository={runtime.inventoryRepository}>
-        {children}
+        <ProfileProvider
+          repository={runtime.profileRepository}
+          adultPolicy={runtime.adultDeclarationPolicy}
+        >
+          {children}
+        </ProfileProvider>
       </InventoryProvider>
     </SessionProvider>
   );
@@ -281,6 +336,54 @@ function ProductionAppRoutes() {
               <RequireAuth>
                 <ProductionAppShell>
                   <ProductionInventoryDetail />
+                </ProductionAppShell>
+              </RequireAuth>
+            </SessionScopedRoutes>
+          }
+        />
+        <Route
+          path="/app/perfil"
+          element={
+            <SessionScopedRoutes>
+              <RequireAuth>
+                <ProductionAppShell>
+                  <ProfileOverviewPage />
+                </ProductionAppShell>
+              </RequireAuth>
+            </SessionScopedRoutes>
+          }
+        />
+        <Route
+          path="/app/perfil/dados"
+          element={
+            <SessionScopedRoutes>
+              <RequireAuth>
+                <ProductionAppShell>
+                  <ProfileDataPage />
+                </ProductionAppShell>
+              </RequireAuth>
+            </SessionScopedRoutes>
+          }
+        />
+        <Route
+          path="/app/perfil/preferencias"
+          element={
+            <SessionScopedRoutes>
+              <RequireAuth>
+                <ProductionAppShell>
+                  <ProfilePreferencesPage />
+                </ProductionAppShell>
+              </RequireAuth>
+            </SessionScopedRoutes>
+          }
+        />
+        <Route
+          path="/app/perfil/equipamentos"
+          element={
+            <SessionScopedRoutes>
+              <RequireAuth>
+                <ProductionAppShell>
+                  <ProfileEquipmentPage />
                 </ProductionAppShell>
               </RequireAuth>
             </SessionScopedRoutes>

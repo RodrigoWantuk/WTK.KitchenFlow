@@ -5,6 +5,7 @@ import { RuntimeProvider } from "@/app/runtime/RuntimeProvider";
 import { ProductionI18nProvider } from "@/app/i18n/ProductionI18nProvider";
 import { createUnavailableContextualHomeAdapter } from "@/adapters/live/unavailableContextualHomeAdapter";
 import { UnavailablePreparationRouteRepository } from "@/adapters/live/unavailablePreparationRouteRepository";
+import { createUnavailableAdultDeclarationPolicy } from "@/features/profile/adultDeclarationPolicy";
 import { PublicEntryPage } from "./PublicEntryPage";
 import type { FrontendRuntime } from "@/app/runtime/types";
 import type { HomeTelemetryEvent } from "@/contracts/contextualHome";
@@ -28,6 +29,12 @@ function renderEntry() {
     } as unknown as FrontendRuntime["inventoryRepository"],
     preparationRouteRepository: new UnavailablePreparationRouteRepository(),
     contextualHomeAdapter: createUnavailableContextualHomeAdapter(),
+    profileRepository: {
+      getProfile: async () => {
+        throw new Error("public entry must not call profile endpoints");
+      },
+    } as unknown as FrontendRuntime["profileRepository"],
+    adultDeclarationPolicy: createUnavailableAdultDeclarationPolicy(),
     enableScenarioBar: false,
     enablePrototypeFixtures: false,
     persistPrototypeAuth: false,

@@ -6,6 +6,7 @@
 import { inventoryCatalogs } from "./inventoryCatalog";
 import { entryCatalogs } from "./entryCatalog";
 import { homeCatalogs } from "./homeCatalog";
+import { profileCatalogs } from "./profileUiCatalog";
 
 export const PRODUCTION_LOCALES = ["pt-BR", "en", "es"] as const;
 export type ProductionLocale = (typeof PRODUCTION_LOCALES)[number];
@@ -39,6 +40,8 @@ const sharedShell: Record<ProductionLocale, Catalog> = {
     "app.unavailable.detail":
       "Esta área ainda não está conectada. A produção não faz fallback para dados mock de receitas, planejamento, compras ou cozinha.",
     "lang.label": "Idioma",
+    "nav.home": "Início",
+    "nav.primary": "Navegação principal",
   },
   en: {
     "brand.name": "Cocinaris",
@@ -64,6 +67,8 @@ const sharedShell: Record<ProductionLocale, Catalog> = {
     "app.unavailable.detail":
       "This area is not wired yet. Production does not fall back to mock recipes, planning, shopping, or cook data.",
     "lang.label": "Language",
+    "nav.home": "Home",
+    "nav.primary": "Primary navigation",
   },
   es: {
     "brand.name": "Cocinaris",
@@ -90,6 +95,8 @@ const sharedShell: Record<ProductionLocale, Catalog> = {
     "app.unavailable.detail":
       "Esta área aún no está conectada. La producción no usa datos mock de recetas, planificación, compras o cocina.",
     "lang.label": "Idioma",
+    "nav.home": "Inicio",
+    "nav.primary": "Navegación principal",
   },
 };
 
@@ -99,18 +106,21 @@ const catalogs: Record<ProductionLocale, Catalog> = {
     ...entryCatalogs["pt-BR"],
     ...homeCatalogs["pt-BR"],
     ...inventoryCatalogs["pt-BR"],
+    ...profileCatalogs["pt-BR"],
   },
   en: {
     ...sharedShell.en,
     ...entryCatalogs.en,
     ...homeCatalogs.en,
     ...inventoryCatalogs.en,
+    ...profileCatalogs.en,
   },
   es: {
     ...sharedShell.es,
     ...entryCatalogs.es,
     ...homeCatalogs.es,
     ...inventoryCatalogs.es,
+    ...profileCatalogs.es,
   },
 };
 
