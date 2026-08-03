@@ -1,0 +1,5 @@
+# Local runtime artifacts — never commit secrets or cookies/tokens.
+*.cookie
+*.token
+*.pem
+local/

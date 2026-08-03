@@ -1,17 +1,17 @@
 # PLAN-0020: Implement Profile, Household, Preferences, and Equipment Frontend
 
-- **Status:** Completed
+- **Status:** In Progress
 - **Type:** Implementation
 - **Priority:** High
-- **Owner:** Cursor agent (PLAN-0020 profile frontend remediation)
+- **Owner:** Unassigned PLAN-0020 remediation agent
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-03T03:15:00Z
+- **Last updated:** 2026-08-03T11:51:24Z
 - **Branch:** `agent/plan-0020-profile-frontend`
 - **Pull request:** [Draft PR #35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35)
 - **Dependencies:** PLAN-0012 and PLAN-0016 merged; PLAN-0011 merged via PR #34 (`eb9e92c`); generated OpenAPI client available
 - **Related product:** `docs/product/audience-and-profile.md`
 - **Related backend:** `docs/plans/PLAN-0012-implement-profile-household-equipment-backend.md`
-- **Related plans:** PLAN-0011 (merged), PLAN-0021 (live home), PLAN-0024 (independent validation — Draft until residual remediation candidate finalized)
+- **Related plans:** PLAN-0011 (merged), PLAN-0021 (live home), PLAN-0024 (independent validation — **Fail** at SUT `5733bb4`)
 - **Starting SHA:** `eb9e92c21ac817e497235168786daeb3f35c30cd`
 - **Review baseline:** `a50152c78e872685b9f760db53c05984308174d8`
 
@@ -71,15 +71,21 @@ Prior green tip `5efcfb8` / packaging `a50152c` are superseded by this remediati
 
 ## Execution state
 
-- **Current checkpoint:** Residual remediation **Completed**; exact-head CI green.
+- **Current checkpoint:** Returned to **In Progress** after PLAN-0024 **Fail** at SUT `5733bb4`. Blocking findings F-0024-01 (malformed numeric fail-closed) and F-0024-02 (logout silent draft loss).
 - **Review baseline (residual):** `9df4ec980c6de1d9d27454ac84499df0aa45ef8d`
-- **Residual functional tip / CI tip:** `5733bb4de957b53469a28bc60c472a90f0955907`
-- **Exact next action:** Owner review of draft PR #35; independent validation via PLAN-0024.
-- **Blockers:** None.
-- **Working tree state:** Completion packaging may advance PR head.
+- **Failed independent validation tip:** `5733bb4de957b53469a28bc60c472a90f0955907`
+- **Exact next action:** Remediate F-0024-01 and F-0024-02 on PR #35; publish a new exact green candidate SHA; request PLAN-0024 retest. Keep draft.
+- **Blockers:** Independent validation Fail (PR #36 evidence).
+- **Working tree state:** Implementation branch unchanged by PLAN-0024 (validation-only).
 
 
 ## Progress log
+
+### 2026-08-03T11:51:24Z — PLAN-0024 independent validation Fail
+
+- **Checkpoint:** PLAN-0020 returned to **In Progress**. Immutable Fail evidence for SUT `5733bb4` in PLAN-0024 / PR #36. P1: F-0024-01, F-0024-02. P2: F-0024-03, F-0024-04. P3: F-0024-05.
+- **Next action:** Remediate P1 findings; do not merge PR #35 until revalidation Passes.
+- **Blockers or handoff notes:** No agent merge; PR #35 remains draft.
 
 ### 2026-08-03T03:15:00Z — Cursor agent (PLAN-0020 residual remediation complete)
 

@@ -10,20 +10,13 @@ Independent validation of PLAN-0020 profile frontend against an immutable produc
 | Implementation PR | [#35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35) / `agent/plan-0020-profile-frontend` |
 | Packaging head at claim | `260cecbb737f6cfa2c623b576eb3eb4216a757fc` |
 | Validation branch | `agent/plan-0024-validate-plan-0020-profile` |
-| Evidence branch head | recorded in `environment.json` after each evidence commit |
-| Validation PR | recorded after draft open |
+| Validation PR | [#36](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/36) |
+| Assessment | **Fail** |
 | SUT worktree | `/home/rodrigo/Repos/GIT/WTK.Cocinaris-plan-0024-sut` @ `5733bb4` |
 
 ## Candidate drift check (claim time)
 
-Commits after `5733bb4` on the implementation branch change documentation/evidence only:
-
-- `docs/evidence/plan-0020/handoff.md`
-- `docs/plan-status.md`
-- `docs/plans/PLAN-0020-implement-profile-household-equipment-frontend.md`
-- `docs/plans/PLAN-0024-independently-validate-plan-0020-profile-frontend.md`
-
-No application, test harness, workflow, dependency, or generated-client file changed after the candidate. Product validation executes against the pinned SUT worktree.
+Commits after `5733bb4` on the implementation branch change documentation/evidence only. No application, test harness, workflow, dependency, or generated-client file changed after the candidate.
 
 ## Candidate CI context (not treated as proof)
 
@@ -37,8 +30,9 @@ No application, test harness, workflow, dependency, or generated-client file cha
 | `environment.json` | Host, tooling, SUT and evidence identities |
 | `command-results.json` | Gate and adversarial command outcomes |
 | `test-matrix.md` | Phase coverage and results |
-| `findings.md` | Defect reports |
-| `assessment.md` | Final Pass / Conditional Pass / Fail |
+| `findings.md` | Defect reports (F-0024-01 … F-0024-05) |
+| `assessment.md` | Final Fail assessment |
+| `reports/` | Raw command logs, smoke report, Firefox zoom JSON |
 
 ## Privacy
 

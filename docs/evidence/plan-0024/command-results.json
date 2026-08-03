@@ -1,0 +1,238 @@
+{
+  "plan": "PLAN-0024",
+  "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+  "generatedAtUtc": "2026-08-03T11:51:24Z",
+  "commands": [
+    {
+      "command": "format-check-api-client",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:42:42Z",
+      "endUtc": "2026-08-03T11:42:42Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/format-check-api-client.log"
+    },
+    {
+      "command": "typecheck",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:42:42Z",
+      "endUtc": "2026-08-03T11:42:50Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/typecheck.log"
+    },
+    {
+      "command": "lint",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:42:50Z",
+      "endUtc": "2026-08-03T11:42:54Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/lint.log"
+    },
+    {
+      "command": "format-check",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:42:54Z",
+      "endUtc": "2026-08-03T11:42:57Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/format-check.log"
+    },
+    {
+      "command": "test",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:43:04Z",
+      "endUtc": "2026-08-03T11:43:19Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/test.log"
+    },
+    {
+      "command": "generate-api-client",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:43:45Z",
+      "endUtc": "2026-08-03T11:43:46Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/generate-api-client.log"
+    },
+    {
+      "command": "check-api-client-drift",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:43:46Z",
+      "endUtc": "2026-08-03T11:43:47Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/check-api-client-drift.log"
+    },
+    {
+      "command": "typecheck-api-client",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:43:47Z",
+      "endUtc": "2026-08-03T11:43:48Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/typecheck-api-client.log"
+    },
+    {
+      "command": "guard-ts-only",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:43:48Z",
+      "endUtc": "2026-08-03T11:43:48Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/guard-ts-only.log"
+    },
+    {
+      "command": "guard-interactive-nesting",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:43:48Z",
+      "endUtc": "2026-08-03T11:43:48Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/guard-interactive-nesting.log"
+    },
+    {
+      "command": "guard-build-mode",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:43:48Z",
+      "endUtc": "2026-08-03T11:43:49Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/guard-build-mode.log"
+    },
+    {
+      "command": "guard-production-isolation",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:43:49Z",
+      "endUtc": "2026-08-03T11:43:49Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/guard-production-isolation.log"
+    },
+    {
+      "command": "build",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:43:49Z",
+      "endUtc": "2026-08-03T11:44:04Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/build.log"
+    },
+    {
+      "command": "build-prototype",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:44:04Z",
+      "endUtc": "2026-08-03T11:44:21Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/build-prototype.log"
+    },
+    {
+      "command": "build-production",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:44:21Z",
+      "endUtc": "2026-08-03T11:44:30Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/build-production.log"
+    },
+    {
+      "command": "inspect-production-bundle",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:44:30Z",
+      "endUtc": "2026-08-03T11:44:30Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/inspect-production-bundle.log"
+    },
+    {
+      "command": "audit-policy",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:44:30Z",
+      "endUtc": "2026-08-03T11:44:32Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/audit-policy.log"
+    },
+    {
+      "command": "build-prototype-named",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:48:04Z",
+      "endUtc": "2026-08-03T11:48:14Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/build-prototype-named.log"
+    },
+    {
+      "command": "build-production-named",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:48:14Z",
+      "endUtc": "2026-08-03T11:48:22Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/build-production-named.log"
+    },
+    {
+      "command": "smoke-browser-ci",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:48:22Z",
+      "endUtc": "2026-08-03T11:49:28Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/smoke-browser-ci.log"
+    },
+    {
+      "command": "validate-firefox-native-zoom",
+      "workingDirectory": "apps/frontend (SUT worktree)",
+      "startUtc": "2026-08-03T11:50:31Z",
+      "endUtc": "2026-08-03T11:50:58Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/validate-firefox-native-zoom.log"
+    },
+    {
+      "command": "yarn test --testPathPattern=validation/plan-0024",
+      "workingDirectory": "apps/frontend (validation branch; product sources match SUT)",
+      "startUtc": "2026-08-03T11:47:00Z",
+      "endUtc": "2026-08-03T11:48:00Z",
+      "exitCode": 1,
+      "result": "Failed (intentional defect probes: 4 failing / 22 passing)",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/adversarial-tests.log",
+      "notes": "22 independent probes passed; 4 probes failed against SUT behavior (malformed numeric fail-closed x3; logout unsaved guard x1). Mutation-proof fixtures also passed."
+    },
+    {
+      "command": "yarn test --testPathPattern=ProductionProfileRoutes|UnsavedChanges|ProfileProvider|ProfilePreferences|ProfileEquipment|ProfileData|productionIsolation|mapProfile|liveProfileRepository",
+      "workingDirectory": "apps/frontend (validation branch)",
+      "startUtc": "2026-08-03T11:48:00Z",
+      "endUtc": "2026-08-03T11:48:16Z",
+      "exitCode": 0,
+      "result": "Passed (9 suites / 98 tests)",
+      "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+      "artifactPath": "docs/evidence/plan-0024/reports/profile-related-tests.log"
+    }
+  ]
+}

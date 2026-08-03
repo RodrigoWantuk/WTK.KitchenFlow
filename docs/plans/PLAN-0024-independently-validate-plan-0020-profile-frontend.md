@@ -1,14 +1,15 @@
 # PLAN-0024: Independently Validate PLAN-0020 Profile Frontend
 
-- **Status:** In Progress
+- **Status:** Completed
 - **Type:** Testing
 - **Priority:** High
 - **Owner:** Independent testing agent (PLAN-0024)
 - **Created:** 2026-08-03
-- **Last updated:** 2026-08-03T11:39:55Z
+- **Last updated:** 2026-08-03T11:51:24Z
 - **Branch:** `agent/plan-0024-validate-plan-0020-profile`
-- **Pull request:** Opening after claim commit
+- **Pull request:** [Draft PR #36](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/36) (base `agent/plan-0020-profile-frontend`)
 - **System under test:** Draft [PR #35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35) / `agent/plan-0020-profile-frontend` @ `5733bb4de957b53469a28bc60c472a90f0955907` (immutable)
+- **Assessment:** **Fail**
 - **Packaging head at claim:** `260cecbb737f6cfa2c623b576eb3eb4216a757fc` (docs-only delta after SUT)
 - **Related implementation plan:** [PLAN-0020](PLAN-0020-implement-profile-household-equipment-frontend.md)
 - **Related plans:** PLAN-0012 (backend), PLAN-0016 (session/inventory frontend), PLAN-0005 (inventory validation baseline)
@@ -57,21 +58,27 @@ Decision-ready Pass / Conditional Pass / Fail assessment against pinned SHA `573
 
 ## Acceptance criteria
 
-- [ ] Candidate SHA pinned and environment manifest recorded
-- [ ] Contract/mapping, concurrency, preference, equipment, session, a11y/i18n, and isolation gates executed
-- [ ] Final assessment document states Pass, Conditional Pass, or Fail with justification
-- [ ] Blocking findings filed or linked when Fail/Conditional Pass
-- [ ] Assessment agent is independent of the PLAN-0020 implementation author
+- [x] Candidate SHA pinned and environment manifest recorded
+- [x] Contract/mapping, concurrency, preference, equipment, session, a11y/i18n, and isolation gates executed
+- [x] Final assessment document states Pass, Conditional Pass, or Fail with justification
+- [x] Blocking findings filed or linked when Fail/Conditional Pass
+- [x] Assessment agent is independent of the PLAN-0020 implementation author
 
 ## Execution state
 
-- **Current checkpoint:** Claimed — SUT `5733bb4` confirmed reachable; packaging head `260cecb` is docs-only after candidate; validation branch and SUT worktree created; evidence directory started.
-- **Exact next action:** Open draft validation PR; execute Phase A–K gates and adversarial tests against the SUT worktree; publish assessment.
-- **Blockers:** None.
-- **Working tree state:** Validation branch dirty with claim artifacts pending first commit.
+- **Current checkpoint:** Completed with **Fail** against immutable SUT `5733bb4`. Evidence under `docs/evidence/plan-0024/`. Blocking findings F-0024-01 and F-0024-02.
+- **Exact next action:** Owner reviews PR #36; PLAN-0020 remediates P1 findings and publishes a new pinned candidate for retest.
+- **Blockers:** None for this assessment (complete).
+- **Working tree state:** Validation branch holds evidence + adversarial probes only; product behavior unchanged.
 
 
 ## Progress log
+
+### 2026-08-03T11:51:24Z — Independent assessment Fail
+
+- **Checkpoint:** Completed **Fail**. P1: F-0024-01 (malformed numeric fail-closed), F-0024-02 (logout discards dirty draft). P2: F-0024-03/04. P3: F-0024-05. SUT regression gates Passed including smoke 24/24 and Firefox native zoom. Adversarial suite 22 Passed / 4 Failed (defect probes).
+- **Validation:** See `docs/evidence/plan-0024/assessment.md`.
+- **Next action:** PLAN-0020 remediation; keep PR #35 draft.
 
 ### 2026-08-03T11:39:55Z — Claimed by independent testing agent
 
