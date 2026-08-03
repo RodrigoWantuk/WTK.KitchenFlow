@@ -21,6 +21,21 @@ export const UNCHANGED_FIELD_MODE: FieldMode = { kind: "unchanged" };
 
 type Translate = ReturnType<typeof useProductionI18n>["t"];
 
+/** Inclusive backend range for one numeric field; see `ValidateCountField` in `ProfileApplicationWorkflow.cs`. */
+export interface NumericFieldLimits {
+  min: number;
+  max: number;
+}
+
+/** Backend-authoritative inclusive bounds for every numeric household/cooking field. */
+export const NUMERIC_FIELD_LIMITS: Record<string, NumericFieldLimits> = {
+  defaultAdultCount: { min: 1, max: 20 },
+  defaultChildCount: { min: 0, max: 20 },
+  defaultServingCount: { min: 1, max: 30 },
+  ordinaryPrepMinutes: { min: 5, max: 600 },
+  exceptionalPrepMinutes: { min: 5, max: 1440 },
+};
+
 /** Resolves the text shown in the input for the current mode and server field. */
 function resolveInputValue(
   field: ProgressiveProfileField<string | number>,
@@ -49,7 +64,9 @@ function resolveStatusLabel(
  * Editor for one progressive profile field (household or cooking context). Exposes
  * the three baseline actions — leave unchanged (default), confirm a new value, or
  * remove — plus a one-click "use this default" action while `presence` is `default`.
- * Submission and PATCH-building are owned by the enclosing section form.
+ * Submission and PATCH-building are owned by the enclosing section form, which is
+ * also responsible for running {@link validateNumberFieldMutation} before submit and
+ * passing the result back in as `errorMessage`.
  */
 export function ProgressiveFieldControl({
   id,
@@ -59,6 +76,7 @@ export function ProgressiveFieldControl({
   onModeChange,
   numeric = false,
   disabled = false,
+  errorMessage,
   t,
   testIdPrefix,
 }: {
@@ -69,6 +87,8 @@ export function ProgressiveFieldControl({
   onModeChange: (mode: FieldMode) => void;
   numeric?: boolean;
   disabled?: boolean;
+  /** Field-level validation message (local or mapped from a backend `fieldErrors` path); wired to `aria-invalid`/`aria-describedby`. */
+  errorMessage?: string | null;
   t: Translate;
   testIdPrefix: string;
 }) {
@@ -78,6 +98,7 @@ export function ProgressiveFieldControl({
     field.presence === "default" &&
     mode.kind === "unchanged" &&
     field.defaultValue != null;
+  const errorId = `${testIdPrefix}-error-${id}`;
 
   return (
     <div
@@ -105,6 +126,8 @@ export function ProgressiveFieldControl({
           type={numeric ? "number" : "text"}
           value={inputValue}
           disabled={disabled || mode.kind === "remove"}
+          aria-invalid={errorMessage ? true : undefined}
+          aria-describedby={errorMessage ? errorId : undefined}
           onChange={(event) =>
             onModeChange({ kind: "confirm", value: event.target.value })
           }
@@ -150,6 +173,16 @@ export function ProgressiveFieldControl({
           </Button>
         )}
       </div>
+      {errorMessage && (
+        <p
+          role="alert"
+          id={errorId}
+          data-testid={errorId}
+          className="text-xs text-destructive"
+        >
+          {errorMessage}
+        </p>
+      )}
     </div>
   );
 }
@@ -164,16 +197,40 @@ export function toStringFieldMutation(
 }
 
 /**
- * Converts a field mode into a `ProfileFieldMutation<number>`, or `undefined` when
- * unchanged. Non-numeric input is coerced to `0` rather than silently dropped —
- * the backend performs the authoritative range validation and surfaces
- * `validation_failed` with field errors when out of range.
+ * Result of validating one numeric field mode against the backend's authoritative
+ * range (see {@link NUMERIC_FIELD_LIMITS}). `ok: false` never reaches
+ * `ProfileFieldMutation` — the caller must surface `errorKey` as a local field error
+ * and refuse to submit the enclosing section, rather than silently coercing an
+ * empty or invalid value to `0` and letting the backend reject it after the fact.
  */
-export function toNumberFieldMutation(
+export type NumberFieldValidation =
+  | { ok: true; mutation: ProfileFieldMutation<number> | undefined }
+  | { ok: false; errorKey: "empty" | "invalid" | "outOfRange" };
+
+/**
+ * Validates a field mode into a `ProfileFieldMutation<number>`. Unlike the previous
+ * behavior, empty or non-numeric input is never silently coerced to `0`: it is
+ * reported back as a local validation failure so the section save is blocked and
+ * the field shows an inline error instead of sending a value the user never typed.
+ */
+export function validateNumberFieldMutation(
   mode: FieldMode,
-): ProfileFieldMutation<number> | undefined {
-  if (mode.kind === "unchanged") return undefined;
-  if (mode.kind === "remove") return { action: "remove" };
-  const parsed = Number(mode.value.trim());
-  return { action: "confirm", value: Number.isFinite(parsed) ? parsed : 0 };
+  limits?: NumericFieldLimits,
+): NumberFieldValidation {
+  if (mode.kind === "unchanged") return { ok: true, mutation: undefined };
+  if (mode.kind === "remove") {
+    return { ok: true, mutation: { action: "remove" } };
+  }
+  const trimmed = mode.value.trim();
+  if (trimmed === "") {
+    return { ok: false, errorKey: "empty" };
+  }
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed)) {
+    return { ok: false, errorKey: "invalid" };
+  }
+  if (limits && (parsed < limits.min || parsed > limits.max)) {
+    return { ok: false, errorKey: "outOfRange" };
+  }
+  return { ok: true, mutation: { action: "confirm", value: parsed } };
 }

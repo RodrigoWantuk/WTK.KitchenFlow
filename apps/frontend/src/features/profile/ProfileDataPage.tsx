@@ -1,13 +1,27 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useProfileWorkspace } from "./ProfileProvider";
 import {
   ProgressiveFieldControl,
   UNCHANGED_FIELD_MODE,
-  toNumberFieldMutation,
+  NUMERIC_FIELD_LIMITS,
   toStringFieldMutation,
+  validateNumberFieldMutation,
   type FieldMode,
 } from "./ProgressiveFieldControl";
+import { ControlledFieldControl } from "./ControlledFieldControl";
+import {
+  FieldErrorSummary,
+  numericErrorMessage,
+  splitKnownFieldErrors,
+  useFocusFirstFieldError,
+  type FieldErrorItem,
+} from "./fieldErrors";
+import {
+  useUnsavedChangesGuard,
+  UnsavedChangesDialog,
+  GuardedLink,
+} from "./useUnsavedChangesGuard";
 import { CodeListEditor } from "./CodeListEditor";
 import {
   GOAL_CODES,
@@ -21,14 +35,14 @@ import {
 import { isProductionLocale } from "@/app/i18n/productionCatalog";
 import type { ProfilePatch } from "@/contracts/profile";
 import { ProfileApiError } from "@/contracts/profile";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 
-const HOUSEHOLD_STRING_FIELDS = [
+const HOUSEHOLD_TEXT_FIELDS = ["displayName", "timeZone"] as const;
+const HOUSEHOLD_CONTROLLED_FIELDS = [
   "language",
   "region",
   "currency",
   "measurementSystem",
-  "timeZone",
   "planningCadence",
   "shoppingCadence",
 ] as const;
@@ -37,7 +51,12 @@ const HOUSEHOLD_NUMBER_FIELDS = [
   "defaultChildCount",
   "defaultServingCount",
 ] as const;
-const COOKING_STRING_FIELDS = [
+const HOUSEHOLD_FIELD_IDS: readonly string[] = [
+  ...HOUSEHOLD_TEXT_FIELDS,
+  ...HOUSEHOLD_CONTROLLED_FIELDS,
+  ...HOUSEHOLD_NUMBER_FIELDS,
+];
+const COOKING_CONTROLLED_FIELDS = [
   "overallSkill",
   "confidence",
   "preferredInstructionDetail",
@@ -51,6 +70,16 @@ const COOKING_STRING_FIELDS = [
 const COOKING_NUMBER_FIELDS = [
   "ordinaryPrepMinutes",
   "exceptionalPrepMinutes",
+] as const;
+const COOKING_FIELD_IDS: readonly string[] = [
+  ...COOKING_CONTROLLED_FIELDS,
+  ...COOKING_NUMBER_FIELDS,
+];
+const LISTS_FIELD_IDS = [
+  "knownTechniques",
+  "techniquesToLearn",
+  "goals",
+  "abandonmentReasons",
 ] as const;
 
 type FieldModeMap = Record<string, FieldMode>;
@@ -73,9 +102,13 @@ function detectBrowserTimeZone(): string | null {
 
 /**
  * Section-scoped PATCH forms for household, locale/cooking, and ordered lists.
- * Each field is edited through {@link ProgressiveFieldControl}: leave unchanged
- * (default), confirm a new value, or remove. "Cancel" restores the section to the
- * last-loaded snapshot without submitting anything.
+ * Each field is edited through {@link ProgressiveFieldControl} (free text/numeric)
+ * or {@link ControlledFieldControl} (closed-set enums): leave unchanged (default),
+ * confirm a new value, or remove. "Cancel" restores the section to the last-loaded
+ * snapshot without submitting anything. Numeric fields are validated locally
+ * against the backend's authoritative range before submit — an empty or
+ * out-of-range value never reaches the network as a coerced `0`, it blocks submit
+ * with an inline field error instead (see {@link validateNumberFieldMutation}).
  */
 export function ProfileDataPage() {
   const {
@@ -88,12 +121,27 @@ export function ProfileDataPage() {
     reload,
   } = useProfileWorkspace();
   const { t, locale, setLocale } = useProductionI18n();
+  const navigate = useNavigate();
 
   const [householdModes, setHouseholdModes] = useState<FieldModeMap>({});
   const [cookingModes, setCookingModes] = useState<FieldModeMap>({});
   const [householdError, setHouseholdError] = useState<string | null>(null);
   const [cookingError, setCookingError] = useState<string | null>(null);
   const [listsError, setListsError] = useState<string | null>(null);
+  const [householdFieldErrors, setHouseholdFieldErrors] = useState<
+    Record<string, string>
+  >({});
+  const [cookingFieldErrors, setCookingFieldErrors] = useState<
+    Record<string, string>
+  >({});
+  const [listsFieldErrors, setListsFieldErrors] = useState<
+    Record<string, string>
+  >({});
+  const [householdUnknownErrors, setHouseholdUnknownErrors] = useState(0);
+  const [cookingUnknownErrors, setCookingUnknownErrors] = useState(0);
+  const [householdServerComparison, setHouseholdServerComparison] =
+    useState(false);
+  const [cookingServerComparison, setCookingServerComparison] = useState(false);
 
   const [knownTechniques, setKnownTechniques] = useState<string[] | null>(null);
   const [techniquesToLearn, setTechniquesToLearn] = useState<string[] | null>(
@@ -105,6 +153,34 @@ export function ProfileDataPage() {
   );
 
   const browserTimeZone = useMemo(detectBrowserTimeZone, []);
+
+  const listsDirty =
+    knownTechniques !== null ||
+    techniquesToLearn !== null ||
+    goals !== null ||
+    abandonmentReasons !== null;
+  const pageDirty =
+    isSectionDirty(householdModes) ||
+    isSectionDirty(cookingModes) ||
+    listsDirty;
+  const guard = useUnsavedChangesGuard(pageDirty);
+
+  const householdErrorItems: FieldErrorItem[] = Object.entries(
+    householdFieldErrors,
+  ).map(([key, message]) => ({
+    id: `profile-data-input-${key}`,
+    label: t(`profile.data.field.${key}`),
+    message,
+  }));
+  const cookingErrorItems: FieldErrorItem[] = Object.entries(
+    cookingFieldErrors,
+  ).map(([key, message]) => ({
+    id: `profile-data-input-${key}`,
+    label: t(`profile.data.field.${key}`),
+    message,
+  }));
+  useFocusFirstFieldError(householdErrorItems);
+  useFocusFirstFieldError(cookingErrorItems);
 
   if (status === "session") {
     return (
@@ -163,20 +239,49 @@ export function ProfileDataPage() {
     event.preventDefault();
     clearMutationError();
     setHouseholdError(null);
+    setHouseholdFieldErrors({});
+    setHouseholdUnknownErrors(0);
+    setHouseholdServerComparison(false);
+
     const patch: ProfilePatch = {};
+    const localErrors: Record<string, string> = {};
+
     const displayNameMutation = toStringFieldMutation(
       getMode(householdModes, "displayName"),
     );
     if (displayNameMutation) patch.displayName = displayNameMutation;
-    for (const key of HOUSEHOLD_STRING_FIELDS) {
+
+    for (const key of HOUSEHOLD_CONTROLLED_FIELDS) {
       const mutation = toStringFieldMutation(getMode(householdModes, key));
       if (mutation) patch[key] = mutation;
     }
+    const timeZoneMutation = toStringFieldMutation(
+      getMode(householdModes, "timeZone"),
+    );
+    if (timeZoneMutation) patch.timeZone = timeZoneMutation;
+
     for (const key of HOUSEHOLD_NUMBER_FIELDS) {
-      const mutation = toNumberFieldMutation(getMode(householdModes, key));
-      if (mutation) patch[key] = mutation;
+      const result = validateNumberFieldMutation(
+        getMode(householdModes, key),
+        NUMERIC_FIELD_LIMITS[key],
+      );
+      if (!result.ok) {
+        localErrors[key] = numericErrorMessage(
+          result.errorKey,
+          NUMERIC_FIELD_LIMITS[key],
+          t,
+        );
+        continue;
+      }
+      if (result.mutation) patch[key] = result.mutation;
+    }
+
+    if (Object.keys(localErrors).length > 0) {
+      setHouseholdFieldErrors(localErrors);
+      return;
     }
     if (Object.keys(patch).length === 0) return;
+
     const languageMode = getMode(householdModes, "language");
     try {
       await patchProfile(patch);
@@ -188,6 +293,28 @@ export function ProfileDataPage() {
         }
       }
     } catch (err) {
+      if (
+        err instanceof ProfileApiError &&
+        err.code === "validation_failed" &&
+        err.fieldErrors
+      ) {
+        const { known, unknownCount } = splitKnownFieldErrors(
+          err.fieldErrors,
+          HOUSEHOLD_FIELD_IDS,
+        );
+        setHouseholdFieldErrors(known);
+        setHouseholdUnknownErrors(unknownCount);
+        if (Object.keys(known).length === 0 && unknownCount === 0) {
+          setHouseholdError(describeMutationError(err));
+        }
+        return;
+      }
+      if (
+        err instanceof ProfileApiError &&
+        err.code === "precondition_failed"
+      ) {
+        setHouseholdServerComparison(true);
+      }
       setHouseholdError(describeMutationError(err));
     }
   }
@@ -196,20 +323,65 @@ export function ProfileDataPage() {
     event.preventDefault();
     clearMutationError();
     setCookingError(null);
+    setCookingFieldErrors({});
+    setCookingUnknownErrors(0);
+    setCookingServerComparison(false);
+
     const patch: ProfilePatch = {};
-    for (const key of COOKING_STRING_FIELDS) {
+    const localErrors: Record<string, string> = {};
+
+    for (const key of COOKING_CONTROLLED_FIELDS) {
       const mutation = toStringFieldMutation(getMode(cookingModes, key));
       if (mutation) patch[key] = mutation;
     }
     for (const key of COOKING_NUMBER_FIELDS) {
-      const mutation = toNumberFieldMutation(getMode(cookingModes, key));
-      if (mutation) patch[key] = mutation;
+      const result = validateNumberFieldMutation(
+        getMode(cookingModes, key),
+        NUMERIC_FIELD_LIMITS[key],
+      );
+      if (!result.ok) {
+        localErrors[key] = numericErrorMessage(
+          result.errorKey,
+          NUMERIC_FIELD_LIMITS[key],
+          t,
+        );
+        continue;
+      }
+      if (result.mutation) patch[key] = result.mutation;
+    }
+
+    if (Object.keys(localErrors).length > 0) {
+      setCookingFieldErrors(localErrors);
+      return;
     }
     if (Object.keys(patch).length === 0) return;
+
     try {
       await patchProfile(patch);
       setCookingModes({});
     } catch (err) {
+      if (
+        err instanceof ProfileApiError &&
+        err.code === "validation_failed" &&
+        err.fieldErrors
+      ) {
+        const { known, unknownCount } = splitKnownFieldErrors(
+          err.fieldErrors,
+          COOKING_FIELD_IDS,
+        );
+        setCookingFieldErrors(known);
+        setCookingUnknownErrors(unknownCount);
+        if (Object.keys(known).length === 0 && unknownCount === 0) {
+          setCookingError(describeMutationError(err));
+        }
+        return;
+      }
+      if (
+        err instanceof ProfileApiError &&
+        err.code === "precondition_failed"
+      ) {
+        setCookingServerComparison(true);
+      }
       setCookingError(describeMutationError(err));
     }
   }
@@ -218,6 +390,7 @@ export function ProfileDataPage() {
     event.preventDefault();
     clearMutationError();
     setListsError(null);
+    setListsFieldErrors({});
     const patch: ProfilePatch = {};
     if (knownTechniques !== null) patch.knownTechniques = knownTechniques;
     if (techniquesToLearn !== null) {
@@ -235,18 +408,30 @@ export function ProfileDataPage() {
       setGoals(null);
       setAbandonmentReasons(null);
     } catch (err) {
+      if (
+        err instanceof ProfileApiError &&
+        err.code === "validation_failed" &&
+        err.fieldErrors
+      ) {
+        const { known } = splitKnownFieldErrors(
+          err.fieldErrors,
+          LISTS_FIELD_IDS,
+        );
+        setListsFieldErrors(known);
+      }
       setListsError(describeMutationError(err));
     }
   }
 
-  const listsDirty =
-    knownTechniques !== null ||
-    techniquesToLearn !== null ||
-    goals !== null ||
-    abandonmentReasons !== null;
-
   return (
     <div data-testid="profile-data" className="mx-auto max-w-2xl space-y-8">
+      <UnsavedChangesDialog
+        open={guard.isPromptOpen}
+        onConfirm={guard.confirmDiscard}
+        onCancel={guard.cancelNavigation}
+        t={t}
+        testIdPrefix="profile-data"
+      />
       <div className="flex items-center justify-between gap-2">
         <div>
           <h1 className="font-display text-3xl">{t("profile.data.title")}</h1>
@@ -254,9 +439,15 @@ export function ProfileDataPage() {
             {t("profile.data.subtitle")}
           </p>
         </div>
-        <Button asChild variant="secondary">
-          <Link to="/app/perfil">{t("profile.actions.back")}</Link>
-        </Button>
+        <GuardedLink
+          to="/app/perfil"
+          requestNavigation={guard.requestNavigation}
+          navigate={navigate}
+          data-testid="profile-data-back"
+          className={buttonVariants({ variant: "secondary" })}
+        >
+          {t("profile.actions.back")}
+        </GuardedLink>
       </div>
 
       {blocked && (
@@ -282,6 +473,20 @@ export function ProfileDataPage() {
         <h2 className="font-display text-xl">
           {t("profile.data.section.household")}
         </h2>
+        <FieldErrorSummary
+          items={householdErrorItems}
+          unknownCount={householdUnknownErrors}
+          t={t}
+          testId="profile-data-household-error-summary"
+        />
+        {householdServerComparison && (
+          <p
+            className="text-xs text-muted-foreground"
+            data-testid="profile-data-household-server-notice"
+          >
+            {t("profile.data.serverVersionNotice")}
+          </p>
+        )}
         <ProgressiveFieldControl
           id="displayName"
           label={t("profile.data.field.displayName")}
@@ -291,30 +496,42 @@ export function ProfileDataPage() {
             setHouseholdModes((prev) => ({ ...prev, displayName: mode }))
           }
           disabled={blocked || isMutating}
+          errorMessage={householdFieldErrors.displayName}
           t={t}
           testIdPrefix="profile-data"
         />
         {HOUSEHOLD_NUMBER_FIELDS.map((key) => (
-          <ProgressiveFieldControl
-            key={key}
-            id={key}
-            label={t(`profile.data.field.${key}`)}
-            field={household[key]}
-            mode={getMode(householdModes, key)}
-            numeric
-            onModeChange={(mode) =>
-              setHouseholdModes((prev) => ({ ...prev, [key]: mode }))
-            }
-            disabled={blocked || isMutating}
-            t={t}
-            testIdPrefix="profile-data"
-          />
-        ))}
-        {HOUSEHOLD_STRING_FIELDS.filter((key) => key !== "timeZone").map(
-          (key) => (
+          <div key={key} className="space-y-1">
             <ProgressiveFieldControl
-              key={key}
               id={key}
+              label={t(`profile.data.field.${key}`)}
+              field={household[key]}
+              mode={getMode(householdModes, key)}
+              numeric
+              onModeChange={(mode) =>
+                setHouseholdModes((prev) => ({ ...prev, [key]: mode }))
+              }
+              disabled={blocked || isMutating}
+              errorMessage={householdFieldErrors[key]}
+              t={t}
+              testIdPrefix="profile-data"
+            />
+            {householdServerComparison &&
+              getMode(householdModes, key).kind !== "unchanged" && (
+                <p
+                  className="pl-3 text-xs text-muted-foreground"
+                  data-testid={`profile-data-server-value-${key}`}
+                >
+                  {household[key].value ?? t("profile.data.presence.absent")}
+                </p>
+              )}
+          </div>
+        ))}
+        {HOUSEHOLD_CONTROLLED_FIELDS.map((key) => (
+          <div key={key} className="space-y-1">
+            <ControlledFieldControl
+              id={key}
+              fieldName={key}
               label={t(`profile.data.field.${key}`)}
               field={household[key]}
               mode={getMode(householdModes, key)}
@@ -322,11 +539,21 @@ export function ProfileDataPage() {
                 setHouseholdModes((prev) => ({ ...prev, [key]: mode }))
               }
               disabled={blocked || isMutating}
+              errorMessage={householdFieldErrors[key]}
               t={t}
               testIdPrefix="profile-data"
             />
-          ),
-        )}
+            {householdServerComparison &&
+              getMode(householdModes, key).kind !== "unchanged" && (
+                <p
+                  className="pl-3 text-xs text-muted-foreground"
+                  data-testid={`profile-data-server-value-${key}`}
+                >
+                  {household[key].value ?? t("profile.data.presence.absent")}
+                </p>
+              )}
+          </div>
+        ))}
         {getMode(householdModes, "language").kind !== "unchanged" && (
           <p
             className="text-xs text-muted-foreground"
@@ -345,6 +572,7 @@ export function ProfileDataPage() {
               setHouseholdModes((prev) => ({ ...prev, timeZone: mode }))
             }
             disabled={blocked || isMutating}
+            errorMessage={householdFieldErrors.timeZone}
             t={t}
             testIdPrefix="profile-data"
           />
@@ -393,7 +621,12 @@ export function ProfileDataPage() {
               variant="secondary"
               data-testid="profile-data-household-cancel"
               disabled={isMutating}
-              onClick={() => setHouseholdModes({})}
+              onClick={() => {
+                setHouseholdModes({});
+                setHouseholdFieldErrors({});
+                setHouseholdUnknownErrors(0);
+                setHouseholdServerComparison(false);
+              }}
             >
               {t("profile.actions.cancel")}
             </Button>
@@ -417,36 +650,75 @@ export function ProfileDataPage() {
         <h2 className="font-display text-xl">
           {t("profile.data.section.cooking")}
         </h2>
+        <FieldErrorSummary
+          items={cookingErrorItems}
+          unknownCount={cookingUnknownErrors}
+          t={t}
+          testId="profile-data-cooking-error-summary"
+        />
+        {cookingServerComparison && (
+          <p
+            className="text-xs text-muted-foreground"
+            data-testid="profile-data-cooking-server-notice"
+          >
+            {t("profile.data.serverVersionNotice")}
+          </p>
+        )}
         {COOKING_NUMBER_FIELDS.map((key) => (
-          <ProgressiveFieldControl
-            key={key}
-            id={key}
-            label={t(`profile.data.field.${key}`)}
-            field={cookingContext[key]}
-            mode={getMode(cookingModes, key)}
-            numeric
-            onModeChange={(mode) =>
-              setCookingModes((prev) => ({ ...prev, [key]: mode }))
-            }
-            disabled={blocked || isMutating}
-            t={t}
-            testIdPrefix="profile-data"
-          />
+          <div key={key} className="space-y-1">
+            <ProgressiveFieldControl
+              id={key}
+              label={t(`profile.data.field.${key}`)}
+              field={cookingContext[key]}
+              mode={getMode(cookingModes, key)}
+              numeric
+              onModeChange={(mode) =>
+                setCookingModes((prev) => ({ ...prev, [key]: mode }))
+              }
+              disabled={blocked || isMutating}
+              errorMessage={cookingFieldErrors[key]}
+              t={t}
+              testIdPrefix="profile-data"
+            />
+            {cookingServerComparison &&
+              getMode(cookingModes, key).kind !== "unchanged" && (
+                <p
+                  className="pl-3 text-xs text-muted-foreground"
+                  data-testid={`profile-data-server-value-${key}`}
+                >
+                  {cookingContext[key].value ??
+                    t("profile.data.presence.absent")}
+                </p>
+              )}
+          </div>
         ))}
-        {COOKING_STRING_FIELDS.map((key) => (
-          <ProgressiveFieldControl
-            key={key}
-            id={key}
-            label={t(`profile.data.field.${key}`)}
-            field={cookingContext[key]}
-            mode={getMode(cookingModes, key)}
-            onModeChange={(mode) =>
-              setCookingModes((prev) => ({ ...prev, [key]: mode }))
-            }
-            disabled={blocked || isMutating}
-            t={t}
-            testIdPrefix="profile-data"
-          />
+        {COOKING_CONTROLLED_FIELDS.map((key) => (
+          <div key={key} className="space-y-1">
+            <ControlledFieldControl
+              id={key}
+              fieldName={key}
+              label={t(`profile.data.field.${key}`)}
+              field={cookingContext[key]}
+              mode={getMode(cookingModes, key)}
+              onModeChange={(mode) =>
+                setCookingModes((prev) => ({ ...prev, [key]: mode }))
+              }
+              disabled={blocked || isMutating}
+              errorMessage={cookingFieldErrors[key]}
+              t={t}
+              testIdPrefix="profile-data"
+            />
+            {cookingServerComparison &&
+              getMode(cookingModes, key).kind !== "unchanged" && (
+                <p
+                  className="pl-3 text-xs text-muted-foreground"
+                  data-testid={`profile-data-server-value-${key}`}
+                >
+                  {cookingContext[key].value ??
+                    t("profile.data.presence.absent")}
+                </p>
+              )}
+          </div>
         ))}
         {cookingError && (
           <p role="alert" data-testid="profile-data-cooking-error">
@@ -467,7 +739,12 @@ export function ProfileDataPage() {
               variant="secondary"
               data-testid="profile-data-cooking-cancel"
               disabled={isMutating}
-              onClick={() => setCookingModes({})}
+              onClick={() => {
+                setCookingModes({});
+                setCookingFieldErrors({});
+                setCookingUnknownErrors(0);
+                setCookingServerComparison(false);
+              }}
             >
               {t("profile.actions.cancel")}
             </Button>
@@ -492,6 +769,7 @@ export function ProfileDataPage() {
           onChange={setKnownTechniques}
           locale={locale}
           disabled={blocked || isMutating}
+          errorMessage={listsFieldErrors.knownTechniques}
           t={t}
         />
         <CodeListEditor
@@ -503,6 +781,7 @@ export function ProfileDataPage() {
           onChange={setTechniquesToLearn}
           locale={locale}
           disabled={blocked || isMutating}
+          errorMessage={listsFieldErrors.techniquesToLearn}
           t={t}
         />
         <CodeListEditor
@@ -514,6 +793,7 @@ export function ProfileDataPage() {
           onChange={setGoals}
           locale={locale}
           disabled={blocked || isMutating}
+          errorMessage={listsFieldErrors.goals}
           t={t}
         />
         <CodeListEditor
@@ -525,6 +805,7 @@ export function ProfileDataPage() {
           onChange={setAbandonmentReasons}
           locale={locale}
           disabled={blocked || isMutating}
+          errorMessage={listsFieldErrors.abandonmentReasons}
           t={t}
         />
         {listsError && (

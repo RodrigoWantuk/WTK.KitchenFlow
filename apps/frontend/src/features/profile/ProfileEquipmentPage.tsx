@@ -1,13 +1,31 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useProfileWorkspace } from "./ProfileProvider";
 import { createCustomStableCode, isCustomStableCode } from "./customCodes";
 import { EQUIPMENT_CODES } from "./catalog/profileCatalogCodes";
 import { resolveLabel } from "./catalog/profileCatalog";
+import {
+  FieldErrorSummary,
+  splitKnownFieldErrors,
+  useFocusFirstFieldError,
+  type FieldErrorItem,
+} from "./fieldErrors";
+import {
+  useUnsavedChangesGuard,
+  UnsavedChangesDialog,
+  GuardedLink,
+} from "./useUnsavedChangesGuard";
 import { useProductionI18n } from "@/app/i18n/ProductionI18nProvider";
 import { ProfileApiError, type EquipmentInput } from "@/contracts/profile";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+type Translate = ReturnType<typeof useProductionI18n>["t"];
+
+/** Backend bounds, `ValidateEquipmentCommands` in `ProfileApplicationWorkflow.cs`. */
+const CUSTOM_NAME_MAX_LENGTH = 80;
+const CAPACITY_UNIT_MAX_LENGTH = 20;
+const CONSTRAINT_NOTE_MAX_LENGTH = 200;
 
 interface DraftItem {
   /** Local-only React key; never sent to the backend. */
@@ -17,6 +35,14 @@ interface DraftItem {
   capacity: string;
   capacityUnit: string;
   constraintNote: string;
+}
+
+interface DraftItemErrors {
+  customName?: string;
+  capacity?: string;
+  capacityUnit?: string;
+  constraintNote?: string;
+  duplicateCode?: string;
 }
 
 function localKey(): string {
@@ -58,6 +84,83 @@ function toEquipmentInputs(items: DraftItem[]): EquipmentInput[] {
 }
 
 /**
+ * Validates every draft item against the same bounds the backend enforces
+ * (`ValidateEquipmentCommands`): unique stable codes, a required, bounded custom
+ * name for `custom_*` entries, a non-negative finite capacity, a bounded capacity
+ * unit, a bounded constraint note, and capacity/unit pair coherence (a unit with no
+ * capacity, or a capacity with no unit, is ambiguous and rejected locally rather
+ * than silently sent half-filled).
+ */
+function validateEquipmentDraft(
+  items: DraftItem[],
+  t: Translate,
+): { errors: Record<string, DraftItemErrors>; hasErrors: boolean } {
+  const errors: Record<string, DraftItemErrors> = {};
+  const seenCodes = new Set<string>();
+
+  for (const item of items) {
+    const itemErrors: DraftItemErrors = {};
+    const isCustom = isCustomStableCode(item.stableCode);
+    const trimmedName = item.customName.trim();
+    if (isCustom && trimmedName === "") {
+      itemErrors.customName = t("profile.equipment.error.customNameRequired");
+    } else if (trimmedName.length > CUSTOM_NAME_MAX_LENGTH) {
+      itemErrors.customName = t("profile.equipment.error.customNameTooLong");
+    }
+
+    const capacityTrimmed = item.capacity.trim();
+    const unitTrimmed = item.capacityUnit.trim();
+    if (capacityTrimmed !== "") {
+      const parsed = Number(capacityTrimmed);
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        itemErrors.capacity = t("profile.equipment.error.capacityInvalid");
+      }
+    }
+    if (unitTrimmed.length > CAPACITY_UNIT_MAX_LENGTH) {
+      itemErrors.capacityUnit = t(
+        "profile.equipment.error.capacityUnitTooLong",
+      );
+    } else if (capacityTrimmed !== "" && unitTrimmed === "") {
+      itemErrors.capacityUnit = t(
+        "profile.equipment.error.capacityUnitRequired",
+      );
+    } else if (
+      capacityTrimmed === "" &&
+      unitTrimmed !== "" &&
+      !itemErrors.capacity
+    ) {
+      itemErrors.capacity = t("profile.equipment.error.capacityRequired");
+    }
+
+    if (item.constraintNote.trim().length > CONSTRAINT_NOTE_MAX_LENGTH) {
+      itemErrors.constraintNote = t(
+        "profile.equipment.error.constraintNoteTooLong",
+      );
+    }
+
+    if (seenCodes.has(item.stableCode)) {
+      itemErrors.duplicateCode = t("profile.equipment.error.duplicateCode");
+    } else {
+      seenCodes.add(item.stableCode);
+    }
+
+    if (Object.keys(itemErrors).length > 0) {
+      errors[item.key] = itemErrors;
+    }
+  }
+
+  return { errors, hasErrors: Object.keys(errors).length > 0 };
+}
+
+const KNOWN_EQUIPMENT_ERROR_SUFFIXES = [
+  "stableCode",
+  "customName",
+  "capacity",
+  "capacityUnit",
+  "constraintNote",
+] as const;
+
+/**
  * Equipment editor: add from catalog or custom, edit fields, remove, and reorder via
  * explicit Move Up/Down controls. Array order is canonical, so the whole ordered
  * collection is submitted together with the shared workspace etag on save.
@@ -73,11 +176,50 @@ export function ProfileEquipmentPage() {
     reload,
   } = useProfileWorkspace();
   const { t, locale } = useProductionI18n();
+  const navigate = useNavigate();
 
   const [draft, setDraft] = useState<DraftItem[] | null>(null);
   const [pendingCode, setPendingCode] = useState("");
   const [customName, setCustomName] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
+  const [itemErrors, setItemErrors] = useState<Record<string, DraftItemErrors>>(
+    {},
+  );
+  const [unknownErrorCount, setUnknownErrorCount] = useState(0);
+  const [liveMessage, setLiveMessage] = useState("");
+  const focusAfterRemoveRef = useRef(false);
+  /** Order submitted with the in-flight/last save, used to map `entries[i].*` backend errors back to draft item keys. */
+  const submittedOrderRef = useRef<string[]>([]);
+
+  const isDirty = draft !== null;
+  const guard = useUnsavedChangesGuard(isDirty);
+
+  useEffect(() => {
+    if (!focusAfterRemoveRef.current) return;
+    focusAfterRemoveRef.current = false;
+    const target = document.getElementById("profile-equipment-catalog-select");
+    if (target instanceof HTMLElement) target.focus();
+  });
+
+  // Computed unconditionally (with safe fallbacks) so every hook below runs on
+  // every render regardless of `status`/`workspace` — the early returns for
+  // session/loading/error states happen after all hooks, per rules of hooks.
+  const items = draft ?? toDraftItems(workspace?.equipment.entries ?? []);
+  const errorItems: FieldErrorItem[] = Object.entries(itemErrors).flatMap(
+    ([key, fieldErrors]) =>
+      (Object.entries(fieldErrors) as [keyof DraftItemErrors, string][])
+        .filter(([field]) => field !== "duplicateCode")
+        .map(([field, message]) => ({
+          id: `profile-equipment-${field}-${key}`,
+          label: `${resolveLabel(
+            locale,
+            "equipment",
+            items.find((item) => item.key === key)?.stableCode ?? "",
+          )} — ${t(`profile.equipment.${field === "customName" ? "customNamePlaceholder" : field}` as never)}`,
+          message,
+        })),
+  );
+  useFocusFirstFieldError(errorItems);
 
   if (status === "session") {
     return (
@@ -107,8 +249,6 @@ export function ProfileEquipmentPage() {
   }
 
   const blocked = status === "version_conflict";
-  const items = draft ?? toDraftItems(workspace.equipment.entries);
-  const isDirty = draft !== null;
   const usedCodes = new Set(items.map((item) => item.stableCode));
   const catalogOptions = EQUIPMENT_CODES.filter((code) => !usedCodes.has(code));
 
@@ -173,6 +313,13 @@ export function ProfileEquipmentPage() {
 
   function removeItem(key: string) {
     setDraft(ensureDraft().filter((item) => item.key !== key));
+    setItemErrors((prev) => {
+      if (!(key in prev)) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    focusAfterRemoveRef.current = true;
   }
 
   function moveItem(key: string, direction: -1 | 1) {
@@ -183,15 +330,63 @@ export function ProfileEquipmentPage() {
     const next = [...current];
     [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
     setDraft(next);
+    const moved = current[index];
+    const label = resolveLabel(locale, "equipment", moved.stableCode);
+    setLiveMessage(
+      t("profile.equipment.reorderAnnouncement")
+        .replace("{name}", moved.customName || label)
+        .replace("{position}", String(targetIndex + 1))
+        .replace("{total}", String(next.length)),
+    );
   }
 
   async function save() {
     setActionError(null);
     clearMutationError();
+    setUnknownErrorCount(0);
+    const current = ensureDraft();
+    const { errors, hasErrors } = validateEquipmentDraft(current, t);
+    if (hasErrors) {
+      setItemErrors(errors);
+      return;
+    }
+    setItemErrors({});
+    submittedOrderRef.current = current.map((item) => item.key);
     try {
-      await replaceEquipment(toEquipmentInputs(ensureDraft()));
+      await replaceEquipment(toEquipmentInputs(current));
       setDraft(null);
     } catch (err) {
+      if (
+        err instanceof ProfileApiError &&
+        err.code === "validation_failed" &&
+        err.fieldErrors
+      ) {
+        const knownIds = submittedOrderRef.current.flatMap((_, index) =>
+          KNOWN_EQUIPMENT_ERROR_SUFFIXES.map(
+            (suffix) => `entries[${index}].${suffix}`,
+          ),
+        );
+        const { known, unknownCount } = splitKnownFieldErrors(
+          err.fieldErrors,
+          knownIds,
+        );
+        const mapped: Record<string, DraftItemErrors> = {};
+        for (const [path, message] of Object.entries(known)) {
+          const match = /^entries\[(\d+)\]\.(\w+)$/.exec(path);
+          if (!match) continue;
+          const index = Number(match[1]);
+          const field = match[2] as keyof DraftItemErrors;
+          const itemKey = submittedOrderRef.current[index];
+          if (!itemKey) continue;
+          mapped[itemKey] = { ...mapped[itemKey], [field]: message };
+        }
+        setItemErrors(mapped);
+        setUnknownErrorCount(unknownCount);
+        if (Object.keys(mapped).length === 0 && unknownCount === 0) {
+          setActionError(describeError(err));
+        }
+        return;
+      }
       setActionError(describeError(err));
     }
   }
@@ -201,6 +396,20 @@ export function ProfileEquipmentPage() {
       data-testid="profile-equipment"
       className="mx-auto max-w-2xl space-y-6"
     >
+      <UnsavedChangesDialog
+        open={guard.isPromptOpen}
+        onConfirm={guard.confirmDiscard}
+        onCancel={guard.cancelNavigation}
+        t={t}
+        testIdPrefix="profile-equipment"
+      />
+      <div
+        aria-live="polite"
+        className="sr-only"
+        data-testid="profile-equipment-live-region"
+      >
+        {liveMessage}
+      </div>
       <div className="flex items-center justify-between gap-2">
         <div>
           <h1 className="font-display text-3xl">
@@ -210,9 +419,15 @@ export function ProfileEquipmentPage() {
             {t("profile.equipment.subtitle")}
           </p>
         </div>
-        <Button asChild variant="secondary">
-          <Link to="/app/perfil">{t("profile.actions.back")}</Link>
-        </Button>
+        <GuardedLink
+          to="/app/perfil"
+          requestNavigation={guard.requestNavigation}
+          navigate={navigate}
+          data-testid="profile-equipment-back"
+          className={buttonVariants({ variant: "secondary" })}
+        >
+          {t("profile.actions.back")}
+        </GuardedLink>
       </div>
 
       {blocked && (
@@ -231,6 +446,13 @@ export function ProfileEquipmentPage() {
         </p>
       )}
 
+      <FieldErrorSummary
+        items={errorItems}
+        unknownCount={unknownErrorCount}
+        t={t}
+        testId="profile-equipment-error-summary"
+      />
+
       <ul className="space-y-2" data-testid="profile-equipment-entries">
         {items.length === 0 && (
           <li className="text-sm text-muted-foreground">
@@ -243,6 +465,7 @@ export function ProfileEquipmentPage() {
             isCustom && item.customName
               ? item.customName
               : resolveLabel(locale, "equipment", item.stableCode);
+          const fieldErrors = itemErrors[item.key] ?? {};
           return (
             <li
               key={item.key}
@@ -291,27 +514,59 @@ export function ProfileEquipmentPage() {
                   {t("profile.equipment.unknownCode")}
                 </p>
               )}
+              {fieldErrors.duplicateCode && (
+                <p role="alert" className="text-xs text-destructive">
+                  {fieldErrors.duplicateCode}
+                </p>
+              )}
               <div className="flex flex-wrap items-center gap-2">
                 {isCustom && (
-                  <Input
-                    data-testid={`profile-equipment-custom-name-${item.key}`}
-                    className="max-w-xs"
-                    placeholder={t("profile.equipment.customNamePlaceholder")}
-                    value={item.customName}
-                    disabled={blocked || isMutating}
-                    onChange={(event) =>
-                      updateItem(item.key, { customName: event.target.value })
-                    }
-                  />
+                  <div className="space-y-1">
+                    <Input
+                      id={`profile-equipment-customName-${item.key}`}
+                      data-testid={`profile-equipment-custom-name-${item.key}`}
+                      className="max-w-xs"
+                      maxLength={CUSTOM_NAME_MAX_LENGTH}
+                      placeholder={t("profile.equipment.customNamePlaceholder")}
+                      value={item.customName}
+                      disabled={blocked || isMutating}
+                      aria-invalid={fieldErrors.customName ? true : undefined}
+                      aria-describedby={
+                        fieldErrors.customName
+                          ? `profile-equipment-customName-error-${item.key}`
+                          : undefined
+                      }
+                      onChange={(event) =>
+                        updateItem(item.key, { customName: event.target.value })
+                      }
+                    />
+                    {fieldErrors.customName && (
+                      <p
+                        role="alert"
+                        id={`profile-equipment-customName-error-${item.key}`}
+                        className="text-xs text-destructive"
+                      >
+                        {fieldErrors.customName}
+                      </p>
+                    )}
+                  </div>
                 )}
                 <label className="flex items-center gap-1 text-xs">
                   {t("profile.equipment.capacity")}
                   <Input
+                    id={`profile-equipment-capacity-${item.key}`}
                     data-testid={`profile-equipment-capacity-${item.key}`}
                     type="number"
+                    min={0}
                     className="w-24"
                     value={item.capacity}
                     disabled={blocked || isMutating}
+                    aria-invalid={fieldErrors.capacity ? true : undefined}
+                    aria-describedby={
+                      fieldErrors.capacity
+                        ? `profile-equipment-capacity-error-${item.key}`
+                        : undefined
+                    }
                     onChange={(event) =>
                       updateItem(item.key, { capacity: event.target.value })
                     }
@@ -320,10 +575,18 @@ export function ProfileEquipmentPage() {
                 <label className="flex items-center gap-1 text-xs">
                   {t("profile.equipment.capacityUnit")}
                   <Input
+                    id={`profile-equipment-capacityUnit-${item.key}`}
                     data-testid={`profile-equipment-capacity-unit-${item.key}`}
                     className="w-24"
+                    maxLength={CAPACITY_UNIT_MAX_LENGTH}
                     value={item.capacityUnit}
                     disabled={blocked || isMutating}
+                    aria-invalid={fieldErrors.capacityUnit ? true : undefined}
+                    aria-describedby={
+                      fieldErrors.capacityUnit
+                        ? `profile-equipment-capacityUnit-error-${item.key}`
+                        : undefined
+                    }
                     onChange={(event) =>
                       updateItem(item.key, {
                         capacityUnit: event.target.value,
@@ -332,11 +595,19 @@ export function ProfileEquipmentPage() {
                   />
                 </label>
                 <Input
+                  id={`profile-equipment-constraintNote-${item.key}`}
                   data-testid={`profile-equipment-constraint-${item.key}`}
                   className="max-w-xs"
+                  maxLength={CONSTRAINT_NOTE_MAX_LENGTH}
                   placeholder={t("profile.equipment.constraintNote")}
                   value={item.constraintNote}
                   disabled={blocked || isMutating}
+                  aria-invalid={fieldErrors.constraintNote ? true : undefined}
+                  aria-describedby={
+                    fieldErrors.constraintNote
+                      ? `profile-equipment-constraintNote-error-${item.key}`
+                      : undefined
+                  }
                   onChange={(event) =>
                     updateItem(item.key, {
                       constraintNote: event.target.value,
@@ -344,6 +615,39 @@ export function ProfileEquipmentPage() {
                   }
                 />
               </div>
+              {(fieldErrors.capacity ||
+                fieldErrors.capacityUnit ||
+                fieldErrors.constraintNote) && (
+                <div className="space-y-1 pl-1">
+                  {fieldErrors.capacity && (
+                    <p
+                      role="alert"
+                      id={`profile-equipment-capacity-error-${item.key}`}
+                      className="text-xs text-destructive"
+                    >
+                      {fieldErrors.capacity}
+                    </p>
+                  )}
+                  {fieldErrors.capacityUnit && (
+                    <p
+                      role="alert"
+                      id={`profile-equipment-capacityUnit-error-${item.key}`}
+                      className="text-xs text-destructive"
+                    >
+                      {fieldErrors.capacityUnit}
+                    </p>
+                  )}
+                  {fieldErrors.constraintNote && (
+                    <p
+                      role="alert"
+                      id={`profile-equipment-constraintNote-error-${item.key}`}
+                      className="text-xs text-destructive"
+                    >
+                      {fieldErrors.constraintNote}
+                    </p>
+                  )}
+                </div>
+              )}
             </li>
           );
         })}
@@ -354,6 +658,7 @@ export function ProfileEquipmentPage() {
         data-testid="profile-equipment-add-catalog"
       >
         <select
+          id="profile-equipment-catalog-select"
           data-testid="profile-equipment-catalog-select"
           className="flex h-9 rounded-md border border-input bg-transparent px-3 text-sm"
           value={pendingCode}
@@ -379,6 +684,7 @@ export function ProfileEquipmentPage() {
         <Input
           data-testid="profile-equipment-custom-input"
           className="max-w-xs"
+          maxLength={CUSTOM_NAME_MAX_LENGTH}
           placeholder={t("profile.equipment.customNamePlaceholder")}
           value={customName}
           disabled={blocked || isMutating}
@@ -410,7 +716,11 @@ export function ProfileEquipmentPage() {
             variant="secondary"
             disabled={isMutating}
             data-testid="profile-equipment-cancel"
-            onClick={() => setDraft(null)}
+            onClick={() => {
+              setDraft(null);
+              setItemErrors({});
+              setUnknownErrorCount(0);
+            }}
           >
             {t("profile.actions.cancel")}
           </Button>

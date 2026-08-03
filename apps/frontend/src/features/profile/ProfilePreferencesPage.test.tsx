@@ -1,10 +1,11 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ProfilePreferencesPage } from "./ProfilePreferencesPage";
-import type {
-  PreferenceCommand,
-  PreferenceSnapshot,
-  ProfileMutationContext,
+import {
+  ProfileApiError,
+  type PreferenceCommand,
+  type PreferenceSnapshot,
+  type ProfileMutationContext,
 } from "@/contracts/profile";
 import {
   createEmptyPreferenceSnapshot,
@@ -183,5 +184,137 @@ describe("ProfilePreferencesPage", () => {
     expect(command.note).toBe("Grandma's stew");
     expect(command.stableCode).not.toContain("Grandma");
     expect(command.stableCode).toMatch(/^custom_/);
+  });
+
+  it("has no separate note field for a custom entry — a single input doubles as its label", () => {
+    render(
+      renderProfileTree({
+        repository: createMockProfileRepo(),
+        children: <ProfilePreferencesPage />,
+      }),
+    );
+    expect(
+      screen.queryByTestId("profile-preferences-custom-note"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("uses a distinct action label for adding a custom entry than for adding a catalog entry", async () => {
+    render(
+      renderProfileTree({
+        repository: createMockProfileRepo(),
+        children: <ProfilePreferencesPage />,
+      }),
+    );
+    await screen.findByTestId("profile-preferences");
+    const catalogSubmit = screen.getByTestId(
+      "profile-preferences-catalog-submit",
+    );
+    const customSubmit = screen.getByTestId(
+      "profile-preferences-custom-submit",
+    );
+    expect(catalogSubmit.textContent).not.toEqual(customSubmit.textContent);
+  });
+
+  it("preserves the typed custom label after a failed add instead of discarding it", async () => {
+    const mutatePreferences = jest.fn<
+      Promise<PreferenceSnapshot>,
+      [PreferenceCommand[], ProfileMutationContext]
+    >(async () => {
+      throw new ProfileApiError("validation_failed", "rejected", 400);
+    });
+    const repo = createMockProfileRepo({ mutatePreferences });
+    const user = userEvent.setup();
+
+    render(
+      renderProfileTree({
+        repository: repo,
+        children: <ProfilePreferencesPage />,
+      }),
+    );
+    await screen.findByTestId("profile-preferences");
+
+    await user.type(
+      screen.getByTestId("profile-preferences-custom-label"),
+      "Keeps this text",
+    );
+    await user.click(screen.getByTestId("profile-preferences-custom-submit"));
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId("profile-preferences-error-message"),
+      ).toBeInTheDocument(),
+    );
+    expect(screen.getByTestId("profile-preferences-custom-label")).toHaveValue(
+      "Keeps this text",
+    );
+  });
+
+  it("preserves the pending sensitive add's typed note when the confirmation is cancelled", async () => {
+    const mutatePreferences = jest.fn<
+      Promise<PreferenceSnapshot>,
+      [PreferenceCommand[], ProfileMutationContext]
+    >(async () => createEmptyPreferenceSnapshot());
+    const repo = createMockProfileRepo({ mutatePreferences });
+    const user = userEvent.setup();
+
+    render(
+      renderProfileTree({
+        repository: repo,
+        children: <ProfilePreferencesPage />,
+      }),
+    );
+    await screen.findByTestId("profile-preferences");
+
+    await user.click(screen.getByTestId("profile-preferences-tab-Allergy"));
+    await user.selectOptions(
+      screen.getByTestId("profile-preferences-catalog-select"),
+      "peanut_allergy",
+    );
+    await user.type(
+      screen.getByTestId("profile-preferences-catalog-note"),
+      "kept note",
+    );
+    await user.click(screen.getByTestId("profile-preferences-catalog-submit"));
+    await screen.findByTestId("profile-preferences-sensitive-confirm");
+
+    await user.click(
+      screen.getByTestId("profile-preferences-sensitive-cancel"),
+    );
+
+    expect(screen.getByTestId("profile-preferences-catalog-note")).toHaveValue(
+      "kept note",
+    );
+    expect(mutatePreferences).not.toHaveBeenCalled();
+  });
+
+  it("uses a Radix alert dialog for the sensitive confirmation (aria-modal, Escape closes)", async () => {
+    const repo = createMockProfileRepo();
+    const user = userEvent.setup();
+
+    render(
+      renderProfileTree({
+        repository: repo,
+        children: <ProfilePreferencesPage />,
+      }),
+    );
+    await screen.findByTestId("profile-preferences");
+
+    await user.click(screen.getByTestId("profile-preferences-tab-Allergy"));
+    await user.selectOptions(
+      screen.getByTestId("profile-preferences-catalog-select"),
+      "peanut_allergy",
+    );
+    await user.click(screen.getByTestId("profile-preferences-catalog-submit"));
+
+    const dialog = await screen.findByTestId(
+      "profile-preferences-sensitive-confirm",
+    );
+    expect(dialog).toHaveAttribute("role", "alertdialog");
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+
+    await user.keyboard("{Escape}");
+    expect(
+      screen.queryByTestId("profile-preferences-sensitive-confirm"),
+    ).not.toBeInTheDocument();
   });
 });

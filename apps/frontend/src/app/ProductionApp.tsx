@@ -5,6 +5,7 @@ import {
   Route,
   Navigate,
   Link,
+  Outlet,
   useLocation,
 } from "react-router-dom";
 import { RuntimeProvider, useRuntime } from "@/app/runtime/RuntimeProvider";
@@ -239,20 +240,42 @@ function HomeRoute() {
 /**
  * Session and inventory providers mount only for access and authenticated
  * subtrees so the public `/` route never bootstraps `getSession()`.
+ *
+ * `ProfileProvider` is intentionally NOT mounted here: it fetches profile,
+ * preferences, equipment, and completeness as soon as the session becomes
+ * authenticated, so mounting it for every session-scoped route would make
+ * `/app/hoje` and `/app/despensa` call the profile endpoints even though
+ * they never read profile data. See `ProfileScopedRoutes` below, which wraps
+ * only the `/app/perfil*` subtree.
  */
 function SessionScopedRoutes({ children }: { children: ReactNode }) {
   const runtime = useRuntime();
   return (
     <SessionProvider adapter={runtime.sessionAdapter}>
       <InventoryProvider repository={runtime.inventoryRepository}>
-        <ProfileProvider
-          repository={runtime.profileRepository}
-          adultPolicy={runtime.adultDeclarationPolicy}
-        >
-          {children}
-        </ProfileProvider>
+        {children}
       </InventoryProvider>
     </SessionProvider>
+  );
+}
+
+/**
+ * Adds `ProfileProvider` on top of `SessionScopedRoutes`, scoped to the
+ * `/app/perfil*` subtree only. Keeping this separate from
+ * `SessionScopedRoutes` is what keeps `/app/hoje` and `/app/despensa` from
+ * ever calling `getProfile`/`getPreferences`/`getEquipment`/`getCompleteness`.
+ */
+function ProfileScopedRoutes({ children }: { children: ReactNode }) {
+  const runtime = useRuntime();
+  return (
+    <SessionScopedRoutes>
+      <ProfileProvider
+        repository={runtime.profileRepository}
+        adultPolicy={runtime.adultDeclarationPolicy}
+      >
+        {children}
+      </ProfileProvider>
+    </SessionScopedRoutes>
   );
 }
 
@@ -344,51 +367,20 @@ function ProductionAppRoutes() {
         <Route
           path="/app/perfil"
           element={
-            <SessionScopedRoutes>
+            <ProfileScopedRoutes>
               <RequireAuth>
                 <ProductionAppShell>
-                  <ProfileOverviewPage />
+                  <Outlet />
                 </ProductionAppShell>
               </RequireAuth>
-            </SessionScopedRoutes>
+            </ProfileScopedRoutes>
           }
-        />
-        <Route
-          path="/app/perfil/dados"
-          element={
-            <SessionScopedRoutes>
-              <RequireAuth>
-                <ProductionAppShell>
-                  <ProfileDataPage />
-                </ProductionAppShell>
-              </RequireAuth>
-            </SessionScopedRoutes>
-          }
-        />
-        <Route
-          path="/app/perfil/preferencias"
-          element={
-            <SessionScopedRoutes>
-              <RequireAuth>
-                <ProductionAppShell>
-                  <ProfilePreferencesPage />
-                </ProductionAppShell>
-              </RequireAuth>
-            </SessionScopedRoutes>
-          }
-        />
-        <Route
-          path="/app/perfil/equipamentos"
-          element={
-            <SessionScopedRoutes>
-              <RequireAuth>
-                <ProductionAppShell>
-                  <ProfileEquipmentPage />
-                </ProductionAppShell>
-              </RequireAuth>
-            </SessionScopedRoutes>
-          }
-        />
+        >
+          <Route index element={<ProfileOverviewPage />} />
+          <Route path="dados" element={<ProfileDataPage />} />
+          <Route path="preferencias" element={<ProfilePreferencesPage />} />
+          <Route path="equipamentos" element={<ProfileEquipmentPage />} />
+        </Route>
         <Route
           path="/app/*"
           element={

@@ -151,4 +151,133 @@ describe("ProfileEquipmentPage", () => {
     ).toBeInTheDocument();
     expect(replaceEquipment).not.toHaveBeenCalled();
   });
+
+  it("requires a name before a custom entry can be added", async () => {
+    const repo = createMockProfileRepo({
+      getEquipment: jest.fn(async () => createEmptyEquipmentSnapshot()),
+    });
+    render(
+      renderProfileTree({
+        repository: repo,
+        children: <ProfileEquipmentPage />,
+      }),
+    );
+    expect(await screen.findByTestId("profile-equipment")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("profile-equipment-custom-submit"),
+    ).toBeDisabled();
+  });
+
+  it("rejects a negative capacity locally and never submits it to the backend", async () => {
+    const replaceEquipment = mockReplaceEquipment();
+    const repo = createMockProfileRepo({
+      getEquipment: jest.fn(async () => seededEquipment()),
+      replaceEquipment,
+    });
+    const user = userEvent.setup();
+
+    render(
+      renderProfileTree({
+        repository: repo,
+        children: <ProfileEquipmentPage />,
+      }),
+    );
+    expect(await screen.findByTestId("profile-equipment")).toBeInTheDocument();
+
+    const capacityInput = screen.getByTestId(
+      "profile-equipment-capacity-eq-oven",
+    );
+    await user.type(capacityInput, "-5");
+    await user.type(
+      screen.getByTestId("profile-equipment-capacity-unit-eq-oven"),
+      "L",
+    );
+    await user.click(screen.getByTestId("profile-equipment-save"));
+
+    await waitFor(() =>
+      expect(
+        document.getElementById("profile-equipment-capacity-error-eq-oven"),
+      ).not.toBeNull(),
+    );
+    expect(replaceEquipment).not.toHaveBeenCalled();
+  });
+
+  it("rejects a capacity value with no unit as an incoherent pair", async () => {
+    const replaceEquipment = mockReplaceEquipment();
+    const repo = createMockProfileRepo({
+      getEquipment: jest.fn(async () => seededEquipment()),
+      replaceEquipment,
+    });
+    const user = userEvent.setup();
+
+    render(
+      renderProfileTree({
+        repository: repo,
+        children: <ProfileEquipmentPage />,
+      }),
+    );
+    expect(await screen.findByTestId("profile-equipment")).toBeInTheDocument();
+
+    await user.type(
+      screen.getByTestId("profile-equipment-capacity-eq-oven"),
+      "5",
+    );
+    await user.click(screen.getByTestId("profile-equipment-save"));
+
+    await waitFor(() =>
+      expect(
+        document.getElementById("profile-equipment-capacityUnit-error-eq-oven"),
+      ).not.toBeNull(),
+    );
+    expect(replaceEquipment).not.toHaveBeenCalled();
+  });
+
+  it("announces the new position of a moved entry through a live region", async () => {
+    const repo = createMockProfileRepo({
+      getEquipment: jest.fn(async () => seededEquipment()),
+    });
+    const user = userEvent.setup();
+
+    render(
+      renderProfileTree({
+        repository: repo,
+        children: <ProfileEquipmentPage />,
+      }),
+    );
+    expect(await screen.findByTestId("profile-equipment")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("profile-equipment-live-region"),
+    ).toHaveTextContent("");
+
+    await user.click(
+      screen.getByTestId("profile-equipment-move-up-eq-blender"),
+    );
+
+    expect(
+      screen.getByTestId("profile-equipment-live-region"),
+    ).not.toHaveTextContent("");
+  });
+
+  it("moves focus to the add-from-catalog control after removing an entry", async () => {
+    const repo = createMockProfileRepo({
+      getEquipment: jest.fn(async () => seededEquipment()),
+    });
+    const user = userEvent.setup();
+
+    render(
+      renderProfileTree({
+        repository: repo,
+        children: <ProfileEquipmentPage />,
+      }),
+    );
+    expect(await screen.findByTestId("profile-equipment")).toBeInTheDocument();
+
+    await user.click(screen.getByTestId("profile-equipment-remove-eq-blender"));
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId("profile-equipment-catalog-select"),
+      ).toHaveFocus(),
+    );
+  });
 });

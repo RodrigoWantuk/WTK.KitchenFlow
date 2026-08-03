@@ -1,18 +1,36 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useProfileWorkspace } from "./ProfileProvider";
 import { createCustomStableCode, isCustomStableCode } from "./customCodes";
 import { PREFERENCE_ENTRY_CODES } from "./catalog/profileCatalogCodes";
 import { resolveLabel } from "./catalog/profileCatalog";
+import {
+  useUnsavedChangesGuard,
+  UnsavedChangesDialog,
+  GuardedLink,
+} from "./useUnsavedChangesGuard";
 import { useProductionI18n } from "@/app/i18n/ProductionI18nProvider";
 import {
   ProfileApiError,
   type PreferenceCategory,
   type PreferenceEntry,
 } from "@/contracts/profile";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+/** Backend `PrivateNote` bound (`apps/backend/.../Domain/ProfileValues.cs`). */
+const NOTE_MAX_LENGTH = 500;
 
 const CATEGORIES: PreferenceCategory[] = [
   "Preference",
@@ -32,6 +50,7 @@ const SENSITIVE_CATEGORIES: ReadonlySet<PreferenceCategory> = new Set([
 ]);
 
 interface PendingAdd {
+  kind: "catalog" | "custom";
   category: PreferenceCategory;
   stableCode: string;
   note: string | null;
@@ -39,9 +58,20 @@ interface PendingAdd {
 
 /**
  * Category-tabbed preference and restriction editor. Only `confirmed` entries are
- * ever returned by the backend, so every listed row is already active. Allergy and
- * medical restriction additions require an explicit, non-native confirmation step
- * that carries a "not medical advice" disclaimer before the mutation is sent.
+ * ever returned by the backend, so every listed row is already active.
+ *
+ * Custom entries (minted with an opaque `custom_*` stable code, see
+ * `./customCodes`) have exactly one piece of user text: the note. That single note
+ * *is* the entry's display label — there is deliberately no separate "label" input,
+ * since a custom entry has no catalog label to annotate. Catalog entries keep an
+ * independent, optional note alongside their fixed catalog label.
+ *
+ * Allergy and medical restriction additions require an explicit, non-native
+ * confirmation dialog (Radix `AlertDialog`: focus trap, Escape-to-cancel, and focus
+ * restore all come from Radix) that carries a "not medical advice" disclaimer
+ * before the mutation is sent. Typed input for a pending add is preserved verbatim
+ * if the confirmation is cancelled or the mutation fails, so the user never has to
+ * retype it.
  */
 export function ProfilePreferencesPage() {
   const {
@@ -54,15 +84,28 @@ export function ProfilePreferencesPage() {
     reload,
   } = useProfileWorkspace();
   const { t, locale } = useProductionI18n();
+  const navigate = useNavigate();
 
   const [category, setCategory] = useState<PreferenceCategory>("Preference");
   const [catalogCode, setCatalogCode] = useState("");
   const [catalogNote, setCatalogNote] = useState("");
   const [customLabel, setCustomLabel] = useState("");
-  const [customNote, setCustomNote] = useState("");
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [pendingAdd, setPendingAdd] = useState<PendingAdd | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  const hasNoteDraftChanges = workspace
+    ? workspace.preferences.entries.some((entry) => {
+        const draft = noteDrafts[entry.entryId];
+        return draft !== undefined && draft !== (entry.note ?? "");
+      })
+    : false;
+  const pageDirty =
+    hasNoteDraftChanges ||
+    catalogCode.trim() !== "" ||
+    catalogNote.trim() !== "" ||
+    customLabel.trim() !== "";
+  const guard = useUnsavedChangesGuard(pageDirty);
 
   if (status === "session") {
     return (
@@ -112,7 +155,11 @@ export function ProfilePreferencesPage() {
     return t("profile.error.save");
   }
 
-  async function submitAdd(stableCode: string, note: string) {
+  async function submitAdd(
+    kind: "catalog" | "custom",
+    stableCode: string,
+    note: string,
+  ) {
     setActionError(null);
     clearMutationError();
     try {
@@ -124,24 +171,36 @@ export function ProfilePreferencesPage() {
           note: note.trim() || null,
         },
       ]);
+      // Only clear on success: a failed or cancelled add must never discard what
+      // the user typed (see class doc above).
+      if (kind === "catalog") {
+        setCatalogCode("");
+        setCatalogNote("");
+      } else {
+        setCustomLabel("");
+      }
     } catch (err) {
       setActionError(describeError(err));
     }
   }
 
-  function requestAdd(stableCode: string, note: string) {
+  function requestAdd(
+    kind: "catalog" | "custom",
+    stableCode: string,
+    note: string,
+  ) {
     if (SENSITIVE_CATEGORIES.has(category)) {
-      setPendingAdd({ category, stableCode, note: note.trim() || null });
+      setPendingAdd({ kind, category, stableCode, note: note.trim() || null });
       return;
     }
-    void submitAdd(stableCode, note);
+    void submitAdd(kind, stableCode, note);
   }
 
   async function confirmPendingAdd() {
     if (!pendingAdd) return;
-    const { stableCode, note } = pendingAdd;
+    const { kind, stableCode, note } = pendingAdd;
     setPendingAdd(null);
-    await submitAdd(stableCode, note ?? "");
+    await submitAdd(kind, stableCode, note ?? "");
   }
 
   async function removeEntry(entry: PreferenceEntry) {
@@ -183,6 +242,13 @@ export function ProfilePreferencesPage() {
       data-testid="profile-preferences"
       className="mx-auto max-w-2xl space-y-6"
     >
+      <UnsavedChangesDialog
+        open={guard.isPromptOpen}
+        onConfirm={guard.confirmDiscard}
+        onCancel={guard.cancelNavigation}
+        t={t}
+        testIdPrefix="profile-preferences"
+      />
       <div className="flex items-center justify-between gap-2">
         <div>
           <h1 className="font-display text-3xl">
@@ -192,9 +258,15 @@ export function ProfilePreferencesPage() {
             {t("profile.preferences.subtitle")}
           </p>
         </div>
-        <Button asChild variant="secondary">
-          <Link to="/app/perfil">{t("profile.actions.back")}</Link>
-        </Button>
+        <GuardedLink
+          to="/app/perfil"
+          requestNavigation={guard.requestNavigation}
+          navigate={navigate}
+          data-testid="profile-preferences-back"
+          className={buttonVariants({ variant: "secondary" })}
+        >
+          {t("profile.actions.back")}
+        </GuardedLink>
       </div>
 
       {blocked && (
@@ -220,7 +292,6 @@ export function ProfilePreferencesPage() {
           setCatalogCode("");
           setCatalogNote("");
           setCustomLabel("");
-          setCustomNote("");
           setPendingAdd(null);
         }}
       >
@@ -237,41 +308,47 @@ export function ProfilePreferencesPage() {
         </TabsList>
       </Tabs>
 
-      {pendingAdd && (
-        <div
-          role="alertdialog"
-          aria-label={t("profile.preferences.sensitive.title")}
-          data-testid="profile-preferences-sensitive-confirm"
-          className="space-y-3 rounded-xl border border-warning p-4"
-        >
-          <h2 className="font-medium">
-            {t("profile.preferences.sensitive.title")}
-          </h2>
-          <p className="text-sm">{t("profile.preferences.sensitive.detail")}</p>
+      <AlertDialog
+        open={pendingAdd !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingAdd(null);
+        }}
+      >
+        <AlertDialogContent data-testid="profile-preferences-sensitive-confirm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("profile.preferences.sensitive.title")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("profile.preferences.sensitive.detail")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
           <p className="text-sm font-medium">
             {t("profile.preferences.sensitive.noMedicalAdvice")}
           </p>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              data-testid="profile-preferences-sensitive-confirm-add"
-              disabled={isMutating}
-              onClick={() => void confirmPendingAdd()}
-            >
-              {t("profile.preferences.sensitive.confirmAdd")}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
+          <AlertDialogFooter>
+            <AlertDialogCancel
               data-testid="profile-preferences-sensitive-cancel"
               disabled={isMutating}
               onClick={() => setPendingAdd(null)}
             >
               {t("profile.preferences.sensitive.cancel")}
-            </Button>
-          </div>
-        </div>
-      )}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              data-testid="profile-preferences-sensitive-confirm-add"
+              disabled={isMutating}
+              onClick={(event) => {
+                event.preventDefault();
+                void confirmPendingAdd();
+              }}
+            >
+              {isMutating
+                ? t("profile.preferences.sensitive.submitting")
+                : t("profile.preferences.sensitive.confirmAdd")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <ul className="space-y-2" data-testid="profile-preferences-entries">
         {entries.length === 0 && (
@@ -309,11 +386,21 @@ export function ProfilePreferencesPage() {
                   {t("profile.preferences.unknownCode")}
                 </p>
               )}
+              {isCustom && (
+                <p className="text-xs text-muted-foreground">
+                  {t("profile.preferences.customEntryHint")}
+                </p>
+              )}
               <div className="flex flex-wrap items-center gap-2">
                 <Input
                   data-testid={`profile-preferences-note-${entry.entryId}`}
                   className="max-w-xs"
-                  placeholder={t("profile.preferences.notePlaceholder")}
+                  maxLength={NOTE_MAX_LENGTH}
+                  placeholder={
+                    isCustom
+                      ? t("profile.preferences.customPlaceholder")
+                      : t("profile.preferences.notePlaceholder")
+                  }
                   value={noteDrafts[entry.entryId] ?? entry.note ?? ""}
                   disabled={blocked || isMutating}
                   onChange={(event) =>
@@ -331,7 +418,9 @@ export function ProfilePreferencesPage() {
                   data-testid={`profile-preferences-update-note-${entry.entryId}`}
                   onClick={() => void updateNote(entry)}
                 >
-                  {t("profile.preferences.updateNote")}
+                  {isCustom
+                    ? t("profile.preferences.renameCustom")
+                    : t("profile.preferences.updateNote")}
                 </Button>
               </div>
             </li>
@@ -364,6 +453,7 @@ export function ProfilePreferencesPage() {
           <Input
             data-testid="profile-preferences-catalog-note"
             className="max-w-xs"
+            maxLength={NOTE_MAX_LENGTH}
             placeholder={t("profile.preferences.notePlaceholder")}
             value={catalogNote}
             disabled={blocked || isMutating}
@@ -371,13 +461,14 @@ export function ProfilePreferencesPage() {
           />
           <Button
             type="button"
-            disabled={blocked || isMutating || !catalogCode}
+            disabled={
+              blocked ||
+              isMutating ||
+              !catalogCode ||
+              catalogNote.length > NOTE_MAX_LENGTH
+            }
             data-testid="profile-preferences-catalog-submit"
-            onClick={() => {
-              requestAdd(catalogCode, catalogNote);
-              setCatalogCode("");
-              setCatalogNote("");
-            }}
+            onClick={() => requestAdd("catalog", catalogCode, catalogNote)}
           >
             {t("profile.actions.add")}
           </Button>
@@ -389,40 +480,68 @@ export function ProfilePreferencesPage() {
         data-testid="profile-preferences-add-custom"
       >
         <h2 className="font-medium">{t("profile.preferences.addCustom")}</h2>
+        <p className="text-xs text-muted-foreground">
+          {t("profile.preferences.customEntryHint")}
+        </p>
         <div className="flex flex-wrap items-center gap-2">
           <Input
             data-testid="profile-preferences-custom-label"
             className="max-w-xs"
+            maxLength={NOTE_MAX_LENGTH}
             placeholder={t("profile.preferences.customPlaceholder")}
             value={customLabel}
             disabled={blocked || isMutating}
+            aria-invalid={
+              customLabel.length > NOTE_MAX_LENGTH ? true : undefined
+            }
+            aria-describedby={
+              customLabel.length > NOTE_MAX_LENGTH
+                ? "profile-preferences-custom-label-error"
+                : undefined
+            }
             onChange={(event) => setCustomLabel(event.target.value)}
-          />
-          <Input
-            data-testid="profile-preferences-custom-note"
-            className="max-w-xs"
-            placeholder={t("profile.preferences.notePlaceholder")}
-            value={customNote}
-            disabled={blocked || isMutating}
-            onChange={(event) => setCustomNote(event.target.value)}
           />
           <Button
             type="button"
-            disabled={blocked || isMutating || !customLabel.trim()}
+            disabled={
+              blocked ||
+              isMutating ||
+              !customLabel.trim() ||
+              customLabel.length > NOTE_MAX_LENGTH
+            }
             data-testid="profile-preferences-custom-submit"
             onClick={() => {
               const code = createCustomStableCode();
-              // The free-text label the user typed becomes the entry's note; the
-              // stable code itself stays opaque and never embeds user text.
-              requestAdd(code, customNote.trim() || customLabel.trim());
-              setCustomLabel("");
-              setCustomNote("");
+              // The free-text the user typed is this custom entry's only piece of
+              // user text: it becomes both the note and (see the primaryLabel
+              // computation above) the display label. The stable code stays opaque
+              // and never embeds user text.
+              requestAdd("custom", code, customLabel.trim());
             }}
           >
-            {t("profile.actions.add")}
+            {t("profile.preferences.customSubmit")}
           </Button>
         </div>
+        {customLabel.length > NOTE_MAX_LENGTH && (
+          <p
+            role="alert"
+            id="profile-preferences-custom-label-error"
+            data-testid="profile-preferences-custom-label-error"
+            className="text-xs text-destructive"
+          >
+            {t("profile.preferences.error.noteTooLong")}
+          </p>
+        )}
       </div>
+      {catalogNote.length > NOTE_MAX_LENGTH && (
+        <p
+          role="alert"
+          data-testid="profile-preferences-catalog-note-error"
+          className="text-xs text-destructive"
+        >
+          {t("profile.preferences.error.noteTooLong")}
+        </p>
+      )}
     </div>
   );
 }

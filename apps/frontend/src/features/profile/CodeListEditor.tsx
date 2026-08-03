@@ -28,6 +28,7 @@ export function CodeListEditor({
   onChange,
   locale,
   disabled = false,
+  errorMessage,
   t,
 }: {
   id: string;
@@ -38,6 +39,8 @@ export function CodeListEditor({
   onChange: (next: string[]) => void;
   locale: ProfileCatalogLocale;
   disabled?: boolean;
+  /** Backend `fieldErrors` message mapped to this list field, if any. */
+  errorMessage?: string | null;
   t: Translate;
 }) {
   const [pendingCode, setPendingCode] = useState("");
@@ -115,6 +118,16 @@ export function CodeListEditor({
           {t("profile.actions.add")}
         </Button>
       </div>
+      {errorMessage && (
+        <p
+          role="alert"
+          id={`code-list-${id}-error`}
+          data-testid={`code-list-${id}-error`}
+          className="text-xs text-destructive"
+        >
+          {errorMessage}
+        </p>
+      )}
     </div>
   );
 }

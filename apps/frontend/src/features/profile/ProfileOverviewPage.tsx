@@ -1,15 +1,85 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useProfileWorkspace } from "./ProfileProvider";
 import { useProductionI18n } from "@/app/i18n/ProductionI18nProvider";
+import { ProfileApiError } from "@/contracts/profile";
 import { Button } from "@/components/ui/button";
+
+/** Backend `AdultDeclarationState` values this page renders distinct copy for. */
+type AdultStateKind = "declared" | "declined" | "notDeclared" | "unknown";
+
+/**
+ * Classifies the backend `AdultDeclarationState` wire string. Anything other than
+ * the three known members is reported as `"unknown"` rather than silently folded
+ * into `"notDeclared"` — a future or unrecognized state must never be presented to
+ * the user as if no declaration had ever been made.
+ */
+function classifyAdultState(state: string): AdultStateKind {
+  if (state === "Declared") return "declared";
+  if (state === "Declined") return "declined";
+  if (state === "NotDeclared") return "notDeclared";
+  return "unknown";
+}
+
+interface NextStep {
+  sectionKey: string;
+  labelKey:
+    | "profile.overview.nextSteps.household"
+    | "profile.overview.nextSteps.preferences"
+    | "profile.overview.nextSteps.equipment";
+  linkTo: string;
+  testId: string;
+}
+
+/** Sections `completeness.sectionCounts` reports that this page offers as progressive next steps. */
+const NEXT_STEP_SECTIONS: readonly NextStep[] = [
+  {
+    sectionKey: "household",
+    labelKey: "profile.overview.nextSteps.household",
+    linkTo: "/app/perfil/dados",
+    testId: "profile-overview-next-step-household",
+  },
+  {
+    sectionKey: "preferences",
+    labelKey: "profile.overview.nextSteps.preferences",
+    linkTo: "/app/perfil/preferencias",
+    testId: "profile-overview-next-step-preferences",
+  },
+  {
+    sectionKey: "equipment",
+    labelKey: "profile.overview.nextSteps.equipment",
+    linkTo: "/app/perfil/equipamentos",
+    testId: "profile-overview-next-step-equipment",
+  },
+];
+
+function formatAcceptedAt(acceptedAt: string | null): string | null {
+  if (!acceptedAt) return null;
+  const parsed = new Date(acceptedAt);
+  if (Number.isNaN(parsed.getTime())) return acceptedAt;
+  return parsed.toLocaleDateString();
+}
 
 /**
  * Read-only landing surface for the profile area: completeness, existence, adult
- * declaration status, and links into the three editable sections. Never writes.
+ * declaration status, progressive next steps, and links into the three editable
+ * sections. The only writes it performs are the explicit adult declaration accept/
+ * decline actions, gated on `adultPolicy.available`.
  */
 export function ProfileOverviewPage() {
-  const { status, workspace, error, reload } = useProfileWorkspace();
+  const {
+    status,
+    workspace,
+    error,
+    reload,
+    adultPolicy,
+    patchProfile,
+    isMutating,
+    lastMutationError,
+    clearMutationError,
+  } = useProfileWorkspace();
   const { t } = useProductionI18n();
+  const [declarationError, setDeclarationError] = useState<string | null>(null);
 
   if (status === "session") {
     return (
@@ -57,13 +127,42 @@ export function ProfileOverviewPage() {
   }
 
   const { profile, completeness } = workspace;
+  const adultKind = classifyAdultState(profile.adultDeclaration.state);
+  const acceptedAtDisplay = formatAcceptedAt(
+    profile.adultDeclaration.acceptedAt,
+  );
+  const canDeclare = adultKind !== "declared" && adultPolicy.available;
 
-  const adultLabelKey =
-    profile.adultDeclaration.state === "Declared"
-      ? "profile.overview.adultDeclaration.declared"
-      : profile.adultDeclaration.state === "Declined"
-        ? "profile.overview.adultDeclaration.declined"
-        : "profile.overview.adultDeclaration.notDeclared";
+  function describeDeclarationError(err: unknown): string {
+    if (err instanceof ProfileApiError) {
+      if (err.code === "precondition_failed")
+        return t("profile.error.precondition412");
+      if (err.code === "validation_failed")
+        return err.message || t("profile.error.validation");
+    }
+    return t("profile.error.save");
+  }
+
+  async function submitDeclaration(adultDeclared: boolean) {
+    if (!adultPolicy.available || !adultPolicy.termsVersion) return;
+    setDeclarationError(null);
+    clearMutationError();
+    try {
+      await patchProfile({
+        adultDeclaration: {
+          adultDeclared,
+          termsVersion: adultPolicy.termsVersion,
+          privacyVersion: adultPolicy.privacyVersion ?? null,
+        },
+      });
+    } catch (err) {
+      setDeclarationError(describeDeclarationError(err));
+    }
+  }
+
+  const nextSteps = NEXT_STEP_SECTIONS.filter(
+    (step) => (completeness.sectionCounts[step.sectionKey] ?? 0) === 0,
+  );
 
   return (
     <div data-testid="profile-overview" className="mx-auto max-w-2xl space-y-6">
@@ -124,13 +223,125 @@ export function ProfileOverviewPage() {
       </div>
 
       <div
+        data-testid="profile-overview-next-steps"
+        className="rounded-xl border border-border p-4"
+      >
+        <h2 className="font-medium">{t("profile.overview.nextSteps")}</h2>
+        {nextSteps.length === 0 ? (
+          <p
+            className="mt-1 text-sm text-muted-foreground"
+            data-testid="profile-overview-next-steps-done"
+          >
+            {t("profile.overview.nextSteps.done")}
+          </p>
+        ) : (
+          <ul className="mt-2 space-y-1">
+            {nextSteps.map((step) => (
+              <li key={step.sectionKey}>
+                <Link
+                  to={step.linkTo}
+                  data-testid={step.testId}
+                  className="text-sm text-primary underline-offset-4 hover:underline"
+                >
+                  {t(step.labelKey)}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div
         data-testid="profile-overview-adult-declaration"
         className="rounded-xl border border-border p-4"
       >
         <h2 className="font-medium">
           {t("profile.overview.adultDeclaration.title")}
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">{t(adultLabelKey)}</p>
+        <p
+          className="mt-1 text-sm text-muted-foreground"
+          data-testid="profile-overview-adult-state"
+        >
+          {adultKind === "declared" &&
+            t("profile.overview.adultDeclaration.declared")}
+          {adultKind === "declined" &&
+            t("profile.overview.adultDeclaration.declined")}
+          {adultKind === "notDeclared" &&
+            t("profile.overview.adultDeclaration.notDeclared")}
+          {adultKind === "unknown" &&
+            t("profile.overview.adultDeclaration.unknown")}
+        </p>
+        {adultKind === "declared" && (
+          <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+            {acceptedAtDisplay && (
+              <p data-testid="profile-overview-adult-accepted-at">
+                {t("profile.overview.adultDeclaration.acceptedAt").replace(
+                  "{date}",
+                  acceptedAtDisplay,
+                )}
+              </p>
+            )}
+            {profile.adultDeclaration.termsVersion && (
+              <p data-testid="profile-overview-adult-terms-version">
+                {t("profile.overview.adultDeclaration.termsVersion").replace(
+                  "{version}",
+                  profile.adultDeclaration.termsVersion,
+                )}
+              </p>
+            )}
+            {profile.adultDeclaration.privacyVersion && (
+              <p data-testid="profile-overview-adult-privacy-version">
+                {t("profile.overview.adultDeclaration.privacyVersion").replace(
+                  "{version}",
+                  profile.adultDeclaration.privacyVersion,
+                )}
+              </p>
+            )}
+          </div>
+        )}
+        {!adultPolicy.available && adultKind !== "declared" && (
+          <p
+            className="mt-1 text-xs text-muted-foreground"
+            data-testid="profile-overview-adult-policy-unavailable"
+          >
+            {t("profile.overview.adultDeclaration.unavailable")}
+          </p>
+        )}
+        {(declarationError || lastMutationError) && (
+          <p
+            role="alert"
+            className="mt-1 text-xs text-destructive"
+            data-testid="profile-overview-adult-error"
+          >
+            {declarationError ??
+              (lastMutationError
+                ? describeDeclarationError(lastMutationError)
+                : "")}
+          </p>
+        )}
+        {canDeclare && (
+          <div className="mt-2 flex gap-2">
+            <Button
+              type="button"
+              size="sm"
+              disabled={isMutating}
+              data-testid="profile-overview-adult-accept"
+              onClick={() => void submitDeclaration(true)}
+            >
+              {t("profile.actions.confirm")}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              disabled={isMutating}
+              data-testid="profile-overview-adult-decline"
+              onClick={() => void submitDeclaration(false)}
+            >
+              {t("profile.actions.remove")}
+            </Button>
+          </div>
+        )}
       </div>
 
       <nav

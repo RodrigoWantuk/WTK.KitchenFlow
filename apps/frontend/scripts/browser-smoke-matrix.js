@@ -160,6 +160,187 @@ function meta() {
   };
 }
 
+/**
+ * Fixture bodies for the intercepted authenticated `/app/perfil*` browser-smoke
+ * journey. These are hand-built wire shapes matching the generated OpenAPI
+ * contract in `src/generated/api-client`, not captures from a real backend —
+ * keep them in sync with `packages/contracts` if the profile contract changes.
+ */
+const profileInterceptionFixtures = (() => {
+  function field(value, presence, defaultValue = null, durability = "durable") {
+    return { value, presence, defaultValue, durability };
+  }
+
+  /** Shared aggregate concurrency token — body version and ETag must agree. */
+  const AGGREGATE_VERSION = "v3";
+  const AGGREGATE_ETAG = '"v3"';
+
+  const session = {
+    userId: "22222222-2222-2222-2222-222222222222",
+    csrfToken: "csrf-intercepted",
+    supportedLocales: ["en", "pt-BR", "es"],
+    displayName: "Ada Intercepted",
+    language: "en",
+    timeZone: "UTC",
+    measurementSystem: "Metric",
+    profileExists: true,
+    profilePercentComplete: 60,
+    adultDeclarationState: "Declared",
+  };
+
+  const profile = {
+    ownerUserId: session.userId,
+    displayName: field("Ada Intercepted", "confirmed"),
+    household: {
+      defaultAdultCount: field(2, "confirmed", 1),
+      defaultChildCount: field(0, "default", 0),
+      defaultServingCount: field(2, "confirmed", 1),
+      language: field("en", "confirmed", "en"),
+      region: field("US", "confirmed"),
+      currency: field("USD", "confirmed"),
+      measurementSystem: field("Metric", "confirmed", "Metric"),
+      timeZone: field("UTC", "confirmed"),
+      planningCadence: field("Weekly", "confirmed"),
+      shoppingCadence: field("Weekly", "confirmed"),
+    },
+    cookingContext: {
+      overallSkill: field("Comfortable", "confirmed"),
+      confidence: field("Moderate", "confirmed"),
+      preferredInstructionDetail: field("Standard", "confirmed"),
+      ordinaryPrepMinutes: field(30, "confirmed"),
+      exceptionalPrepMinutes: field(60, "confirmed"),
+      effortTolerance: field("Medium", "confirmed"),
+      cleanupTolerance: field("Medium", "confirmed"),
+      repeatMealPreference: field("Neutral", "confirmed"),
+      reheatingPreference: field("Comfortable", "confirmed"),
+      leftoverPreference: field("Comfortable", "confirmed"),
+      freezingPreference: field("Comfortable", "confirmed"),
+    },
+    adultDeclaration: {
+      adultDeclared: true,
+      termsVersion: "2026-01-01",
+      privacyVersion: "2026-01-01",
+      acceptedAt: "2026-01-15T12:00:00Z",
+      state: "Declared",
+    },
+    knownTechniques: [],
+    techniquesToLearn: [],
+    goals: [],
+    abandonmentReasons: [],
+    profileExists: true,
+    version: AGGREGATE_VERSION,
+    createdAt: "2026-01-01T00:00:00Z",
+    updatedAt: "2026-01-15T12:00:00Z",
+  };
+
+  const preferences = { version: AGGREGATE_VERSION, entries: [] };
+  const equipment = { version: AGGREGATE_VERSION, entries: [] };
+  const completeness = {
+    percentComplete: 60,
+    completedSections: 3,
+    totalSections: 5,
+    sectionCounts: { household: 1, preferences: 0, equipment: 0 },
+    adultDeclarationState: "Declared",
+    profileExists: true,
+  };
+
+  return {
+    session,
+    profile,
+    preferences,
+    equipment,
+    completeness,
+    AGGREGATE_VERSION,
+    AGGREGATE_ETAG,
+  };
+})();
+
+/**
+ * Installs `page.route()` interception for the session and profile endpoints
+ * used by the assignment scenarios (overview, household save with the
+ * unsaved-changes guard, preferences, equipment). GET responses always carry
+ * an `ETag` header when `profileExists` is true, mirroring the backend
+ * contract the live adapter relies on (it never derives an ETag from the
+ * response body). A PATCH to `/api/v1/profile` is answered with the same
+ * fixture profile (bumped aggregate version) rather than a real mutation.
+ */
+async function installProfileInterception(page) {
+  const fx = profileInterceptionFixtures;
+  let aggregateVersion = fx.AGGREGATE_VERSION;
+  const etagFor = (version) => `"${version}"`;
+
+  await page.route("**/api/v1/session", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(fx.session),
+    }),
+  );
+  await page.route("**/api/v1/profile/preferences", (route) => {
+    const method = route.request().method();
+    if (method === "PUT") {
+      aggregateVersion = `v${Number(String(aggregateVersion).replace(/\D/g, "") || "3") + 1}`;
+    }
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers: { etag: etagFor(aggregateVersion) },
+      body: JSON.stringify({
+        ...fx.preferences,
+        version: aggregateVersion,
+      }),
+    });
+  });
+  await page.route("**/api/v1/profile/equipment", (route) => {
+    const method = route.request().method();
+    if (method === "PUT") {
+      aggregateVersion = `v${Number(String(aggregateVersion).replace(/\D/g, "") || "3") + 1}`;
+    }
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers: { etag: etagFor(aggregateVersion) },
+      body: JSON.stringify({
+        ...fx.equipment,
+        version: aggregateVersion,
+      }),
+    });
+  });
+  await page.route("**/api/v1/profile/completeness", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(fx.completeness),
+    }),
+  );
+  await page.route("**/api/v1/profile", (route) => {
+    const method = route.request().method();
+    if (method === "PATCH" || method === "PUT") {
+      aggregateVersion = `v${Number(String(aggregateVersion).replace(/\D/g, "") || "3") + 1}`;
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        headers: { etag: etagFor(aggregateVersion) },
+        body: JSON.stringify({
+          ...fx.profile,
+          version: aggregateVersion,
+          updatedAt: new Date().toISOString(),
+        }),
+      });
+      return;
+    }
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers: { etag: etagFor(aggregateVersion) },
+      body: JSON.stringify({
+        ...fx.profile,
+        version: aggregateVersion,
+      }),
+    });
+  });
+}
+
 async function waitForServer(url, timeoutMs = 120000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
@@ -869,6 +1050,117 @@ async function run() {
           "production profile route gate",
           "Passed",
           "unauthenticated /app/perfil* redirects to /acesso; no live-backend authenticated coverage in this harness",
+        );
+      },
+    );
+
+    // Route-interception coverage of the authenticated `/app/perfil*` journey.
+    //
+    // IMPORTANT: this step never talks to a real KitchenFlow backend or Keycloak.
+    // Every `/api/v1/session` and `/api/v1/profile*` request against
+    // PRODUCTION_BASE is intercepted with `page.route()` and answered from the
+    // fixtures in `profileInterceptionFixtures` below, so the frontend renders
+    // exactly as it would against a real backend returning those bytes, but no
+    // authoritative state is exercised. It complements, and does not replace,
+    // the Jest component/integration tests in `src/features/profile/*.test.tsx`
+    // and `src/app/ProductionProfileRoutes.test.tsx`, and the unauthenticated
+    // route gate above.
+    await withPage(
+      { viewport: { width: 1280, height: 800 } },
+      "production-profile-intercepted",
+      async (page) => {
+        await installProfileInterception(page);
+
+        await page.goto(PRODUCTION_BASE + "/app/perfil", {
+          waitUntil: "domcontentloaded",
+          timeout: 30000,
+        });
+        await page.getByTestId("profile-overview").waitFor({ timeout: 15000 });
+        await page
+          .getByTestId("profile-overview-adult-accepted-at")
+          .waitFor({ timeout: 5000 });
+        if (
+          (await page.getByTestId("profile-overview-next-steps").count()) === 0
+        ) {
+          fail(
+            "production profile intercepted: overview",
+            "next-steps section missing",
+          );
+        }
+        record(
+          "production profile intercepted: overview",
+          "Passed",
+          "intercepted session+profile fixtures render completeness and adult declaration",
+        );
+
+        await page.goto(PRODUCTION_BASE + "/app/perfil/dados", {
+          waitUntil: "domcontentloaded",
+        });
+        await page.getByTestId("profile-data").waitFor({ timeout: 15000 });
+        const nameInput = page.getByTestId("profile-data-input-displayName");
+        await nameInput.click();
+        await nameInput.fill("");
+        await nameInput.pressSequentially("Ada Changed For Dirty Guard", {
+          delay: 10,
+        });
+        await page.getByTestId("profile-data-back").click();
+        await page
+          .getByTestId("profile-data-unsaved-dialog")
+          .waitFor({ timeout: 10000 });
+        await page.getByTestId("profile-data-unsaved-stay").click();
+        await page
+          .getByTestId("profile-data-unsaved-dialog")
+          .waitFor({ state: "hidden", timeout: 5000 })
+          .catch(() => undefined);
+        if (
+          await page.getByTestId("profile-data-unsaved-dialog").isVisible()
+        ) {
+          fail(
+            "production profile intercepted: unsaved changes",
+            "dialog still visible after choosing to stay",
+          );
+        }
+        await page.getByTestId("profile-data-household-save").click();
+        await page
+          .getByTestId("profile-data-input-displayName")
+          .waitFor({ timeout: 5000 });
+        await page.waitForTimeout(500);
+        if (
+          (await page
+            .getByTestId("profile-data-household-error-summary")
+            .count()) > 0
+        ) {
+          fail(
+            "production profile intercepted: household save",
+            "error summary present after a save the fixture answers with 200",
+          );
+        }
+        record(
+          "production profile intercepted: household save + unsaved-changes guard",
+          "Passed",
+          "accessible confirmation blocked navigation with a dirty draft; intercepted PATCH accepted the save",
+        );
+
+        await page.goto(PRODUCTION_BASE + "/app/perfil/preferencias", {
+          waitUntil: "domcontentloaded",
+        });
+        await page
+          .getByTestId("profile-preferences")
+          .waitFor({ timeout: 15000 });
+        record(
+          "production profile intercepted: preferences",
+          "Passed",
+          "intercepted preferences fixture renders",
+        );
+
+        await page.goto(PRODUCTION_BASE + "/app/perfil/equipamentos", {
+          waitUntil: "domcontentloaded",
+        });
+        await page.getByTestId("profile-equipment").waitFor({ timeout: 15000 });
+        record(
+          "production profile intercepted: equipment",
+          "Passed",
+          "intercepted equipment fixture renders",
         );
       },
     );
