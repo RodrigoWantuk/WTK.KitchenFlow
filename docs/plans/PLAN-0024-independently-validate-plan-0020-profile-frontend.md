@@ -1,17 +1,17 @@
 # PLAN-0024: Independently Validate PLAN-0020 Profile Frontend
 
-- **Status:** Draft
+- **Status:** Ready
 - **Type:** Testing
 - **Priority:** High
 - **Owner:** Unassigned independent testing agent
 - **Created:** 2026-08-03
-- **Last updated:** 2026-08-03T00:00:00Z
+- **Last updated:** 2026-08-03T02:20:00Z
 - **Branch:** `agent/plan-0024-validate-plan-0020-profile` (when claimed)
 - **Pull request:** Not opened
-- **System under test:** Draft PR #35 / `agent/plan-0020-profile-frontend` — exact candidate SHA **unpinned** until PLAN-0020 remediation is finalized (do not use superseded tips `5efcfb8` / `a50152c` as the validation SUT).
+- **System under test:** Draft [PR #35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35) / `agent/plan-0020-profile-frontend` @ `f59606e3958d7db71cd6c7ff900d41111160c39c`
 - **Related implementation plan:** [PLAN-0020](PLAN-0020-implement-profile-household-equipment-frontend.md)
 - **Related plans:** PLAN-0012 (backend), PLAN-0016 (session/inventory frontend), PLAN-0005 (inventory validation baseline)
-- **Dependencies:** PLAN-0020 remediation candidate published with green exact-head Frontend + PLAN-0005; then pin this plan to that SHA and move to Ready.
+- **Dependencies:** PLAN-0020 remediation candidate green (Frontend `30778578106`, PLAN-0005 `30778578095`)
 
 ## Objective
 
@@ -20,10 +20,11 @@ Independently determine whether the PLAN-0020 production profile frontend satisf
 ## Test basis
 
 - `docs/product/audience-and-profile.md`
-- `docs/plans/PLAN-0020-implement-profile-household-equipment-frontend.md` acceptance criteria
+- `docs/plans/PLAN-0020-implement-profile-household-equipment-frontend.md` acceptance criteria and remediation scope
 - PLAN-0012 backend contracts and OpenAPI `kitchenflow-v1.json` profile operations
 - ADR-0004 identity/session and privacy/security docs
 - `docs/testing/product-foundation-gates.md`
+- Review baseline `a50152c` findings remediated on tip `6215b89` / CI tip `f59606e`
 
 ## Scope
 
@@ -33,12 +34,15 @@ Independently determine whether the PLAN-0020 production profile frontend satisf
 - Section PATCH versus accidental PUT replacement
 - Progressive field confirm/remove/default-not-silent-confirm
 - Shared profile/preferences/equipment concurrency token and 412/428/409 UX
-- Explicit allergy/medical confirmation; opaque custom codes
+- Workspace consistency invariants and mutation-ready guards
+- Explicit allergy/medical confirmation; opaque custom codes; note-as-label for custom entries
 - Equipment ordered replace and keyboard reorder
 - Session-safe field refresh after save; adult-declaration policy unavailable default
+- ProfileProvider route scope (no profile fetch on home/inventory/access)
 - Locales `en` / `pt-BR` / `es`; keyboard; focus; 360/768/1280; 200% zoom; reduced motion
 - Production isolation (no profile fixture fallback)
 - Generated-client drift zero
+- Intercepted authenticated browser smoke scenarios
 
 ### Excluded
 
@@ -48,7 +52,7 @@ Independently determine whether the PLAN-0020 production profile frontend satisf
 
 ## Substantial test-run target
 
-Decision-ready Pass / Conditional Pass / Fail assessment against one pinned PLAN-0020 candidate SHA, with evidence under `docs/evidence/plan-0024/`.
+Decision-ready Pass / Conditional Pass / Fail assessment against pinned SHA `f59606e3958d7db71cd6c7ff900d41111160c39c`, with evidence under `docs/evidence/plan-0024/`.
 
 ## Acceptance criteria
 
@@ -60,17 +64,22 @@ Decision-ready Pass / Conditional Pass / Fail assessment against one pinned PLAN
 
 ## Execution state
 
-- **Current checkpoint:** Draft; candidate intentionally unpinned while PLAN-0020 remediates PR #35 acceptance findings.
-- **Exact next action:** After PLAN-0020 publishes a green remediation tip, pin that SHA here, set status Ready, and claim for independent execution.
-- **Blockers:** PLAN-0020 remediation incomplete (review baseline `a50152c` not acceptance-ready).
-- **Working tree state:** Draft placeholder only.
+- **Current checkpoint:** Ready — pinned to remediation CI tip `f59606e3958d7db71cd6c7ff900d41111160c39c`.
+- **Exact next action:** Independent testing agent claims the plan, creates branch from the pinned SHA (or reviews PR #35 at that tip), and executes the campaign.
+- **Blockers:** None for claim.
+- **Working tree state:** Ready placeholder.
 
 ## Progress log
 
+### 2026-08-03T02:20:00Z — PLAN-0020 remediation complete
+
+- **Checkpoint:** Pinned SUT `f59606e`; status **Ready**.
+- **Next action:** Independent agent claim and execute.
+
 ### 2026-08-03T01:10:00Z — PLAN-0020 remediation reopen
 
-- **Checkpoint:** Removed premature candidate pin references (`5efcfb8`). PLAN-0024 remains Draft/unpinned.
-- **Next action:** Wait for remediation candidate; then Ready + claim.
+- **Checkpoint:** Removed premature candidate pin references (`5efcfb8`). PLAN-0024 remained Draft/unpinned.
+- **Next action:** Wait for remediation candidate.
 
 ### 2026-08-03T00:00:00Z — PLAN-0020 claim
 

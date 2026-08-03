@@ -1,11 +1,11 @@
 # PLAN-0020: Implement Profile, Household, Preferences, and Equipment Frontend
 
-- **Status:** In Progress
+- **Status:** Completed
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Cursor agent (PLAN-0020 profile frontend remediation)
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-03T01:10:00Z
+- **Last updated:** 2026-08-03T02:20:00Z
 - **Branch:** `agent/plan-0020-profile-frontend`
 - **Pull request:** [Draft PR #35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35)
 - **Dependencies:** PLAN-0012 and PLAN-0016 merged; PLAN-0011 merged via PR #34 (`eb9e92c`); generated OpenAPI client available
@@ -40,29 +40,38 @@ Prior green tip `5efcfb8` / packaging `a50152c` are superseded by this remediati
 
 ## Acceptance criteria
 
-- [ ] Workspace presence/version/ETag invariants fail closed; mutation impossible outside ready consistent workspace.
-- [ ] Post-mutation reload failure blocks subsequent writes without misreporting the save.
-- [ ] Write durability permits only durable; controlled fields use localized typed options.
-- [ ] Invalid numeric input is never converted to zero; field errors reach accessible controls.
-- [ ] Custom preference labels round-trip; allergy/medical use accessible modal.
-- [ ] Unsaved changes protected; ProfileProvider scoped to profile routes.
-- [ ] Overview uses completeness section data and adult policy truthfully.
-- [ ] Equipment validation and keyboard behavior complete.
-- [ ] Authenticated profile browser scenarios pass (intercepted harness).
-- [ ] Locales complete; production isolation; generated client drift zero.
-- [ ] Frontend and PLAN-0005 pass on the final published head.
-- [ ] PLAN-0024 pinned Ready only after remediation candidate is stable.
+- [x] Workspace presence/version/ETag invariants fail closed; mutation impossible outside ready consistent workspace.
+- [x] Post-mutation reload failure blocks subsequent writes without misreporting the save.
+- [x] Write durability permits only durable; controlled fields use localized typed options.
+- [x] Invalid numeric input is never converted to zero; field errors reach accessible controls.
+- [x] Custom preference labels round-trip; allergy/medical use accessible modal.
+- [x] Unsaved changes protected; ProfileProvider scoped to profile routes.
+- [x] Overview uses completeness section data and adult policy truthfully.
+- [x] Equipment validation and keyboard behavior complete.
+- [x] Authenticated profile browser scenarios pass (intercepted harness).
+- [x] Locales complete; production isolation; generated client drift zero.
+- [x] Frontend and PLAN-0005 pass on the final published head.
+- [x] PLAN-0024 pinned Ready after remediation candidate is stable.
 
 ## Execution state
 
-- **Current checkpoint:** Remediation published; awaiting exact-head CI.
+- **Current checkpoint:** Remediation verified; PLAN-0020 **Completed**.
 - **Review baseline:** `a50152c78e872685b9f760db53c05984308174d8`
 - **Remediation functional tip:** `6215b89147ffd53cc132fea87687a549a475ce07`
-- **Exact next action:** Await exact-head Frontend + PLAN-0005; mark Completed and pin PLAN-0024 when green.
-- **Blockers:** Exact-head CI pending.
-- **Working tree state:** Packaging tip may advance PR head.
+- **CI-validated tip:** `f59606e3958d7db71cd6c7ff900d41111160c39c`
+- **Exact next action:** Owner review of draft PR #35; independent validation via PLAN-0024.
+- **Blockers:** None.
+- **Working tree state:** Completion packaging may advance PR head.
 
 ## Progress log
+
+### 2026-08-03T02:20:00Z — Cursor agent (PLAN-0020 remediation complete)
+
+- **Checkpoint:** Exact-head Frontend `30778578106` + PLAN-0005 `30778578095` Passed on `f59606e`; PLAN-0020 **Completed**; PLAN-0024 Ready and pinned.
+- **Changes included in the commit:** Plan/registry/evidence completion; PLAN-0024 Ready pin; PR body reconciliation.
+- **Validation performed:** Frontend + PLAN-0005 green on published tip `f59606e3958d7db71cd6c7ff900d41111160c39c`. Draft, MERGEABLE, reviewer `RodrigoWantuk`.
+- **Next action:** Owner review; PLAN-0024 independent validation may begin.
+- **Blockers or handoff notes:** No agent merge.
 
 ### 2026-08-03T02:10:00Z — Cursor agent (PLAN-0020 remediation)
 
