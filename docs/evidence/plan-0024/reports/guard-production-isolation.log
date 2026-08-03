@@ -1,0 +1,4 @@
+yarn run v1.22.22
+$ node scripts/guard-production-isolation.js
+Production isolation guard passed.
+Done in 0.07s.

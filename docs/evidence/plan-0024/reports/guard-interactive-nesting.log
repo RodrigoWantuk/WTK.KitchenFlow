@@ -1,0 +1,4 @@
+yarn run v1.22.22
+$ node scripts/guard-interactive-nesting.js
+Interactive nesting guard passed: no nested interactive controls under src/.
+Done in 0.34s.

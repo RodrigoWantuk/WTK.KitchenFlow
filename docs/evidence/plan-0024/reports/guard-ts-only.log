@@ -1,0 +1,4 @@
+yarn run v1.22.22
+$ node scripts/guard-ts-only.js
+TypeScript-only guard passed: no .js/.jsx under src/.
+Done in 0.07s.

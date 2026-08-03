@@ -1,0 +1,7 @@
+yarn run v1.22.22
+$ eslint "src/**/*.{js,jsx,ts,tsx}" --max-warnings 0
+(node:65802) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/rodrigo/Repos/GIT/WTK.Cocinaris-plan-0024-sut/apps/frontend/eslint.config.js?mtime=1785757181865 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/rodrigo/Repos/GIT/WTK.Cocinaris-plan-0024-sut/apps/frontend/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Done in 4.24s.

@@ -1,0 +1,4 @@
+yarn run v1.22.22
+$ yarn --cwd ../../packages/api-client typecheck
+$ tsc --noEmit -p tsconfig.json
+Done in 0.73s.

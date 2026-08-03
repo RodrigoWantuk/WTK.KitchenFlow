@@ -1,0 +1,149 @@
+{
+  "kind": "automated-browser-smoke",
+  "evidenceNote": "CI artifact only — not a versioned source-of-truth report in git",
+  "testedCodeSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+  "prHeadSha": null,
+  "syntheticMergeSha": null,
+  "gitHeadSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+  "githubRunId": null,
+  "githubRunAttempt": null,
+  "githubEventName": "local",
+  "workflowName": "local",
+  "prototypeBaseUrl": "http://127.0.0.1:3000",
+  "productionBaseUrl": "http://127.0.0.1:3001",
+  "testedModes": [
+    "prototype",
+    "production"
+  ],
+  "nodeVersion": "v24.18.0",
+  "yarnVersion": "1.22.22",
+  "playwrightVersion": "1.55.1",
+  "chromiumVersion": "140.0.7339.186",
+  "frontendMode": "prototype+production-static",
+  "timestamp": "2026-08-03T11:48:23.109Z",
+  "headless": true,
+  "operatingSystem": "linux 6.12.96+deb13-amd64 x64",
+  "results": [
+    {
+      "check": "360px: Landing→Access→Home→Pantry→Plan",
+      "result": "Passed",
+      "notes": ""
+    },
+    {
+      "check": "360px touch/mobile nav",
+      "result": "Passed",
+      "notes": "bottomnav"
+    },
+    {
+      "check": "768px journey",
+      "result": "Passed",
+      "notes": ""
+    },
+    {
+      "check": "1280px journey",
+      "result": "Passed",
+      "notes": ""
+    },
+    {
+      "check": "keyboard-only Landing→Access→Home→Plan→Settings",
+      "result": "Passed",
+      "notes": "Tab/Enter only; baseline vs focused :focus-visible"
+    },
+    {
+      "check": "CSS zoom approximation (not browser zoom)",
+      "result": "Passed",
+      "notes": "documentElement.style.zoom=2; Home/Despensa/Plan/Compras ok"
+    },
+    {
+      "check": "touch/mobile viewport flows",
+      "result": "Passed",
+      "notes": "bottomnav, pantry debt, route, cook CTA"
+    },
+    {
+      "check": "prefers-reduced-motion",
+      "result": "Passed",
+      "notes": "matchMedia true; quick chooser operable; scenarioSheet=true; motion samples=63; no long durations on rendered nodes"
+    },
+    {
+      "check": "production locale mobile 360",
+      "result": "Passed",
+      "notes": "select visible; en persisted; lang updated"
+    },
+    {
+      "check": "production profile route gate",
+      "result": "Passed",
+      "notes": "unauthenticated /app/perfil* redirects to /acesso; no live-backend authenticated coverage in this harness"
+    },
+    {
+      "check": "production profile intercepted: overview",
+      "result": "Passed",
+      "notes": "intercepted session+profile fixtures render completeness and adult declaration"
+    },
+    {
+      "check": "production profile intercepted: dirty shell Home Stay",
+      "result": "Passed",
+      "notes": "primary Home navigation opened confirmation; Stay kept Profile Data"
+    },
+    {
+      "check": "production profile intercepted: dirty shell Inventory Discard",
+      "result": "Passed",
+      "notes": "primary Inventory navigation discarded the draft and left profile"
+    },
+    {
+      "check": "production profile intercepted: household save + unsaved-changes guard",
+      "result": "Passed",
+      "notes": "accessible confirmation blocked navigation with a dirty draft; intercepted PATCH accepted the save"
+    },
+    {
+      "check": "production profile intercepted: browser Back Stay/Discard without loop",
+      "result": "Passed",
+      "notes": "dirty Preferences Back Stay retained draft; Discard left once without reopening"
+    },
+    {
+      "check": "production profile intercepted: save refresh failed warning",
+      "result": "Passed",
+      "notes": "saved-success warning appeared, blocked mutation, and cleared after reload"
+    },
+    {
+      "check": "production profile intercepted: session refresh warning",
+      "result": "Passed",
+      "notes": "profile save succeeded while session refresh failure was surfaced and cleared"
+    },
+    {
+      "check": "production profile intercepted: preferences",
+      "result": "Passed",
+      "notes": "intercepted preferences fixture renders"
+    },
+    {
+      "check": "production profile intercepted: equipment",
+      "result": "Passed",
+      "notes": "intercepted equipment fixture renders"
+    },
+    {
+      "check": "locale pt-BR",
+      "result": "Passed",
+      "notes": "selector + 3 distinct strings"
+    },
+    {
+      "check": "locale en",
+      "result": "Passed",
+      "notes": "selector + 3 distinct strings"
+    },
+    {
+      "check": "locale es",
+      "result": "Passed",
+      "notes": "selector + 3 distinct strings"
+    },
+    {
+      "check": "Despensa déficit → compras review",
+      "result": "Passed",
+      "notes": ""
+    },
+    {
+      "check": "CTA Cozinhar navegação",
+      "result": "Passed",
+      "notes": "http://127.0.0.1:3000/app/cozinhar/r3?sourcePreparationRouteId=prep-route-bean-soup&relatedPlanEntryId=pl-route-r3"
+    }
+  ],
+  "failedArtifacts": []
+}

@@ -1,0 +1,50 @@
+=== START generate-api-client 2026-08-03T11:42:40Z ===
+=== END generate-api-client exit=127 2026-08-03T11:42:40Z ===
+=== START check-api-client-drift 2026-08-03T11:42:40Z ===
+=== END check-api-client-drift exit=1 2026-08-03T11:42:41Z ===
+=== START typecheck-api-client 2026-08-03T11:42:41Z ===
+=== END typecheck-api-client exit=2 2026-08-03T11:42:42Z ===
+=== START format-check-api-client 2026-08-03T11:42:42Z ===
+=== END format-check-api-client exit=0 2026-08-03T11:42:42Z ===
+=== START typecheck 2026-08-03T11:42:42Z ===
+=== END typecheck exit=0 2026-08-03T11:42:50Z ===
+=== START lint 2026-08-03T11:42:50Z ===
+=== END lint exit=0 2026-08-03T11:42:54Z ===
+=== START format-check 2026-08-03T11:42:54Z ===
+=== END format-check exit=0 2026-08-03T11:42:57Z ===
+=== START generate-api-client 2026-08-03T11:43:45Z ===
+=== END generate-api-client exit=0 2026-08-03T11:43:46Z ===
+=== START check-api-client-drift 2026-08-03T11:43:46Z ===
+=== END check-api-client-drift exit=0 2026-08-03T11:43:47Z ===
+=== START typecheck-api-client 2026-08-03T11:43:47Z ===
+=== END typecheck-api-client exit=0 2026-08-03T11:43:48Z ===
+=== START guard-ts-only 2026-08-03T11:43:48Z ===
+=== END guard-ts-only exit=0 2026-08-03T11:43:48Z ===
+=== START guard-interactive-nesting 2026-08-03T11:43:48Z ===
+=== END guard-interactive-nesting exit=0 2026-08-03T11:43:48Z ===
+=== START guard-build-mode 2026-08-03T11:43:48Z ===
+=== END guard-build-mode exit=0 2026-08-03T11:43:49Z ===
+=== START guard-production-isolation 2026-08-03T11:43:49Z ===
+=== END guard-production-isolation exit=0 2026-08-03T11:43:49Z ===
+=== START build 2026-08-03T11:43:49Z ===
+=== END build exit=0 2026-08-03T11:44:04Z ===
+=== START build-prototype 2026-08-03T11:44:04Z ===
+=== END build-prototype exit=0 2026-08-03T11:44:21Z ===
+=== START build-production 2026-08-03T11:44:21Z ===
+=== END build-production exit=0 2026-08-03T11:44:30Z ===
+=== START inspect-production-bundle 2026-08-03T11:44:30Z ===
+=== END inspect-production-bundle exit=0 2026-08-03T11:44:30Z ===
+=== START audit-policy 2026-08-03T11:44:30Z ===
+=== END audit-policy exit=0 2026-08-03T11:44:32Z ===
+=== START smoke-browser-ci 2026-08-03T11:45:57Z ===
+=== END smoke-browser-ci exit=1 2026-08-03T11:46:24Z ===
+=== START validate-firefox-native-zoom 2026-08-03T11:46:24Z ===
+=== END validate-firefox-native-zoom exit=1 2026-08-03T11:46:24Z ===
+=== START build-prototype-named 2026-08-03T11:48:04Z ===
+=== END build-prototype-named exit=0 2026-08-03T11:48:14Z ===
+=== START build-production-named 2026-08-03T11:48:14Z ===
+=== END build-production-named exit=0 2026-08-03T11:48:22Z ===
+=== START smoke-browser-ci 2026-08-03T11:48:22Z ===
+=== END smoke-browser-ci exit=0 2026-08-03T11:49:28Z ===
+=== START validate-firefox-native-zoom 2026-08-03T11:49:28Z ===
+=== END validate-firefox-native-zoom exit=1 2026-08-03T11:49:28Z ===

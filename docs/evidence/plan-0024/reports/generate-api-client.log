@@ -1,0 +1,7 @@
+yarn run v1.22.22
+$ yarn --cwd ../../packages/api-client generate
+$ openapi-typescript ../contracts/openapi/kitchenflow-v1.json -o src/generated/schema.ts && node ../../scripts/contracts/sync-api-client-to-frontend.mjs
+✨ openapi-typescript 7.9.1
+🚀 ../contracts/openapi/kitchenflow-v1.json → src/generated/schema.ts [102.3ms]
+Synced API client → /home/rodrigo/Repos/GIT/WTK.Cocinaris-plan-0024-sut/apps/frontend/src/generated/api-client
+Done in 0.82s.

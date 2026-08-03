@@ -1,0 +1,10 @@
+yarn run v1.22.22
+$ node scripts/firefox-native-zoom-pointer-keyboard.cjs
+Firefox native zoom pointer/keyboard report → /home/rodrigo/Repos/GIT/WTK.KitchenFlow/docs/evidence/plan-0024/reports/firefox-zoom-pointer-keyboard.json
+{
+  "Cook_pointer": "Passed",
+  "Cook_keyboard": "Passed",
+  "Pantry_pointer": "Passed",
+  "Pantry_keyboard": "Passed"
+}
+Done in 26.71s.

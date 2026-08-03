@@ -1,0 +1,6 @@
+yarn run v1.22.22
+$ yarn --cwd ../../packages/api-client format:check
+$ prettier --check "src/**/*.{ts,md}" --ignore-path .prettierignore
+Checking formatting...
+All matched files use Prettier code style!
+Done in 0.43s.

@@ -1,0 +1,6 @@
+yarn run v1.22.22
+$ node scripts/inspect-production-bundle.js
+Production bundle isolation passed.
+ - build/static/js/main.5db660f8.js: 668479 bytes
+Report: build/production-bundle-report.json
+Done in 0.07s.

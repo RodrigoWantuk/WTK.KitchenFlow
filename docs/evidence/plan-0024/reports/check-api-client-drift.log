@@ -1,0 +1,5 @@
+yarn run v1.22.22
+$ yarn --cwd ../../packages/api-client check:drift
+$ node ../../scripts/contracts/check-api-client-drift.mjs
+API client drift check passed (package + frontend mirror).
+Done in 0.80s.

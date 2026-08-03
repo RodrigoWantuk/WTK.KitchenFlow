@@ -1,0 +1,53 @@
+yarn run v1.22.22
+$ SMOKE_MANAGE_SERVER=1 SMOKE_TRACE=1 node scripts/browser-smoke-matrix.js
+Building production bundle for mobile locale smoke...
+$ REACT_APP_FRONTEND_MODE=production GENERATE_SOURCEMAP=false craco build
+(node:68381) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Creating an optimized production build...
+Compiled successfully.
+
+File sizes after gzip:
+
+  186.95 kB  build/static/js/main.5db660f8.js
+  12.02 kB   build/static/css/main.3c0ccd3e.css
+
+The project was built assuming it is hosted at /.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+You may serve it with a static server:
+
+  yarn global add serve
+  serve -s build
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+
+[Passed] 360px: Landing→Access→Home→Pantry→Plan
+[Passed] 360px touch/mobile nav — bottomnav
+[Passed] 768px journey
+[Passed] 1280px journey
+[Passed] keyboard-only Landing→Access→Home→Plan→Settings — Tab/Enter only; baseline vs focused :focus-visible
+[Passed] CSS zoom approximation (not browser zoom) — documentElement.style.zoom=2; Home/Despensa/Plan/Compras ok
+[Passed] touch/mobile viewport flows — bottomnav, pantry debt, route, cook CTA
+[Passed] prefers-reduced-motion — matchMedia true; quick chooser operable; scenarioSheet=true; motion samples=63; no long durations on rendered nodes
+[Passed] production locale mobile 360 — select visible; en persisted; lang updated
+[Passed] production profile route gate — unauthenticated /app/perfil* redirects to /acesso; no live-backend authenticated coverage in this harness
+[Passed] production profile intercepted: overview — intercepted session+profile fixtures render completeness and adult declaration
+[Passed] production profile intercepted: dirty shell Home Stay — primary Home navigation opened confirmation; Stay kept Profile Data
+[Passed] production profile intercepted: dirty shell Inventory Discard — primary Inventory navigation discarded the draft and left profile
+[Passed] production profile intercepted: household save + unsaved-changes guard — accessible confirmation blocked navigation with a dirty draft; intercepted PATCH accepted the save
+[Passed] production profile intercepted: browser Back Stay/Discard without loop — dirty Preferences Back Stay retained draft; Discard left once without reopening
+[Passed] production profile intercepted: save refresh failed warning — saved-success warning appeared, blocked mutation, and cleared after reload
+[Passed] production profile intercepted: session refresh warning — profile save succeeded while session refresh failure was surfaced and cleared
+[Passed] production profile intercepted: preferences — intercepted preferences fixture renders
+[Passed] production profile intercepted: equipment — intercepted equipment fixture renders
+[Passed] locale pt-BR — selector + 3 distinct strings
+[Passed] locale en — selector + 3 distinct strings
+[Passed] locale es — selector + 3 distinct strings
+[Passed] Despensa déficit → compras review
+[Passed] CTA Cozinhar navegação — http://127.0.0.1:3000/app/cozinhar/r3?sourcePreparationRouteId=prep-route-bean-soup&relatedPlanEntryId=pl-route-r3
+Wrote /home/rodrigo/Repos/GIT/WTK.Cocinaris-plan-0024-sut/apps/frontend/docs/browser-smoke/browser-smoke-report.json
+Done in 65.30s.

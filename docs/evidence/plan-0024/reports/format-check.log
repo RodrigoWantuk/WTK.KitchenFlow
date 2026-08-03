@@ -1,0 +1,5 @@
+yarn run v1.22.22
+$ prettier --check "src/**/*.{js,jsx,ts,tsx,css,md}"
+Checking formatting...
+All matched files use Prettier code style!
+Done in 2.96s.

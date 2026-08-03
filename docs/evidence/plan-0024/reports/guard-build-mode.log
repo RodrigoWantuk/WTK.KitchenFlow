@@ -1,0 +1,4 @@
+yarn run v1.22.22
+$ node scripts/guard-build-mode.js
+Build mode guard passed.
+Done in 0.07s.
