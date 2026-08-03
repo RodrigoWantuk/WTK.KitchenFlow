@@ -142,11 +142,12 @@ Started from post-PR #34 `main` (`eb9e92c`). No concurrent PLAN-0011 branch work
 
 ## Execution state
 
-- **Current checkpoint:** Vertical slice validated locally; ready to push draft PR.
+- **Current checkpoint:** Functional tip `4ddc87475b156ccb984cd7fe879a2f1086c9c1d5` published; opening draft PR.
+- **Functional tip:** `4ddc87475b156ccb984cd7fe879a2f1086c9c1d5`
 - **Run target:** Deliver Phases 1–5 as one production profile frontend vertical slice; open draft PR; exact-head CI.
 - **Blockers:** Local Firefox zoom blocked by root/`$HOME` ownership (rely on PLAN-0005 CI).
-- **Exact next action:** Push draft PR; await exact-head CI.
-- **Working tree state:** Implementation ready to commit on `agent/plan-0020-profile-frontend`.
+- **Exact next action:** Open draft PR requesting `RodrigoWantuk`; await exact-head CI.
+- **Working tree state:** Packaging tip may advance PR head beyond immutable functional tip.
 
 ## Progress log
 
