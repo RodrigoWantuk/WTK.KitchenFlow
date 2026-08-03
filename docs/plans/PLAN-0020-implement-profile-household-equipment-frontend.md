@@ -1,11 +1,11 @@
 # PLAN-0020: Implement Profile, Household, Preferences, and Equipment Frontend
 
-- **Status:** In Progress
+- **Status:** Completed
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Cursor agent (PLAN-0020 profile frontend)
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-03T00:15:00Z
+- **Last updated:** 2026-08-03T00:35:00Z
 - **Branch:** `agent/plan-0020-profile-frontend`
 - **Pull request:** [Draft PR #35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35)
 - **Dependencies:** PLAN-0012 and PLAN-0016 merged; PLAN-0011 merged via PR #34 (`eb9e92c`); generated OpenAPI client available
@@ -135,21 +135,29 @@ Started from post-PR #34 `main` (`eb9e92c`). No concurrent PLAN-0011 branch work
 - [x] No profile data is inferred or silently persisted.
 - [x] ETag concurrency, CSRF, and Problem Details are handled.
 - [x] Generated contracts remain canonical.
-- [ ] Supported locales and accessibility gates pass (local/CI pending on published tip).
+- [x] Supported locales and accessibility gates pass (local/CI pending on published tip).
 - [x] Production contains no mock fallback.
 - [x] Documentation and code-level comments are complete.
-- [ ] Independent review is requested before merge (draft PR pending).
+- [x] Independent review is requested before merge (draft PR pending).
 
 ## Execution state
 
-- **Current checkpoint:** Functional tip `4ddc87475b156ccb984cd7fe879a2f1086c9c1d5` published; opening draft PR.
+- **Current checkpoint:** Exact-head Frontend + PLAN-0005 green; PLAN-0020 **Completed**.
 - **Functional tip:** `4ddc87475b156ccb984cd7fe879a2f1086c9c1d5`
-- **Run target:** Deliver Phases 1–5 as one production profile frontend vertical slice; open draft PR; exact-head CI.
-- **Blockers:** Local Firefox zoom blocked by root/`$HOME` ownership (rely on PLAN-0005 CI).
-- **Exact next action:** Open draft PR requesting `RodrigoWantuk`; await exact-head CI.
-- **Working tree state:** Packaging tip may advance PR head beyond immutable functional tip.
+- **CI-validated tip:** `5efcfb8b5f70a1389e9e2c709afe7edf51d016ba`
+- **Exact next action:** Owner review of draft PR #35 only — no agent merge.
+- **Blockers:** None.
+- **Working tree state:** Completion packaging may advance PR head beyond CI-validated tip.
 
 ## Progress log
+
+### 2026-08-03T00:35:00Z — Cursor agent (PLAN-0020 completion)
+
+- **Checkpoint:** Frontend `30774513344` + PLAN-0005 `30774513343` Passed on `5efcfb8`; PLAN-0020 returned to **Completed**.
+- **Changes included in the commit:** Plan/registry/evidence completion; PR body reconciliation.
+- **Validation performed:** Exact-head Frontend quality+browser-smoke and PLAN-0005 p0/p1/evidence-consistency on published tip `5efcfb8b5f70a1389e9e2c709afe7edf51d016ba`. Draft, MERGEABLE, reviewer `RodrigoWantuk`.
+- **Next action:** Owner review only — independent validation via PLAN-0024.
+- **Blockers or handoff notes:** PLAN-0021 remains blocked until profile and other live-source prerequisites merge.
 
 ### 2026-08-03T00:30:00Z — Cursor agent (PLAN-0020 claim + vertical slice)
 
