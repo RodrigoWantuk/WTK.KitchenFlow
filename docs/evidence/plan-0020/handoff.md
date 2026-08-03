@@ -11,7 +11,7 @@
 | Review baseline (pre-remediation) | `a50152c78e872685b9f760db53c05984308174d8` |
 | Superseded functional tip | `4ddc87475b156ccb984cd7fe879a2f1086c9c1d5` |
 | Superseded CI tip | `5efcfb8b5f70a1389e9e2c709afe7edf51d016ba` |
-| Remediation functional tip |  |
+| Remediation functional tip | `6215b89147ffd53cc132fea87687a549a475ce07` |
 | CI-validated remediation tip | pending |
 
 ## Scope delivered (remediation)

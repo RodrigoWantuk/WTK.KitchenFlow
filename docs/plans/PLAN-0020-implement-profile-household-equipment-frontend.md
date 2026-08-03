@@ -55,12 +55,12 @@ Prior green tip `5efcfb8` / packaging `a50152c` are superseded by this remediati
 
 ## Execution state
 
-- **Current checkpoint:** Remediation R1–R12 implemented; local gates Passed; ready to push.
+- **Current checkpoint:** Remediation published; awaiting exact-head CI.
 - **Review baseline:** `a50152c78e872685b9f760db53c05984308174d8`
-- **Remediation functional tip:** 
-- **Exact next action:** Commit; push draft PR #35; await exact-head CI; pin PLAN-0024 when green.
-- **Blockers:** Local Firefox zoom relies on PLAN-0005 CI.
-- **Working tree state:** Ready to commit remediations.
+- **Remediation functional tip:** `6215b89147ffd53cc132fea87687a549a475ce07`
+- **Exact next action:** Await exact-head Frontend + PLAN-0005; mark Completed and pin PLAN-0024 when green.
+- **Blockers:** Exact-head CI pending.
+- **Working tree state:** Packaging tip may advance PR head.
 
 ## Progress log
 
