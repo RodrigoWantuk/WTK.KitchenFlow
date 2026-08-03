@@ -1,11 +1,11 @@
 # PLAN-0025: Independently Retest PLAN-0020 Profile Remediation
 
-- **Status:** Ready
+- **Status:** In Progress
 - **Type:** Testing
 - **Priority:** High
-- **Owner:** Unassigned independent testing agent
+- **Owner:** Independent testing agent (PLAN-0025)
 - **Created:** 2026-08-03
-- **Last updated:** 2026-08-03T22:25:00Z
+- **Last updated:** 2026-08-03T22:38:46Z
 - **Branch:** `agent/plan-0025-retest-plan-0020-profile` (when claimed)
 - **Pull request:** Not opened
 - **System under test:** Draft [PR #35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35) / `agent/plan-0020-profile-frontend` @ `06bd95baacaabaa099170de1ba41187a8e885dea`
@@ -57,8 +57,8 @@ Decision-ready Pass / Conditional Pass / Fail against pinned SHA `06bd95baacaaba
 
 ## Execution state
 
-- **Current checkpoint:** Ready. Candidate pinned to `06bd95b` after green exact-head Frontend + PLAN-0005.
-- **Exact next action:** Independent testing agent claims this plan, creates `agent/plan-0025-retest-plan-0020-profile`, and retests F-0024-01…05 plus non-regression matrix against the pinned SHA.
+- **Current checkpoint:** Claimed. The immutable SUT remains `06bd95baacaabaa099170de1ba41187a8e885dea`; the evidence branch was created from the documentation-only packaging head `8b3022b733120fd8c3e8be1f9e95ca5fa888b67b`.
+- **Exact next action:** Open the draft validation PR, then run independent finding retests and the required frontend gates only in the detached SUT worktree.
 - **Blockers:** None for starting independent retest.
 - **Working tree state:** Placeholder Ready on implementation branch; validation work must use a separate branch.
 
@@ -70,3 +70,11 @@ Decision-ready Pass / Conditional Pass / Fail against pinned SHA `06bd95baacaaba
 - **Checkpoint:** Ready. SUT `06bd95baacaabaa099170de1ba41187a8e885dea`. Predecessor PLAN-0024 Fail immutable.
 - **Next action:** Independent agent begins PLAN-0025.
 - **Blockers or handoff notes:** Do not reopen PLAN-0024; do not merge PR #35 from this plan.
+
+### 2026-08-03T22:38:46Z — Claimed independent retest
+
+- **Checkpoint:** PLAN-0025 is **In Progress** on `agent/plan-0025-retest-plan-0020-profile`. The SUT is fixed at `06bd95baacaabaa099170de1ba41187a8e885dea`; tests will run only from detached worktree `../WTK.Cocinaris-plan-0025-sut`. PR #35 is open and its current packaging head `8b3022b733120fd8c3e8be1f9e95ca5fa888b67b` differs only by the expected documentation files after the candidate.
+- **Material changes:** Created the PLAN-0025 evidence package and recorded the claimed test environment; no product behavior or historical PLAN-0024 evidence changed.
+- **Validation:** Verified remote refs, PR #35 state, candidate reachability, expected documentation-only delta, and the exact candidate CI workflow IDs `30857947860` and `30857947726` (Passed).
+- **Next action:** Publish the claim as a draft validation PR, then execute the independent adversarial and regression campaign.
+- **Blockers or handoff notes:** Unrelated untracked local build/smoke artifacts predate this claim and remain excluded from commits.

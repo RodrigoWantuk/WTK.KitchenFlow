@@ -1,0 +1,33 @@
+{
+  "plan": "PLAN-0025",
+  "phase": "claim",
+  "sutSha": "06bd95baacaabaa099170de1ba41187a8e885dea",
+  "implementationPackagingHead": "8b3022b733120fd8c3e8be1f9e95ca5fa888b67b",
+  "evidenceBranchHead": "pending claim commit",
+  "repository": "RodrigoWantuk/WTK.Cocinaris",
+  "implementationPr": 35,
+  "validationPr": "pending draft creation",
+  "historicalValidationPr": 36,
+  "historicalFailedSut": "5733bb4de957b53469a28bc60c472a90f0955907",
+  "operatingSystem": "Debian GNU/Linux",
+  "kernel": "6.12.96+deb13-amd64",
+  "hostname": "NOTEBOOK-DEB-RODRIGO",
+  "architecture": "x86_64",
+  "nodeVersion": "v24.18.0",
+  "yarnVersion": "1.22.22",
+  "dotnetSdkVersion": "10.0.302",
+  "browserVersions": "pending SUT browser environment discovery",
+  "timezone": "America/Sao_Paulo",
+  "locale": "pt_BR.UTF-8",
+  "claimTimestampUtc": "2026-08-03T22:38:46Z",
+  "executionStartTimestampUtc": "2026-08-03T22:38:46Z",
+  "workingTreeCleanliness": {
+    "validationBranch": "unrelated pre-existing untracked build and smoke artifacts; excluded from this plan",
+    "sutWorktree": "clean detached worktree at SUT SHA"
+  },
+  "candidateCi": {
+    "frontendWorkflowId": 30857947860,
+    "plan0005WorkflowId": 30857947726,
+    "status": "Passed on exact SUT SHA"
+  }
+}
