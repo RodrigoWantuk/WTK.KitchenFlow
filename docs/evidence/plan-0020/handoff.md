@@ -19,7 +19,7 @@ Production profile overview and editing routes, live repository adapters, shared
 | Role | Value |
 |---|---|
 | Branch start / PLAN-0011 merge | `eb9e92c21ac817e497235168786daeb3f35c30cd` |
-| Functional implementation tip | pending first functional commit |
+| Functional implementation tip | `4ddc874` (full SHA recorded after push) |
 | CI-validated tip | pending exact-head Frontend (+ PLAN-0005 where applicable) |
 | Current PR head | PR metadata |
 

@@ -142,18 +142,18 @@ Started from post-PR #34 `main` (`eb9e92c`). No concurrent PLAN-0011 branch work
 
 ## Execution state
 
-- **Current checkpoint:** Claimed In Progress from `eb9e92c`; vertical slice implemented locally (contracts, adapters, workspace, routes, preferences, equipment, tests).
+- **Current checkpoint:** Vertical slice validated locally; ready to push draft PR.
 - **Run target:** Deliver Phases 1–5 as one production profile frontend vertical slice; open draft PR; exact-head CI.
-- **Blockers:** None external.
-- **Exact next action:** Finish local gates (build/smoke/audit); commit; push; open draft PR #N; await CI.
-- **Working tree state:** Uncommitted implementation on `agent/plan-0020-profile-frontend`.
+- **Blockers:** Local Firefox zoom blocked by root/`$HOME` ownership (rely on PLAN-0005 CI).
+- **Exact next action:** Push draft PR; await exact-head CI.
+- **Working tree state:** Implementation ready to commit on `agent/plan-0020-profile-frontend`.
 
 ## Progress log
 
-### 2026-08-03T00:15:00Z — Cursor agent (PLAN-0020 claim + vertical slice)
+### 2026-08-03T00:30:00Z — Cursor agent (PLAN-0020 claim + vertical slice)
 
-- **Checkpoint:** Claimed from post-merge `main` (`eb9e92c`); PLAN-0011 delivery reconciled; PLAN-0024 independent validation placeholder created; profile contracts/adapters/catalogs/workspace/UI/routes/tests landed.
-- **Changes included in the commit:** See commit messages in this run.
-- **Validation performed:** `yarn generate:api-client` + drift/typecheck/format Passed; prior local typecheck/lint/format/test (276) + guards Passed during implementation; remaining build/smoke/audit pending before push.
-- **Next action:** Complete remaining local gates; push draft PR; exact-head CI.
-- **Blockers or handoff notes:** Adult policy unavailable in production by design; free-text ordered-list labels deferred.
+- **Checkpoint:** Claimed from post-merge `main` (`eb9e92c`); PLAN-0011 delivery reconciled; PLAN-0024 placeholder created; profile vertical slice implemented and locally validated.
+- **Changes included in the commit:** Contracts/adapters/catalogs; ProfileProvider; overview/dados/preferencias/equipamentos; shell nav; i18n; guards; smoke gate; docs/evidence.
+- **Validation performed:** `yarn install --frozen-lockfile`, `typecheck`, `lint`, `format:check`, `test` (40/276), `guard:*`, `build`/`build:prototype`/`build:production`, `inspect:production-bundle`, `audit:policy`, `generate:api-client` + drift/typecheck/format, `smoke:browser:ci` Passed. `validate:firefox-native-zoom` Failed locally (Firefox root/`$HOME`).
+- **Next action:** Push; open draft PR; await exact-head Frontend (+ PLAN-0005).
+- **Blockers or handoff notes:** Adult policy unavailable in production by design; free-text ordered-list labels deferred; independent validation PLAN-0024.
