@@ -55,16 +55,22 @@ Prior green tip `5efcfb8` / packaging `a50152c` are superseded by this remediati
 
 ## Execution state
 
-- **Current checkpoint:** Returned to **In Progress** for PR #35 remediation against baseline `a50152c`. Local remediation implementation in progress.
+- **Current checkpoint:** Remediation R1–R12 implemented; local gates Passed; ready to push.
 - **Review baseline:** `a50152c78e872685b9f760db53c05984308174d8`
-- **Functional tip (pre-remediation, superseded):** `4ddc87475b156ccb984cd7fe879a2f1086c9c1d5`
-- **Prior CI tip (superseded):** `5efcfb8b5f70a1389e9e2c709afe7edf51d016ba` / packaging `a50152c`
-- **Remediation functional tip:** pending commit
-- **Exact next action:** Land remediation commits; local gates; push; exact-head CI; pin PLAN-0024 when green.
-- **Blockers:** None external.
-- **Working tree state:** Uncommitted remediations R1–R12 on branch.
+- **Remediation functional tip:** 
+- **Exact next action:** Commit; push draft PR #35; await exact-head CI; pin PLAN-0024 when green.
+- **Blockers:** Local Firefox zoom relies on PLAN-0005 CI.
+- **Working tree state:** Ready to commit remediations.
 
 ## Progress log
+
+### 2026-08-03T02:10:00Z — Cursor agent (PLAN-0020 remediation)
+
+- **Checkpoint:** R1–R12 remediations complete locally; smoke including intercepted authenticated profile Passed.
+- **Changes included in the commit:** Workspace invariants + mutation guard; durability split; controlled codes/controls; numeric validation; field errors; custom prefs; Radix sensitive/unsaved dialogs; ProfileProvider scoped to `/app/perfil*`; overview/adult policy; equipment harden; intercepted browser smoke; docs.
+- **Validation performed:** typecheck/lint/format/test (314)/guards/builds/isolation/api-client/smoke:browser:ci Passed.
+- **Next action:** Push; exact-head Frontend + PLAN-0005; mark Completed + Ready PLAN-0024 when green.
+- **Blockers or handoff notes:** Keep draft; no agent merge.
 
 ### 2026-08-03T01:10:00Z — Cursor agent (PLAN-0020 remediation reopen)
 
