@@ -1,17 +1,18 @@
 # PLAN-0020: Implement Profile, Household, Preferences, and Equipment Frontend
 
-- **Status:** Ready
+- **Status:** In Progress
 - **Type:** Implementation
 - **Priority:** High
-- **Owner:** Unassigned frontend implementation agent
+- **Owner:** Cursor agent (PLAN-0020 profile frontend)
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-02
+- **Last updated:** 2026-08-03T00:15:00Z
 - **Branch:** `agent/plan-0020-profile-frontend`
-- **Pull request:** Not opened
-- **Dependencies:** PLAN-0012 and PLAN-0016 merged; generated OpenAPI client available
+- **Pull request:** Pending draft open
+- **Dependencies:** PLAN-0012 and PLAN-0016 merged; PLAN-0011 merged via PR #34 (`eb9e92c`); generated OpenAPI client available
 - **Related product:** `docs/product/audience-and-profile.md`
 - **Related backend:** `docs/plans/PLAN-0012-implement-profile-household-equipment-backend.md`
-- **Related plans:** PLAN-0011 and PLAN-0021
+- **Related plans:** PLAN-0011 (merged), PLAN-0021 (live home), PLAN-0024 (independent validation placeholder)
+- **Starting SHA:** `eb9e92c21ac817e497235168786daeb3f35c30cd`
 
 ## Objective
 
@@ -31,7 +32,7 @@ An authenticated user can configure enough durable context to improve later reco
 - allergy and medical restriction entry only through explicit user action;
 - equipment list editing and ordering;
 - profile completeness presentation and progressive next-step prompts;
-- ETag/`If-Match`, CSRF, Problem Details, 404/412/428, retry, and stale-review UX;
+- ETag/`If-Match`, CSRF, Problem Details, 409/412/428, retry, and stale-review UX;
 - generated OpenAPI client use through application-owned adapters;
 - `en`, `pt-BR`, and `es`;
 - responsive, keyboard, screen-reader, reduced-motion, and 200% zoom behavior;
@@ -47,7 +48,7 @@ An authenticated user can configure enough durable context to improve later reco
 - changing backend profile semantics inside React;
 - direct Keycloak SDK or token storage;
 - recommendation generation;
-- PLAN-0011 public landing/home implementation.
+- inventing production terms/privacy version identifiers for adult declaration.
 
 ## Architecture and contract rules
 
@@ -60,8 +61,9 @@ An authenticated user can configure enough durable context to improve later reco
 - Presentation models must not expose raw generated DTOs throughout the component tree.
 - Backend owns stable codes, validation, concurrency, authorization, completeness, and sensitive-history redaction.
 - Session data must not grow to include allergies, medical restrictions, or private notes merely for convenience.
-- Treat an absent profile differently from an empty field.
-- Preserve `null`, absent, confirmed, removed, default, temporary, and durable semantics from PLAN-0012.
+- Treat an absent profile differently from an empty field (`profileExists: false` scaffold, not 404).
+- Preserve `null`, absent, confirmed, removed, default (wire), temporary, and durable semantics from PLAN-0012.
+- Ordinary forms use PATCH; PUT replace remains repository-level only.
 - Do not use localStorage/sessionStorage as authoritative profile storage.
 - Do not translate stable codes in API payloads; localize at presentation boundaries.
 
@@ -70,17 +72,18 @@ An authenticated user can configure enough durable context to improve later reco
 ### Phase 1 — Contract and adapter baseline
 
 - regenerate and verify the API client;
-- inventory profile endpoints and error contracts;
 - define application/presentation models;
 - implement production repository/adapters;
-- add adapter contract tests and drift checks.
+- add adapter contract tests and drift checks;
+- presentation catalogs and opaque custom-code helpers;
+- adult-declaration policy boundary (production unavailable by default).
 
 ### Phase 2 — Profile overview and core editing
 
-- implement routes, loading/error/not-found/session states;
-- implement household and locale/timezone/measurement editing;
-- support ETag concurrency and review/retry;
-- preserve browser IANA fallback without treating server timezone as user context.
+- routes, loading/error/session states;
+- household and locale/timezone/measurement editing via PATCH;
+- ETag concurrency and review/retry;
+- browser IANA suggestion without silent persist.
 
 ### Phase 3 — Preferences, restrictions, and equipment
 
@@ -106,9 +109,9 @@ An authenticated user can configure enough durable context to improve later reco
 ## Testing requirements
 
 - absent profile and first save;
-- successful GET/PUT/PATCH;
+- successful GET/PATCH (PUT covered at repository level only);
 - replace versus partial-update semantics;
-- `404`, `400`, `401`, `403`, `409`, `412`, and `428`;
+- `400`, `401`, `403`, `409`, `412`, and `428`;
 - stale ETag review and retry;
 - concurrent preference/equipment edits;
 - duplicate equipment stable codes;
@@ -123,23 +126,34 @@ An authenticated user can configure enough durable context to improve later reco
 
 ## Concurrency and merge order
 
-PLAN-0020 and PLAN-0011 may touch shared routing, session, shell, localization, and test utilities. With one developer, merge PLAN-0011 first and start PLAN-0020 from updated `main`. Parallel work requires explicit file ownership and merge order in both plans.
+Started from post-PR #34 `main` (`eb9e92c`). No concurrent PLAN-0011 branch work.
 
 ## Acceptance criteria
 
-- [ ] All accepted profile backend capabilities have truthful production UI or an explicit documented exclusion.
-- [ ] Sensitive categories require explicit user action.
-- [ ] No profile data is inferred or silently persisted.
-- [ ] ETag concurrency, CSRF, and Problem Details are handled.
-- [ ] Generated contracts remain canonical.
-- [ ] Supported locales and accessibility gates pass.
-- [ ] Production contains no mock fallback.
-- [ ] Documentation and code-level comments are complete.
-- [ ] Independent review is requested before merge.
+- [x] All accepted profile backend capabilities have truthful production UI or an explicit documented exclusion (adult declaration mutation gated by policy).
+- [x] Sensitive categories require explicit user action.
+- [x] No profile data is inferred or silently persisted.
+- [x] ETag concurrency, CSRF, and Problem Details are handled.
+- [x] Generated contracts remain canonical.
+- [ ] Supported locales and accessibility gates pass (local/CI pending on published tip).
+- [x] Production contains no mock fallback.
+- [x] Documentation and code-level comments are complete.
+- [ ] Independent review is requested before merge (draft PR pending).
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0012 backend and generated contracts are on `main`; frontend implementation has not started.
-- **Run target:** Deliver Phases 1–4 plus hardening as one production profile frontend vertical slice.
-- **Blockers:** None after PLAN-0011 merge; concurrent execution requires coordination.
-- **Exact next action:** After PLAN-0011 merges, claim the plan, create the branch from current `main`, regenerate the client, and implement the production profile frontend.
+- **Current checkpoint:** Claimed In Progress from `eb9e92c`; vertical slice implemented locally (contracts, adapters, workspace, routes, preferences, equipment, tests).
+- **Run target:** Deliver Phases 1–5 as one production profile frontend vertical slice; open draft PR; exact-head CI.
+- **Blockers:** None external.
+- **Exact next action:** Finish local gates (build/smoke/audit); commit; push; open draft PR #N; await CI.
+- **Working tree state:** Uncommitted implementation on `agent/plan-0020-profile-frontend`.
+
+## Progress log
+
+### 2026-08-03T00:15:00Z — Cursor agent (PLAN-0020 claim + vertical slice)
+
+- **Checkpoint:** Claimed from post-merge `main` (`eb9e92c`); PLAN-0011 delivery reconciled; PLAN-0024 independent validation placeholder created; profile contracts/adapters/catalogs/workspace/UI/routes/tests landed.
+- **Changes included in the commit:** See commit messages in this run.
+- **Validation performed:** `yarn generate:api-client` + drift/typecheck/format Passed; prior local typecheck/lint/format/test (276) + guards Passed during implementation; remaining build/smoke/audit pending before push.
+- **Next action:** Complete remaining local gates; push draft PR; exact-head CI.
+- **Blockers or handoff notes:** Adult policy unavailable in production by design; free-text ordered-list labels deferred.

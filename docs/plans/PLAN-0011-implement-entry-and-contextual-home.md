@@ -7,7 +7,8 @@
 - **Created:** 2026-07-30
 - **Last updated:** 2026-08-02T19:45:00Z
 - **Branch:** `agent/plan-0011-contextual-home`
-- **Pull request:** [PR #34](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/34) (draft)
+- **Pull request:** [PR #34](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/34) (**Merged**)
+- **Merge commit:** `eb9e92c21ac817e497235168786daeb3f35c30cd` (2026-08-02T23:39:13Z)
 - **Binding amendment:** [`PLAN-0011-amendment-2026-08-02-next-execution.md`](PLAN-0011-amendment-2026-08-02-next-execution.md)
 - **Related documentation plan:** PLAN-0010
 - **Related frontend plan:** PLAN-0014 (on main); remediation [PLAN-0015](PLAN-0015-remediate-frontend-baseline.md) (**Completed**; manual visual/NVDA/VoiceOver deferred as non-blocking)
@@ -240,17 +241,23 @@ Automated coverage must include:
 
 ## Execution state
 
-- **Current checkpoint:** Contract hardening verified; PLAN-0011 returned to **Completed**.
+- **Current checkpoint:** Merged via PR #34 at `eb9e92c21ac817e497235168786daeb3f35c30cd`.
 - **Exact tip SHA (functional implementation tip):** `9079887c7aa8d7d41691de6752381883346fabee`
 - **CI-validated tip:** `9017e7e0cf6f3243bd18f0a4fa5fce105e91f5f4`
-- **Review baseline:** `ca2dc3685dd4a4dec659724d6fe67e72a78cfd53`
-- **Run delivery target:** Discriminated definition + runtime validation + exhaustive QuickChooser; exact-head CI green; draft PR for owner review.
-- **Unresolved blockers:** None.
-- **Exact next action:** Owner review of draft PR #34 only — no agent merge.
+- **Review baseline (final hardening):** `ca2dc3685dd4a4dec659724d6fe67e72a78cfd53`
+- **Exact next action:** None for PLAN-0011 implementation — follow-on work is PLAN-0020 / PLAN-0021.
 - **Blockers:** None.
-- **Working tree state:** Completion packaging commit advances PR head beyond the immutable CI-validated tip.
+- **Working tree state:** Delivery reconciled on `main` after owner merge.
 
 ## Progress log
+
+### 2026-08-03T00:10:00Z — PLAN-0020 claim (post-merge reconciliation)
+
+- **Checkpoint:** PR #34 merge recorded on `main` as `eb9e92c21ac817e497235168786daeb3f35c30cd`. Delivery updated from draft/awaiting merge to **Merged**.
+- **Changes included in the commit:** PLAN-0011 / amendment / registry / evidence delivery truth only (immutable functional/CI tips preserved).
+- **Validation performed:** `github-app-run gh pr view 34` state MERGED; `origin/main` tip includes merge commit.
+- **Next action:** PLAN-0020 owns subsequent frontend profile work.
+- **Blockers or handoff notes:** Live contextual-home sources remain PLAN-0021.
 
 ### 2026-08-02T19:45:00Z — Cursor agent (PLAN-0011 contract hardening)
 

@@ -30,7 +30,7 @@ Live source contracts remain PLAN-0021.
 ## Handoff
 
 ```text
-PR #34 ready for owner review.
-Next frontend plan after merge: PLAN-0020.
+PR #34 merged at eb9e92c21ac817e497235168786daeb3f35c30cd.
+Next frontend plan: PLAN-0020.
 Future live contextual-home integration: PLAN-0021.
 ```
