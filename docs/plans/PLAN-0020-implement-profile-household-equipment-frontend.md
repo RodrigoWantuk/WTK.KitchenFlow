@@ -7,7 +7,7 @@
 - **Created:** 2026-08-02
 - **Last updated:** 2026-08-03T00:15:00Z
 - **Branch:** `agent/plan-0020-profile-frontend`
-- **Pull request:** Pending draft open
+- **Pull request:** [Draft PR #35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35)
 - **Dependencies:** PLAN-0012 and PLAN-0016 merged; PLAN-0011 merged via PR #34 (`eb9e92c`); generated OpenAPI client available
 - **Related product:** `docs/product/audience-and-profile.md`
 - **Related backend:** `docs/plans/PLAN-0012-implement-profile-household-equipment-backend.md`
