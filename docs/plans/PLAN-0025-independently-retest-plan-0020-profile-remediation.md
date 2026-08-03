@@ -5,7 +5,7 @@
 - **Priority:** High
 - **Owner:** Independent testing agent (PLAN-0025)
 - **Created:** 2026-08-03
-- **Last updated:** 2026-08-03T22:59:56Z
+- **Last updated:** 2026-08-03T23:02:59Z
 - **Branch:** `agent/plan-0025-retest-plan-0020-profile` (when claimed)
 - **Pull request:** Not opened
 - **System under test:** Draft [PR #35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35) / `agent/plan-0020-profile-frontend` @ `06bd95baacaabaa099170de1ba41187a8e885dea`
@@ -87,3 +87,11 @@ Decision-ready Pass / Conditional Pass / Fail against pinned SHA `06bd95baacaaba
 - **Failures or limitations:** An initial P0 attempt omitted Xvfb/Openbox and failed only the native Firefox setup; the exact workflow-equivalent rerun passed. No real assistive-technology session was performed or claimed.
 - **Next action:** Close issue #37 with the linked retest evidence; PR #35 is eligible for owner review and merge, but remains draft and no agent performs approval, auto-merge, or merge.
 - **Blockers or handoff notes:** Evidence is reproducible from the pinned detached SUT worktree; local generated test artifacts remain uncommitted.
+
+### 2026-08-03T23:02:59Z — Package durable report summaries
+
+- **Checkpoint:** Completed — Pass unchanged.
+- **Material changes:** Force-added privacy-safe PLAN-0025 report summaries because the repository-wide `reports/` ignore rule would otherwise omit the required evidence package.
+- **Validation:** Confirmed the summaries contain no tokens, cookies, CSRF values, authorization headers, private profile values, or request bodies.
+- **Next action:** Push the completed evidence branch and update the draft PR with the final Pass disposition.
+- **Blockers or handoff notes:** No product behavior changed.
