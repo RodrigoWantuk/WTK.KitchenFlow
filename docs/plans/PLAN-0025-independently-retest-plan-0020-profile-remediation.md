@@ -5,7 +5,7 @@
 - **Priority:** High
 - **Owner:** Independent testing agent (PLAN-0025)
 - **Created:** 2026-08-03
-- **Last updated:** 2026-08-03T23:02:59Z
+- **Last updated:** 2026-08-03T23:08:00Z
 - **Branch:** `agent/plan-0025-retest-plan-0020-profile` (when claimed)
 - **Pull request:** Not opened
 - **System under test:** Draft [PR #35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35) / `agent/plan-0020-profile-frontend` @ `06bd95baacaabaa099170de1ba41187a8e885dea`
@@ -95,3 +95,10 @@ Decision-ready Pass / Conditional Pass / Fail against pinned SHA `06bd95baacaaba
 - **Validation:** Confirmed the summaries contain no tokens, cookies, CSRF values, authorization headers, private profile values, or request bodies.
 - **Next action:** Push the completed evidence branch and update the draft PR with the final Pass disposition.
 - **Blockers or handoff notes:** No product behavior changed.
+
+### 2026-08-03T23:08:00Z — Validation PR CI passed
+
+- **Checkpoint:** Completed — Pass unchanged. Draft PR #38 head `8ab45e278aa10d5124e35443fae49e263d459e41` passed both Frontend quality runs (`30860941812`, `30860944550`) and both browser-smoke runs.
+- **Validation:** The validation branch itself passed typecheck, lint, formatting, full test suite, guards, builds, production isolation, audit, and browser smoke in GitHub Actions; local independent and pinned-SUT evidence remains recorded separately.
+- **Next action:** Push this documentation-only CI-record checkpoint; PR #38 remains draft for owner review.
+- **Blockers or handoff notes:** No product behavior changed; no agent approval, auto-merge, or merge was performed.

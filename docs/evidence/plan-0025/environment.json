@@ -30,5 +30,11 @@
     "frontendWorkflowId": 30857947860,
     "plan0005WorkflowId": 30857947726,
     "status": "Passed on exact SUT SHA"
+  },
+  "validationBranchCi": {
+    "head": "8ab45e278aa10d5124e35443fae49e263d459e41",
+    "workflowRuns": [30860941812, 30860944550],
+    "quality": "Passed",
+    "browserSmoke": "Passed"
   }
 }
