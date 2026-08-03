@@ -1,14 +1,15 @@
 # PLAN-0024: Independently Validate PLAN-0020 Profile Frontend
 
-- **Status:** Ready
+- **Status:** In Progress
 - **Type:** Testing
 - **Priority:** High
-- **Owner:** Unassigned independent testing agent
+- **Owner:** Independent testing agent (PLAN-0024)
 - **Created:** 2026-08-03
-- **Last updated:** 2026-08-03T03:15:00Z
-- **Branch:** `agent/plan-0024-validate-plan-0020-profile` (when claimed)
-- **Pull request:** Not opened
-- **System under test:** Draft [PR #35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35) / `agent/plan-0020-profile-frontend` @ `5733bb4de957b53469a28bc60c472a90f0955907`
+- **Last updated:** 2026-08-03T11:39:55Z
+- **Branch:** `agent/plan-0024-validate-plan-0020-profile`
+- **Pull request:** Opening after claim commit
+- **System under test:** Draft [PR #35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35) / `agent/plan-0020-profile-frontend` @ `5733bb4de957b53469a28bc60c472a90f0955907` (immutable)
+- **Packaging head at claim:** `260cecbb737f6cfa2c623b576eb3eb4216a757fc` (docs-only delta after SUT)
 - **Related implementation plan:** [PLAN-0020](PLAN-0020-implement-profile-household-equipment-frontend.md)
 - **Related plans:** PLAN-0012 (backend), PLAN-0016 (session/inventory frontend), PLAN-0005 (inventory validation baseline)
 - **Dependencies:** PLAN-0020 residual remediation candidate green (Frontend `30780915229`, PLAN-0005 `30780915260`)
@@ -64,13 +65,19 @@ Decision-ready Pass / Conditional Pass / Fail assessment against pinned SHA `573
 
 ## Execution state
 
-- **Current checkpoint:** Ready — pinned to residual remediation tip `5733bb4`.
-- **Exact next action:** Independent testing agent claims the plan and executes against the pinned SHA.
-- **Blockers:** None for claim.
-- **Working tree state:** Ready placeholder.
+- **Current checkpoint:** Claimed — SUT `5733bb4` confirmed reachable; packaging head `260cecb` is docs-only after candidate; validation branch and SUT worktree created; evidence directory started.
+- **Exact next action:** Open draft validation PR; execute Phase A–K gates and adversarial tests against the SUT worktree; publish assessment.
+- **Blockers:** None.
+- **Working tree state:** Validation branch dirty with claim artifacts pending first commit.
 
 
 ## Progress log
+
+### 2026-08-03T11:39:55Z — Claimed by independent testing agent
+
+- **Checkpoint:** Status **In Progress**. Confirmed PR #35 open/draft; candidate `5733bb4` is ancestor of `agent/plan-0020-profile-frontend`; post-candidate delta is documentation-only; SUT worktree at `/home/rodrigo/Repos/GIT/WTK.Cocinaris-plan-0024-sut`; validation branch `agent/plan-0024-validate-plan-0020-profile` created from packaging head `260cecb`.
+- **Validation:** Candidate drift check passed (`behaviorAffectingFilesChanged: []`).
+- **Next action:** Commit claim, open draft PR targeting `agent/plan-0020-profile-frontend`, begin Phase A contract/adapter validation.
 
 ### 2026-08-03T03:15:00Z — PLAN-0020 residual remediation complete
 

@@ -1,0 +1,53 @@
+{
+  "plan": "PLAN-0024",
+  "generatedAtUtc": "2026-08-03T11:39:55Z",
+  "phase": "claim",
+  "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
+  "evidenceBranchHead": "PENDING_CLAIM_COMMIT",
+  "repository": "RodrigoWantuk/WTK.Cocinaris",
+  "localCloneRemote": "https://github.com/RodrigoWantuk/WTK.KitchenFlow.git",
+  "implementationPr": 35,
+  "validationPr": null,
+  "baseBranch": "agent/plan-0020-profile-frontend",
+  "validationBranch": "agent/plan-0024-validate-plan-0020-profile",
+  "packagingHeadAtClaim": "260cecbb737f6cfa2c623b576eb3eb4216a757fc",
+  "candidateCi": {
+    "frontendWorkflowRunId": "30780915229",
+    "plan0005ValidationWorkflowRunId": "30780915260"
+  },
+  "candidateDrift": {
+    "commitsAfterCandidate": [
+      "260cecbb737f6cfa2c623b576eb3eb4216a757fc"
+    ],
+    "behaviorAffectingFilesChanged": [],
+    "documentationOnlyFilesChanged": [
+      "docs/evidence/plan-0020/handoff.md",
+      "docs/plan-status.md",
+      "docs/plans/PLAN-0020-implement-profile-household-equipment-frontend.md",
+      "docs/plans/PLAN-0024-independently-validate-plan-0020-profile-frontend.md"
+    ],
+    "verdict": "candidate_stable"
+  },
+  "operatingSystem": "Debian GNU/Linux 13 (trixie)",
+  "kernel": "6.12.96+deb13-amd64",
+  "hostname": "NOTEBOOK-DEB-RODRIGO",
+  "architecture": "x86_64",
+  "nodeVersion": "v24.18.0",
+  "yarnVersion": "1.22.22",
+  "dotnetSdkVersion": "10.0.302",
+  "browserVersions": {
+    "firefox": "Mozilla Firefox 140.13.0esr",
+    "chrome": "Google Chrome 150.0.7871.186"
+  },
+  "timezone": "America/Sao_Paulo",
+  "locale": "pt_BR.UTF-8",
+  "executionTimestamps": {
+    "claimStartedUtc": "2026-08-03T11:39:55Z"
+  },
+  "workingTreeCleanliness": {
+    "atClaim": "untracked build/smoke artifacts present under apps/frontend and docs/evidence/plan-0018; not staged"
+  },
+  "sutWorktreePath": "/home/rodrigo/Repos/GIT/WTK.Cocinaris-plan-0024-sut",
+  "productionOrPersonalData": false,
+  "secretsRecorded": false
+}
