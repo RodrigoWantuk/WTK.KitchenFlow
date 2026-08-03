@@ -3,7 +3,7 @@
   "generatedAtUtc": "2026-08-03T11:39:55Z",
   "phase": "claim",
   "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
-  "evidenceBranchHead": "0f98365018fefbe59fda7734e7ba077a663a0c4d",
+  "evidenceBranchHead": "9253adbdc70d1eac671a4534ea66364970869244",
   "repository": "RodrigoWantuk/WTK.Cocinaris",
   "localCloneRemote": "https://github.com/RodrigoWantuk/WTK.KitchenFlow.git",
   "implementationPr": 35,
@@ -215,5 +215,6 @@
     "passed": 24,
     "report": "docs/evidence/plan-0024/reports/browser-smoke-report.json"
   },
-  "blockingIssue": 37
+  "blockingIssue": 37,
+  "evidencePackageNote": "evidenceBranchHead points at the parent tip that contains the assessment package; PR #36 HEAD may advance by one docs sync commit."
 }

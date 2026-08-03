@@ -6,6 +6,7 @@
 - **Validation PR:** #36 (`agent/plan-0024-validate-plan-0020-profile` → `agent/plan-0020-profile-frontend`)
 - **Assessed at (UTC):** 2026-08-03T11:51:24Z
 - **Assessor:** Independent testing agent (PLAN-0024)
+- **Evidence branch head (at assessment packaging):** 
 
 ## Decision summary
 
