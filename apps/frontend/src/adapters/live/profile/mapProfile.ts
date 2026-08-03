@@ -366,9 +366,13 @@ function mapPreferenceEntry(dto: PreferenceResponseDto): PreferenceEntry {
     stableCode: dto.stableCode,
     note: dto.note ?? null,
     presence: normalizePresence(dto.presence),
-    sortOrder: mapRequiredFiniteInteger(dto.sortOrder, "preferences.sortOrder", {
-      min: 0,
-    }),
+    sortOrder: mapRequiredFiniteInteger(
+      dto.sortOrder,
+      "preferences.sortOrder",
+      {
+        min: 0,
+      },
+    ),
   };
 }
 

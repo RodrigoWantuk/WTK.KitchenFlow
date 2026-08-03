@@ -38,9 +38,9 @@ describe("customCodes", () => {
     expect(isCustomStableCode("custom_")).toBe(false);
     expect(isCustomStableCode("custom_invalid")).toBe(false);
     expect(isCustomStableCode("custom_123")).toBe(false);
-    expect(
-      isCustomStableCode("aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"),
-    ).toBe(false);
+    expect(isCustomStableCode("aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee")).toBe(
+      false,
+    );
     expect(
       isCustomStableCode("custom_aaaaaaaa-bbbb-5ccc-8ddd-eeeeeeeeeeee"),
     ).toBe(false);

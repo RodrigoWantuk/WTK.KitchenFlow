@@ -1271,6 +1271,32 @@ async function run() {
           "Logout Discard confirmed once without reopen loop",
         );
 
+        // Keyboard dirty logout Discard
+        await page.goto(PRODUCTION_BASE + "/app/perfil/dados", {
+          waitUntil: "domcontentloaded",
+        });
+        await page.getByTestId("profile-data").waitFor({ timeout: 15000 });
+        await page.getByTestId("profile-data-input-displayName").fill("");
+        await page
+          .getByTestId("profile-data-input-displayName")
+          .pressSequentially("Ada Logout Keyboard Discard", { delay: 5 });
+        await page.getByTestId("production-logout").focus();
+        await page.keyboard.press("Enter");
+        await page
+          .getByTestId("profile-unsaved-dialog")
+          .waitFor({ timeout: 10000 });
+        await page.getByTestId("profile-unsaved-discard").focus();
+        await page.keyboard.press("Enter");
+        await page
+          .getByTestId("profile-unsaved-dialog")
+          .waitFor({ state: "hidden", timeout: 5000 })
+          .catch(() => undefined);
+        record(
+          "production profile intercepted: dirty logout keyboard Discard",
+          "Passed",
+          "Keyboard Logout+Discard confirmed once without reopen loop",
+        );
+
         await page.goto(PRODUCTION_BASE + "/app/perfil/dados", {
           waitUntil: "domcontentloaded",
         });

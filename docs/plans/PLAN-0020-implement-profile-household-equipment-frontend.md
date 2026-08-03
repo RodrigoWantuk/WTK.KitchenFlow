@@ -81,15 +81,21 @@ Against review baseline `a50152c`:
 
 ## Execution state
 
-- **Current checkpoint:** Functional remediations for F-0024-01…05 implemented with regression tests and dirty-logout browser smoke coverage; local gates pending before candidate publication.
+- **Current checkpoint:** F-0024-01…05 remediations plus expanded logout regressions, Prettier, and dependency audit resolutions (`postcss` 8.5.25, `fast-uri` 3.1.5) ready to publish; awaiting push and exact-head CI.
 - **Failed SUT:** `5733bb4de957b53469a28bc60c472a90f0955907`
 - **Evidence:** PR #36 @ `b549a97ff91acc0236121556e8edc81fcea82156`
-- **Exact next action:** Run full frontend gates; push; await exact-head Frontend + PLAN-0005; create PLAN-0025; set Validating.
+- **Exact next action:** Push branch; await exact-head Frontend + PLAN-0005; set Validating; Ready PLAN-0025; comment #37.
 - **Blockers:** #37 pending remediation CI + independent retest.
-- **Working tree state:** Remediation code ready to commit.
+- **Working tree state:** Regression/audit fixes staged for commit.
 
 
 ## Progress log
+
+### 2026-08-03T22:35:00Z — Regressions, audit resolutions, and dirty-logout coverage
+
+- **Checkpoint:** Expanded ProductionLogoutUnsaved cases (Preferences/Equipment/Escape/repeat/API failure); keyboard Discard smoke; Prettier; `postcss`/`fast-uri` resolution bumps for audit:policy.
+- **Next action:** Push and exact-head CI.
+- **Blockers or handoff notes:** Do not mark Completed; PLAN-0025 after green tip.
 
 ### 2026-08-03T22:20:00Z — Remediate F-0024-01…05
 

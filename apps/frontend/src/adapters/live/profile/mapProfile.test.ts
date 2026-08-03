@@ -238,21 +238,18 @@ describe("mapProfile — required and optional numeric fail-closed mapping", () 
     ["Infinity", Number.POSITIVE_INFINITY],
     ["fractional", 1.5],
     ["non-numeric string", "abc"],
-  ])(
-    "fails closed when completeness.percentComplete is %s",
-    (_label, raw) => {
-      expect(() =>
-        mapCompleteness({
-          percentComplete: raw as number,
-          completedSections: 1,
-          totalSections: 5,
-          sectionCounts: {},
-          adultDeclarationState: "NotDeclared",
-          profileExists: true,
-        }),
-      ).toThrow(ProfileApiError);
-    },
-  );
+  ])("fails closed when completeness.percentComplete is %s", (_label, raw) => {
+    expect(() =>
+      mapCompleteness({
+        percentComplete: raw as number,
+        completedSections: 1,
+        totalSections: 5,
+        sectionCounts: {},
+        adultDeclarationState: "NotDeclared",
+        profileExists: true,
+      }),
+    ).toThrow(ProfileApiError);
+  });
 
   it("fails closed when completeness.percentComplete is out of 0..100", () => {
     expect(() =>
