@@ -3,7 +3,7 @@
   "generatedAtUtc": "2026-08-03T11:39:55Z",
   "phase": "claim",
   "sutSha": "5733bb4de957b53469a28bc60c472a90f0955907",
-  "evidenceBranchHead": "d5e60560e2555df4625a9b18354a320ebe78e016",
+  "evidenceBranchHead": "4eb0f2bd4167955a4a53c37afde30a9a24d10252",
   "repository": "RodrigoWantuk/WTK.Cocinaris",
   "localCloneRemote": "https://github.com/RodrigoWantuk/WTK.KitchenFlow.git",
   "implementationPr": 35,
