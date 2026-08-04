@@ -5,7 +5,7 @@
 - **Priority:** High
 - **Owner:** Codex backend/domain implementation agent
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-04T22:12:24Z
+- **Last updated:** 2026-08-04T22:20:36Z
 - **Branch:** `agent/plan-0023-prepared-component-lots`
 - **Pull request:** Draft [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39)
 - **Dependencies:** PLAN-0003 and PLAN-0016 inventory foundations merged
@@ -119,7 +119,7 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 
 - **Claimed at:** 2026-08-04T01:24:28Z
 - **Main baseline:** `f166ce21020f6704d3fcd99b4b6d195b33638155`
-- **Current checkpoint:** Domain/application contract, PostgreSQL persistence/migration, authenticated HTTP/OpenAPI surface, generated client, unit/architecture/focused PostgreSQL/telemetry/Keycloak validation, migration constraints, runbook updates, provenance integrity, rollback, stale concurrency, and concurrent idempotency replay coverage are implemented. PLAN-0026 remains Draft and unpinned.
+- **Current checkpoint:** Domain/application contract, PostgreSQL persistence/migration, authenticated HTTP/OpenAPI surface, generated client, unit/architecture/focused PostgreSQL/HTTP/telemetry/Keycloak validation, migration constraints, runbook updates, provenance integrity, rollback, stale concurrency, and concurrent idempotency replay coverage are implemented. PLAN-0026 remains Draft and unpinned.
 - **Run target:** Deliver the complete owner-scoped preparation transaction vertical slice: domain/application contract, atomic PostgreSQL persistence and migration, HTTP/OpenAPI/client contract, tests, operations documentation, implementation evidence, and an independently testable candidate.
 - **Blockers:** The complete integration assembly is inconclusive on this workstation because local Docker repeatedly pauses or recycles Testcontainers PostgreSQL instances. Existing untracked frontend build and smoke artifacts are preserved and excluded from this plan.
 - **Exact next action:** Re-run the exact full Backend workflow on a clean Docker host or exact-head CI, then update the evidence with its result before moving to `Validating`.
@@ -177,3 +177,13 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - **Defects or coverage gaps:** The full integration assembly remains inconclusive: local Docker repeatedly paused or recycled Testcontainers PostgreSQL instances even after test collections were serialized. Local gitleaks is unavailable; CI owns that gate. Exact-head CI has not yet run.
 - **Result:** Do not move PLAN-0023 to `Validating`; PLAN-0026 remains Draft and unpinned.
 - **Next action:** Re-run `.github/workflows/backend.yml`'s complete test step on a clean Docker host or exact-head CI, record the outcome, then evaluate candidate publication.
+
+### 2026-08-04T22:20:36Z — Codex backend/domain implementation agent
+
+- **Run delivery target:** Add transport-level proof for the production preparation endpoint while exact-head CI executes the complete Backend workflow.
+- **Checkpoint:** Added an authenticated HTTP integration test that creates a preparation with CSRF and a resource-bound parent ETag, replays the same idempotency key, then verifies the authoritative parent remainder and owned batch/provenance projections.
+- **Changes included in the commit:** API preparation transaction test plus synchronized evidence and plan state.
+- **Evidence and validation:** Targeted HTTP test passed 1/1; `dotnet build KitchenFlow.slnx -c Release --no-restore` passed. Exact-head CI has passed secret scan, two frontend quality/browser-smoke workflows, and PLAN-0025 p0/p1 validation jobs; Backend `build-and-test` remains in progress.
+- **Defects or coverage gaps:** The new exact-head Backend workflow must still pass before the local full-integration limitation can be considered resolved. Local gitleaks remains unavailable.
+- **Result:** PLAN-0023 remains In Progress and PLAN-0026 remains Draft/unpinned.
+- **Next action:** Push this test checkpoint, inspect exact-head Backend CI, and only then decide whether a candidate can move to `Validating`.

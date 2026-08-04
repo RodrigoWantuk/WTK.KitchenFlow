@@ -21,6 +21,17 @@
     "artifact": "console output"
   },
   {
+    "command": "dotnet test tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-build --filter FullyQualifiedName~PreparationCreatesOwnedLotsConsumesParentAndReplaysTheAuthoritativeResponse",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend",
+    "startedAtUtc": "2026-08-04T22:20:00Z",
+    "finishedAtUtc": "2026-08-04T22:20:36Z",
+    "exitCode": 0,
+    "result": "passed",
+    "summary": "One HTTP preparation test passed: authenticated CSRF-protected create, per-parent ETag, idempotent replay, parent remainder, batch and provenance reads.",
+    "testedCommit": "14aa6fd with uncommitted HTTP preparation test",
+    "artifact": "console output"
+  },
+  {
     "command": "dotnet ef database update historical baseline, dotnet ef database update latest, generate-migration-script, and apply idempotent script twice",
     "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
     "startedAtUtc": "2026-08-04T21:56:00Z",

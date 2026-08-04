@@ -986,6 +986,52 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         Assert.Equal("peanut_allergy", preferences.GetProperty("entries")[0].GetProperty("stableCode").GetString());
     }
 
+    [Fact]
+    public async Task PreparationCreatesOwnedLotsConsumesParentAndReplaysTheAuthoritativeResponse()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        using var parentCreate = await CreateAsync(client, csrf, Guid.NewGuid().ToString(), "Dry beans", 100m);
+        var parentBody = await parentCreate.Content.ReadFromJsonAsync<JsonElement>();
+        var parentLotId = parentBody.GetProperty("lotId").GetGuid();
+        var parentVersion = parentCreate.Headers.ETag!.Tag;
+        var key = Guid.NewGuid().ToString();
+        var requestBody = new
+        {
+            outputProduct = new { productId = (Guid?)null, productName = "Cooked beans" },
+            declaredYield = new { measuredValue = 60m, unit = "Gram", availabilityState = (string?)null },
+            inputs = new[] { new { lotId = parentLotId, quantity = new { measuredValue = 60m, unit = "Gram", availabilityState = (string?)null }, version = parentVersion } },
+            outputs = new[] { new { quantity = new { measuredValue = 60m, unit = "Gram", availabilityState = (string?)null }, storageLocation = "Refrigerator", customLocation = (string?)null, packageState = "Opened", shelfLifeEvidence = new { date = (DateOnly?)null, source = "Unknown", confidence = "Unknown", conditions = (string?)null } } },
+            preparedAt = DateTimeOffset.UtcNow.AddMinutes(-1)
+        };
+
+        using var firstRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/inventory/preparations") { Content = JsonContent.Create(requestBody) };
+        firstRequest.Headers.Add("Idempotency-Key", key);
+        firstRequest.Headers.Add("X-CSRF-TOKEN", csrf);
+        using var first = await client.SendAsync(firstRequest);
+        var firstBody = await first.Content.ReadFromJsonAsync<JsonElement>();
+        var batchId = firstBody.GetProperty("batchId").GetGuid();
+        using var replayRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/inventory/preparations") { Content = JsonContent.Create(requestBody) };
+        replayRequest.Headers.Add("Idempotency-Key", key);
+        replayRequest.Headers.Add("X-CSRF-TOKEN", csrf);
+        using var replay = await client.SendAsync(replayRequest);
+        var replayBody = await replay.Content.ReadFromJsonAsync<JsonElement>();
+        var parentAfter = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots/{parentLotId}");
+        var provenance = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots/{parentLotId}/provenance");
+        var batch = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/preparations/{batchId}");
+
+        Assert.Equal(System.Net.HttpStatusCode.Created, parentCreate.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.Created, first.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.Created, replay.StatusCode);
+        Assert.Equal(batchId, replayBody.GetProperty("batchId").GetGuid());
+        Assert.Equal(60m, firstBody.GetProperty("outputs")[0].GetProperty("lot").GetProperty("quantity").GetProperty("measuredValue").GetDecimal());
+        Assert.Equal(40m, parentAfter.GetProperty("quantity").GetProperty("measuredValue").GetDecimal());
+        Assert.Equal(batchId, provenance.GetProperty("consumedBy")[0].GetProperty("batchId").GetGuid());
+        Assert.Equal(batchId, batch.GetProperty("batchId").GetGuid());
+    }
+
     private static object CreateLot(string productName = "Test tomato", decimal measuredValue = 100m) => new { productName, quantity = new { measuredValue, unit = "Gram", availabilityState = (string?)null }, storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null };
 
     private static async Task<string> GetCsrfAsync(HttpClient client)
