@@ -8,3 +8,5 @@ This directory records reproducible, privacy-safe evidence for the prepared-comp
 - Independent validation: PLAN-0026 remains unpinned until exact-head CI is green.
 
 Evidence records commands, timestamps, tested commits, exit codes, and artifact paths only. It never contains credentials, cookies, CSRF values, request bodies, private notes, or personal inventory data.
+
+The current local matrix includes focused PostgreSQL, Keycloak authentication, telemetry, migration, contract, generated-client, backend, and frontend checks. The complete integration assembly remains explicitly inconclusive on this workstation because its Testcontainers PostgreSQL instances are repeatedly paused or recycled by the local Docker session. This is not passing candidate evidence.

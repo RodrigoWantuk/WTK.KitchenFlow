@@ -1,37 +1,77 @@
 [
   {
-    "command": "dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --filter FullyQualifiedName~PreparationProvenanceIsOwnerConsistentAndAppendOnly",
+    "command": "dotnet restore KitchenFlow.slnx --locked-mode && dotnet format KitchenFlow.slnx --verify-no-changes --no-restore && dotnet build KitchenFlow.slnx -c Release --no-restore",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend",
+    "startedAtUtc": "2026-08-04T21:53:00Z",
+    "finishedAtUtc": "2026-08-04T21:54:00Z",
+    "exitCode": 0,
     "result": "passed",
-    "summary": "1 PostgreSQL 18 Testcontainers test passed",
-    "artifact": "console output"
-  },
-  {
-    "command": "dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore",
-    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
-    "result": "passed",
+    "testedCommit": "c7c6f6e",
     "artifact": "apps/backend/**/bin/Release"
   },
   {
-    "command": "dotnet test apps/backend/tests/KitchenFlow.UnitTests/KitchenFlow.UnitTests.csproj -c Release --no-build",
+    "command": "dotnet test UnitTests, ArchitectureTests, PostgreSqlMigrationTests.PreparationStore, TelemetryRedactionTests, and ProtectedSessionReturnsUnauthorizedWithoutAuthentication",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend",
+    "startedAtUtc": "2026-08-04T22:08:00Z",
+    "finishedAtUtc": "2026-08-04T22:12:00Z",
+    "exitCode": 0,
     "result": "passed",
-    "summary": "49 tests passed",
+    "summary": "50 unit, 14 architecture, 3 preparation PostgreSQL, 29 telemetry-redaction, and 1 authenticated-session tests passed.",
+    "testedCommit": "c7c6f6e with uncommitted integration-fixture serialization",
     "artifact": "console output"
   },
   {
-    "command": "dotnet ef database update ... --no-build",
+    "command": "dotnet ef database update historical baseline, dotnet ef database update latest, generate-migration-script, and apply idempotent script twice",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
+    "startedAtUtc": "2026-08-04T21:56:00Z",
+    "finishedAtUtc": "2026-08-04T21:58:00Z",
+    "exitCode": 0,
     "result": "passed",
-    "summary": "Empty local PostgreSQL upgraded through 20260804013603_AddPreparedComponentTransactions",
-    "artifact": "local development PostgreSQL schema"
+    "summary": "Previous migration upgraded to 20260804013603_AddPreparedComponentTransactions; idempotent script ran twice; expected and actual migration count were both 9.",
+    "testedCommit": "c7c6f6e",
+    "artifact": "artifacts/kitchenflow-migrations.sql"
   },
   {
-    "command": "export-openapi, check-openapi, lint-openapi, and generated-client checks",
+    "command": "check-dotnet-vulnerabilities, export-openapi, check-openapi, lint-openapi, generate:api-client, check:api-client-drift, typecheck:api-client, and format:check:api-client",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
+    "startedAtUtc": "2026-08-04T21:58:00Z",
+    "finishedAtUtc": "2026-08-04T22:01:00Z",
+    "exitCode": 0,
     "result": "passed",
+    "testedCommit": "c7c6f6e",
     "artifact": "packages/contracts/openapi/kitchenflow-v1.json and generated client mirrors"
   },
   {
-    "command": "dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-build",
+    "command": "yarn typecheck, lint, format:check, test, guards, production and prototype builds, and production-bundle inspection",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/frontend",
+    "startedAtUtc": "2026-08-04T22:01:00Z",
+    "finishedAtUtc": "2026-08-04T22:05:00Z",
+    "exitCode": 0,
+    "result": "passed",
+    "summary": "Console warnings from existing React dialog and act test behavior did not fail the gate.",
+    "testedCommit": "c7c6f6e",
+    "artifact": "apps/frontend/build-production and apps/frontend/build-prototype (pre-existing untracked output preserved)"
+  },
+  {
+    "command": "dotnet test tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-build",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend",
+    "startedAtUtc": "2026-08-04T21:54:00Z",
+    "finishedAtUtc": "2026-08-04T22:08:00Z",
+    "exitCode": null,
     "result": "inconclusive",
-    "summary": "Existing OIDC redirect cases returned 500 while local Keycloak startup was incomplete; no preparation failure was observed and this is not accepted as passing full-suite evidence.",
-    "artifact": "console output"
+    "summary": "The full assembly repeatedly left Testcontainers PostgreSQL instances paused/recycled in the local Docker session, including after serializing test collections. Focused PostgreSQL, telemetry, and Keycloak-backed authentication tests passed; this is not accepted as full-suite evidence.",
+    "testedCommit": "c7c6f6e with uncommitted integration-fixture serialization",
+    "artifact": "console output and Docker process inspection"
+  },
+  {
+    "command": "gitleaks detect --source . --no-git --redact",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
+    "startedAtUtc": "2026-08-04T22:06:00Z",
+    "finishedAtUtc": "2026-08-04T22:06:00Z",
+    "exitCode": null,
+    "result": "not-run",
+    "summary": "The gitleaks CLI is not installed locally; the required secret scan remains a CI gate.",
+    "testedCommit": "c7c6f6e",
+    "artifact": null
   }
 ]

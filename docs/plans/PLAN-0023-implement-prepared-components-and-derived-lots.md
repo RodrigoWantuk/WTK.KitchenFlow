@@ -5,7 +5,7 @@
 - **Priority:** High
 - **Owner:** Codex backend/domain implementation agent
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-04T21:53:04Z
+- **Last updated:** 2026-08-04T22:12:24Z
 - **Branch:** `agent/plan-0023-prepared-component-lots`
 - **Pull request:** Draft [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39)
 - **Dependencies:** PLAN-0003 and PLAN-0016 inventory foundations merged
@@ -119,10 +119,10 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 
 - **Claimed at:** 2026-08-04T01:24:28Z
 - **Main baseline:** `f166ce21020f6704d3fcd99b4b6d195b33638155`
-- **Current checkpoint:** Domain/application contract, PostgreSQL persistence/migration, authenticated HTTP/OpenAPI surface, generated client, unit coverage, migration constraints, runbook updates, provenance integrity, rollback, stale concurrency, and concurrent idempotency replay coverage are implemented. PLAN-0026 remains Draft and unpinned.
+- **Current checkpoint:** Domain/application contract, PostgreSQL persistence/migration, authenticated HTTP/OpenAPI surface, generated client, unit/architecture/focused PostgreSQL/telemetry/Keycloak validation, migration constraints, runbook updates, provenance integrity, rollback, stale concurrency, and concurrent idempotency replay coverage are implemented. PLAN-0026 remains Draft and unpinned.
 - **Run target:** Deliver the complete owner-scoped preparation transaction vertical slice: domain/application contract, atomic PostgreSQL persistence and migration, HTTP/OpenAPI/client contract, tests, operations documentation, implementation evidence, and an independently testable candidate.
-- **Blockers:** None. Existing untracked frontend build and smoke artifacts are preserved and excluded from this plan.
-- **Exact next action:** Run the complete required backend, migration, OpenAPI, generated-client, and frontend validation matrix; then record exact candidate evidence before moving to `Validating`.
+- **Blockers:** The complete integration assembly is inconclusive on this workstation because local Docker repeatedly pauses or recycles Testcontainers PostgreSQL instances. Existing untracked frontend build and smoke artifacts are preserved and excluded from this plan.
+- **Exact next action:** Re-run the exact full Backend workflow on a clean Docker host or exact-head CI, then update the evidence with its result before moving to `Validating`.
 
 ## Progress log
 
@@ -167,3 +167,13 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - **Defects or coverage gaps:** The broader Backend workflow, idempotent migration-script execution, HTTP/Keycloak checks, OpenAPI/client drift, secret scan, and exact-head CI remain unverified.
 - **Result:** Atomic write-store and concurrency checkpoint passed locally; the plan remains In Progress.
 - **Next action:** Run the complete local validation matrix and write privacy-safe exact-command evidence.
+
+### 2026-08-04T22:12:24Z — Codex backend/domain implementation agent
+
+- **Run delivery target:** Execute the complete candidate validation matrix and leave a truthful resumable validation handoff.
+- **Checkpoint:** Consolidated preparation PostgreSQL tests into the existing migration fixture and serialized integration test collections to avoid concurrent ephemeral PostgreSQL pressure. Focused validation passed: 50 unit tests, 14 architecture tests, 3 preparation PostgreSQL tests, 29 telemetry-redaction tests, and one Keycloak-backed authenticated-session test. Migration upgrade, idempotent script application twice (9/9 migrations), OpenAPI/client gates, dependency scan, and frontend matrix passed.
+- **Changes included in the commit:** Integration fixture serialization; focused verification results; complete privacy-safe command evidence and handoff.
+- **Evidence and validation:** `docs/evidence/plan-0023/command-results.json` records commands, working directories, timestamps, exit outcomes, artifacts, and tested revisions. The frontend gate emitted existing React dialog/act warnings without failing.
+- **Defects or coverage gaps:** The full integration assembly remains inconclusive: local Docker repeatedly paused or recycled Testcontainers PostgreSQL instances even after test collections were serialized. Local gitleaks is unavailable; CI owns that gate. Exact-head CI has not yet run.
+- **Result:** Do not move PLAN-0023 to `Validating`; PLAN-0026 remains Draft and unpinned.
+- **Next action:** Re-run `.github/workflows/backend.yml`'s complete test step on a clean Docker host or exact-head CI, record the outcome, then evaluate candidate publication.
