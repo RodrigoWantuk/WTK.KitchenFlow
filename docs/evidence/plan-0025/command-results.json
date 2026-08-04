@@ -1,0 +1,17 @@
+{
+  "plan": "PLAN-0025",
+  "sutSha": "06bd95baacaabaa099170de1ba41187a8e885dea",
+  "commands": [
+    { "command": "yarn install --frozen-lockfile", "workingDirectory": "apps/frontend (detached SUT worktree)", "startUtc": "2026-08-03T22:39:00Z", "endUtc": "2026-08-03T22:39:13Z", "exitCode": 0, "result": "Passed", "artifactPath": "reports/gate-summary.md" },
+    { "command": "yarn install --frozen-lockfile", "workingDirectory": "packages/api-client (detached SUT worktree prerequisite)", "startUtc": "2026-08-03T22:39:20Z", "endUtc": "2026-08-03T22:39:21Z", "exitCode": 0, "result": "Passed", "artifactPath": "reports/gate-summary.md" },
+    { "command": "yarn generate:api-client; check:api-client-drift; typecheck:api-client; format:check:api-client", "workingDirectory": "apps/frontend (detached SUT worktree)", "startUtc": "2026-08-03T22:39:25Z", "endUtc": "2026-08-03T22:39:29Z", "exitCode": 0, "result": "Passed", "artifactPath": "reports/gate-summary.md" },
+    { "command": "yarn typecheck; lint; format:check; test", "workingDirectory": "apps/frontend (detached SUT worktree)", "startUtc": "2026-08-03T22:39:35Z", "endUtc": "2026-08-03T22:40:05Z", "exitCode": 0, "result": "Passed", "artifactPath": "reports/gate-summary.md" },
+    { "command": "yarn guard:ts-only; guard:interactive-nesting; guard:build-mode; guard:production-isolation; build", "workingDirectory": "apps/frontend (detached SUT worktree)", "startUtc": "2026-08-03T22:40:10Z", "endUtc": "2026-08-03T22:40:34Z", "exitCode": 0, "result": "Passed", "artifactPath": "reports/gate-summary.md" },
+    { "command": "yarn build:prototype; build:production; inspect:production-bundle; audit:policy", "workingDirectory": "apps/frontend (detached SUT worktree)", "startUtc": "2026-08-03T22:40:40Z", "endUtc": "2026-08-03T22:41:20Z", "exitCode": 0, "result": "Passed", "artifactPath": "reports/gate-summary.md" },
+    { "command": "yarn smoke:browser:install; smoke:browser:ci", "workingDirectory": "apps/frontend (detached SUT worktree)", "startUtc": "2026-08-03T22:41:25Z", "endUtc": "2026-08-03T22:42:47Z", "exitCode": 0, "result": "Passed (28 scenarios)", "artifactPath": "reports/browser-smoke-summary.md" },
+    { "command": "yarn validate:firefox-native-zoom (Xvfb/Openbox, native 200%)", "workingDirectory": "apps/frontend (detached SUT worktree)", "startUtc": "2026-08-03T22:43:00Z", "endUtc": "2026-08-03T22:44:37Z", "exitCode": 0, "result": "Passed (4 pointer/keyboard sub-scenarios)", "artifactPath": "reports/firefox-native-zoom-summary.md" },
+    { "command": "PLAN-0005 P1 completion orchestration", "workingDirectory": "detached SUT worktree root", "startUtc": "2026-08-03T22:46:00Z", "endUtc": "2026-08-03T22:50:26Z", "exitCode": 0, "result": "Passed (7 groups)", "artifactPath": "reports/plan-0005-summary.md" },
+    { "command": "PLAN-0005 P0 round 1 orchestration (Xvfb/Openbox workflow-equivalent rerun)", "workingDirectory": "detached SUT worktree root", "startUtc": "2026-08-03T22:55:00Z", "endUtc": "2026-08-03T22:59:30Z", "exitCode": 0, "result": "Passed (5 groups)", "artifactPath": "reports/plan-0005-summary.md" },
+    { "command": "yarn typecheck; test --testPathPattern=validation/plan-0025; format:check", "workingDirectory": "apps/frontend (validation branch)", "startUtc": "2026-08-03T22:50:00Z", "endUtc": "2026-08-03T22:50:15Z", "exitCode": 0, "result": "Passed (22 independent adversarial assertions)", "artifactPath": "reports/independent-tests-summary.md" }
+  ]
+}
