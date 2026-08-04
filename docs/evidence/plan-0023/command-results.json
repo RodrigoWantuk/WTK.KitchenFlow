@@ -84,5 +84,16 @@
     "summary": "The gitleaks CLI is not installed locally; the required secret scan remains a CI gate.",
     "testedCommit": "c7c6f6e",
     "artifact": null
+  },
+  {
+    "command": "GitHub Actions exact-head candidate workflows",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
+    "startedAtUtc": "2026-08-04T22:20:36Z",
+    "finishedAtUtc": "2026-08-04T22:30:00Z",
+    "exitCode": 0,
+    "result": "passed",
+    "summary": "Exact candidate passed Backend build-and-test and secret scan (run 30956077382); frontend quality/browser-smoke (runs 30956074507 and 30956077386); and evidence-consistency plus p0/p1 validation (run 30956077424).",
+    "testedCommit": "b72e8efaa6ae6c97998a92967b8e6112f326a14c",
+    "artifact": "https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30956077382; https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30956074507; https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30956077386; https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30956077424"
   }
 ]

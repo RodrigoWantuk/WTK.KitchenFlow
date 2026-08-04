@@ -1,11 +1,11 @@
 # PLAN-0023: Implement Prepared Components and Derived Inventory Lots
 
-- **Status:** In Progress
+- **Status:** Validating
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Codex backend/domain implementation agent
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-04T22:20:36Z
+- **Last updated:** 2026-08-04T22:30:00Z
 - **Branch:** `agent/plan-0023-prepared-component-lots`
 - **Pull request:** Draft [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39)
 - **Dependencies:** PLAN-0003 and PLAN-0016 inventory foundations merged
@@ -103,26 +103,26 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 
 ## Acceptance criteria
 
-- [ ] Prepared outputs are first-class owner-scoped lots.
-- [ ] Inputs and outputs reconcile atomically.
-- [ ] Partial transitions preserve correct remainder and provenance.
-- [ ] Duplicate requests cannot double-consume or duplicate outputs.
-- [ ] Cross-user parent references return nondisclosing failure.
-- [ ] ETag, CSRF, idempotency, and Problem Details are complete.
-- [ ] Migration and forward-repair paths are tested.
-- [ ] OpenAPI/generated client are reproducible.
-- [ ] Telemetry and history contain no private payload leakage.
+- [x] Prepared outputs are first-class owner-scoped lots.
+- [x] Inputs and outputs reconcile atomically.
+- [x] Partial transitions preserve correct remainder and provenance.
+- [x] Duplicate requests cannot double-consume or duplicate outputs.
+- [x] Cross-user parent references return nondisclosing failure.
+- [x] ETag, CSRF, idempotency, and Problem Details are complete.
+- [x] Migration and forward-repair paths are tested.
+- [x] OpenAPI/generated client are reproducible.
+- [x] Telemetry and history contain no private payload leakage.
 - [ ] Independent test plan provides a final assessment.
-- [ ] Sequential planning is not implemented prematurely.
+- [x] Sequential planning is not implemented prematurely.
 
 ## Execution state
 
 - **Claimed at:** 2026-08-04T01:24:28Z
 - **Main baseline:** `f166ce21020f6704d3fcd99b4b6d195b33638155`
-- **Current checkpoint:** Domain/application contract, PostgreSQL persistence/migration, authenticated HTTP/OpenAPI surface, generated client, unit/architecture/focused PostgreSQL/HTTP/telemetry/Keycloak validation, migration constraints, runbook updates, provenance integrity, rollback, stale concurrency, and concurrent idempotency replay coverage are implemented. PLAN-0026 remains Draft and unpinned.
+- **Current checkpoint:** The immutable product candidate `b72e8efaa6ae6c97998a92967b8e6112f326a14c` has passed exact-head Backend, frontend, validation, evidence-consistency, browser-smoke, quality, and secret-scan workflows. The owner-scoped preparation vertical slice is ready for independent validation; PLAN-0026 is pinned and Ready.
 - **Run target:** Deliver the complete owner-scoped preparation transaction vertical slice: domain/application contract, atomic PostgreSQL persistence and migration, HTTP/OpenAPI/client contract, tests, operations documentation, implementation evidence, and an independently testable candidate.
-- **Blockers:** The complete integration assembly is inconclusive on this workstation because local Docker repeatedly pauses or recycles Testcontainers PostgreSQL instances. Existing untracked frontend build and smoke artifacts are preserved and excluded from this plan.
-- **Exact next action:** Re-run the exact full Backend workflow on a clean Docker host or exact-head CI, then update the evidence with its result before moving to `Validating`.
+- **Blockers:** Independent PLAN-0026 validation is outstanding. The historical local Docker/Testcontainers limitation remains recorded in evidence but does not supersede the green exact-head CI result. Existing untracked frontend build and smoke artifacts are preserved and excluded from this plan.
+- **Exact next action:** An independent testing agent must claim PLAN-0026 on its own branch, validate the pinned candidate without changing production behavior, and publish its assessment in a separate testing PR.
 
 ## Progress log
 
@@ -187,3 +187,12 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - **Defects or coverage gaps:** The new exact-head Backend workflow must still pass before the local full-integration limitation can be considered resolved. Local gitleaks remains unavailable.
 - **Result:** PLAN-0023 remains In Progress and PLAN-0026 remains Draft/unpinned.
 - **Next action:** Push this test checkpoint, inspect exact-head Backend CI, and only then decide whether a candidate can move to `Validating`.
+
+### 2026-08-04T22:30:00Z — Codex backend/domain implementation agent
+
+- **Run delivery target:** Publish the exact green implementation candidate for independent validation without claiming the independent assessment.
+- **Checkpoint:** Exact-head CI passed for immutable candidate `b72e8efaa6ae6c97998a92967b8e6112f326a14c`. PLAN-0023 moved to `Validating`; PLAN-0026 is `Ready` and pinned to that candidate.
+- **Evidence and validation:** Backend `build-and-test` and secret scan passed in run `30956077382`; frontend quality/browser-smoke passed in runs `30956074507` and `30956077386`; evidence consistency plus p0/p1 validation passed in run `30956077424`. The draft implementation PR remains [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39).
+- **Defects or coverage gaps:** No independent test execution or assessment has been performed. The previous local Docker/Testcontainers full-suite limitation remains historical evidence only; it is resolved for this candidate by the exact-head Backend workflow.
+- **Result:** Ready for independent validation; not completed and not merge-authorized.
+- **Next action:** An independent testing agent claims and executes PLAN-0026 from an isolated test branch and detached candidate worktree.
