@@ -119,10 +119,10 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 
 - **Claimed at:** 2026-08-04T01:24:28Z
 - **Main baseline:** `f166ce21020f6704d3fcd99b4b6d195b33638155`
-- **Current checkpoint:** Domain/application contract, PostgreSQL persistence/migration, authenticated HTTP/OpenAPI surface, generated client, unit coverage, migration constraints, and runbook updates are implemented. PLAN-0026 remains Draft and unpinned.
+- **Current checkpoint:** Domain/application contract, PostgreSQL persistence/migration, authenticated HTTP/OpenAPI surface, generated client, unit coverage, migration constraints, runbook updates, and PostgreSQL provenance integrity coverage are implemented. PLAN-0026 remains Draft and unpinned.
 - **Run target:** Deliver the complete owner-scoped preparation transaction vertical slice: domain/application contract, atomic PostgreSQL persistence and migration, HTTP/OpenAPI/client contract, tests, operations documentation, implementation evidence, and an independently testable candidate.
 - **Blockers:** None. Existing untracked frontend build and smoke artifacts are preserved and excluded from this plan.
-- **Exact next action:** Add dedicated PostgreSQL preparation atomicity/concurrency coverage, run the complete required validation matrix, and record exact candidate evidence before moving to `Validating`.
+- **Exact next action:** Add write-store atomic rollback/concurrency coverage, run the complete required validation matrix, and record exact candidate evidence before moving to `Validating`.
 
 ## Progress log
 
@@ -147,3 +147,13 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - **Defects or coverage gaps:** Dedicated preparation PostgreSQL atomicity/race tests and full exact-head CI remain required. Reservation/lock persistence is intentionally not implemented because planning data does not yet exist; the compatibility boundary is documented.
 - **Result:** Implementation checkpoint complete and compiling; not yet ready for independent validation.
 - **Next action:** Add preparation-specific integration tests, execute migration/idempotent-script and full CI gates, then update evidence and publish an immutable candidate.
+
+### 2026-08-04T01:49:00Z — Codex backend/domain implementation agent
+
+- **Run delivery target:** Extend the implementation checkpoint with real PostgreSQL provenance integrity coverage.
+- **Checkpoint:** Added a Testcontainers PostgreSQL test that creates an authoritative preparation graph, verifies append-only batch/input/output metadata, and proves composite owner links reject a mismatched owner.
+- **Changes included in the commit:** Preparation provenance integration test and synchronized evidence/plan state.
+- **Evidence and validation:** `PreparationProvenanceIsOwnerConsistentAndAppendOnly` passed against PostgreSQL 18 (1/1).
+- **Defects or coverage gaps:** Atomic write-store rollback and concurrent stale-parent delivery require dedicated tests; full exact-head CI is still pending.
+- **Result:** PostgreSQL integrity checkpoint passed.
+- **Next action:** Add write-store atomic rollback/concurrency tests and complete required gates.

@@ -1,5 +1,11 @@
 [
   {
+    "command": "dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --filter FullyQualifiedName~PreparationProvenanceIsOwnerConsistentAndAppendOnly",
+    "result": "passed",
+    "summary": "1 PostgreSQL 18 Testcontainers test passed",
+    "artifact": "console output"
+  },
+  {
     "command": "dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore",
     "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
     "result": "passed",

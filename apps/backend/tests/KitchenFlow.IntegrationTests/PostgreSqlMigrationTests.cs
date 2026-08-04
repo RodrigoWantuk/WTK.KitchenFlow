@@ -384,6 +384,41 @@ public sealed class PostgreSqlMigrationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task PreparationProvenanceIsOwnerConsistentAndAppendOnly()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(_postgres.GetConnectionString()).Options;
+        await using var context = new ApplicationDbContext(options);
+        await context.Database.MigrateAsync();
+        var ownerId = Guid.NewGuid();
+        var otherOwnerId = Guid.NewGuid();
+        var productId = Guid.NewGuid();
+        var parentLotId = Guid.NewGuid();
+        var secondParentLotId = Guid.NewGuid();
+        var outputLotId = Guid.NewGuid();
+        var batchId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        context.Users.AddRange(new InternalUser(ownerId, $"https://issuer.test/{ownerId}", $"subject-{ownerId}", now), new InternalUser(otherOwnerId, $"https://issuer.test/{otherOwnerId}", $"subject-{otherOwnerId}", now));
+        context.Products.Add(new ProductRecord { Id = productId, OwnerUserId = ownerId, DisplayName = "Prepared stock", NormalizedSearchName = "PREPARED STOCK", CreatedAt = now, UpdatedAt = now });
+        context.Lots.AddRange(
+            new LotRecord { Id = parentLotId, OwnerUserId = ownerId, ProductId = productId, MeasuredValue = 5m, MeasuredUnit = "Gram", StorageLocation = "Pantry", Version = 1, CreatedAt = now, UpdatedAt = now },
+            new LotRecord { Id = secondParentLotId, OwnerUserId = ownerId, ProductId = productId, MeasuredValue = 5m, MeasuredUnit = "Gram", StorageLocation = "Pantry", Version = 1, CreatedAt = now, UpdatedAt = now },
+            new LotRecord { Id = outputLotId, OwnerUserId = ownerId, ProductId = productId, MeasuredValue = 3m, MeasuredUnit = "Gram", StorageLocation = "Refrigerator", Version = 1, CreatedAt = now, UpdatedAt = now });
+        context.PreparationBatches.Add(new PreparationBatchRecord { Id = batchId, OwnerUserId = ownerId, OutputProductId = productId, SourceType = "ManualPreparation", PreparedAt = now, CreatedAt = now });
+        context.PreparationInputs.Add(new PreparationInputRecord { BatchId = batchId, OwnerUserId = ownerId, InputLotId = parentLotId, ConsumedValue = 2m, ConsumedUnit = "Gram" });
+        context.PreparationOutputs.Add(new PreparationOutputRecord { BatchId = batchId, OwnerUserId = ownerId, OutputLotId = outputLotId });
+        context.PreparedLots.Add(new PreparedLotRecord { LotId = outputLotId, OwnerUserId = ownerId, BatchId = batchId, LifecycleState = "Prepared", PreparedAt = now, ShelfLifeSource = "Unknown", ShelfLifeConfidence = "Unknown" });
+        await context.SaveChangesAsync();
+
+        var inputMutation = await Assert.ThrowsAsync<PostgresException>(() => context.Database.ExecuteSqlInterpolatedAsync($"UPDATE inventory.preparation_inputs SET \"ConsumedValue\" = 1 WHERE \"BatchId\" = {batchId}"));
+        var outputDeletion = await Assert.ThrowsAsync<PostgresException>(() => context.Database.ExecuteSqlInterpolatedAsync($"DELETE FROM inventory.preparation_outputs WHERE \"BatchId\" = {batchId}"));
+        Assert.Equal("55000", inputMutation.SqlState);
+        Assert.Equal("55000", outputDeletion.SqlState);
+
+        var ownerViolation = await Assert.ThrowsAsync<PostgresException>(() => context.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO inventory.preparation_inputs (\"BatchId\", \"InputLotId\", \"OwnerUserId\", \"ConsumedValue\", \"ConsumedUnit\") VALUES ({batchId}, {secondParentLotId}, {otherOwnerId}, {1m}, {"Gram"})"));
+        Assert.Equal(PostgresErrorCodes.ForeignKeyViolation, ownerViolation.SqlState);
+    }
+
+    [Fact]
     public async Task UniqueEquipmentStableCodeMigrationFailsClosedWhenDuplicatesExist()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
