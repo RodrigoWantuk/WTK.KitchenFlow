@@ -1,145 +1,140 @@
 # PLAN-0020: Implement Profile, Household, Preferences, and Equipment Frontend
 
-- **Status:** Ready
+- **Status:** Completed
 - **Type:** Implementation
 - **Priority:** High
-- **Owner:** Unassigned frontend implementation agent
+- **Owner:** PLAN-0020 remediation agent
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-02
+- **Last updated:** 2026-08-03T22:59:56Z
 - **Branch:** `agent/plan-0020-profile-frontend`
-- **Pull request:** Not opened
-- **Dependencies:** PLAN-0012 and PLAN-0016 merged; generated OpenAPI client available
+- **Pull request:** [Draft PR #35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35)
+- **Dependencies:** PLAN-0012 and PLAN-0016 merged; PLAN-0011 merged via PR #34 (`eb9e92c`); generated OpenAPI client available
 - **Related product:** `docs/product/audience-and-profile.md`
 - **Related backend:** `docs/plans/PLAN-0012-implement-profile-household-equipment-backend.md`
-- **Related plans:** PLAN-0011 and PLAN-0021
+- **Related plans:** PLAN-0011 (merged), PLAN-0021 (live home), PLAN-0024 (**Completed — Fail** at `5733bb4`, evidence PR #36), PLAN-0025 (**Completed — Pass** at `06bd95b`, evidence PR #38)
+- **Starting SHA:** `eb9e92c21ac817e497235168786daeb3f35c30cd`
+- **Review baseline:** `a50152c78e872685b9f760db53c05984308174d8`
+- **Failed independent SUT:** `5733bb4de957b53469a28bc60c472a90f0955907`
+- **Independent validation:** PLAN-0024 / [PR #36](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/36) @ `b549a97ff91acc0236121556e8edc81fcea82156` — **Fail**
+- **Blocking issue:** [#37](https://github.com/RodrigoWantuk/WTK.Cocinaris/issues/37)
+- **Remediation candidate:** `06bd95baacaabaa099170de1ba41187a8e885dea`
 
 ## Objective
 
 Deliver a production frontend for the already implemented owner-scoped profile backend so an authenticated adult can review and edit household context, locale/timezone/measurement settings, cooking context, preferences/restrictions, equipment, and progressive completeness without exposing sensitive fields in session projections or inventing frontend authority.
 
-## User outcome
+## PLAN-0024 remediation scope (issue #37)
 
-An authenticated user can configure enough durable context to improve later recommendations while remaining free to skip nonessential fields, correct information, remove entries, and understand which data is confirmed.
+Immutable Fail against SUT `5733bb4`. Remediate without rewriting PLAN-0024 evidence:
 
-## Included scope
+1. **F-0024-01 (P1)** — Fail closed on malformed required numerics (`sortOrder`, completeness counters/percentage/sectionCounts); optional capacity stays nullable.
+2. **F-0024-02 (P1)** — Route logout through unsaved-changes coordinator when a profile editor is dirty.
+3. **F-0024-03 (P2)** — Map equipment `entries[i].stableCode` field errors to a real focusable entry target with localized copy.
+4. **F-0024-04 (P2)** — Persistent accessible names (not placeholder-only) on Preferences/Equipment controls.
+5. **F-0024-05 (P3)** — `isCustomStableCode` matches exact minted `custom_<uuid-v4>` shape.
 
-- production routes for profile overview and editing;
-- household/default serving and cadence fields exposed by the accepted API;
-- language, region, IANA timezone, currency, and measurement settings supported by the backend contract;
-- cooking context, skill/confidence, time, effort, cleanup, reheating, leftover, freezing, and planning preferences represented by accepted fields;
-- explicit preference/restriction categories;
-- allergy and medical restriction entry only through explicit user action;
-- equipment list editing and ordering;
-- profile completeness presentation and progressive next-step prompts;
-- ETag/`If-Match`, CSRF, Problem Details, 404/412/428, retry, and stale-review UX;
-- generated OpenAPI client use through application-owned adapters;
-- `en`, `pt-BR`, and `es`;
-- responsive, keyboard, screen-reader, reduced-motion, and 200% zoom behavior;
-- production isolation and comprehensive tests;
-- durable documentation and TSDoc/JSDoc.
+## Residual remediation scope (PR #35 review baseline `9df4ec9`)
 
-## Excluded scope
+Against review baseline `9df4ec980c6de1d9d27454ac84499df0aa45ef8d` (major remediation accepted):
 
-- AI-based profile inference or natural-language onboarding;
-- multi-member household accounts, invitations, or permissions;
-- billing, subscription, notifications, marketing consent implementation, or final legal copy;
-- silent durable learning from quick-chooser answers or behavior;
-- changing backend profile semantics inside React;
-- direct Keycloak SDK or token storage;
-- recommendation generation;
-- PLAN-0011 public landing/home implementation.
+1. Route-level unsaved-changes coordinator protecting shell/brand/history navigation without page-local `GuardedLink` dependence.
+2. Browser Back/Forward confirmation without reopen loops; clean history after save/cancel.
+3. Explicit accessible `saveRefreshFailed` banner; reload does not clear the warning until success.
+4. Separate `sessionRefreshWarning` when session refresh fails after a successful save.
+5. Shared `canMutate` readiness across all profile pages; localized `workspace_not_ready` copy.
+6. Authenticated intercepted browser coverage for shell/history/post-save/session-refresh residuals.
 
-## Architecture and contract rules
+Prior CI tip `f59606e` / packaging `9df4ec9` are superseded. Tip `5733bb4` is the immutable PLAN-0024 Fail SUT.
 
-- Use the generated client for:
-  - `GET/PUT/PATCH /api/v1/profile`;
-  - `GET/PUT /api/v1/profile/preferences`;
-  - `GET/PUT /api/v1/profile/equipment`;
-  - `GET /api/v1/profile/completeness`;
-  - safe `GET /api/v1/session` fields.
-- Presentation models must not expose raw generated DTOs throughout the component tree.
-- Backend owns stable codes, validation, concurrency, authorization, completeness, and sensitive-history redaction.
-- Session data must not grow to include allergies, medical restrictions, or private notes merely for convenience.
-- Treat an absent profile differently from an empty field.
-- Preserve `null`, absent, confirmed, removed, default, temporary, and durable semantics from PLAN-0012.
-- Do not use localStorage/sessionStorage as authoritative profile storage.
-- Do not translate stable codes in API payloads; localize at presentation boundaries.
+## Remediation scope (PR #35 review)
 
-## Delivery phases
+Against review baseline `a50152c`:
 
-### Phase 1 — Contract and adapter baseline
-
-- regenerate and verify the API client;
-- inventory profile endpoints and error contracts;
-- define application/presentation models;
-- implement production repository/adapters;
-- add adapter contract tests and drift checks.
-
-### Phase 2 — Profile overview and core editing
-
-- implement routes, loading/error/not-found/session states;
-- implement household and locale/timezone/measurement editing;
-- support ETag concurrency and review/retry;
-- preserve browser IANA fallback without treating server timezone as user context.
-
-### Phase 3 — Preferences, restrictions, and equipment
-
-- explicit category-aware preference/restriction UX;
-- heightened communication for allergy/medical data without medical claims;
-- equipment add/remove/reorder flows;
-- validation, duplicate stable-code handling, and accessible errors.
-
-### Phase 4 — Completeness and progressive setup
-
-- completeness summary;
-- optional next-step prompts;
-- clear skip/cancel behavior;
-- no blocking of inventory or home use because optional profile fields are incomplete.
-
-### Phase 5 — Hardening
-
-- full locale/accessibility/responsive tests;
-- session/privacy/telemetry review;
-- production-isolation proof;
-- browser smoke and documentation.
-
-## Testing requirements
-
-- absent profile and first save;
-- successful GET/PUT/PATCH;
-- replace versus partial-update semantics;
-- `404`, `400`, `401`, `403`, `409`, `412`, and `428`;
-- stale ETag review and retry;
-- concurrent preference/equipment edits;
-- duplicate equipment stable codes;
-- explicit allergy/medical entry and removal;
-- no sensitive values in session or telemetry;
-- timezone and locale behavior;
-- localization resource completeness;
-- keyboard/focus/live-region behavior;
-- 360/768/1280/intermediate widths and 200% zoom;
-- production bundle contains no prototype profile fixtures;
-- generated client drift remains zero.
-
-## Concurrency and merge order
-
-PLAN-0020 and PLAN-0011 may touch shared routing, session, shell, localization, and test utilities. With one developer, merge PLAN-0011 first and start PLAN-0020 from updated `main`. Parallel work requires explicit file ownership and merge order in both plans.
+1. Complete workspace presence/version/ETag consistency (fail closed; mutation guard; post-save refresh failure).
+2. Separate read durability (`durable`|`temporary`) from write durability (`durable` only).
+3. Typed localized controls for closed enum fields.
+4. Stop coercing invalid numeric input to zero; capacity validation.
+5. Surface Problem Details field errors accessibly.
+6. Custom preference semantics (`note` as label for `custom_*`).
+7. Accessible Radix sensitive confirmation dialog.
+8. Unsaved-change protection with accessible confirm.
+9. Restrict `ProfileProvider` to `/app/perfil*` only.
+10. Overview completeness projection + truthful adult policy presentation.
+11. Harden equipment editing (validation, focus, live region).
+12. Authenticated browser coverage via Playwright interception.
 
 ## Acceptance criteria
 
-- [ ] All accepted profile backend capabilities have truthful production UI or an explicit documented exclusion.
-- [ ] Sensitive categories require explicit user action.
-- [ ] No profile data is inferred or silently persisted.
-- [ ] ETag concurrency, CSRF, and Problem Details are handled.
-- [ ] Generated contracts remain canonical.
-- [ ] Supported locales and accessibility gates pass.
-- [ ] Production contains no mock fallback.
-- [ ] Documentation and code-level comments are complete.
-- [ ] Independent review is requested before merge.
+- [x] Workspace presence/version/ETag invariants fail closed; mutation impossible outside ready consistent workspace.
+- [x] Post-mutation reload failure blocks subsequent writes without misreporting the save.
+- [x] Write durability permits only durable; controlled fields use localized typed options.
+- [x] Invalid numeric input is never converted to zero; field errors reach accessible controls.
+- [x] Custom preference labels round-trip; allergy/medical use accessible modal.
+- [x] Unsaved changes protected; ProfileProvider scoped to profile routes.
+- [x] Overview uses completeness section data and adult policy truthfully.
+- [x] Equipment validation and keyboard behavior complete.
+- [x] Authenticated profile browser scenarios pass (intercepted harness).
+- [x] Locales complete; production isolation; generated client drift zero.
+- [x] F-0024-01 through F-0024-05 remediated with canonical regression tests (implementation claim).
+- [x] Frontend and PLAN-0005 pass on the new remediation candidate `06bd95b`.
+- [x] PLAN-0025 Ready and pinned; PLAN-0024 remains immutable Completed/Fail.
+- [x] Issue #37 closed after independent PLAN-0025 Pass evidence.
+- [x] PLAN-0025 independent retest Passed before marking PLAN-0020 Completed.
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0012 backend and generated contracts are on `main`; frontend implementation has not started.
-- **Run target:** Deliver Phases 1–4 plus hardening as one production profile frontend vertical slice.
-- **Blockers:** None after PLAN-0011 merge; concurrent execution requires coordination.
-- **Exact next action:** After PLAN-0011 merges, claim the plan, create the branch from current `main`, regenerate the client, and implement the production profile frontend.
+- **Current checkpoint:** **Completed**. Independent PLAN-0025 passed against immutable remediation candidate `06bd95baacaabaa099170de1ba41187a8e885dea` (draft PR #38).
+- **Failed SUT:** `5733bb4de957b53469a28bc60c472a90f0955907`
+- **Evidence:** PR #36 @ `b549a97ff91acc0236121556e8edc81fcea82156`
+- **Exact next action:** Owner reviews PR #35 and independently recorded PLAN-0025 Pass evidence; owner may merge when satisfied.
+- **Blockers:** None.
+- **Working tree state:** Candidate remains published on draft PR #35; no agent approval, auto-merge, or merge.
+
+
+## Progress log
+
+### 2026-08-03T22:59:56Z — Independent PLAN-0025 Pass
+
+- **Checkpoint:** PLAN-0020 **Completed**. PLAN-0025 independently passed all historical finding retests and required frontend/PLAN-0005 gates against immutable SUT `06bd95b`; evidence is draft PR #38.
+- **Next action:** Owner review of PR #35; only the owner may authorize and perform merge.
+- **Blockers or handoff notes:** Issue #37 closed with PLAN-0025 evidence. No agent approval, auto-merge, or merge was performed.
+
+### 2026-08-03T22:25:00Z — Publish candidate for PLAN-0025 retest
+
+- **Checkpoint:** PLAN-0020 **Validating**. Candidate `06bd95b`. Frontend `30857947860` + PLAN-0005 `30857947726` Passed. PLAN-0025 Ready and pinned.
+- **Next action:** Independent PLAN-0025 retest; do not mark Completed.
+- **Blockers or handoff notes:** Issue #37 remains open; PR #35 remains draft.
+
+### 2026-08-03T22:35:00Z — Regressions, audit resolutions, and dirty-logout coverage
+
+- **Checkpoint:** Expanded ProductionLogoutUnsaved cases (Preferences/Equipment/Escape/repeat/API failure); keyboard Discard smoke; Prettier; `postcss`/`fast-uri` resolution bumps for audit:policy.
+- **Next action:** Push and exact-head CI.
+- **Blockers or handoff notes:** Do not mark Completed; PLAN-0025 after green tip.
+
+### 2026-08-03T22:20:00Z — Remediate F-0024-01…05
+
+- **Checkpoint:** Fail-closed required numerics; logout via unsaved coordinator; equipment stableCode entry focus; accessible names; exact custom UUID codes; regression + smoke dirty-logout scenarios.
+- **Next action:** Full local gates and publish candidate.
+- **Blockers or handoff notes:** Keep draft; do not close #37.
+
+### 2026-08-03T22:02:03Z — Reopen after PLAN-0024 Fail
+
+- **Checkpoint:** PLAN-0020 **In Progress**. Recorded immutable Fail SUT `5733bb4`, evidence PR #36 / tip `b549a97`, issue #37, findings F-0024-01…05. PR #35 remains draft.
+- **Next action:** Functional remediation of all five findings.
+- **Blockers or handoff notes:** Do not rewrite PLAN-0024 evidence; do not merge.
+
+### 2026-08-03T03:15:00Z — Cursor agent (PLAN-0020 residual remediation complete)
+
+- **Checkpoint:** Exact-head Frontend `30780915229` + PLAN-0005 `30780915260` Passed on `5733bb4`; PLAN-0020 **Completed**; PLAN-0024 Ready and pinned.
+- **Changes included in the commit:** Plan/registry/evidence completion; PLAN-0024 Ready pin; PR body reconciliation.
+- **Validation performed:** Frontend + PLAN-0005 green on published tip `5733bb4de957b53469a28bc60c472a90f0955907`. Draft, MERGEABLE, reviewer `RodrigoWantuk`.
+- **Next action:** Owner review; PLAN-0024 independent validation may begin.
+- **Blockers or handoff notes:** No agent merge. **Superseded by PLAN-0024 Fail.**
+
+### 2026-08-03T03:20:00Z — Cursor agent (PLAN-0020 residual remediation)
+
+- **Checkpoint:** Route-level unsaved coordinator, shell/history protection, saveRefreshFailed/sessionRefreshWarning/canMutate, intercepted browser residuals Implemented and locally validated.
+- **Changes included in the commit:** `createBrowserRouter` + `UnsavedChangesCoordinatorProvider`; ProfileProvider soft session refresh; page `canMutate` wiring; i18n; smoke residuals; plan/registry/docs.
+- **Validation performed:** typecheck/lint/format/test (323+)/guards/builds/api-client/smoke:browser:ci Passed locally.
+- **Next action:** Push; exact-head CI; Complete + Ready PLAN-0024 when green.
+- **Blockers or handoff notes:** Keep draft; no agent merge.

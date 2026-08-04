@@ -46,6 +46,7 @@ assertNotIncludes(
     "createMockSessionAdapter",
     "createUnavailableSessionAdapter",
     "cocinaris_state_v1",
+    "createSyntheticAdultDeclarationPolicy",
   ],
   "production composition root",
 );
@@ -66,6 +67,16 @@ if (!productionRuntime.includes("createUnavailableContextualHomeAdapter")) {
     "production composition root must wire createUnavailableContextualHomeAdapter",
   );
 }
+if (!productionRuntime.includes("createLiveProfileRepository")) {
+  failures.push(
+    "production composition root must wire createLiveProfileRepository",
+  );
+}
+if (!productionRuntime.includes("createUnavailableAdultDeclarationPolicy")) {
+  failures.push(
+    "production composition root must wire createUnavailableAdultDeclarationPolicy",
+  );
+}
 assertNotIncludes(
   "src/app/runtime/createProductionRuntime.ts",
   ["createMockContextualHomeAdapter"],
@@ -79,6 +90,15 @@ assertNotIncludes(
     "createMockContextualHomeAdapter",
   ],
   "production app home isolation",
+);
+assertNotIncludes(
+  "src/app/ProductionApp.tsx",
+  [
+    "adapters/mock/profile",
+    "createSyntheticAdultDeclarationPolicy",
+    "createMockProfileRepository",
+  ],
+  "production app profile isolation",
 );
 
 assertNotIncludes(

@@ -56,4 +56,16 @@ describe("Production inventory routes", () => {
       expect(screen.getByTestId("inventory-empty")).toBeInTheDocument(),
     );
   });
+
+  it("never calls the profile endpoints from /app/despensa (ProfileProvider is scoped to /app/perfil*)", async () => {
+    const fetchSpy = jest.spyOn(globalThis, "fetch");
+    render(<ProductionApp />);
+    await waitFor(() =>
+      expect(screen.getByTestId("inventory-empty")).toBeInTheDocument(),
+    );
+    const profileCalls = fetchSpy.mock.calls.filter(([input]) =>
+      String(input).includes("/api/v1/profile"),
+    );
+    expect(profileCalls).toHaveLength(0);
+  });
 });

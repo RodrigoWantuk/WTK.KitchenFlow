@@ -2,13 +2,16 @@ import { sharedMockPreparationRouteRepository } from "@/adapters/mock/preparatio
 import { MOCK_SHOPPING_REQUIREMENTS } from "@/adapters/mock/shoppingRequirementFixtures";
 import { createMockContextualHomeAdapter } from "@/adapters/mock/contextual-home/mockContextualHomeAdapter";
 import { createLiveInventoryRepository } from "@/adapters/live/liveInventoryRepository";
+import { createLiveProfileRepository } from "@/adapters/live/profile/liveProfileRepository";
+import { createSyntheticAdultDeclarationPolicy } from "@/features/profile/adultDeclarationPolicy";
 import { createMockSessionAdapter } from "@/app/session/mockSessionAdapter";
 import type { FrontendRuntime } from "./types";
 
 /**
  * Prototype composition root: fixtures, ScenarioBar, and mock session are explicit.
- * Inventory repository is the live adapter shape; prototype UX still uses StoreProvider pantry.
- * Contextual home uses synthetic mocks — never wired into production.
+ * Inventory and profile repositories are the live adapter shape; prototype UX still
+ * uses StoreProvider pantry. Contextual home and adult declaration use synthetic
+ * mocks — never wired into production.
  */
 export function createPrototypeRuntime(): FrontendRuntime {
   return {
@@ -23,6 +26,8 @@ export function createPrototypeRuntime(): FrontendRuntime {
     contextualHomeAdapter: createMockContextualHomeAdapter({
       scenario: "default",
     }),
+    profileRepository: createLiveProfileRepository(),
+    adultDeclarationPolicy: createSyntheticAdultDeclarationPolicy(),
     enableScenarioBar: true,
     enablePrototypeFixtures: true,
     persistPrototypeAuth: true,

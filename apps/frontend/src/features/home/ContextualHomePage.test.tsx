@@ -20,6 +20,7 @@ import type {
 } from "@/contracts/contextualHome";
 import { homeCatalogText } from "@/contracts/contextualHome";
 import { UnavailablePreparationRouteRepository } from "@/adapters/live/unavailablePreparationRouteRepository";
+import { createUnavailableAdultDeclarationPolicy } from "@/features/profile/adultDeclarationPolicy";
 
 function renderHome(options?: {
   displayName?: string | null;
@@ -50,6 +51,8 @@ function renderHome(options?: {
     } as unknown as FrontendRuntime["inventoryRepository"],
     preparationRouteRepository: new UnavailablePreparationRouteRepository(),
     contextualHomeAdapter: homeAdapter,
+    profileRepository: {} as unknown as FrontendRuntime["profileRepository"],
+    adultDeclarationPolicy: createUnavailableAdultDeclarationPolicy(),
     enableScenarioBar: false,
     enablePrototypeFixtures: !options?.unavailable,
     persistPrototypeAuth: false,

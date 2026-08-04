@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import type { PreparationRouteRepository } from "@/contracts/preparation";
 import type { ContextualHomeAdapter } from "@/contracts/contextualHome";
 import type { InventoryRepository } from "@/adapters/live/inventoryTypes";
+import type { ProfileRepository } from "@/contracts/profile";
+import type { AdultDeclarationPolicy } from "@/features/profile/adultDeclarationPolicy";
 import type { SessionAdapter } from "@/app/session/types";
 import type { FrontendMode } from "./mode";
 import type { ShoppingRequirementProjection } from "@/contracts/preparation";
@@ -21,6 +23,13 @@ export interface FrontendRuntime {
    * Prototype/test may inject mocks — never silently in production.
    */
   contextualHomeAdapter: ContextualHomeAdapter;
+  /** Live profile/household/preferences/equipment repository for production; prototype/test may inject a stub. */
+  profileRepository: ProfileRepository;
+  /**
+   * Adult declaration availability and accepted terms/privacy versions.
+   * Production is unavailable until PLAN-0011 supplies accepted legal copy.
+   */
+  adultDeclarationPolicy: AdultDeclarationPolicy;
   /** When false, ScenarioBar and scenario tooling must not render. */
   enableScenarioBar: boolean;
   /** When true, seed fixtures and local mock persistence of personal data are allowed. */

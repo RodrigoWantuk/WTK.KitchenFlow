@@ -9,6 +9,7 @@ import { createMockContextualHomeAdapter } from "@/adapters/mock/contextual-home
 import { PrototypeContextualHomeRoute } from "./PrototypeContextualHomeRoute";
 import type { FrontendRuntime } from "@/app/runtime/types";
 import { UnavailablePreparationRouteRepository } from "@/adapters/live/unavailablePreparationRouteRepository";
+import { createUnavailableAdultDeclarationPolicy } from "@/features/profile/adultDeclarationPolicy";
 
 function renderPrototypeHome() {
   const sessionAdapter = createMockSessionAdapter({
@@ -27,6 +28,8 @@ function renderPrototypeHome() {
     contextualHomeAdapter: createMockContextualHomeAdapter({
       scenario: "default",
     }),
+    profileRepository: {} as unknown as FrontendRuntime["profileRepository"],
+    adultDeclarationPolicy: createUnavailableAdultDeclarationPolicy(),
     enableScenarioBar: false,
     enablePrototypeFixtures: true,
     persistPrototypeAuth: false,

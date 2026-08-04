@@ -10,7 +10,8 @@ Official KitchenFlow frontend package living at `apps/frontend`.
 - Emergent and Lovable remain optional generation tools only (ADR-0007).
 - PLAN-0015 remediation and browser gates are completed.
 - PLAN-0016 is merged and supplies the production BFF session plus authenticated inventory routes.
-- PLAN-0011 Phase 1 + Phase 2 deliver the public entry and mock-backed contextual home on `/` and `/app/hoje`. Live home sources remain PLAN-0021 (production uses controlled unavailable adapters).
+- PLAN-0011 Phase 1 + Phase 2 deliver the public entry and mock-backed contextual home on `/` and `/app/hoje` (merged via PR #34). Live home sources remain PLAN-0021 (production uses controlled unavailable adapters).
+- PLAN-0020 delivers production profile routes under `/app/perfil*` (household, preferences, equipment, completeness) through live adapters.
 - The broader initial release is not production-complete. Undeveloped product areas must show truthful unavailable/prototype states until their plans deliver live behavior.
 
 ## Stack
@@ -106,6 +107,7 @@ CI fails when the OpenAPI snapshot, package output, or frontend mirror drift.
 - Cookies use `credentials: "include"`; OIDC tokens are never stored in JavaScript storage.
 - Production inventory routes live under `/app/despensa` (list/detail/create/edit/adjust/history).
 - Authenticated contextual home lives under `/app/hoje` (mock-backed in prototype/test; unavailable sources in production until PLAN-0021).
+- Authenticated profile lives under `/app/perfil*` (live adapters; see [`docs/profile/README.md`](docs/profile/README.md)).
 - Production home adapters set `capabilityStatus: "not_implemented"` and `retryable: false` so permanent capability gaps do not show misleading Retry.
 - Quick chooser classifies resolved suggestion statuses (`ready`/`empty` complete; failed/unavailable do not emit completion telemetry).
 - Chooser definitions are a discriminated union (exactly 1–2 questions when available) with runtime normalization before UI state.
