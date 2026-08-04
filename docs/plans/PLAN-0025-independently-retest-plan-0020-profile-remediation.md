@@ -5,12 +5,12 @@
 - **Priority:** High
 - **Owner:** Independent testing agent (PLAN-0025)
 - **Created:** 2026-08-03
-- **Last updated:** 2026-08-03T23:08:00Z
-- **Branch:** `agent/plan-0025-retest-plan-0020-profile` (when claimed)
-- **Pull request:** Not opened
+- **Last updated:** 2026-08-04T00:51:00Z
+- **Branch:** `agent/plan-0025-retest-plan-0020-profile`
+- **Pull request:** Draft [PR #38](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/38)
 - **System under test:** Draft [PR #35](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/35) / `agent/plan-0020-profile-frontend` @ `06bd95baacaabaa099170de1ba41187a8e885dea`
 - **Predecessor evidence:** [PLAN-0024](PLAN-0024-independently-validate-plan-0020-profile-frontend.md) / [PR #36](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/36) — immutable **Fail** at `5733bb4de957b53469a28bc60c472a90f0955907` (evidence tip `b549a97ff91acc0236121556e8edc81fcea82156`)
-- **Blocking issue:** [#37](https://github.com/RodrigoWantuk/WTK.Cocinaris/issues/37)
+- **Blocking issue:** [#37](https://github.com/RodrigoWantuk/WTK.Cocinaris/issues/37) — closed as completed after this Pass
 - **Related implementation plan:** [PLAN-0020](PLAN-0020-implement-profile-household-equipment-frontend.md)
 - **Dependencies:** PLAN-0020 remediation candidate with exact-head Frontend + PLAN-0005 green (satisfied)
 
@@ -39,12 +39,12 @@ Independently retest whether the PLAN-0020 remediation candidate closes every PL
 
 ## Acceptance criteria
 
-- [ ] New candidate SHA pinned; environment manifest recorded
-- [ ] Every F-0024-* finding retested with Pass or open residual classification
-- [ ] Non-regression matrix executed
-- [ ] Final assessment Pass / Conditional Pass / Fail with justification
-- [ ] Assessor independent of the PLAN-0020 remediation author
-- [ ] Issue #37 updated from retest outcome (close only on Pass with owner authority rules observed)
+- [x] New candidate SHA pinned; environment manifest recorded
+- [x] Every F-0024-* finding retested with Pass or open residual classification
+- [x] Non-regression matrix executed
+- [x] Final assessment Pass / Conditional Pass / Fail with justification
+- [x] Assessor independent of the PLAN-0020 remediation author
+- [x] Issue #37 updated from retest outcome and closed after Pass
 
 ## Substantial test-run target
 
@@ -57,11 +57,10 @@ Decision-ready Pass / Conditional Pass / Fail against pinned SHA `06bd95baacaaba
 
 ## Execution state
 
-- **Current checkpoint:** Completed — **Pass** against immutable SUT `06bd95baacaabaa099170de1ba41187a8e885dea`. Validation evidence is on draft PR #38.
-- **Exact next action:** Owner reviews PLAN-0025 evidence and PR #35; merge remains an owner-only action.
+- **Current checkpoint:** Completed — **Pass** against immutable SUT `06bd95baacaabaa099170de1ba41187a8e885dea`. Validation evidence is on draft PR #38, all acceptance criteria are satisfied, and issue #37 is closed.
+- **Exact next action:** Owner reviews and incorporates PR #38 into `agent/plan-0020-profile-frontend`, then validates the resulting exact head of PR #35 before owner-only merge to `main`.
 - **Blockers:** None.
 - **Working tree state:** Validation branch contains only independent tests, plan/registry state, and evidence; no product behavior changed.
-
 
 ## Progress log
 
@@ -102,3 +101,11 @@ Decision-ready Pass / Conditional Pass / Fail against pinned SHA `06bd95baacaaba
 - **Validation:** The validation branch itself passed typecheck, lint, formatting, full test suite, guards, builds, production isolation, audit, and browser smoke in GitHub Actions; local independent and pinned-SUT evidence remains recorded separately.
 - **Next action:** Push this documentation-only CI-record checkpoint; PR #38 remains draft for owner review.
 - **Blockers or handoff notes:** No product behavior changed; no agent approval, auto-merge, or merge was performed.
+
+### 2026-08-04T00:51:00Z — Reconcile final delivery metadata
+
+- **Checkpoint:** Completed — Pass unchanged. PR #38 is linked explicitly and every satisfied acceptance criterion is checked.
+- **Material changes:** Documentation-only reconciliation of the completed testing plan; no product behavior or historical evidence changed.
+- **Validation:** The technical assessment remains anchored to immutable SUT `06bd95baacaabaa099170de1ba41187a8e885dea`; the next CI run validates only this metadata correction on the evidence branch.
+- **Next action:** Incorporate PR #38 into PR #35, run exact-head final gates on PR #35, then perform owner-only merge if green.
+- **Blockers or handoff notes:** None.
