@@ -7,7 +7,7 @@
 - **Created:** 2026-08-02
 - **Last updated:** 2026-08-04T01:24:28Z
 - **Branch:** `agent/plan-0023-prepared-component-lots`
-- **Pull request:** Draft PR pending first claim push
+- **Pull request:** Draft [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39)
 - **Dependencies:** PLAN-0003 and PLAN-0016 inventory foundations merged
 - **Related product:** `docs/product/closed-loop-kitchen-orchestration.md`
 - **Related domain:** `docs/domain/inventory-lifecycle.md`
@@ -119,10 +119,10 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 
 - **Claimed at:** 2026-08-04T01:24:28Z
 - **Main baseline:** `f166ce21020f6704d3fcd99b4b6d195b33638155`
-- **Current checkpoint:** PLAN-0023 is claimed on `agent/plan-0023-prepared-component-lots`; PLAN-0026 is a Draft independent-validation placeholder. No product behavior has changed.
+- **Current checkpoint:** Domain/application contract, PostgreSQL persistence/migration, authenticated HTTP/OpenAPI surface, generated client, unit coverage, migration constraints, and runbook updates are implemented. PLAN-0026 remains Draft and unpinned.
 - **Run target:** Deliver the complete owner-scoped preparation transaction vertical slice: domain/application contract, atomic PostgreSQL persistence and migration, HTTP/OpenAPI/client contract, tests, operations documentation, implementation evidence, and an independently testable candidate.
 - **Blockers:** None. Existing untracked frontend build and smoke artifacts are preserved and excluded from this plan.
-- **Exact next action:** Define the preparation transaction domain and application boundary, then add atomic persistence and integration coverage.
+- **Exact next action:** Add dedicated PostgreSQL preparation atomicity/concurrency coverage, run the complete required validation matrix, and record exact candidate evidence before moving to `Validating`.
 
 ## Progress log
 
@@ -136,3 +136,14 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - **Defects or coverage gaps:** No product validation executed yet. Pre-existing untracked generated build/smoke artifacts remain outside the commit.
 - **Result:** Claim complete; implementation may begin.
 - **Next action:** Deliver Phase 1 domain/application contracts and begin Phase 2 persistence.
+
+### 2026-08-04T01:43:45Z — Codex backend/domain implementation agent
+
+- **Run delivery target:** Deliver the first complete implementation checkpoint: deterministic preparation transaction behavior from domain through generated contract.
+- **Checkpoint:** Implemented manual preparation batches with multi-parent measured consumption, a single output product partitioned into portions, immutable provenance/history, owner-scoped queries, per-parent opaque concurrency versions, semantic idempotency, and prepared shelf-life metadata.
+- **Changes included in the commit:** Inventory domain/application/persistence/API contracts; relational migration and append-only triggers; OpenAPI snapshot and generated TypeScript mirrors; unit and migration-constraint tests; lifecycle and runbook documentation; implementation evidence scaffold.
+- **Documentation reviewed:** Product closed-loop orchestration, inventory lifecycle, architecture principles, privacy, testing gates, backend workflow, current inventory implementation, and migration conventions.
+- **Evidence and validation:** Build and unit tests passed (`49` unit tests). Empty local PostgreSQL database upgraded through `20260804013603_AddPreparedComponentTransactions`; preparation triggers were verified. OpenAPI export/check/lint and all generated-client checks passed. Integration-suite execution was attempted twice; the environment emitted pre-existing OIDC redirect `500` failures before a conclusive full-suite summary, so it is not treated as passing evidence.
+- **Defects or coverage gaps:** Dedicated preparation PostgreSQL atomicity/race tests and full exact-head CI remain required. Reservation/lock persistence is intentionally not implemented because planning data does not yet exist; the compatibility boundary is documented.
+- **Result:** Implementation checkpoint complete and compiling; not yet ready for independent validation.
+- **Next action:** Add preparation-specific integration tests, execute migration/idempotent-script and full CI gates, then update evidence and publish an immutable candidate.

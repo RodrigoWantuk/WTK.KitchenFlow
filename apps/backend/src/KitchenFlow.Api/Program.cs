@@ -54,6 +54,7 @@ builder.Services.AddScoped<IInternalUserStore, PostgreSqlInternalUserStore>();
 builder.Services.AddScoped<ICurrentUserAccessor, CurrentUserResolver>();
 builder.Services.AddScoped<IInventoryLotReadStore, PostgreSqlInventoryLotReadStore>();
 builder.Services.AddScoped<IInventoryLotWriteStore, PostgreSqlInventoryLotWriteStore>();
+builder.Services.AddScoped<IInventoryPreparationStore, PostgreSqlInventoryPreparationStore>();
 builder.Services.AddSingleton<IInventoryHttpTokenService, DataProtectionInventoryHttpTokenService>();
 builder.Services.AddSingleton<InventoryMetrics>();
 var securityMetrics = new SecurityMetrics();
@@ -66,6 +67,10 @@ builder.Services.AddScoped<IUpdateInventoryLotUseCase, UpdateInventoryLotHandler
 builder.Services.AddScoped<IAdjustInventoryLotUseCase, AdjustInventoryLotHandler>();
 builder.Services.AddScoped<IDeleteInventoryLotUseCase, DeleteInventoryLotHandler>();
 builder.Services.AddScoped<IGetInventoryLotHistoryUseCase, GetInventoryLotHistoryHandler>();
+builder.Services.AddScoped<PreparedComponentApplicationWorkflow>();
+builder.Services.AddScoped<IPrepareComponentsUseCase, PrepareComponentsHandler>();
+builder.Services.AddScoped<IGetPreparationBatchUseCase, GetPreparationBatchHandler>();
+builder.Services.AddScoped<IGetInventoryLotProvenanceUseCase, GetInventoryLotProvenanceHandler>();
 builder.Services.AddScoped<InventoryApplicationService>();
 builder.Services.AddSingleton<InventoryLotLifecycleUseCase>();
 builder.Services.AddScoped<IProfileReadStore, PostgreSqlProfileReadStore>();

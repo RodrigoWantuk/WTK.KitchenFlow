@@ -203,16 +203,16 @@ public sealed class InventoryLot
             throw new InvalidOperationException("Measured adjustments require a measured quantity.");
         }
 
-        if ((type is InventoryTransactionType.Consume or InventoryTransactionType.Discard && value <= 0m) || (type == InventoryTransactionType.Correct && value < 0m) || decimal.Round(value, 3) != value)
+        if ((type is InventoryTransactionType.Consume or InventoryTransactionType.Discard or InventoryTransactionType.PreparationInputConsumed && value <= 0m) || (type == InventoryTransactionType.Correct && value < 0m) || decimal.Round(value, 3) != value)
         {
             throw new InvalidOperationException("Adjustment value must be nonnegative for corrections and positive for consumption or discard, with at most three decimal places.");
         }
 
         var result = type switch
         {
-            InventoryTransactionType.Consume or InventoryTransactionType.Discard when value <= previous.Value =>
+            InventoryTransactionType.Consume or InventoryTransactionType.Discard or InventoryTransactionType.PreparationInputConsumed when value <= previous.Value =>
                 previous.Value - value,
-            InventoryTransactionType.Consume or InventoryTransactionType.Discard =>
+            InventoryTransactionType.Consume or InventoryTransactionType.Discard or InventoryTransactionType.PreparationInputConsumed =>
                 throw new InvalidOperationException("The adjustment cannot exceed the current measured quantity."),
             InventoryTransactionType.Correct => value,
             _ => throw new InvalidOperationException("The adjustment type is not valid for a measured quantity.")

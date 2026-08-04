@@ -167,6 +167,10 @@ A destructive down migration requires an explicit incident decision, a verified 
 documented data-loss implications. Never edit migration history manually to make a deployment look
 successful.
 
+### Prepared-component migration checks
+
+The prepared-component migration adds immutable preparation batches, input/output provenance, and per-output prepared metadata under the `inventory` schema. Before deployment, verify the migration applies from the prior inventory schema, its idempotent script applies twice to an empty database, and the preparation append-only triggers are present. Do not use a down migration to remove committed preparation provenance; stop affected writes, preserve a backup, and deploy a reviewed forward-repair migration if integrity is uncertain.
+
 ## HTTPS API and session key ring
 
 The backend cookie uses `Secure`, `HttpOnly`, `SameSite=Lax`, and a `__Host-` name. Local OIDC and

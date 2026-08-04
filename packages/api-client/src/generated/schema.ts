@@ -109,6 +109,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/inventory/lots/{lotId}/provenance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GET /api/v1/inventory/lots/{lotId}/provenance */
+        get: operations["getApiV1InventoryLotsLotIdProvenance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/preparations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** POST /api/v1/inventory/preparations */
+        post: operations["postApiV1InventoryPreparations"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/preparations/{batchId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GET /api/v1/inventory/preparations/{batchId} */
+        get: operations["getApiV1InventoryPreparationsBatchId"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/profile": {
         parameters: {
             query?: never;
@@ -367,6 +418,13 @@ export interface components {
             resultingQuantity: null | components["schemas"]["QuantityResponse"];
             type: null | string;
         };
+        /** @description Returns preparation batches that consumed or produced one owned lot. */
+        LotProvenanceResponse: {
+            consumedBy: components["schemas"]["PreparationResponse"][];
+            /** Format: uuid */
+            lotId: string;
+            producedBy: components["schemas"]["PreparationResponse"][];
+        };
         /** @description Returns the current representation of an inventory lot. */
         LotResponse: {
             /** Format: date-time */
@@ -420,6 +478,84 @@ export interface components {
         /** @description Preference command request DTO. */
         PreferencesRequest: {
             entries: components["schemas"]["PreferenceCommandDto"][];
+        };
+        /** @description Consumes one measured parent lot using its resource-bound opaque current version. */
+        PreparationInputRequest: {
+            /** Format: uuid */
+            lotId: string;
+            quantity: components["schemas"]["QuantityRequest"];
+            version: null | string;
+        };
+        /** @description Returns one consumed input's actual quantity in immutable preparation provenance. */
+        PreparationInputResponse: {
+            consumedQuantity: components["schemas"]["QuantityResponse"];
+            /** Format: uuid */
+            lotId: string;
+        };
+        /** @description References either an existing owned product or a new normalized product for all v1 preparation outputs. */
+        PreparationOutputProductRequest: {
+            /** Format: uuid */
+            productId: null | string;
+            productName: null | string;
+        };
+        /** @description Stores one portion of a preparation batch's declared yield. */
+        PreparationOutputRequest: {
+            customLocation: null | string;
+            packageState: null | string;
+            quantity: components["schemas"]["QuantityRequest"];
+            shelfLifeEvidence: null | components["schemas"]["PreparedShelfLifeEvidenceRequest"];
+            storageLocation: string;
+        };
+        /** @description Returns one produced lot and its prepared-component metadata. */
+        PreparationOutputResponse: {
+            lot: components["schemas"]["LotResponse"];
+            preparedMetadata: components["schemas"]["PreparedLotMetadataResponse"];
+        };
+        /** @description Returns an owner-visible preparation batch and its immutable input/output provenance. */
+        PreparationResponse: {
+            /** Format: uuid */
+            batchId: string;
+            /** Format: date-time */
+            createdAt: string;
+            declaredYield: components["schemas"]["QuantityResponse"];
+            inputs: components["schemas"]["PreparationInputResponse"][];
+            /** Format: uuid */
+            outputProductId: string;
+            outputProductName: string;
+            outputs: components["schemas"]["PreparationOutputResponse"][];
+            /** Format: date-time */
+            preparedAt: string;
+            sourceType: string;
+        };
+        /** @description Creates an authoritative manual preparation transaction with all parent and output lines. */
+        PrepareComponentsRequest: {
+            declaredYield: components["schemas"]["QuantityRequest"];
+            inputs: components["schemas"]["PreparationInputRequest"][];
+            outputProduct: components["schemas"]["PreparationOutputProductRequest"];
+            outputs: components["schemas"]["PreparationOutputRequest"][];
+            /** Format: date-time */
+            preparedAt: null | string;
+        };
+        /** @description Returns prepared-component metadata attached to an authoritative output lot. */
+        PreparedLotMetadataResponse: {
+            /** Format: uuid */
+            batchId: string;
+            lifecycleState: string;
+            /** Format: date-time */
+            preparedAt: string;
+            shelfLifeConditions: null | string;
+            shelfLifeConfidence: string;
+            /** Format: date */
+            shelfLifeDate: null | string;
+            shelfLifeSource: string;
+        };
+        /** @description Supplies advisory shelf-life evidence for one prepared output without claiming a guarantee. */
+        PreparedShelfLifeEvidenceRequest: {
+            conditions: null | string;
+            confidence: null | string;
+            /** Format: date */
+            date: null | string;
+            source: null | string;
         };
         ProblemDetails: {
             detail?: null | string;
@@ -1205,6 +1341,221 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LotHistoryResponse"][];
+                };
+            };
+            /** @description Authentication is required. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description An unexpected server error occurred. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    getApiV1InventoryLotsLotIdProvenance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lotId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotProvenanceResponse"];
+                };
+            };
+            /** @description Authentication is required. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description An unexpected server error occurred. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    postApiV1InventoryPreparations: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required CSRF token issued by GET /api/v1/session. */
+                "X-CSRF-TOKEN": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrepareComponentsRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreparationResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Authentication is required. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description The request content type is not supported. */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description The mutation rate limit was exceeded. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description An unexpected server error occurred. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    getApiV1InventoryPreparationsBatchId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batchId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreparationResponse"];
                 };
             };
             /** @description Authentication is required. */

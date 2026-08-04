@@ -1,0 +1,31 @@
+[
+  {
+    "command": "dotnet build apps/backend/KitchenFlow.slnx -c Release --no-restore",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
+    "result": "passed",
+    "artifact": "apps/backend/**/bin/Release"
+  },
+  {
+    "command": "dotnet test apps/backend/tests/KitchenFlow.UnitTests/KitchenFlow.UnitTests.csproj -c Release --no-build",
+    "result": "passed",
+    "summary": "49 tests passed",
+    "artifact": "console output"
+  },
+  {
+    "command": "dotnet ef database update ... --no-build",
+    "result": "passed",
+    "summary": "Empty local PostgreSQL upgraded through 20260804013603_AddPreparedComponentTransactions",
+    "artifact": "local development PostgreSQL schema"
+  },
+  {
+    "command": "export-openapi, check-openapi, lint-openapi, and generated-client checks",
+    "result": "passed",
+    "artifact": "packages/contracts/openapi/kitchenflow-v1.json and generated client mirrors"
+  },
+  {
+    "command": "dotnet test apps/backend/tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-build",
+    "result": "inconclusive",
+    "summary": "Existing OIDC redirect cases returned 500 while local Keycloak startup was incomplete; no preparation failure was observed and this is not accepted as passing full-suite evidence.",
+    "artifact": "console output"
+  }
+]

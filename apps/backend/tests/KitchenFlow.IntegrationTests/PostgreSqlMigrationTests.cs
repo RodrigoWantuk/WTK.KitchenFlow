@@ -44,10 +44,18 @@ public sealed class PostgreSqlMigrationTests : IAsyncLifetime
             "ck_transactions_previous_quantity",
             "ck_transactions_resulting_quantity",
             "ck_transactions_reason_code",
+            "ck_preparation_batches_source",
+            "ck_preparation_batches_prepared_at",
+            "ck_preparation_inputs_quantity",
+            "ck_prepared_lots_lifecycle",
+            "ck_prepared_lots_evidence",
             "ck_idempotency_completion",
             "ck_idempotency_status_code",
             "FK_lots_products_ProductId_OwnerUserId",
             "FK_transactions_lots_LotId_OwnerUserId",
+            "FK_preparation_inputs_lots_InputLotId_OwnerUserId",
+            "FK_preparation_outputs_lots_OutputLotId_OwnerUserId",
+            "FK_prepared_lots_lots_LotId_OwnerUserId",
             "FK_audit_events_users_ActorUserId",
             "FK_idempotency_records_users_OwnerUserId"
         ];
@@ -56,6 +64,10 @@ public sealed class PostgreSqlMigrationTests : IAsyncLifetime
             """SELECT tgname AS "Value" FROM pg_trigger WHERE NOT tgisinternal""").ToListAsync();
         Assert.Contains("transactions_are_append_only", triggers);
         Assert.Contains("audit_events_are_append_only", triggers);
+        Assert.Contains("preparation_batches_are_append_only", triggers);
+        Assert.Contains("preparation_inputs_are_append_only", triggers);
+        Assert.Contains("preparation_outputs_are_append_only", triggers);
+        Assert.Contains("prepared_lots_are_append_only", triggers);
     }
 
     [Fact]

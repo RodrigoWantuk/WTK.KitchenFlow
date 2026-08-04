@@ -175,6 +175,14 @@ Authoritative changes are grouped into transactions, including:
 
 Operations must support idempotency where clients or workers may retry.
 
+### Prepared-component transaction boundary
+
+The first prepared-component implementation records a manual preparation batch in the Inventory module. It consumes one or more measured owner-scoped parent lots and creates one or more stored portions of one declared output product in one authoritative transaction. The v1 command carries an opaque current version for every parent; a missing or stale parent version rejects the complete batch.
+
+Partial preparation consumption preserves the source lot as the authoritative remainder and records the exact consumed quantity in immutable batch provenance. Each output is a normal inventory lot supplemented by immutable prepared metadata: source, prepared time, `Prepared` lifecycle state, storage, and advisory shelf-life evidence. The v1 API permits either a measured yield partitioned exactly by same-unit output portions, or one qualitative output; it does not infer package conversions or food-safety guarantees.
+
+Planning reservations and locks are not yet persisted. The preparation boundary retains owner-consistent provenance so a future planning-owned protection query can reject protected consumption without migrating historical batches.
+
 ## Recipe completion reconciliation
 
 Finalization proposes expected mutations, for example:

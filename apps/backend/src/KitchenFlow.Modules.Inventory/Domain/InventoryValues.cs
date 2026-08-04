@@ -70,6 +70,12 @@ public enum InventoryTransactionType
     AvailabilityChanged,
     /// <summary>Soft deletion of an erroneously created lot.</summary>
     Deleted
+
+    ,
+    /// <summary>Consumes a measured parent quantity as an input to an authoritative preparation batch.</summary>
+    PreparationInputConsumed,
+    /// <summary>Creates an output lot produced by an authoritative preparation batch.</summary>
+    PreparationOutputCreated
 }
 
 /// <summary>Validated product name and normalized search value.</summary>
