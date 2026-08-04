@@ -63,6 +63,21 @@ public sealed class PreparedComponentApplicationUseCaseTests
         Assert.Null(fixture.Store.Saved);
     }
 
+    [Fact]
+    public async Task PrepareDoesNotMutateDetachedParentsWhenLaterOutputValidationFails()
+    {
+        var fixture = new Fixture();
+
+        var result = await fixture.Workflow.PrepareAsync(fixture.Command() with
+        {
+            Outputs = [fixture.Output(2m) with { StorageLocation = "Other", CustomLocation = null }, fixture.Output(3m)]
+        }, CancellationToken.None);
+
+        Assert.Equal("validation_failed", result.Problem!.ErrorCode);
+        Assert.Equal(5m, Assert.IsType<LotQuantity.Measured>(fixture.ParentLot.Quantity).Value);
+        Assert.Null(fixture.Store.Saved);
+    }
+
     private sealed class Fixture
     {
         private readonly Guid _ownerId = Guid.NewGuid();

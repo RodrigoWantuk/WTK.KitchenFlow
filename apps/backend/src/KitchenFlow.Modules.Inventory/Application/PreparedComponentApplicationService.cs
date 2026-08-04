@@ -128,8 +128,8 @@ public sealed class PreparedComponentApplicationWorkflow(ICurrentUserAccessor cu
             command.DeclaredYieldUnit,
             command.DeclaredYieldAvailabilityState,
             Inputs = command.Inputs?.Select(item => new { item.LotId, item.ConsumedValue, item.Unit }).OrderBy(item => item.LotId),
-            Outputs = command.Outputs?.Select(item => new { item.MeasuredValue, item.Unit, item.AvailabilityState, item.StorageLocation, item.CustomLocation, item.PackageState, item.ShelfLifeDate, item.ShelfLifeSource, item.ShelfLifeConfidence, item.ShelfLifeConditions }).OrderBy(item => item.StorageLocation),
-            command.PreparedAt
+            Outputs = command.Outputs?.Select(item => new { item.MeasuredValue, item.Unit, item.AvailabilityState, item.StorageLocation, item.CustomLocation, item.PackageState, item.ShelfLifeDate, item.ShelfLifeSource, item.ShelfLifeConfidence, ShelfLifeConditions = item.ShelfLifeConditions?.Trim() }).OrderBy(item => JsonSerializer.Serialize(item)),
+            PreparedAt = command.PreparedAt?.ToUniversalTime()
         });
         var existing = await store.FindIdempotencyAsync(user.Id, command.IdempotencyKey.Value, cancellationToken);
         if (existing is not null)
@@ -194,7 +194,7 @@ public sealed class PreparedComponentApplicationWorkflow(ICurrentUserAccessor cu
         }
 
         var inputById = loadedInputs.ToDictionary(item => item.Lot.Id);
-        var inputWrites = new List<PreparationInputWrite>(command.Inputs.Count);
+        var validatedInputs = new List<(PreparationInputState State, decimal ConsumedValue)>(command.Inputs.Count);
         foreach (var input in command.Inputs)
         {
             if (!input.Precondition.IsPresent)
@@ -218,15 +218,12 @@ public sealed class PreparedComponentApplicationWorkflow(ICurrentUserAccessor cu
                 return Failure("domain_rule_violated", "Input consumption must use the parent lot's measured canonical unit.", "inputs", "Input consumption must use the parent lot's measured canonical unit.");
             }
 
-            try
+            if (consumed > measured.Value)
             {
-                var transaction = state.Lot.AdjustMeasured(InventoryTransactionType.PreparationInputConsumed, consumed, "preparation", null, command.IdempotencyKey, now);
-                inputWrites.Add(new PreparationInputWrite(state.Lot, state.Product, state.Lot.Version - 1, consumed, transaction));
+                return Failure("domain_rule_violated", "The adjustment cannot exceed the current measured quantity.", "inputs", "The adjustment cannot exceed the current measured quantity.");
             }
-            catch (InvalidOperationException exception)
-            {
-                return Failure("domain_rule_violated", exception.Message, "inputs", exception.Message);
-            }
+
+            validatedInputs.Add((state, consumed));
         }
 
         var outputWrites = new List<PreparationOutputWrite>(command.Outputs.Count);
@@ -245,6 +242,16 @@ public sealed class PreparedComponentApplicationWorkflow(ICurrentUserAccessor cu
         if (!OutputPartitionsYield(declaredYield!, outputWrites))
         {
             return Failure("domain_rule_violated", "Output portions must exactly partition the declared yield using the same quantity mode and unit.", "outputs", "Output portions must exactly partition the declared yield using the same quantity mode and unit.");
+        }
+
+        // Complete all validation before mutating detached aggregates. This makes command failure
+        // side-effect free for in-process callers as well as for the later PostgreSQL transaction.
+        var inputWrites = new List<PreparationInputWrite>(validatedInputs.Count);
+        foreach (var input in validatedInputs)
+        {
+            var expectedVersion = input.State.Lot.Version;
+            var transaction = input.State.Lot.AdjustMeasured(InventoryTransactionType.PreparationInputConsumed, input.ConsumedValue, "preparation", null, command.IdempotencyKey, now);
+            inputWrites.Add(new PreparationInputWrite(input.State.Lot, input.State.Product, expectedVersion, input.ConsumedValue, transaction));
         }
 
         PreparationBatch batch;
@@ -270,7 +277,10 @@ public sealed class PreparedComponentApplicationWorkflow(ICurrentUserAccessor cu
             return Replay(await store.FindIdempotencyAsync(user.Id, command.IdempotencyKey.Value, cancellationToken), hash);
         }
 
-        return Failure("precondition_failed", "An inventory input was modified.");
+        // A same-key winner can advance a parent before this attempt reaches the persistence
+        // boundary. Re-read its owner-scoped record so a retry receives the original result.
+        var concurrentRecord = await store.FindIdempotencyAsync(user.Id, command.IdempotencyKey.Value, cancellationToken);
+        return concurrentRecord is not null ? Replay(concurrentRecord, hash) : Failure("precondition_failed", "An inventory input was modified.");
     }
 
     /// <inheritdoc />

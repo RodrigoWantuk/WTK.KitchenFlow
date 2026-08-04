@@ -5,7 +5,7 @@
 - **Priority:** High
 - **Owner:** Codex backend/domain implementation agent
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-04T01:24:28Z
+- **Last updated:** 2026-08-04T21:53:04Z
 - **Branch:** `agent/plan-0023-prepared-component-lots`
 - **Pull request:** Draft [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39)
 - **Dependencies:** PLAN-0003 and PLAN-0016 inventory foundations merged
@@ -119,10 +119,10 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 
 - **Claimed at:** 2026-08-04T01:24:28Z
 - **Main baseline:** `f166ce21020f6704d3fcd99b4b6d195b33638155`
-- **Current checkpoint:** Domain/application contract, PostgreSQL persistence/migration, authenticated HTTP/OpenAPI surface, generated client, unit coverage, migration constraints, runbook updates, and PostgreSQL provenance integrity coverage are implemented. PLAN-0026 remains Draft and unpinned.
+- **Current checkpoint:** Domain/application contract, PostgreSQL persistence/migration, authenticated HTTP/OpenAPI surface, generated client, unit coverage, migration constraints, runbook updates, provenance integrity, rollback, stale concurrency, and concurrent idempotency replay coverage are implemented. PLAN-0026 remains Draft and unpinned.
 - **Run target:** Deliver the complete owner-scoped preparation transaction vertical slice: domain/application contract, atomic PostgreSQL persistence and migration, HTTP/OpenAPI/client contract, tests, operations documentation, implementation evidence, and an independently testable candidate.
 - **Blockers:** None. Existing untracked frontend build and smoke artifacts are preserved and excluded from this plan.
-- **Exact next action:** Add write-store atomic rollback/concurrency coverage, run the complete required validation matrix, and record exact candidate evidence before moving to `Validating`.
+- **Exact next action:** Run the complete required backend, migration, OpenAPI, generated-client, and frontend validation matrix; then record exact candidate evidence before moving to `Validating`.
 
 ## Progress log
 
@@ -157,3 +157,13 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - **Defects or coverage gaps:** Atomic write-store rollback and concurrent stale-parent delivery require dedicated tests; full exact-head CI is still pending.
 - **Result:** PostgreSQL integrity checkpoint passed.
 - **Next action:** Add write-store atomic rollback/concurrency tests and complete required gates.
+
+### 2026-08-04T21:53:04Z — Codex backend/domain implementation agent
+
+- **Run delivery target:** Close the preparation transaction correctness gap before executing the full candidate gate matrix.
+- **Checkpoint:** Preparation validation is now side-effect free until every input and output rule passes. PostgreSQL integration coverage proves full rollback when output persistence fails, one-winner behavior for concurrent different keys, and authoritative replay for concurrent same-key delivery.
+- **Changes included in the commit:** Deterministic semantic output hashing; deferred detached parent mutation; concurrent idempotency reread; one unit test and three real PostgreSQL Testcontainers tests.
+- **Evidence and validation:** `dotnet build KitchenFlow.slnx -c Release --no-restore` passed; UnitTests passed 50/50; `PostgreSqlInventoryPreparationStoreTests` passed 3/3 against PostgreSQL 18.
+- **Defects or coverage gaps:** The broader Backend workflow, idempotent migration-script execution, HTTP/Keycloak checks, OpenAPI/client drift, secret scan, and exact-head CI remain unverified.
+- **Result:** Atomic write-store and concurrency checkpoint passed locally; the plan remains In Progress.
+- **Next action:** Run the complete local validation matrix and write privacy-safe exact-command evidence.
