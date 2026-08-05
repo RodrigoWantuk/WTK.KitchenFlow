@@ -1,0 +1,4 @@
+Execução de teste para /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.UnitTests/bin/Release/net10.0/KitchenFlow.UnitTests.dll (.NETCoreApp,Version=v10.0)
+1 arquivos de teste no total corresponderam ao padrão especificado.
+
+Aprovado!  – Com falha:     0, Aprovado:    10, Ignorado:     0, Total:    10, Duração: 139 ms - KitchenFlow.UnitTests.dll (net10.0)

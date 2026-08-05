@@ -1,0 +1,33 @@
+Execução de teste para /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/bin/Release/net10.0/KitchenFlow.IntegrationTests.dll (.NETCoreApp,Version=v10.0)
+1 arquivos de teste no total corresponderam ao padrão especificado.
+[xUnit.net 00:00:08.14]     KitchenFlow.IntegrationTests.Plan0026IndependentPreparedComponentValidationTests.QualitativePreparationPersistsReplaysAndRejectsInvalidConstraintRows [FAIL]
+  Com falha KitchenFlow.IntegrationTests.Plan0026IndependentPreparedComponentValidationTests.QualitativePreparationPersistsReplaysAndRejectsInvalidConstraintRows [291 ms]
+  Mensagem de erro:
+   Assert.Throws() Failure: No exception was thrown
+Expected: typeof(Npgsql.PostgresException)
+  Rastreamento de pilha:
+     at KitchenFlow.IntegrationTests.Plan0026IndependentPreparedComponentValidationTests.AssertConstraintRejectedAsync(NpgsqlConnection connection, String sql) in /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/Plan0026IndependentPreparedComponentValidationTests.cs:line 525
+   at KitchenFlow.IntegrationTests.Plan0026IndependentPreparedComponentValidationTests.AssertConstraintRejectedAsync(NpgsqlConnection connection, String sql) in /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/Plan0026IndependentPreparedComponentValidationTests.cs:line 526
+   at KitchenFlow.IntegrationTests.Plan0026IndependentPreparedComponentValidationTests.QualitativePreparationPersistsReplaysAndRejectsInvalidConstraintRows() in /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/Plan0026IndependentPreparedComponentValidationTests.cs:line 124
+   at KitchenFlow.IntegrationTests.Plan0026IndependentPreparedComponentValidationTests.QualitativePreparationPersistsReplaysAndRejectsInvalidConstraintRows() in /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/Plan0026IndependentPreparedComponentValidationTests.cs:line 148
+   at KitchenFlow.IntegrationTests.Plan0026IndependentPreparedComponentValidationTests.QualitativePreparationPersistsReplaysAndRejectsInvalidConstraintRows() in /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/Plan0026IndependentPreparedComponentValidationTests.cs:line 148
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:08.94]     KitchenFlow.IntegrationTests.Plan0026IndependentPreparedComponentValidationTests.ConcurrentSameKeyPreparationAndKeyReuseBehaveDeterministically [FAIL]
+  Com falha KitchenFlow.IntegrationTests.Plan0026IndependentPreparedComponentValidationTests.ConcurrentSameKeyPreparationAndKeyReuseBehaveDeterministically [236 ms]
+  Mensagem de erro:
+   Assert.All() Failure: 1 out of 2 items in the collection did not pass.
+[0]: Item:  StatusCode: 412, ReasonPhrase: 'Precondition Failed', Version: 1.1, Content: System.Net.Http.StreamContent, Headers:
+            {
+              Content-Type: application/problem+json
+            }
+     Error: Assert.Equal() Failure: Values differ
+            Expected: Created
+            Actual:   PreconditionFailed
+  Rastreamento de pilha:
+     at KitchenFlow.IntegrationTests.Plan0026IndependentPreparedComponentValidationTests.ConcurrentSameKeyPreparationAndKeyReuseBehaveDeterministically() in /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/Plan0026IndependentPreparedComponentValidationTests.cs:line 237
+   at KitchenFlow.IntegrationTests.Plan0026IndependentPreparedComponentValidationTests.ConcurrentSameKeyPreparationAndKeyReuseBehaveDeterministically() in /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/Plan0026IndependentPreparedComponentValidationTests.cs:line 256
+--- End of stack trace from previous location ---
+AVISO: sobrescrevendo o arquivo de resultados: /home/rodrigo/Repos/GIT/WTK.KitchenFlow/docs/evidence/plan-0026/reports/plan-0026-integration.trx
+Arquivo de resultados: /home/rodrigo/Repos/GIT/WTK.KitchenFlow/docs/evidence/plan-0026/reports/plan-0026-integration.trx
+
+Com falha! – Com falha:     2, Aprovado:     8, Ignorado:     0, Total:    10, Duração: 8 s - KitchenFlow.IntegrationTests.dll (net10.0)

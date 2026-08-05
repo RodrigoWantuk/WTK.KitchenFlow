@@ -1,0 +1,7 @@
+ACCEPTED: all-null
+ACCEPTED: value-without-unit
+REJECTED: unit-without-value :: ERROR:  new row for relation "preparation_batches" violates check constraint "ck_preparation_batches_declared_yield"
+REJECTED: measured-and-availability :: ERROR:  new row for relation "preparation_batches" violates check constraint "ck_preparation_batches_declared_yield"
+REJECTED: zero :: ERROR:  new row for relation "preparation_batches" violates check constraint "ck_preparation_batches_declared_yield"
+REJECTED: unknown-unit :: ERROR:  new row for relation "preparation_batches" violates check constraint "ck_preparation_batches_declared_yield"
+REJECTED: unknown-availability :: ERROR:  new row for relation "preparation_batches" violates check constraint "ck_preparation_batches_declared_yield"
