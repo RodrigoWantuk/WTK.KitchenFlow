@@ -104,3 +104,9 @@ PLAN-0017 is completed as documentation history. PLAN-0008 consumes this plan's 
 - Validation: `scripts/contracts/validate-recipe-ai.sh` remains Passed.
 - Disposition unchanged: **Revised** → protocol `0.3`.
 - PLAN-0022 marked Completed. No approval, auto-merge, or merge performed.
+
+### 2026-08-05 — Final handoff push
+
+- Committed remaining PLAN-0021 Ready execution-state sync.
+- Pushed final PLAN-0022 completion head to Draft PR #43 for owner review and one final CI run.
+- No approval, auto-merge, or merge performed.

@@ -101,6 +101,6 @@ Represent:
 
 ## Execution state
 
-- **Current checkpoint:** Plan defined; presentation and upstream live-source prerequisites are not all available.
-- **Blockers:** PLAN-0011, PLAN-0020, PLAN-0022, and an accepted-menu/planning read contract.
-- **Exact next action:** Keep blocked. Reassess after PLAN-0011 and PLAN-0020 merge; split a first deterministic inventory/profile source slice if menu/AI prerequisites remain unavailable.
+- **Current checkpoint:** PLAN-0011, PLAN-0020, and PLAN-0022 recipe AI contracts are complete. Remaining prerequisite before full live AI-backed home sources is an accepted menu/planning source contract.
+- **Blockers:** Accepted menu/planning source contract.
+- **Exact next action:** Confirm or create the accepted menu/planning source contract, then claim `agent/plan-0021-contextual-home-live-sources` and implement the deterministic inventory/profile slices first if menu/AI sources remain pending.
