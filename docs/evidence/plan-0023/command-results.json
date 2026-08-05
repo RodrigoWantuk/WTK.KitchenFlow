@@ -151,4 +151,14 @@
     "testedCommit": "123ad4148a52a84bf43b65d3ce039dc1c6051c7c plus uncommitted remediation",
     "artifact": "packages/contracts/openapi/kitchenflow-v1.json; packages/api-client/src/generated/schema.ts; apps/frontend/src/generated/api-client"
   }
+,
+  {
+    "command": "GitHub Actions consolidated implementation and PLAN-0027 validation workflows",
+    "workingDirectory": "GitHub Actions",
+    "exitCode": 0,
+    "result": "passed",
+    "testedCommit": "99d84dab3735c2230985c6011a835e4adce52006",
+    "summary": "Backend 31040038676, Frontend 31040038769, and PLAN-0005 31040038628 completed successfully.",
+    "artifact": "GitHub Actions workflow runs"
+  }
 ]
