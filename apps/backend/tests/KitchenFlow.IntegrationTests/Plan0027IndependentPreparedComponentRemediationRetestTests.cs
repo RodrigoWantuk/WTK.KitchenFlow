@@ -1,6 +1,5 @@
 using System.Net.Http.Json;
 using System.Security.Claims;
-using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using KitchenFlow.Infrastructure.Persistence;

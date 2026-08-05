@@ -1,11 +1,11 @@
 # PLAN-0023: Implement Prepared Components and Derived Inventory Lots
 
-- **Status:** Validating
+- **Status:** Completed
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Codex backend/domain implementation agent
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-05T14:15:00Z
+- **Last updated:** 2026-08-05T15:18:38Z
 - **Branch:** `agent/plan-0023-prepared-component-lots`
 - **Pull request:** Draft [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39)
 - **Dependencies:** PLAN-0003 and PLAN-0016 inventory foundations merged
@@ -268,3 +268,10 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 
 - **Checkpoint:** Corrected the publication index to exclude three pre-existing, unrelated PLAN-0018 local evidence artifacts; they remain untracked in the workspace and are not part of PLAN-0023 delivery.
 - **Next action:** Push the documentation-only packaging correction and await packaging-head CI.
+
+### 2026-08-05T15:18:38Z — Independent validation agent (PLAN-0027)
+
+- **Checkpoint:** Independent PLAN-0027 assessment **Pass** at immutable candidate `9bff2e130afb4a0f31ea0b84925362f546d1179e`.
+- **Evidence and validation:** F-0026-01/02/03 Passed. See `docs/evidence/plan-0027/` and Draft PR #42. Bounded P3 F-0027-01 (handoff workflow wording) must be corrected before final merge.
+- **Result:** PLAN-0023 Completed after independent Pass. PR #39 remains Draft until validation incorporation and consolidated CI.
+- **Next action:** Owner incorporates PR #42, corrects F-0027-01, runs consolidated gates, then promotes/merges PR #39.
