@@ -1,10 +1,11 @@
 # PLAN-0022: Evaluate and Finalize Recipe AI Artifact Contracts
 
-- **Status:** In Progress
+- **Status:** Completed
 - **Type:** Research
 - **Priority:** High
 - **Owner:** Cursor agent (PLAN-0022 lean evaluation)
 - **Created:** 2026-08-02
+- **Completed:** 2026-08-05
 - **Last updated:** 2026-08-05
 - **Branch:** `agent/plan-0022-recipe-ai-evaluation`
 - **Pull request:** Draft [PR #43](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/43)
@@ -24,7 +25,7 @@ Under the lean amendment, the goal is to **unblock recipe AI contract implementa
 
 This plan is the sole owner of:
 
-- PLAN-0017's unfinished benchmark campaign (now reduced by the lean amendment);
+- PLAN-0017's unfinished benchmark campaign (reduced by the lean amendment);
 - the recipe-specific model-evaluation portion of PLAN-0008 Phase 3;
 - the strict JSON Schema/tool-output decision;
 - final candidate/expansion field limits and semantic thresholds.
@@ -65,34 +66,12 @@ PLAN-0017 is completed as documentation history. PLAN-0008 consumes this plan's 
 - Separate live-provider evaluation from default repository tests (`PLAN0022_LIVE_EVAL=1`).
 - On `NOTEBOOK-DEB-RODRIGO`, use GitHub App wrappers, an `agent/` branch, a draft PR, and request `RodrigoWantuk` review.
 
-## Execution phases
-
-### Phase 1 — Deterministic fixtures and schemas
-
-- parse every request fixture as JSON;
-- publish strict response schemas;
-- add positive/negative fixtures and semantic validators;
-- document decisions for identity, package confidence, and routing.
-
-### Phase 2 — Bounded live campaign
-
-- run the four representative calls only;
-- capture observed latency/cost without p50/p95 claims;
-- classify schema/semantic failures and repairs.
-
-### Phase 3 — Contract finalization and disposition
-
-- version schemas and bounds as protocol `0.3`;
-- set disposition Accepted / Revised / Rejected;
-- hand implementation to a later AI Gateway plan;
-- unblock PLAN-0021 when remaining menu/planning source contracts are satisfied.
-
 ## Acceptance criteria
 
 - [x] All request fixtures parse and have deterministic validators.
 - [x] Strict candidate and expansion schemas are versioned.
 - [x] Positive and negative contract fixtures cover schema, references, units, limits, privacy, and injection/no-authority cases.
-- [ ] Bounded live campaign executed (4 calls, ≤1 repair each) with cost ceiling.
+- [x] Bounded live campaign executed (4 calls, ≤1 repair each) with cost ceiling.
 - [x] Exact-reference, canonical-unit, equipment, lead-time, and assumption rules are encoded.
 - [x] Ingredient-identity and package-confidence decisions are recorded.
 - [x] `cook_now` and menu-planning model policies are recorded.
@@ -104,15 +83,24 @@ PLAN-0017 is completed as documentation history. PLAN-0008 consumes this plan's 
 
 ## Execution state
 
-- **Current checkpoint:** Lean validation policy adopted; post-merge PLAN-0023/0026/0027 reconciliation written; protocol `0.3` schemas, fixtures, validators, and decisions delivered; deterministic tests passed. Live campaign blocked on missing `DEEPSEEK_API_KEY`.
-- **Run target:** Complete lean Phases 1–3, including the four live calls when the credential is available, then mark Completed and open/update the draft PR.
-- **Blockers:** `DEEPSEEK_API_KEY` not present in the agent environment (runtime prerequisite).
-- **Exact next action:** Export `DEEPSEEK_API_KEY`, set `PLAN0022_LIVE_EVAL=1`, run `node scripts/ai/recipe-live-eval.mjs`, record evidence, then mark PLAN-0022 Completed and update PLAN-0021 to Ready.
+- **Current checkpoint:** PLAN-0022 Completed. Protocol `0.3` Revised; lean live campaign executed (4 calls, ~US$ 0.0129); deterministic validators passed; Draft PR #43 updated.
+- **Run target:** Delivered.
+- **Blockers:** None.
+- **Exact next action:** Owner reviews Draft PR #43. Next implementation work: AI Gateway plan consuming finalized recipe AI contracts; PLAN-0021 may proceed once remaining menu/planning source contracts are accepted.
 
 ## Progress log
 
 ### 2026-08-05 — Draft PR opened
 
 - Opened Draft [PR #43](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/43) requesting review from `RodrigoWantuk`.
-- Live campaign still blocked on `DEEPSEEK_API_KEY`.
-- **Exact next action:** Provide `DEEPSEEK_API_KEY` in the agent environment, run `PLAN0022_LIVE_EVAL=1 node scripts/ai/recipe-live-eval.mjs`, commit evidence, mark Completed.
+- Live campaign still blocked on `DEEPSEEK_API_KEY` at that checkpoint.
+
+### 2026-08-05 — Lean live campaign and completion
+
+- Loaded `DEEPSEEK_API_KEY` from ignored `.env` (never committed or printed).
+- Ran `PLAN0022_LIVE_EVAL=1 PLAN0022_COST_CEILING_USD=0.05 node scripts/ai/recipe-live-eval.mjs`.
+- Results: thinking-high truncated (reasoning exhausted completion budget); fallback produced JSON that failed strict schema but passed semantic checks for both `cook_now` and `menu_planning`.
+- Evidence under `docs/evidence/plan-0022/`; addendum `docs/ai/provider-evaluations/deepseek-v4-flash-plan-0022-lean-2026-08-05.md`.
+- Validation: `scripts/contracts/validate-recipe-ai.sh` remains Passed.
+- Disposition unchanged: **Revised** → protocol `0.3`.
+- PLAN-0022 marked Completed. No approval, auto-merge, or merge performed.

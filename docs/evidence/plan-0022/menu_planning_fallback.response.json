@@ -1,0 +1,236 @@
+{
+  "operation": "recipe.suggest_candidates.v1",
+  "requestId": "eval-v03-menu-projection-001",
+  "candidates": [
+    {
+      "candidateId": "cand-001",
+      "candidateStrategy": "on_hand_first",
+      "name": "Frango grelhado com arroz e cenoura refogada",
+      "targetMealType": "dinner",
+      "dishFormat": "prato principal com acompanhamentos",
+      "primaryTechnique": "grelhar",
+      "primaryIngredientRefs": [
+        "ingredient-chicken-breast"
+      ],
+      "summary": "Peito de frango grelhado, arroz branco e cenoura refogada.",
+      "servings": 2,
+      "time": {
+        "activeMinutes": 35,
+        "totalMinutes": 60
+      },
+      "difficulty": "beginner",
+      "requiredEquipmentIds": [
+        "eq-stove",
+        "eq-skillet",
+        "eq-pan"
+      ],
+      "requiredCapabilities": [
+        "burner",
+        "saute",
+        "sear",
+        "boil",
+        "simmer"
+      ],
+      "inventoryUses": [
+        {
+          "ingredientRef": "ingredient-chicken-breast",
+          "inventoryItemId": "inv-001",
+          "userName": "Peito de frango",
+          "requiredQuantity": 300,
+          "unit": "g",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        },
+        {
+          "ingredientRef": "ingredient-carrot",
+          "inventoryItemId": "inv-003",
+          "userName": "Cenoura",
+          "requiredQuantity": 1,
+          "unit": "unit",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        }
+      ],
+      "additionalIngredients": [
+        {
+          "ingredientRef": "ingredient-white-rice",
+          "inventoryItemId": null,
+          "userName": "Arroz branco",
+          "requiredQuantity": 160,
+          "unit": "g",
+          "availabilitySource": "planned_purchase",
+          "requiredState": "raw"
+        },
+        {
+          "ingredientRef": "ingredient-onion",
+          "inventoryItemId": null,
+          "userName": "Cebola",
+          "requiredQuantity": 1,
+          "unit": "unit",
+          "availabilitySource": "planned_purchase",
+          "requiredState": "raw"
+        }
+      ],
+      "preparationProfile": {
+        "requiresAdvancePreparation": false,
+        "minimumLeadMinutes": 0,
+        "blockingPreparationCodes": [],
+        "mayProduceReusableComponents": false
+      },
+      "assumptionsUsed": [
+        "água",
+        "sal",
+        "óleo vegetal"
+      ]
+    },
+    {
+      "candidateId": "cand-002",
+      "candidateStrategy": "planned_purchase_reuse",
+      "name": "Risoto de frango com cenoura",
+      "targetMealType": "dinner",
+      "dishFormat": "prato único",
+      "primaryTechnique": "cozinhar em caldo",
+      "primaryIngredientRefs": [
+        "ingredient-white-rice",
+        "ingredient-chicken-breast"
+      ],
+      "summary": "Risoto cremoso de frango e cenoura, usando arroz e cebola planejados.",
+      "servings": 2,
+      "time": {
+        "activeMinutes": 35,
+        "totalMinutes": 65
+      },
+      "difficulty": "beginner",
+      "requiredEquipmentIds": [
+        "eq-stove",
+        "eq-pan"
+      ],
+      "requiredCapabilities": [
+        "burner",
+        "boil",
+        "simmer",
+        "saute"
+      ],
+      "inventoryUses": [
+        {
+          "ingredientRef": "ingredient-chicken-breast",
+          "inventoryItemId": "inv-001",
+          "userName": "Peito de frango",
+          "requiredQuantity": 200,
+          "unit": "g",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        },
+        {
+          "ingredientRef": "ingredient-carrot",
+          "inventoryItemId": "inv-003",
+          "userName": "Cenoura",
+          "requiredQuantity": 1,
+          "unit": "unit",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        }
+      ],
+      "additionalIngredients": [
+        {
+          "ingredientRef": "ingredient-white-rice",
+          "inventoryItemId": null,
+          "userName": "Arroz branco",
+          "requiredQuantity": 200,
+          "unit": "g",
+          "availabilitySource": "planned_purchase",
+          "requiredState": "raw"
+        },
+        {
+          "ingredientRef": "ingredient-onion",
+          "inventoryItemId": null,
+          "userName": "Cebola",
+          "requiredQuantity": 1,
+          "unit": "unit",
+          "availabilitySource": "planned_purchase",
+          "requiredState": "raw"
+        }
+      ],
+      "preparationProfile": {
+        "requiresAdvancePreparation": false,
+        "minimumLeadMinutes": 0,
+        "blockingPreparationCodes": [],
+        "mayProduceReusableComponents": false
+      },
+      "assumptionsUsed": [
+        "água",
+        "sal",
+        "óleo vegetal"
+      ]
+    },
+    {
+      "candidateId": "cand-003",
+      "candidateStrategy": "exploratory",
+      "name": "Frango ao forno com legumes assados",
+      "targetMealType": "dinner",
+      "dishFormat": "prato principal com acompanhamento",
+      "primaryTechnique": "assar",
+      "primaryIngredientRefs": [
+        "ingredient-chicken-breast"
+      ],
+      "summary": "Peito de frango assado com cenoura e cebola no forno.",
+      "servings": 2,
+      "time": {
+        "activeMinutes": 30,
+        "totalMinutes": 70
+      },
+      "difficulty": "beginner",
+      "requiredEquipmentIds": [
+        "eq-oven",
+        "eq-pan"
+      ],
+      "requiredCapabilities": [
+        "bake",
+        "broil",
+        "burner"
+      ],
+      "inventoryUses": [
+        {
+          "ingredientRef": "ingredient-chicken-breast",
+          "inventoryItemId": "inv-001",
+          "userName": "Peito de frango",
+          "requiredQuantity": 300,
+          "unit": "g",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        },
+        {
+          "ingredientRef": "ingredient-carrot",
+          "inventoryItemId": "inv-003",
+          "userName": "Cenoura",
+          "requiredQuantity": 1,
+          "unit": "unit",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        }
+      ],
+      "additionalIngredients": [
+        {
+          "ingredientRef": "ingredient-onion",
+          "inventoryItemId": null,
+          "userName": "Cebola",
+          "requiredQuantity": 1,
+          "unit": "unit",
+          "availabilitySource": "planned_purchase",
+          "requiredState": "raw"
+        }
+      ],
+      "preparationProfile": {
+        "requiresAdvancePreparation": false,
+        "minimumLeadMinutes": 0,
+        "blockingPreparationCodes": [],
+        "mayProduceReusableComponents": false
+      },
+      "assumptionsUsed": [
+        "água",
+        "sal",
+        "óleo vegetal"
+      ]
+    }
+  ]
+}
