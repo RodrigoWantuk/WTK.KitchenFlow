@@ -8,7 +8,7 @@
   "trackingIssue": 41,
   "sutSha": "9bff2e130afb4a0f31ea0b84925362f546d1179e",
   "implementationPackagingHead": "d928752f746030bfd735f84d5b15239562923092",
-  "validationEvidenceHead": "pending-final-commit",
+  "validationEvidenceHead": "c0c9b5893a6eeb23ff4ea7aec9d9c4201785ee67",
   "historicalFailedSut": "7e24fa2f86350d8a566de0b9f2f1cdba984080ff",
   "operatingSystem": "Debian GNU/Linux",
   "kernel": "6.12.96+deb13-amd64",
