@@ -1,0 +1,14 @@
+
+    ╔═══════════════════════════════════════════════════════╗
+    ║                                                       ║
+    ║  A new version of Redocly CLI (2.44.1) is available.  ║
+    ║  Update now: `npm i -g @redocly/cli@latest`.          ║
+    ║  Changelog: https://redocly.com/docs/cli/changelog/   ║
+    ║                                                       ║
+    ╚═══════════════════════════════════════════════════════╝
+
+validating packages/contracts/openapi/kitchenflow-v1.json...
+packages/contracts/openapi/kitchenflow-v1.json: validated in 718ms
+
+Woohoo! Your API description is valid. 🎉
+

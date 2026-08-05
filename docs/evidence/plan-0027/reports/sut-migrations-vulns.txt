@@ -1,0 +1,10 @@
+A ferramenta 'dotnet-ef' (versão '10.0.4') foi restaurada. Comandos disponíveis: dotnet-ef
+
+A restauração foi bem-sucedida.
+A ferramenta 'dotnet-ef' (versão '10.0.4') foi restaurada. Comandos disponíveis: dotnet-ef
+
+A restauração foi bem-sucedida.
+Build started...
+Build succeeded.
+No changes have been made to the model since the last migration.
+730:        CONSTRAINT ck_preparation_batches_declared_yield CHECK ((("DeclaredYieldMeasuredValue" IS NOT NULL AND "DeclaredYieldMeasuredValue" > 0 AND "DeclaredYieldMeasuredUnit" IN ('Gram', 'Milliliter', 'Unit') AND "DeclaredYieldAvailabilityState" IS NULL) OR ("DeclaredYieldMeasuredValue" IS NULL AND "DeclaredYieldMeasuredUnit" IS NULL AND "DeclaredYieldAvailabilityState" IN ('Available', 'Low', 'Unavailable'))) IS TRUE),
