@@ -1,12 +1,12 @@
 {
   "plan": "PLAN-0026",
-  "phase": "claim",
+  "phase": "final-assessment",
   "sutSha": "7e24fa2f86350d8a566de0b9f2f1cdba984080ff",
   "implementationPackagingHead": "123ad4148a52a84bf43b65d3ce039dc1c6051c7c",
-  "evidenceBranchHead": "pending-claim-commit",
+  "evidenceBranchHead": "pending-final-commit",
   "repository": "RodrigoWantuk/WTK.Cocinaris",
   "implementationPr": 39,
-  "validationPr": null,
+  "validationPr": 40,
   "operatingSystem": "Debian GNU/Linux",
   "kernel": "6.12.96+deb13-amd64",
   "hostname": "NOTEBOOK-DEB-RODRIGO",
@@ -22,7 +22,7 @@
   "locale": "pt_BR.UTF-8",
   "claimTimestampUtc": "2026-08-05T01:24:42Z",
   "executionStartTimestampUtc": "2026-08-05T01:24:42Z",
-  "executionEndTimestampUtc": null,
+  "executionEndTimestampUtc": "2026-08-05T01:48:18Z",
   "workingTreeCleanliness": {
     "validationBranch": "unrelated pre-existing untracked frontend build/smoke and plan-0018 evidence artifacts; excluded from this plan",
     "sutWorktree": "clean detached worktree at SUT SHA"
@@ -47,5 +47,7 @@
     "docs/plan-status.md",
     "docs/plans/PLAN-0023-implement-prepared-components-and-derived-lots.md",
     "docs/plans/PLAN-0026-independently-validate-prepared-components.md"
-  ]
+  ],
+  "assessment": "Fail",
+  "validationBranchCi": "pending-after-push"
 }

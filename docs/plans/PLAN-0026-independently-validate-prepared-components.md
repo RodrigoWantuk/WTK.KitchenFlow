@@ -1,16 +1,16 @@
 # PLAN-0026: Independently Validate Prepared Components and Derived Lots
 
-- **Status:** In Progress
+- **Status:** Completed
 - **Type:** Testing
 - **Priority:** High
 - **Owner:** Independent validation agent (PLAN-0026)
 - **Created:** 2026-08-04
-- **Last updated:** 2026-08-05T01:24:42Z
+- **Last updated:** 2026-08-05T01:48:18Z
 - **Branch:** `agent/plan-0026-validate-prepared-components`
-- **Pull request:** Opening with claim commit
+- **Pull request:** Draft [PR #40](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/40)
 - **System under test:** `7e24fa2f86350d8a566de0b9f2f1cdba984080ff` (PLAN-0023 Draft [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39))
 - **Related implementation plan:** PLAN-0023
-- **Dependencies:** Replacement PLAN-0023 immutable candidate and exact-head CI (satisfied); independent test-agent claim remains required
+- **Dependencies:** PLAN-0023 candidate `7e24fa2` independently assessed; remediation of F-0026-01/02 required before revalidation
 
 ## Objective
 
@@ -38,10 +38,10 @@ Independently attempt to disprove the readiness of PLAN-0023 prepared-component 
 ## Execution state
 
 - **Current run delivery target:** Independently validate the replacement pinned candidate without modifying its production behavior.
-- **Current checkpoint:** Claimed on `agent/plan-0026-validate-prepared-components` at 2026-08-05T01:24:42Z; SUT worktree detached at `7e24fa2f86350d8a566de0b9f2f1cdba984080ff`; packaging head `123ad4148a52a84bf43b65d3ce039dc1c6051c7c` documentation-only delta verified; PR #39 remains open draft.
-- **Exact next action:** Open the draft validation PR, execute the independent adversarial matrix and required gates against the immutable SUT worktree, then publish Pass/Conditional Pass/Fail assessment with evidence.
-- **Blockers:** None at claim time.
-- **Working tree state:** Validation branch clean except unrelated pre-existing untracked frontend build/smoke and plan-0018 artifacts excluded from this plan.
+- **Current checkpoint:** Completed — **Fail** at SUT `7e24fa2f86350d8a566de0b9f2f1cdba984080ff`. Blocking findings F-0026-01 and F-0026-02 recorded; F-0026-03 is a bounded P2. Draft validation PR #40.
+- **Exact next action:** Implementation owner remediates F-0026-01/02 on PLAN-0023, pins a new exact green candidate, and requests a fresh independent validation run.
+- **Blockers:** None for PLAN-0026 (assessment complete). PLAN-0023 remediation is required before merge.
+- **Working tree state:** Validation evidence and independent tests committed; product code unchanged.
 
 ## Progress log
 
@@ -79,3 +79,10 @@ Independently attempt to disprove the readiness of PLAN-0023 prepared-component 
 - **Evidence and validation:** Created `docs/evidence/plan-0026/` claim package and detached SUT worktree `../WTK.Cocinaris-plan-0026-sut` at `7e24fa2`. No product gates executed yet; no readiness inferred.
 - **Result:** Plan moved Ready → In Progress.
 - **Next action:** Open draft validation PR and execute the adversarial matrix against the immutable SUT.
+
+### 2026-08-05T01:48:18Z — Independent validation agent
+
+- **Checkpoint:** Completed independent assessment **Fail** for SUT `7e24fa2`.
+- **Evidence and validation:** Reproduced F-0026-01 (false same-key preparation 412) and F-0026-02 (declared-yield CHECK accepts all-null / value-without-unit). F-0026-03 records missing provenance truncation signal (P2). Existing inventory integration (non-finding tests), unit/architecture, OpenAPI, and frontend quality gates passed on the SUT worktree.
+- **Result:** PLAN-0026 Completed — Fail. PLAN-0023 returned to In Progress. PR #39 remains Draft.
+- **Next action:** Implementation remediates blocking findings and pins a new candidate for revalidation.

@@ -1,11 +1,11 @@
 # PLAN-0023: Implement Prepared Components and Derived Inventory Lots
 
-- **Status:** Validating
+- **Status:** In Progress
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Codex backend/domain implementation agent
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-05T01:01:47Z
+- **Last updated:** 2026-08-05T01:48:18Z
 - **Branch:** `agent/plan-0023-prepared-component-lots`
 - **Pull request:** Draft [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39)
 - **Dependencies:** PLAN-0003 and PLAN-0016 inventory foundations merged
@@ -235,3 +235,10 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - **Evidence and validation:** Backend/secret scan run `30964375294` passed; frontend quality/browser-smoke runs `30964372594` and `30964375347` passed; PLAN-0005 p0, p1, and evidence consistency run `30964375297` passed. The same-key HTTP test passed 21 consecutive local executions without a retry wrapper.
 - **Result:** PLAN-0023 is `Validating`; PLAN-0026 is Ready and pinned. No independent validation has been executed.
 - **Next action:** Independent agent claims PLAN-0026 in an isolated worktree and performs its adversarial validation.
+
+### 2026-08-05T01:48:18Z — Independent validation agent (PLAN-0026)
+
+- **Checkpoint:** Independent PLAN-0026 assessment **Fail** at immutable candidate `7e24fa2f86350d8a566de0b9f2f1cdba984080ff`.
+- **Evidence and validation:** Blocking findings F-0026-01 (concurrent same-key preparation false 412) and F-0026-02 (declared-yield CHECK accepts incomplete null combinations). See `docs/evidence/plan-0026/` and Draft PR #40.
+- **Result:** PLAN-0023 returned from Validating to In Progress. PR #39 remains Draft. No product repair was performed by the validation agent.
+- **Next action:** Remediate F-0026-01 and F-0026-02, obtain exact-head green CI, pin a replacement candidate, and re-request PLAN-0026.

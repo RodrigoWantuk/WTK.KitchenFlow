@@ -3,15 +3,103 @@
   "sutSha": "7e24fa2f86350d8a566de0b9f2f1cdba984080ff",
   "commands": [
     {
-      "command": "hostname; git fetch --all --prune; gh pr view 39; git diff --name-status 7e24fa2..123ad414; gh run list",
+      "command": "candidate identity verification (fetch/pr/diff/workflows)",
       "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
-      "startedAtUtc": "2026-08-05T01:24:42Z",
-      "finishedAtUtc": "2026-08-05T01:24:42Z",
+      "startedAtUtc": "2026-08-05T01:24:00Z",
+      "finishedAtUtc": "2026-08-05T01:24:21Z",
       "exitCode": 0,
       "result": "Passed",
       "testedSha": "123ad4148a52a84bf43b65d3ce039dc1c6051c7c",
       "artifactOrReportPath": "docs/evidence/plan-0026/environment.json",
-      "limitations": "Candidate identity and PR #39 draft/open state verified before claim. Product gates not yet executed."
+      "limitations": "None"
+    },
+    {
+      "command": "dotnet test filter Plan0026 unit",
+      "workingDirectory": "apps/backend",
+      "startedAtUtc": "2026-08-05T01:31:57Z",
+      "finishedAtUtc": "2026-08-05T01:33:00Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "testedSha": "validation-branch product identical to 7e24fa2",
+      "artifactOrReportPath": "docs/evidence/plan-0026/reports/unit-plan0026.txt",
+      "limitations": "None"
+    },
+    {
+      "command": "dotnet test filter Plan0026 integration",
+      "workingDirectory": "apps/backend",
+      "startedAtUtc": "2026-08-05T01:36:42Z",
+      "finishedAtUtc": "2026-08-05T01:36:56Z",
+      "exitCode": 1,
+      "result": "Failed",
+      "testedSha": "validation-branch / SUT 7e24fa2",
+      "artifactOrReportPath": "docs/evidence/plan-0026/reports/integration-plan0026.txt",
+      "limitations": "2 independent finding tests failed (F-0026-01/02); 8 passed"
+    },
+    {
+      "command": "declared-yield constraint SQL probe",
+      "workingDirectory": "compose postgres kitchenflow_plan0026_probe",
+      "startedAtUtc": "2026-08-05T01:40:00Z",
+      "finishedAtUtc": "2026-08-05T01:40:30Z",
+      "exitCode": 0,
+      "result": "Failed",
+      "testedSha": "7e24fa2 migration applied",
+      "artifactOrReportPath": "docs/evidence/plan-0026/reports/declared-yield-constraint-probe.txt",
+      "limitations": "Probe documents product defect; command itself completed"
+    },
+    {
+      "command": "dotnet restore/format/build/test full solution on SUT worktree",
+      "workingDirectory": "../WTK.Cocinaris-plan-0026-sut/apps/backend",
+      "startedAtUtc": "2026-08-05T01:37:33Z",
+      "finishedAtUtc": "2026-08-05T01:44:31Z",
+      "exitCode": 1,
+      "result": "Failed",
+      "testedSha": "7e24fa2f86350d8a566de0b9f2f1cdba984080ff",
+      "artifactOrReportPath": "docs/evidence/plan-0026/reports/sut-dotnet-test.txt",
+      "limitations": "Exit non-zero solely from Plan0026 finding tests; unit 60 and architecture 14 passed; integration 161 passed + 2 failed"
+    },
+    {
+      "command": "OpenAPI export/check/lint + vulnerability scan with local API",
+      "workingDirectory": "../WTK.Cocinaris-plan-0026-sut",
+      "startedAtUtc": "2026-08-05T01:46:15Z",
+      "finishedAtUtc": "2026-08-05T01:46:37Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "testedSha": "7e24fa2f86350d8a566de0b9f2f1cdba984080ff",
+      "artifactOrReportPath": "docs/evidence/plan-0026/reports/sut-openapi-verified.txt",
+      "limitations": "None"
+    },
+    {
+      "command": "frontend yarn quality/build/audit matrix",
+      "workingDirectory": "../WTK.Cocinaris-plan-0026-sut/apps/frontend",
+      "startedAtUtc": "2026-08-05T01:45:28Z",
+      "finishedAtUtc": "2026-08-05T01:47:02Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "testedSha": "7e24fa2f86350d8a566de0b9f2f1cdba984080ff",
+      "artifactOrReportPath": "docs/evidence/plan-0026/reports/sut-frontend-gates.txt",
+      "limitations": "Required packages/api-client yarn install first"
+    },
+    {
+      "command": "yarn smoke:browser:ci",
+      "workingDirectory": "../WTK.Cocinaris-plan-0026-sut/apps/frontend",
+      "startedAtUtc": "2026-08-05T01:47:48Z",
+      "finishedAtUtc": "2026-08-05T01:48:46Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "testedSha": "7e24fa2f86350d8a566de0b9f2f1cdba984080ff",
+      "artifactOrReportPath": "docs/evidence/plan-0026/reports/sut-browser-smoke.txt",
+      "limitations": "None; candidate Frontend CI remains corroboration only"
+    },
+    {
+      "command": "yarn build:prototype; cp -a build build-prototype; xvfb-run -a yarn validate:firefox-native-zoom",
+      "workingDirectory": "../WTK.Cocinaris-plan-0026-sut/apps/frontend",
+      "startedAtUtc": "2026-08-05T01:49:47Z",
+      "finishedAtUtc": "2026-08-05T01:50:14Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "testedSha": "7e24fa2f86350d8a566de0b9f2f1cdba984080ff",
+      "artifactOrReportPath": "docs/evidence/plan-0026/reports/sut-firefox-native-zoom-summary.txt",
+      "limitations": "Required copying CRA build/ to build-prototype for the validator path"
     }
   ]
 }
