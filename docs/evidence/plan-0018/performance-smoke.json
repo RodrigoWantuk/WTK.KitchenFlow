@@ -1,0 +1,29 @@
+{
+  "plan": "PLAN-0005",
+  "testIds": [
+    "TEST-0005-135",
+    "TEST-0005-136"
+  ],
+  "status": "Passed",
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+  "prHeadSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
+  "checkedOutCommitSha": "46f31af8feafccb3eb29756c918da416088a3990",
+  "evidenceGenerationSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
+  "generatedAtUtc": "2026-08-02T12:47:59Z",
+  "samples": 50,
+  "p50Ms": 779,
+  "p95Ms": 887,
+  "p99Ms": 906,
+  "errors": 0,
+  "ownerCrossovers": 0,
+  "cpuBefore": 19198.944,
+  "cpuAfter": 29313.39,
+  "memoryBeforeBytes": 236716032,
+  "memoryAfterBytes": 287145984,
+  "postgresConnectionsBefore": 1,
+  "postgresConnectionsAfter": 49,
+  "postgresConnectionsPeak": 49,
+  "postgresConnectionsSampleCount": 8,
+  "postgresConnectionsMetric": "peak_sampled_during_concurrent_list_workload",
+  "note": "Non-SLA smoke. Concurrent authenticated lists without owner crossover. postgresConnectionsPeak is max of samples taken during the workload."
+}

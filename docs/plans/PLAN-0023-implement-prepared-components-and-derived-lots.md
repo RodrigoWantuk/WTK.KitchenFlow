@@ -275,3 +275,10 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - **Evidence and validation:** F-0026-01/02/03 Passed. See `docs/evidence/plan-0027/` and Draft PR #42. Bounded P3 F-0027-01 (handoff workflow wording) must be corrected before final merge.
 - **Result:** PLAN-0023 Completed after independent Pass. PR #39 remains Draft until validation incorporation and consolidated CI.
 - **Next action:** Owner incorporates PR #42, corrects F-0027-01, runs consolidated gates, then promotes/merges PR #39.
+
+### 2026-08-05T15:25:00Z — Codex backend/domain implementation agent
+
+- **Checkpoint:** Incorporated independent PLAN-0027 Pass through Draft PR #42 using a regular merge commit; validation head `03c4e176ee3dee199e0b10a4166749e9687a2374` remains preserved.
+- **P3 resolution:** Corrected F-0027-01 workflow attribution in the PLAN-0023 handoff. No product behavior changed and no reassessment was performed by the implementation agent.
+- **State:** PLAN-0023 is Completed; Draft PR #39 awaits consolidated exact-head CI before owner review. PLAN-0026 remains historical Fail in unmerged PR #40.
+- **Next action:** Run consolidated exact-head CI for this incorporation/documentation head.

@@ -1,0 +1,46 @@
+{
+  "plan": "PLAN-0005",
+  "testId": "TEST-0005-132",
+  "status": "Passed",
+  "integratedMainSha": "b94abd9a83fe29d88b095e3e9a42f10d01c05414",
+  "prHeadSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
+  "checkedOutCommitSha": "46f31af8feafccb3eb29756c918da416088a3990",
+  "evidenceGenerationSha": "4d07afa066fd7994bbc36473242ee7a2d764ea70",
+  "generatedAtUtc": "2026-08-02T12:49:11Z",
+  "baseline": {
+    "quantity": 12.000,
+    "version": 1,
+    "transactionCount": 1,
+    "auditCount": 1,
+    "idempotencyCount": 0
+  },
+  "duringOutage": {
+    "read": {
+      "resultType": "timeout",
+      "statusCode": null,
+      "safeBodyValidated": true
+    },
+    "mutation": {
+      "resultType": "timeout",
+      "statusCode": null,
+      "safeBodyValidated": true,
+      "idempotencyKey": "mutation-key-present"
+    }
+  },
+  "afterRestore": {
+    "quantity": 12.000,
+    "version": 1,
+    "transactionCount": 1,
+    "auditCount": 1,
+    "idempotencyCount": 0
+  },
+  "afterRetry": {
+    "quantity": 11.000,
+    "version": 2,
+    "transactionCount": 2,
+    "auditCount": 2,
+    "idempotencyCount": 1,
+    "replayProducedAdditionalEffect": false
+  },
+  "note": "Authenticated read and mutation during PostgreSQL pause returned safe errors; lot intact after restore; idempotency absent until successful retry; replay produced no additional effect."
+}

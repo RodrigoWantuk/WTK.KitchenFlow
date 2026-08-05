@@ -36,3 +36,9 @@ Immutable SUT: `9bff2e130afb4a0f31ea0b84925362f546d1179e`
 - **Retest requirement:** Confirm wording cites correct SHA-bound workflow IDs before final PR #39 merge
 
 No P0/P1/P2 product findings.
+
+## Owner resolution after independent assessment
+
+F-0027-01 was resolved after PLAN-0027 incorporation by correcting
+`docs/evidence/plan-0023/handoff.md`. The original finding remains part of the
+immutable assessment history. No product behavior was changed.
