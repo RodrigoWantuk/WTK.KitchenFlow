@@ -1,13 +1,13 @@
 # PLAN-0026: Independently Validate Prepared Components and Derived Lots
 
-- **Status:** Ready
+- **Status:** In Progress
 - **Type:** Testing
 - **Priority:** High
-- **Owner:** Unassigned independent testing agent
+- **Owner:** Independent validation agent (PLAN-0026)
 - **Created:** 2026-08-04
-- **Last updated:** 2026-08-05T01:01:47Z
+- **Last updated:** 2026-08-05T01:24:42Z
 - **Branch:** `agent/plan-0026-validate-prepared-components`
-- **Pull request:** Not opened
+- **Pull request:** Opening with claim commit
 - **System under test:** `7e24fa2f86350d8a566de0b9f2f1cdba984080ff` (PLAN-0023 Draft [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39))
 - **Related implementation plan:** PLAN-0023
 - **Dependencies:** Replacement PLAN-0023 immutable candidate and exact-head CI (satisfied); independent test-agent claim remains required
@@ -38,10 +38,10 @@ Independently attempt to disprove the readiness of PLAN-0023 prepared-component 
 ## Execution state
 
 - **Current run delivery target:** Independently validate the replacement pinned candidate without modifying its production behavior.
-- **Current checkpoint:** Exact candidate `7e24fa2f86350d8a566de0b9f2f1cdba984080ff` is pinned after green exact-head CI; no independent testing has been performed.
-- **Exact next action:** An independent testing agent must claim this plan on `agent/plan-0026-validate-prepared-components`, create a separate testing PR, and test from a detached worktree at the pinned SUT commit.
-- **Blockers:** Awaiting an independent testing agent; implementation agent must not execute this plan.
-- **Working tree state:** Not applicable until claimed.
+- **Current checkpoint:** Claimed on `agent/plan-0026-validate-prepared-components` at 2026-08-05T01:24:42Z; SUT worktree detached at `7e24fa2f86350d8a566de0b9f2f1cdba984080ff`; packaging head `123ad4148a52a84bf43b65d3ce039dc1c6051c7c` documentation-only delta verified; PR #39 remains open draft.
+- **Exact next action:** Open the draft validation PR, execute the independent adversarial matrix and required gates against the immutable SUT worktree, then publish Pass/Conditional Pass/Fail assessment with evidence.
+- **Blockers:** None at claim time.
+- **Working tree state:** Validation branch clean except unrelated pre-existing untracked frontend build/smoke and plan-0018 artifacts excluded from this plan.
 
 ## Progress log
 
@@ -72,3 +72,10 @@ Independently attempt to disprove the readiness of PLAN-0023 prepared-component 
 - **Evidence and validation:** Backend/secret scan run `30964375294`, frontend runs `30964372594` and `30964375347`, and PLAN-0005 p0/p1/evidence run `30964375297` passed for the candidate.
 - **Result:** No independent validation was executed or inferred from implementation-agent evidence.
 - **Next action:** Independent testing agent claims this plan and publishes a separate Pass, Conditional Pass, or Fail assessment.
+
+### 2026-08-05T01:24:42Z — Independent validation agent
+
+- **Checkpoint:** Claimed PLAN-0026. Verified PR #39 open+draft, candidate ancestor of packaging head, documentation-only candidate-to-head drift, and exact-candidate workflows 30964375294 / 30964372594 / 30964375347 / 30964375297 Passed.
+- **Evidence and validation:** Created `docs/evidence/plan-0026/` claim package and detached SUT worktree `../WTK.Cocinaris-plan-0026-sut` at `7e24fa2`. No product gates executed yet; no readiness inferred.
+- **Result:** Plan moved Ready → In Progress.
+- **Next action:** Open draft validation PR and execute the adversarial matrix against the immutable SUT.

@@ -1,0 +1,17 @@
+{
+  "plan": "PLAN-0026",
+  "sutSha": "7e24fa2f86350d8a566de0b9f2f1cdba984080ff",
+  "commands": [
+    {
+      "command": "hostname; git fetch --all --prune; gh pr view 39; git diff --name-status 7e24fa2..123ad414; gh run list",
+      "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
+      "startedAtUtc": "2026-08-05T01:24:42Z",
+      "finishedAtUtc": "2026-08-05T01:24:42Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "testedSha": "123ad4148a52a84bf43b65d3ce039dc1c6051c7c",
+      "artifactOrReportPath": "docs/evidence/plan-0026/environment.json",
+      "limitations": "Candidate identity and PR #39 draft/open state verified before claim. Product gates not yet executed."
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "plan": "PLAN-0026",
+  "phase": "claim",
+  "sutSha": "7e24fa2f86350d8a566de0b9f2f1cdba984080ff",
+  "implementationPackagingHead": "123ad4148a52a84bf43b65d3ce039dc1c6051c7c",
+  "evidenceBranchHead": "pending-claim-commit",
+  "repository": "RodrigoWantuk/WTK.Cocinaris",
+  "implementationPr": 39,
+  "validationPr": null,
+  "operatingSystem": "Debian GNU/Linux",
+  "kernel": "6.12.96+deb13-amd64",
+  "hostname": "NOTEBOOK-DEB-RODRIGO",
+  "architecture": "x86_64",
+  "dotnetSdkVersion": "10.0.302",
+  "nodeVersion": "v24.18.0",
+  "yarnVersion": "1.22.22",
+  "dockerVersion": "29.6.2",
+  "dockerComposeVersion": "v5.3.1",
+  "postgresImage": "postgres:18.4",
+  "keycloakImage": "quay.io/keycloak/keycloak:26.7.0",
+  "timezone": "America/Sao_Paulo",
+  "locale": "pt_BR.UTF-8",
+  "claimTimestampUtc": "2026-08-05T01:24:42Z",
+  "executionStartTimestampUtc": "2026-08-05T01:24:42Z",
+  "executionEndTimestampUtc": null,
+  "workingTreeCleanliness": {
+    "validationBranch": "unrelated pre-existing untracked frontend build/smoke and plan-0018 evidence artifacts; excluded from this plan",
+    "sutWorktree": "clean detached worktree at SUT SHA"
+  },
+  "candidateCi": {
+    "backendWorkflowId": 30964375294,
+    "frontendPushWorkflowId": 30964372594,
+    "frontendPullRequestWorkflowId": 30964375347,
+    "plan0005WorkflowId": 30964375297,
+    "status": "Passed on exact SUT SHA (implementation-agent claim; independently verified run list)"
+  },
+  "packagingHeadCi": {
+    "backendWorkflowId": 30965251916,
+    "frontendWorkflowId": 30965251920,
+    "plan0005WorkflowId": 30965252054,
+    "status": "Passed on packaging head 123ad414 (documentation-only delta from SUT)"
+  },
+  "candidateToPackagingDrift": [
+    "docs/evidence/plan-0023/README.md",
+    "docs/evidence/plan-0023/command-results.json",
+    "docs/evidence/plan-0023/handoff.md",
+    "docs/plan-status.md",
+    "docs/plans/PLAN-0023-implement-prepared-components-and-derived-lots.md",
+    "docs/plans/PLAN-0026-independently-validate-prepared-components.md"
+  ]
+}
