@@ -282,3 +282,8 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - **P3 resolution:** Corrected F-0027-01 workflow attribution in the PLAN-0023 handoff. No product behavior changed and no reassessment was performed by the implementation agent.
 - **State:** PLAN-0023 is Completed; Draft PR #39 awaits consolidated exact-head CI before owner review. PLAN-0026 remains historical Fail in unmerged PR #40.
 - **Next action:** Run consolidated exact-head CI for this incorporation/documentation head.
+
+### 2026-08-05T15:26:00Z — Codex backend/domain implementation agent
+
+- **Checkpoint:** Removed pre-existing unrelated PLAN-0018 local artifacts from the publication index while preserving them as untracked local files.
+- **Next action:** Push the corrected consolidated documentation head and await CI.
