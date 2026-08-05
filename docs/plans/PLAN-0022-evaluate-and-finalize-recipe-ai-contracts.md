@@ -7,7 +7,7 @@
 - **Created:** 2026-08-02
 - **Last updated:** 2026-08-05
 - **Branch:** `agent/plan-0022-recipe-ai-evaluation`
-- **Pull request:** Draft (opening with this delivery)
+- **Pull request:** Draft [PR #43](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/43)
 - **Predecessor:** PLAN-0017 documentation delivery
 - **Related operations plan:** PLAN-0008
 - **Related ADR:** ADR-0005
@@ -111,11 +111,8 @@ PLAN-0017 is completed as documentation history. PLAN-0008 consumes this plan's 
 
 ## Progress log
 
-### 2026-08-05 — Lean adoption and deterministic contract finalization
+### 2026-08-05 — Draft PR opened
 
-- Adopted [`PLAN-0007-amendment-2026-08-05-lean-validation.md`](PLAN-0007-amendment-2026-08-05-lean-validation.md) and [`PLAN-0022-amendment-2026-08-05-lean-evaluation.md`](PLAN-0022-amendment-2026-08-05-lean-evaluation.md).
-- Reconciled registry delivery for PLAN-0023 (merged PR #39 at `7912d4676ffc1f06ac193b7d6788c3a910ed2bd1`), PLAN-0026 (PR #40 closed without merge, Fail), and PLAN-0027 (Pass, incorporated through PR #39 / PR #42).
-- Published strict schemas under `packages/contracts/ai/recipe/`, positive/negative fixtures, and Node validators.
-- Validation: `cd packages/contracts/ai/recipe && npm test && npm run check:drift` — passed.
-- Protocol disposition set to **Revised** (`0.3`).
-- Live campaign not yet executed (credential missing).
+- Opened Draft [PR #43](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/43) requesting review from `RodrigoWantuk`.
+- Live campaign still blocked on `DEEPSEEK_API_KEY`.
+- **Exact next action:** Provide `DEEPSEEK_API_KEY` in the agent environment, run `PLAN0022_LIVE_EVAL=1 node scripts/ai/recipe-live-eval.mjs`, commit evidence, mark Completed.
