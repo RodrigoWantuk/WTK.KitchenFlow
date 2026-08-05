@@ -3,7 +3,7 @@
   "phase": "final-assessment",
   "sutSha": "7e24fa2f86350d8a566de0b9f2f1cdba984080ff",
   "implementationPackagingHead": "123ad4148a52a84bf43b65d3ce039dc1c6051c7c",
-  "evidenceBranchHead": "pending-final-commit",
+  "evidenceBranchHead": "935f28e05143b19887449a607fc8f485e02abb0a",
   "repository": "RodrigoWantuk/WTK.Cocinaris",
   "implementationPr": 39,
   "validationPr": 40,
