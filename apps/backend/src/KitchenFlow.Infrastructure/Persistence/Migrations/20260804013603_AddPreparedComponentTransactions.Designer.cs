@@ -314,6 +314,17 @@ namespace KitchenFlow.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DeclaredYieldAvailabilityState")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<decimal?>("DeclaredYieldMeasuredValue")
+                        .HasColumnType("numeric(18,3)");
+
+                    b.Property<string>("DeclaredYieldMeasuredUnit")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<Guid>("OutputProductId")
                         .HasColumnType("uuid");
 
@@ -336,6 +347,8 @@ namespace KitchenFlow.Infrastructure.Persistence.Migrations
 
                     b.ToTable("preparation_batches", "inventory", t =>
                         {
+                            t.HasCheckConstraint("ck_preparation_batches_declared_yield", "(\"DeclaredYieldMeasuredValue\" IS NOT NULL AND \"DeclaredYieldMeasuredValue\" > 0 AND \"DeclaredYieldMeasuredUnit\" IN ('Gram', 'Milliliter', 'Unit') AND \"DeclaredYieldAvailabilityState\" IS NULL) OR (\"DeclaredYieldMeasuredValue\" IS NULL AND \"DeclaredYieldMeasuredUnit\" IS NULL AND \"DeclaredYieldAvailabilityState\" IN ('Available', 'Low', 'Unavailable'))");
+
                             t.HasCheckConstraint("ck_preparation_batches_prepared_at", "\"PreparedAt\" <= \"CreatedAt\"");
 
                             t.HasCheckConstraint("ck_preparation_batches_source", "\"SourceType\" IN ('ManualPreparation')");

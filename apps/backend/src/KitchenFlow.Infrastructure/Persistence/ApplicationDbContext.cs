@@ -138,10 +138,14 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             {
                 table.HasCheckConstraint("ck_preparation_batches_source", "\"SourceType\" IN ('ManualPreparation')");
                 table.HasCheckConstraint("ck_preparation_batches_prepared_at", "\"PreparedAt\" <= \"CreatedAt\"");
+                table.HasCheckConstraint("ck_preparation_batches_declared_yield", "(\"DeclaredYieldMeasuredValue\" IS NOT NULL AND \"DeclaredYieldMeasuredValue\" > 0 AND \"DeclaredYieldMeasuredUnit\" IN ('Gram', 'Milliliter', 'Unit') AND \"DeclaredYieldAvailabilityState\" IS NULL) OR (\"DeclaredYieldMeasuredValue\" IS NULL AND \"DeclaredYieldMeasuredUnit\" IS NULL AND \"DeclaredYieldAvailabilityState\" IN ('Available', 'Low', 'Unavailable'))");
             });
             entity.HasKey(x => x.Id);
             entity.HasAlternateKey(x => new { x.Id, x.OwnerUserId });
             entity.Property(x => x.SourceType).HasMaxLength(40).IsRequired();
+            entity.Property(x => x.DeclaredYieldMeasuredValue).HasColumnType("numeric(18,3)");
+            entity.Property(x => x.DeclaredYieldMeasuredUnit).HasMaxLength(20);
+            entity.Property(x => x.DeclaredYieldAvailabilityState).HasMaxLength(20);
             entity.HasOne<InternalUser>().WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<ProductRecord>().WithMany().HasForeignKey(x => new { x.OutputProductId, x.OwnerUserId }).HasPrincipalKey(x => new { x.Id, x.OwnerUserId }).OnDelete(DeleteBehavior.Restrict);
             entity.HasIndex(x => new { x.OwnerUserId, x.PreparedAt, x.Id });
@@ -391,6 +395,12 @@ public sealed class PreparationBatchRecord
     public Guid OwnerUserId { get; set; }
     /// <summary>Gets or sets the product shared by all v1 output portions.</summary>
     public Guid OutputProductId { get; set; }
+    /// <summary>Gets or sets the immutable declared measured yield, when this batch has measured output.</summary>
+    public decimal? DeclaredYieldMeasuredValue { get; set; }
+    /// <summary>Gets or sets the immutable canonical measured-yield unit, when applicable.</summary>
+    public string? DeclaredYieldMeasuredUnit { get; set; }
+    /// <summary>Gets or sets the immutable declared qualitative yield state, when applicable.</summary>
+    public string? DeclaredYieldAvailabilityState { get; set; }
     /// <summary>Gets or sets the controlled source type.</summary>
     public required string SourceType { get; set; }
     /// <summary>Gets or sets when the component was prepared.</summary>

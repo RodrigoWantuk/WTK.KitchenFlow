@@ -62,6 +62,9 @@ public sealed class PostgreSqlInventoryPreparationStore(ApplicationDbContext dat
             Id = write.Batch.Id,
             OwnerUserId = write.Batch.OwnerUserId,
             OutputProductId = write.Batch.OutputProductId,
+            DeclaredYieldMeasuredValue = write.DeclaredYield.MeasuredValue,
+            DeclaredYieldMeasuredUnit = write.DeclaredYield.Unit,
+            DeclaredYieldAvailabilityState = write.DeclaredYield.AvailabilityState,
             SourceType = write.Batch.SourceType.ToString(),
             PreparedAt = write.Batch.PreparedAt,
             CreatedAt = write.Batch.CreatedAt
@@ -167,7 +170,7 @@ public sealed class PostgreSqlInventoryPreparationStore(ApplicationDbContext dat
                                    orderby lot.CreatedAt, lot.Id
                                    select new { Lot = lot, Prepared = prepared }).ToListAsync(cancellationToken);
         var outputs = outputRecords.Select(item => ToOutputView(item.Lot, batch.Product.DisplayName, item.Prepared)).ToList();
-        var declaredYield = ToDeclaredYield(outputs);
+        var declaredYield = ToDeclaredYield(batch.Batch);
         return new PreparationBatchView(batch.Batch.Id, batch.Batch.SourceType, batch.Product.Id, batch.Product.DisplayName, declaredYield, batch.Batch.PreparedAt, inputs, outputs, batch.Batch.CreatedAt);
     }
 
@@ -180,41 +183,55 @@ public sealed class PostgreSqlInventoryPreparationStore(ApplicationDbContext dat
             return null;
         }
 
-        var consumedIds = await database.PreparationInputs.AsNoTracking().Where(item => item.OwnerUserId == ownerUserId && item.InputLotId == lotId).Select(item => item.BatchId).ToListAsync(cancellationToken);
-        var producedIds = await database.PreparationOutputs.AsNoTracking().Where(item => item.OwnerUserId == ownerUserId && item.OutputLotId == lotId).Select(item => item.BatchId).ToListAsync(cancellationToken);
-        var consumedBy = new List<PreparationBatchView>();
-        foreach (var id in consumedIds)
-        {
-            var batch = await GetAsync(ownerUserId, id, cancellationToken);
-            if (batch is not null)
-            {
-                consumedBy.Add(batch);
-            }
-        }
-        var producedBy = new List<PreparationBatchView>();
-        foreach (var id in producedIds)
-        {
-            var batch = await GetAsync(ownerUserId, id, cancellationToken);
-            if (batch is not null)
-            {
-                producedBy.Add(batch);
-            }
-        }
+        const int maximumRelatedBatches = 50;
+        var consumedIds = await RelatedBatchIdsAsync(database.PreparationInputs.AsNoTracking().Where(item => item.OwnerUserId == ownerUserId && item.InputLotId == lotId).Select(item => item.BatchId), ownerUserId, maximumRelatedBatches, cancellationToken);
+        var producedIds = await RelatedBatchIdsAsync(database.PreparationOutputs.AsNoTracking().Where(item => item.OwnerUserId == ownerUserId && item.OutputLotId == lotId).Select(item => item.BatchId), ownerUserId, maximumRelatedBatches, cancellationToken);
+        var views = await GetManyAsync(ownerUserId, consumedIds.Concat(producedIds).Distinct().ToList(), cancellationToken);
+        var consumedBy = consumedIds.Select(id => views[id]).ToList();
+        var producedBy = producedIds.Select(id => views[id]).ToList();
         return new InventoryLotProvenanceView(lotId, consumedBy, producedBy);
     }
 
     private static PreparationOutputView ToOutputView(LotRecord lot, string productName, PreparedLotRecord prepared) =>
         new(new InventoryLotView(lot.Id, lot.ProductId, productName, new InventoryQuantity(lot.MeasuredValue, lot.MeasuredUnit, lot.AvailabilityState), lot.StorageLocation, lot.CustomLocation, lot.PackageState, lot.PrintedExpirationDate, lot.Notes, lot.ConcurrencyToken, lot.CreatedAt, lot.UpdatedAt), new PreparedLotMetadataView(prepared.BatchId, prepared.LifecycleState, prepared.PreparedAt, prepared.ShelfLifeDate, prepared.ShelfLifeSource, prepared.ShelfLifeConfidence, prepared.ShelfLifeConditions));
 
-    private static InventoryQuantity ToDeclaredYield(IReadOnlyList<PreparationOutputView> outputs)
+    private static InventoryQuantity ToDeclaredYield(PreparationBatchRecord batch) => new(batch.DeclaredYieldMeasuredValue, batch.DeclaredYieldMeasuredUnit, batch.DeclaredYieldAvailabilityState);
+
+    private async Task<IReadOnlyDictionary<Guid, PreparationBatchView>> GetManyAsync(Guid ownerUserId, IReadOnlyList<Guid> batchIds, CancellationToken cancellationToken)
     {
-        if (outputs.Count == 1 && outputs[0].Lot.Quantity.AvailabilityState is { } availability)
-        {
-            return new InventoryQuantity(null, null, availability);
-        }
-        var unit = outputs[0].Lot.Quantity.Unit;
-        return new InventoryQuantity(outputs.Sum(item => item.Lot.Quantity.MeasuredValue ?? 0m), unit, null);
+        if (batchIds.Count == 0) { return new Dictionary<Guid, PreparationBatchView>(); }
+
+        var batches = await (from item in database.PreparationBatches.AsNoTracking()
+                             join product in database.Products.AsNoTracking() on new { item.OutputProductId, item.OwnerUserId } equals new { OutputProductId = product.Id, product.OwnerUserId }
+                             where item.OwnerUserId == ownerUserId && batchIds.Contains(item.Id)
+                             select new { Batch = item, Product = product }).ToListAsync(cancellationToken);
+        var retainedIds = batches.Select(item => item.Batch.Id).ToList();
+        var inputs = await database.PreparationInputs.AsNoTracking().Where(item => item.OwnerUserId == ownerUserId && retainedIds.Contains(item.BatchId)).OrderBy(item => item.InputLotId).ToListAsync(cancellationToken);
+        var outputRecords = await (from output in database.PreparationOutputs.AsNoTracking()
+                                   join lot in database.Lots.AsNoTracking() on new { Id = output.OutputLotId, output.OwnerUserId } equals new { lot.Id, lot.OwnerUserId }
+                                   join prepared in database.PreparedLots.AsNoTracking() on new { LotId = lot.Id, lot.OwnerUserId } equals new { prepared.LotId, prepared.OwnerUserId }
+                                   where output.OwnerUserId == ownerUserId && retainedIds.Contains(output.BatchId)
+                                   orderby lot.CreatedAt, lot.Id
+                                   select new { output.BatchId, Lot = lot, Prepared = prepared }).ToListAsync(cancellationToken);
+        return batches.ToDictionary(
+            item => item.Batch.Id,
+            item => new PreparationBatchView(
+                item.Batch.Id,
+                item.Batch.SourceType,
+                item.Product.Id,
+                item.Product.DisplayName,
+                ToDeclaredYield(item.Batch),
+                item.Batch.PreparedAt,
+                inputs.Where(input => input.BatchId == item.Batch.Id).Select(input => new PreparationInputView(input.InputLotId, new InventoryQuantity(input.ConsumedValue, input.ConsumedUnit, null))).ToList(),
+                outputRecords.Where(output => output.BatchId == item.Batch.Id).Select(output => ToOutputView(output.Lot, item.Product.DisplayName, output.Prepared)).ToList(),
+                item.Batch.CreatedAt));
     }
+
+    private async Task<IReadOnlyList<Guid>> RelatedBatchIdsAsync(IQueryable<Guid> ids, Guid ownerUserId, int maximumRelatedBatches, CancellationToken cancellationToken) =>
+        await (from id in ids.Distinct()
+               join batch in database.PreparationBatches.AsNoTracking() on new { Id = id, OwnerUserId = ownerUserId } equals new { batch.Id, batch.OwnerUserId }
+               orderby batch.PreparedAt descending, batch.Id descending
+               select batch.Id).Take(maximumRelatedBatches).ToListAsync(cancellationToken);
 
     private static Product ToDomain(ProductRecord item)
     {

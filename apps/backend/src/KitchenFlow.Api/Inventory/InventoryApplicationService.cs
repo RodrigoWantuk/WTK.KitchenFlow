@@ -77,6 +77,16 @@ public sealed class InventoryApplicationService(
     /// <summary>Maps a multi-parent preparation DTO and each resource-bound input version to the application contract.</summary>
     public async Task<IResult> PrepareAsync(PrepareComponentsRequest request, HttpRequest requestContext, CancellationToken cancellationToken)
     {
+        if (request is null || request.Inputs is null || request.Inputs.Any(item => item is null))
+        {
+            return Problem("validation_failed", "Preparation inputs must not contain null items.", StatusCodes.Status400BadRequest, requestContext.HttpContext.TraceIdentifier, new Dictionary<string, string[]> { ["inputs"] = ["Preparation inputs must not contain null items."] });
+        }
+
+        if (request.Outputs is null || request.Outputs.Any(item => item is null))
+        {
+            return Problem("validation_failed", "Preparation outputs must not contain null items.", StatusCodes.Status400BadRequest, requestContext.HttpContext.TraceIdentifier, new Dictionary<string, string[]> { ["outputs"] = ["Preparation outputs must not contain null items."] });
+        }
+
         var key = Guid.TryParse(requestContext.Headers["Idempotency-Key"], out var parsed) ? parsed : (Guid?)null;
         var command = new PrepareComponentsCommand(
             request.OutputProduct?.ProductId,

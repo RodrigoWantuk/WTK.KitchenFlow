@@ -24,6 +24,9 @@ namespace KitchenFlow.Infrastructure.Persistence.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     OwnerUserId = table.Column<Guid>(type: "uuid", nullable: false),
                     OutputProductId = table.Column<Guid>(type: "uuid", nullable: false),
+                    DeclaredYieldMeasuredValue = table.Column<decimal>(type: "numeric(18,3)", nullable: true),
+                    DeclaredYieldMeasuredUnit = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    DeclaredYieldAvailabilityState = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
                     SourceType = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
                     PreparedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
@@ -32,6 +35,7 @@ namespace KitchenFlow.Infrastructure.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_preparation_batches", x => x.Id);
                     table.UniqueConstraint("AK_preparation_batches_Id_OwnerUserId", x => new { x.Id, x.OwnerUserId });
+                    table.CheckConstraint("ck_preparation_batches_declared_yield", "(\"DeclaredYieldMeasuredValue\" IS NOT NULL AND \"DeclaredYieldMeasuredValue\" > 0 AND \"DeclaredYieldMeasuredUnit\" IN ('Gram', 'Milliliter', 'Unit') AND \"DeclaredYieldAvailabilityState\" IS NULL) OR (\"DeclaredYieldMeasuredValue\" IS NULL AND \"DeclaredYieldMeasuredUnit\" IS NULL AND \"DeclaredYieldAvailabilityState\" IN ('Available', 'Low', 'Unavailable'))");
                     table.CheckConstraint("ck_preparation_batches_prepared_at", "\"PreparedAt\" <= \"CreatedAt\"");
                     table.CheckConstraint("ck_preparation_batches_source", "\"SourceType\" IN ('ManualPreparation')");
                     table.ForeignKey(

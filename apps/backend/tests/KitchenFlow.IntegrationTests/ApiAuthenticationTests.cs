@@ -1013,6 +1013,10 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         using var first = await client.SendAsync(firstRequest);
         var firstBody = await first.Content.ReadFromJsonAsync<JsonElement>();
         var batchId = firstBody.GetProperty("batchId").GetGuid();
+        var outputLot = firstBody.GetProperty("outputs")[0].GetProperty("lot");
+        var outputLotId = outputLot.GetProperty("lotId").GetGuid();
+        var outputVersion = outputLot.GetProperty("version").GetString()!;
+        using var consumeOutput = await AdjustAsync(client, csrf, outputLotId, outputVersion, Guid.NewGuid().ToString(), 20m);
         using var replayRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/inventory/preparations") { Content = JsonContent.Create(requestBody) };
         replayRequest.Headers.Add("Idempotency-Key", key);
         replayRequest.Headers.Add("X-CSRF-TOKEN", csrf);
@@ -1024,12 +1028,40 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
 
         Assert.Equal(System.Net.HttpStatusCode.Created, parentCreate.StatusCode);
         Assert.Equal(System.Net.HttpStatusCode.Created, first.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.OK, consumeOutput.StatusCode);
         Assert.Equal(System.Net.HttpStatusCode.Created, replay.StatusCode);
         Assert.Equal(batchId, replayBody.GetProperty("batchId").GetGuid());
+        Assert.Equal(60m, firstBody.GetProperty("declaredYield").GetProperty("measuredValue").GetDecimal());
+        Assert.Equal(60m, replayBody.GetProperty("declaredYield").GetProperty("measuredValue").GetDecimal());
         Assert.Equal(60m, firstBody.GetProperty("outputs")[0].GetProperty("lot").GetProperty("quantity").GetProperty("measuredValue").GetDecimal());
         Assert.Equal(40m, parentAfter.GetProperty("quantity").GetProperty("measuredValue").GetDecimal());
         Assert.Equal(batchId, provenance.GetProperty("consumedBy")[0].GetProperty("batchId").GetGuid());
+        Assert.Equal(60m, provenance.GetProperty("consumedBy")[0].GetProperty("declaredYield").GetProperty("measuredValue").GetDecimal());
         Assert.Equal(batchId, batch.GetProperty("batchId").GetGuid());
+        Assert.Equal(60m, batch.GetProperty("declaredYield").GetProperty("measuredValue").GetDecimal());
+    }
+
+    [Theory]
+    [InlineData("{\"outputProduct\":{\"productName\":\"Prepared\"},\"declaredYield\":{\"measuredValue\":1,\"unit\":\"Gram\"},\"inputs\":[null],\"outputs\":[]}", "inputs")]
+    [InlineData("{\"outputProduct\":{\"productName\":\"Prepared\"},\"declaredYield\":{\"measuredValue\":1,\"unit\":\"Gram\"},\"inputs\":[],\"outputs\":[null]}", "outputs")]
+    [InlineData("{\"outputProduct\":{\"productName\":\"Prepared\"},\"declaredYield\":{\"measuredValue\":1,\"unit\":\"Gram\"},\"inputs\":null,\"outputs\":[]}", "inputs")]
+    [InlineData("{\"outputProduct\":{\"productName\":\"Prepared\"},\"declaredYield\":{\"measuredValue\":1,\"unit\":\"Gram\"},\"inputs\":[],\"outputs\":null}", "outputs")]
+    public async Task PreparationNullCollectionsOrItemsReturnValidationProblem(string body, string field)
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        var csrf = await GetCsrfAsync(client);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/inventory/preparations") { Content = new StringContent(body, Encoding.UTF8, "application/json") };
+        request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString());
+        request.Headers.Add("X-CSRF-TOKEN", csrf);
+
+        using var response = await client.SendAsync(request);
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("validation_failed", problem.GetProperty("errorCode").GetString());
+        Assert.True(problem.GetProperty("errors").TryGetProperty(field, out _));
     }
 
     private static object CreateLot(string productName = "Test tomato", decimal measuredValue = 100m) => new { productName, quantity = new { measuredValue, unit = "Gram", availabilityState = (string?)null }, storageLocation = "Pantry", customLocation = (string?)null, packageState = (string?)null, printedExpirationDate = (DateOnly?)null, notes = (string?)null };

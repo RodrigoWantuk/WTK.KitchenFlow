@@ -202,3 +202,10 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - **Checkpoint:** Reopened corrective implementation after PLAN-0005 run `30956720196` found `ConcurrentAdjustmentWithSameKeyReplaysTheWinningResponse` returning 412 for one same-key delivery. Review also found that batch reads reconstructed declared yield from mutable output lots.
 - **Result:** The prior `b72e8efaa6ae6c97998a92967b8e6112f326a14c` candidate and `c861cb6cfc13c37874e91d825c5dc8e6f2238db7` head are not validation candidates. PLAN-0023 is `In Progress`; PLAN-0026 is returned to Draft and unpinned.
 - **Next action:** Implement, test, and publish the replacement candidate; do not execute independent PLAN-0026 work.
+
+### 2026-08-05T00:05:00Z — Codex backend/domain implementation agent
+
+- **Checkpoint:** Persisted the immutable declared-yield quantity mode on preparation batches, made batch and provenance views read it rather than mutable output quantities, bounded provenance to fifty deterministic related batches per direction with set-based graph loading, and added HTTP null-collection/item validation.
+- **Concurrency correction:** Same-key adjustment replay now checks the owner-scoped idempotency record before stale `If-Match` evaluation after ownership is established. This closes the observed race where the winner advanced the token before the second delivery performed its precondition check.
+- **Evidence and validation:** Release build and `migrations has-pending-model-changes` passed with explicit Release configuration. Focused real-PostgreSQL and HTTP tests passed 7/7, including same-key adjustment, immutable yield after output consumption, provenance, and null input/output collection cases.
+- **Next action:** Add remaining adversarial coverage, execute migration/API/client gates and repeated concurrency runs, then record outcomes and publish a replacement candidate.
