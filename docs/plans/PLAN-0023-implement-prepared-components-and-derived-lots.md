@@ -263,3 +263,8 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - **Evidence:** Local 50 synchronized same-key iterations, declared-yield direct SQL matrix, provenance 0/1/49/50/51/55 boundary matrix, migration script, OpenAPI, and generated-client gates are recorded. Issue #41 remains open.
 - **State:** PLAN-0026/PR #40 remains immutable historical Fail; PLAN-0027 is prepared and pinned but unexecuted. This publication commit changes documentation/evidence only.
 - **Next action:** Independent PLAN-0027 validation only; no implementation-agent assessment, approval, auto-merge, or merge.
+
+### 2026-08-05T14:16:00Z — Codex backend/domain implementation agent
+
+- **Checkpoint:** Corrected the publication index to exclude three pre-existing, unrelated PLAN-0018 local evidence artifacts; they remain untracked in the workspace and are not part of PLAN-0023 delivery.
+- **Next action:** Push the documentation-only packaging correction and await packaging-head CI.
