@@ -1,0 +1,17 @@
+{
+  "plan": "PLAN-0027",
+  "sutSha": "9bff2e130afb4a0f31ea0b84925362f546d1179e",
+  "commands": [
+    {
+      "command": "git fetch; cat-file; merge-base; diff name-status; gh pr view 39; gh run list by SHA",
+      "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
+      "startedAtUtc": "2026-08-05T15:01:06Z",
+      "finishedAtUtc": "2026-08-05T15:01:06Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "testedSha": "d928752f746030bfd735f84d5b15239562923092",
+      "artifactOrReportPath": "docs/evidence/plan-0027/environment.json",
+      "limitations": "Candidate identity verified before claim. Product gates not yet executed."
+    }
+  ]
+}
