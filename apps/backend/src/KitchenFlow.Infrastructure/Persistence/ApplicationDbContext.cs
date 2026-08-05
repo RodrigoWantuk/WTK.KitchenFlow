@@ -22,6 +22,18 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     /// <summary>Gets immutable inventory lifecycle transaction records.</summary>
     public DbSet<TransactionRecord> Transactions => Set<TransactionRecord>();
 
+    /// <summary>Gets immutable owner-scoped preparation batch records.</summary>
+    public DbSet<PreparationBatchRecord> PreparationBatches => Set<PreparationBatchRecord>();
+
+    /// <summary>Gets immutable preparation input provenance records.</summary>
+    public DbSet<PreparationInputRecord> PreparationInputs => Set<PreparationInputRecord>();
+
+    /// <summary>Gets immutable preparation output provenance records.</summary>
+    public DbSet<PreparationOutputRecord> PreparationOutputs => Set<PreparationOutputRecord>();
+
+    /// <summary>Gets prepared-component metadata attached to authoritative output lots.</summary>
+    public DbSet<PreparedLotRecord> PreparedLots => Set<PreparedLotRecord>();
+
     /// <summary>Gets immutable audit event records.</summary>
     public DbSet<AuditEventRecord> AuditEvents => Set<AuditEventRecord>();
 
@@ -104,7 +116,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
         {
             entity.ToTable("transactions", "inventory", table =>
             {
-                table.HasCheckConstraint("ck_transactions_type", "\"Type\" IN ('Initial', 'Consume', 'Discard', 'Correct', 'AvailabilityChanged', 'Deleted')");
+                table.HasCheckConstraint("ck_transactions_type", "\"Type\" IN ('Initial', 'Consume', 'Discard', 'Correct', 'AvailabilityChanged', 'Deleted', 'PreparationInputConsumed', 'PreparationOutputCreated')");
                 table.HasCheckConstraint("ck_transactions_previous_quantity", "(\"PreviousMeasuredValue\" IS NULL AND \"PreviousMeasuredUnit\" IS NULL AND \"PreviousAvailabilityState\" IS NULL) OR (\"PreviousMeasuredValue\" IS NOT NULL AND \"PreviousMeasuredValue\" >= 0 AND \"PreviousMeasuredUnit\" IN ('Gram', 'Milliliter', 'Unit') AND \"PreviousAvailabilityState\" IS NULL) OR (\"PreviousMeasuredValue\" IS NULL AND \"PreviousMeasuredUnit\" IS NULL AND \"PreviousAvailabilityState\" IN ('Available', 'Low', 'Unavailable'))");
                 table.HasCheckConstraint("ck_transactions_resulting_quantity", "(\"ResultingMeasuredValue\" IS NOT NULL AND \"ResultingMeasuredValue\" >= 0 AND \"ResultingMeasuredUnit\" IN ('Gram', 'Milliliter', 'Unit') AND \"ResultingAvailabilityState\" IS NULL) OR (\"ResultingMeasuredValue\" IS NULL AND \"ResultingMeasuredUnit\" IS NULL AND \"ResultingAvailabilityState\" IN ('Available', 'Low', 'Unavailable'))");
                 table.HasCheckConstraint("ck_transactions_reason_code", "\"ReasonCode\" IS NULL OR length(btrim(\"ReasonCode\")) > 0");
@@ -118,6 +130,65 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             entity.HasOne<InternalUser>().WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<LotRecord>().WithMany().HasForeignKey(x => new { x.LotId, x.OwnerUserId }).HasPrincipalKey(x => new { x.Id, x.OwnerUserId }).OnDelete(DeleteBehavior.Restrict);
             entity.HasIndex(x => new { x.OwnerUserId, x.LotId, x.OccurredAt });
+        });
+
+        modelBuilder.Entity<PreparationBatchRecord>(entity =>
+        {
+            entity.ToTable("preparation_batches", "inventory", table =>
+            {
+                table.HasCheckConstraint("ck_preparation_batches_source", "\"SourceType\" IN ('ManualPreparation')");
+                table.HasCheckConstraint("ck_preparation_batches_prepared_at", "\"PreparedAt\" <= \"CreatedAt\"");
+                table.HasCheckConstraint("ck_preparation_batches_declared_yield", "((\"DeclaredYieldMeasuredValue\" IS NOT NULL AND \"DeclaredYieldMeasuredValue\" > 0 AND \"DeclaredYieldMeasuredUnit\" IN ('Gram', 'Milliliter', 'Unit') AND \"DeclaredYieldAvailabilityState\" IS NULL) OR (\"DeclaredYieldMeasuredValue\" IS NULL AND \"DeclaredYieldMeasuredUnit\" IS NULL AND \"DeclaredYieldAvailabilityState\" IN ('Available', 'Low', 'Unavailable'))) IS TRUE");
+            });
+            entity.HasKey(x => x.Id);
+            entity.HasAlternateKey(x => new { x.Id, x.OwnerUserId });
+            entity.Property(x => x.SourceType).HasMaxLength(40).IsRequired();
+            entity.Property(x => x.DeclaredYieldMeasuredValue).HasColumnType("numeric(18,3)");
+            entity.Property(x => x.DeclaredYieldMeasuredUnit).HasMaxLength(20);
+            entity.Property(x => x.DeclaredYieldAvailabilityState).HasMaxLength(20);
+            entity.HasOne<InternalUser>().WithMany().HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<ProductRecord>().WithMany().HasForeignKey(x => new { x.OutputProductId, x.OwnerUserId }).HasPrincipalKey(x => new { x.Id, x.OwnerUserId }).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => new { x.OwnerUserId, x.PreparedAt, x.Id });
+        });
+
+        modelBuilder.Entity<PreparationInputRecord>(entity =>
+        {
+            entity.ToTable("preparation_inputs", "inventory", table =>
+            {
+                table.HasCheckConstraint("ck_preparation_inputs_quantity", "\"ConsumedValue\" > 0 AND \"ConsumedUnit\" IN ('Gram', 'Milliliter', 'Unit')");
+            });
+            entity.HasKey(x => new { x.BatchId, x.InputLotId });
+            entity.Property(x => x.ConsumedValue).HasColumnType("numeric(18,3)");
+            entity.Property(x => x.ConsumedUnit).HasMaxLength(20).IsRequired();
+            entity.HasOne<PreparationBatchRecord>().WithMany().HasForeignKey(x => new { x.BatchId, x.OwnerUserId }).HasPrincipalKey(x => new { x.Id, x.OwnerUserId }).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<LotRecord>().WithMany().HasForeignKey(x => new { x.InputLotId, x.OwnerUserId }).HasPrincipalKey(x => new { x.Id, x.OwnerUserId }).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => new { x.OwnerUserId, x.InputLotId });
+        });
+
+        modelBuilder.Entity<PreparationOutputRecord>(entity =>
+        {
+            entity.ToTable("preparation_outputs", "inventory");
+            entity.HasKey(x => new { x.BatchId, x.OutputLotId });
+            entity.HasOne<PreparationBatchRecord>().WithMany().HasForeignKey(x => new { x.BatchId, x.OwnerUserId }).HasPrincipalKey(x => new { x.Id, x.OwnerUserId }).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<LotRecord>().WithMany().HasForeignKey(x => new { x.OutputLotId, x.OwnerUserId }).HasPrincipalKey(x => new { x.Id, x.OwnerUserId }).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => new { x.OwnerUserId, x.OutputLotId }).IsUnique();
+        });
+
+        modelBuilder.Entity<PreparedLotRecord>(entity =>
+        {
+            entity.ToTable("prepared_lots", "inventory", table =>
+            {
+                table.HasCheckConstraint("ck_prepared_lots_lifecycle", "\"LifecycleState\" IN ('Prepared')");
+                table.HasCheckConstraint("ck_prepared_lots_evidence", "(\"ShelfLifeSource\" = 'Unknown' AND \"ShelfLifeDate\" IS NULL AND \"ShelfLifeConfidence\" = 'Unknown') OR (\"ShelfLifeSource\" IN ('UserEntered', 'Curated', 'Regional') AND \"ShelfLifeDate\" IS NOT NULL AND \"ShelfLifeConfidence\" IN ('Low', 'Medium', 'High'))");
+            });
+            entity.HasKey(x => new { x.LotId, x.OwnerUserId });
+            entity.Property(x => x.LifecycleState).HasMaxLength(30).IsRequired();
+            entity.Property(x => x.ShelfLifeSource).HasMaxLength(30).IsRequired();
+            entity.Property(x => x.ShelfLifeConfidence).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.ShelfLifeConditions).HasMaxLength(500);
+            entity.HasOne<LotRecord>().WithMany().HasForeignKey(x => new { x.LotId, x.OwnerUserId }).HasPrincipalKey(x => new { x.Id, x.OwnerUserId }).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<PreparationBatchRecord>().WithMany().HasForeignKey(x => new { x.BatchId, x.OwnerUserId }).HasPrincipalKey(x => new { x.Id, x.OwnerUserId }).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => new { x.OwnerUserId, x.BatchId });
         });
 
         modelBuilder.Entity<AuditEventRecord>(entity =>
@@ -313,6 +384,78 @@ public sealed class TransactionRecord
     public Guid? IdempotencyKey { get; set; }
     /// <summary>Gets or sets the UTC instant at which the transition occurred.</summary>
     public DateTimeOffset OccurredAt { get; set; }
+}
+
+/// <summary>Immutable persistence representation of one manual preparation transaction.</summary>
+public sealed class PreparationBatchRecord
+{
+    /// <summary>Gets or sets the preparation batch identifier.</summary>
+    public Guid Id { get; set; }
+    /// <summary>Gets or sets the authoritative owner identifier.</summary>
+    public Guid OwnerUserId { get; set; }
+    /// <summary>Gets or sets the product shared by all v1 output portions.</summary>
+    public Guid OutputProductId { get; set; }
+    /// <summary>Gets or sets the immutable declared measured yield, when this batch has measured output.</summary>
+    public decimal? DeclaredYieldMeasuredValue { get; set; }
+    /// <summary>Gets or sets the immutable canonical measured-yield unit, when applicable.</summary>
+    public string? DeclaredYieldMeasuredUnit { get; set; }
+    /// <summary>Gets or sets the immutable declared qualitative yield state, when applicable.</summary>
+    public string? DeclaredYieldAvailabilityState { get; set; }
+    /// <summary>Gets or sets the controlled source type.</summary>
+    public required string SourceType { get; set; }
+    /// <summary>Gets or sets when the component was prepared.</summary>
+    public DateTimeOffset PreparedAt { get; set; }
+    /// <summary>Gets or sets when the authoritative batch was created.</summary>
+    public DateTimeOffset CreatedAt { get; set; }
+}
+
+/// <summary>Immutable provenance representation of one consumed parent quantity.</summary>
+public sealed class PreparationInputRecord
+{
+    /// <summary>Gets or sets the parent preparation batch identifier.</summary>
+    public Guid BatchId { get; set; }
+    /// <summary>Gets or sets the authoritative owner identifier.</summary>
+    public Guid OwnerUserId { get; set; }
+    /// <summary>Gets or sets the consumed input lot identifier.</summary>
+    public Guid InputLotId { get; set; }
+    /// <summary>Gets or sets the actual positive consumed value.</summary>
+    public decimal ConsumedValue { get; set; }
+    /// <summary>Gets or sets the canonical unit for the consumed value.</summary>
+    public required string ConsumedUnit { get; set; }
+}
+
+/// <summary>Immutable provenance representation of one produced output lot.</summary>
+public sealed class PreparationOutputRecord
+{
+    /// <summary>Gets or sets the parent preparation batch identifier.</summary>
+    public Guid BatchId { get; set; }
+    /// <summary>Gets or sets the authoritative owner identifier.</summary>
+    public Guid OwnerUserId { get; set; }
+    /// <summary>Gets or sets the output lot identifier.</summary>
+    public Guid OutputLotId { get; set; }
+}
+
+/// <summary>Prepared-specific metadata that supplements, rather than weakens, the authoritative lot record.</summary>
+public sealed class PreparedLotRecord
+{
+    /// <summary>Gets or sets the output lot identifier.</summary>
+    public Guid LotId { get; set; }
+    /// <summary>Gets or sets the authoritative owner identifier.</summary>
+    public Guid OwnerUserId { get; set; }
+    /// <summary>Gets or sets the creating preparation batch identifier.</summary>
+    public Guid BatchId { get; set; }
+    /// <summary>Gets or sets the controlled lifecycle state.</summary>
+    public required string LifecycleState { get; set; }
+    /// <summary>Gets or sets when the component was prepared.</summary>
+    public DateTimeOffset PreparedAt { get; set; }
+    /// <summary>Gets or sets the optional advisory shelf-life date.</summary>
+    public DateOnly? ShelfLifeDate { get; set; }
+    /// <summary>Gets or sets the shelf-life evidence source.</summary>
+    public required string ShelfLifeSource { get; set; }
+    /// <summary>Gets or sets the shelf-life evidence confidence.</summary>
+    public required string ShelfLifeConfidence { get; set; }
+    /// <summary>Gets or sets optional private handling conditions.</summary>
+    public string? ShelfLifeConditions { get; set; }
 }
 
 /// <summary>Immutable audit trail record for an authorized action.</summary>

@@ -19,6 +19,9 @@ public sealed class InventoryApplicationService(
     IAdjustInventoryLotUseCase adjustLot,
     IDeleteInventoryLotUseCase deleteLot,
     IGetInventoryLotHistoryUseCase getHistory,
+    IPrepareComponentsUseCase prepareComponents,
+    IGetPreparationBatchUseCase getPreparation,
+    IGetInventoryLotProvenanceUseCase getProvenance,
     IInventoryHttpTokenService tokens,
     InventoryMetrics metrics)
 {
@@ -71,9 +74,46 @@ public sealed class InventoryApplicationService(
     public async Task<IResult> HistoryAsync(Guid lotId, HttpContext context, CancellationToken cancellationToken) =>
         ToResult(await getHistory.HistoryAsync(lotId, cancellationToken), items => (IReadOnlyList<LotHistoryResponse>)items.Select(item => new LotHistoryResponse(item.EntryId, item.Kind, item.TransactionType, ToQuantity(item.PreviousQuantity), ToQuantity(item.ResultingQuantity), item.ReasonCode, item.ChangedFields, item.OccurredAt)).ToList(), context.TraceIdentifier);
 
+    /// <summary>Maps a multi-parent preparation DTO and each resource-bound input version to the application contract.</summary>
+    public async Task<IResult> PrepareAsync(PrepareComponentsRequest request, HttpRequest requestContext, CancellationToken cancellationToken)
+    {
+        if (request is null || request.Inputs is null || request.Inputs.Any(item => item is null))
+        {
+            return Problem("validation_failed", "Preparation inputs must not contain null items.", StatusCodes.Status400BadRequest, requestContext.HttpContext.TraceIdentifier, new Dictionary<string, string[]> { ["inputs"] = ["Preparation inputs must not contain null items."] });
+        }
+
+        if (request.Outputs is null || request.Outputs.Any(item => item is null))
+        {
+            return Problem("validation_failed", "Preparation outputs must not contain null items.", StatusCodes.Status400BadRequest, requestContext.HttpContext.TraceIdentifier, new Dictionary<string, string[]> { ["outputs"] = ["Preparation outputs must not contain null items."] });
+        }
+
+        var key = Guid.TryParse(requestContext.Headers["Idempotency-Key"], out var parsed) ? parsed : (Guid?)null;
+        var command = new PrepareComponentsCommand(
+            request.OutputProduct?.ProductId,
+            request.OutputProduct?.ProductName,
+            request.DeclaredYield?.MeasuredValue,
+            request.DeclaredYield?.Unit,
+            request.DeclaredYield?.AvailabilityState,
+            request.Inputs?.Select(item => new PreparationInputCommand(item.LotId, item.Quantity?.MeasuredValue, item.Quantity?.Unit, ReadPreparationPrecondition(item.LotId, item.Version))).ToList(),
+            request.Outputs?.Select(item => new PreparationOutputCommand(item.Quantity?.MeasuredValue, item.Quantity?.Unit, item.Quantity?.AvailabilityState, item.StorageLocation, item.CustomLocation, item.PackageState, item.ShelfLifeEvidence?.Date, item.ShelfLifeEvidence?.Source, item.ShelfLifeEvidence?.Confidence, item.ShelfLifeEvidence?.Conditions)).ToList(),
+            request.PreparedAt,
+            key,
+            requestContext.HttpContext.TraceIdentifier);
+        return ToPreparationResult("prepare", await prepareComponents.PrepareAsync(command, cancellationToken), requestContext.HttpContext.TraceIdentifier);
+    }
+
+    /// <summary>Maps an owner-scoped preparation query to its HTTP representation.</summary>
+    public async Task<IResult> GetPreparationAsync(Guid batchId, HttpContext context, CancellationToken cancellationToken) =>
+        ToPreparationResult("preparation_get", await getPreparation.GetAsync(batchId, cancellationToken), context.TraceIdentifier);
+
+    /// <summary>Maps an owner-scoped lot provenance query to its HTTP representation.</summary>
+    public async Task<IResult> ProvenanceAsync(Guid lotId, HttpContext context, CancellationToken cancellationToken) =>
+        ToResult(await getProvenance.GetAsync(lotId, cancellationToken), item => new LotProvenanceResponse(item.LotId, item.ConsumedBy.Select(ToPreparationResponse).ToList(), item.ConsumedByTruncated, item.ProducedBy.Select(ToPreparationResponse).ToList(), item.ProducedByTruncated), context.TraceIdentifier);
+
     private LotResponse ToResponse(InventoryLotView item) => ToResponse(item, tokens.WriteVersion(item.LotId, item.ConcurrencyToken));
     private static LotResponse ToResponse(InventoryLotView item, string version) => new(item.LotId, item.ProductId, item.ProductName, ToQuantity(item.Quantity)!, item.StorageLocation, item.CustomLocation, item.PackageState, item.PrintedExpirationDate, item.Notes, version, item.CreatedAt, item.UpdatedAt);
     private static QuantityResponse? ToQuantity(InventoryQuantity? quantity) => quantity is null ? null : new QuantityResponse(quantity.MeasuredValue, quantity.Unit, quantity.AvailabilityState);
+    private PreparationResponse ToPreparationResponse(PreparationBatchView item) => new(item.BatchId, item.SourceType, item.OutputProductId, item.OutputProductName, ToQuantity(item.DeclaredYield)!, item.PreparedAt, item.Inputs.Select(input => new PreparationInputResponse(input.LotId, ToQuantity(input.ConsumedQuantity)!)).ToList(), item.Outputs.Select(output => new PreparationOutputResponse(ToResponse(output.Lot), new PreparedLotMetadataResponse(output.PreparedMetadata.BatchId, output.PreparedMetadata.LifecycleState, output.PreparedMetadata.PreparedAt, output.PreparedMetadata.ShelfLifeDate, output.PreparedMetadata.ShelfLifeSource, output.PreparedMetadata.ShelfLifeConfidence, output.PreparedMetadata.ShelfLifeConditions))).ToList(), item.CreatedAt);
 
     private IResult ToLotResult(string operation, InventoryApplicationResult<InventoryLotView> result, string traceId)
     {
@@ -92,6 +132,14 @@ public sealed class InventoryApplicationService(
         return new EtagResult<LotResponse>(ToResponse(result.Value!, version), Quote(version), StatusFor(result.Success));
     }
 
+    private IResult ToPreparationResult(string operation, InventoryApplicationResult<PreparationBatchView> result, string traceId)
+    {
+        metrics.RecordMutation(operation, result);
+        return result.Problem is not null
+            ? Problem(result.Problem.ErrorCode, result.Problem.Detail, StatusFor(result.Problem.ErrorCode), traceId, result.Problem.Errors)
+            : Results.Json(ToPreparationResponse(result.Value!), statusCode: StatusFor(result.Success));
+    }
+
     private static IResult ToResult<TSource, TResponse>(InventoryApplicationResult<TSource> result, Func<TSource, TResponse> map, string traceId) =>
         result.Problem is not null
             ? Problem(result.Problem.ErrorCode, result.Problem.Detail, StatusFor(result.Problem.ErrorCode), traceId, result.Problem.Errors)
@@ -107,6 +155,11 @@ public sealed class InventoryApplicationService(
 
         return tokens.TryReadVersion(lotId, raw.Trim('"'), out var version) ? InventoryVersionPrecondition.Valid(version) : InventoryVersionPrecondition.Invalid;
     }
+
+    private InventoryVersionPrecondition ReadPreparationPrecondition(Guid lotId, string? version) =>
+        string.IsNullOrWhiteSpace(version)
+            ? InventoryVersionPrecondition.Missing
+            : tokens.TryReadVersion(lotId, version.Trim('"'), out var token) ? InventoryVersionPrecondition.Valid(token) : InventoryVersionPrecondition.Invalid;
 
     private static int StatusFor(InventoryApplicationSuccess success) => success switch
     {

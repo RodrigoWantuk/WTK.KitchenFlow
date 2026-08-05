@@ -167,6 +167,10 @@ A destructive down migration requires an explicit incident decision, a verified 
 documented data-loss implications. Never edit migration history manually to make a deployment look
 successful.
 
+### Prepared-component migration checks
+
+The prepared-component migration adds immutable preparation batches, including the original declared yield (measured value/unit or qualitative availability), input/output provenance, and per-output prepared metadata under the `inventory` schema. The declared-yield constraint must be fail-closed (`... IS TRUE`) so SQL NULL semantics cannot accept an incomplete mode. Before deployment, verify the migration applies from the prior inventory schema, its idempotent script applies twice to an empty database, invalid direct declared-yield probes fail with PostgreSQL `23514`, valid measured and qualitative probes succeed, and the preparation append-only triggers are present. Provenance inspection returns at most fifty batches in each direction; its separate truncation flag means an older relationship exists and must not be mistaken for complete history. Do not use a down migration to remove committed preparation provenance; stop affected writes, preserve a backup, and deploy a reviewed forward-repair migration if integrity is uncertain. If this still-unmerged migration must be revised before its first production application, regenerate the idempotent script and rerun empty/upgrade checks; after production application, use a forward repair rather than editing migration history.
+
 ## HTTPS API and session key ring
 
 The backend cookie uses `Secure`, `HttpOnly`, `SameSite=Lax`, and a `__Host-` name. Local OIDC and

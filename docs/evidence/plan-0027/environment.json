@@ -1,0 +1,52 @@
+{
+  "plan": "PLAN-0027",
+  "phase": "final-assessment",
+  "repository": "RodrigoWantuk/WTK.Cocinaris",
+  "implementationPr": 39,
+  "historicalValidationPr": 40,
+  "validationPr": 42,
+  "trackingIssue": 41,
+  "sutSha": "9bff2e130afb4a0f31ea0b84925362f546d1179e",
+  "implementationPackagingHead": "d928752f746030bfd735f84d5b15239562923092",
+  "validationEvidenceHead": "c0c9b5893a6eeb23ff4ea7aec9d9c4201785ee67",
+  "historicalFailedSut": "7e24fa2f86350d8a566de0b9f2f1cdba984080ff",
+  "operatingSystem": "Debian GNU/Linux",
+  "kernel": "6.12.96+deb13-amd64",
+  "hostname": "NOTEBOOK-DEB-RODRIGO",
+  "architecture": "x86_64",
+  "dotnetSdkVersion": "10.0.302",
+  "nodeVersion": "v24.18.0",
+  "yarnVersion": "1.22.22",
+  "dockerVersion": "29.6.2",
+  "postgresImage": "postgres:18.4",
+  "keycloakImage": "quay.io/keycloak/keycloak:26.7.0",
+  "timezone": "America/Sao_Paulo",
+  "locale": "pt_BR.UTF-8",
+  "startedAtUtc": "2026-08-05T15:01:06Z",
+  "finishedAtUtc": "2026-08-05T15:18:38Z",
+  "workingTreeState": {
+    "validationBranch": "unrelated pre-existing untracked frontend build/smoke and plan-0018 artifacts excluded",
+    "sutWorktree": "clean detached worktree at SUT SHA"
+  },
+  "candidateCi": {
+    "backendWorkflowId": 31013020164,
+    "frontendWorkflowId": 31013020163,
+    "plan0005WorkflowId": 31013020245,
+    "status": "Passed on exact SUT SHA (independently verified)"
+  },
+  "packagingHeadCi": {
+    "backendWorkflowId": 31016455273,
+    "frontendWorkflowId": 31016457649,
+    "plan0005WorkflowId": 31016455555,
+    "status": "Passed on packaging head d928752 (documentation-only delta)"
+  },
+  "candidateToPackagingDrift": [
+    "docs/evidence/plan-0023/README.md",
+    "docs/evidence/plan-0023/environment.json",
+    "docs/evidence/plan-0023/handoff.md",
+    "docs/plan-status.md",
+    "docs/plans/PLAN-0023-implement-prepared-components-and-derived-lots.md",
+    "docs/plans/PLAN-0027-independently-retest-prepared-component-remediation.md"
+  ],
+  "assessment": "Pass"
+}

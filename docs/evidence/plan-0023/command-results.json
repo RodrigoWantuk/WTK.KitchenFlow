@@ -1,0 +1,164 @@
+[
+  {
+    "command": "dotnet restore KitchenFlow.slnx --locked-mode && dotnet format KitchenFlow.slnx --verify-no-changes --no-restore && dotnet build KitchenFlow.slnx -c Release --no-restore",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend",
+    "startedAtUtc": "2026-08-04T21:53:00Z",
+    "finishedAtUtc": "2026-08-04T21:54:00Z",
+    "exitCode": 0,
+    "result": "passed",
+    "testedCommit": "c7c6f6e",
+    "artifact": "apps/backend/**/bin/Release"
+  },
+  {
+    "command": "dotnet test UnitTests, ArchitectureTests, PostgreSqlMigrationTests.PreparationStore, TelemetryRedactionTests, and ProtectedSessionReturnsUnauthorizedWithoutAuthentication",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend",
+    "startedAtUtc": "2026-08-04T22:08:00Z",
+    "finishedAtUtc": "2026-08-04T22:12:00Z",
+    "exitCode": 0,
+    "result": "passed",
+    "summary": "50 unit, 14 architecture, 3 preparation PostgreSQL, 29 telemetry-redaction, and 1 authenticated-session tests passed.",
+    "testedCommit": "c7c6f6e with uncommitted integration-fixture serialization",
+    "artifact": "console output"
+  },
+  {
+    "command": "dotnet test tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-build --filter FullyQualifiedName~PreparationCreatesOwnedLotsConsumesParentAndReplaysTheAuthoritativeResponse",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend",
+    "startedAtUtc": "2026-08-04T22:20:00Z",
+    "finishedAtUtc": "2026-08-04T22:20:36Z",
+    "exitCode": 0,
+    "result": "passed",
+    "summary": "One HTTP preparation test passed: authenticated CSRF-protected create, per-parent ETag, idempotent replay, parent remainder, batch and provenance reads.",
+    "testedCommit": "14aa6fd with uncommitted HTTP preparation test",
+    "artifact": "console output"
+  },
+  {
+    "command": "dotnet ef database update historical baseline, dotnet ef database update latest, generate-migration-script, and apply idempotent script twice",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
+    "startedAtUtc": "2026-08-04T21:56:00Z",
+    "finishedAtUtc": "2026-08-04T21:58:00Z",
+    "exitCode": 0,
+    "result": "passed",
+    "summary": "Previous migration upgraded to 20260804013603_AddPreparedComponentTransactions; idempotent script ran twice; expected and actual migration count were both 9.",
+    "testedCommit": "c7c6f6e",
+    "artifact": "artifacts/kitchenflow-migrations.sql"
+  },
+  {
+    "command": "check-dotnet-vulnerabilities, export-openapi, check-openapi, lint-openapi, generate:api-client, check:api-client-drift, typecheck:api-client, and format:check:api-client",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
+    "startedAtUtc": "2026-08-04T21:58:00Z",
+    "finishedAtUtc": "2026-08-04T22:01:00Z",
+    "exitCode": 0,
+    "result": "passed",
+    "testedCommit": "c7c6f6e",
+    "artifact": "packages/contracts/openapi/kitchenflow-v1.json and generated client mirrors"
+  },
+  {
+    "command": "yarn typecheck, lint, format:check, test, guards, production and prototype builds, and production-bundle inspection",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/frontend",
+    "startedAtUtc": "2026-08-04T22:01:00Z",
+    "finishedAtUtc": "2026-08-04T22:05:00Z",
+    "exitCode": 0,
+    "result": "passed",
+    "summary": "Console warnings from existing React dialog and act test behavior did not fail the gate.",
+    "testedCommit": "c7c6f6e",
+    "artifact": "apps/frontend/build-production and apps/frontend/build-prototype (pre-existing untracked output preserved)"
+  },
+  {
+    "command": "dotnet test tests/KitchenFlow.IntegrationTests/KitchenFlow.IntegrationTests.csproj -c Release --no-build",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend",
+    "startedAtUtc": "2026-08-04T21:54:00Z",
+    "finishedAtUtc": "2026-08-04T22:08:00Z",
+    "exitCode": null,
+    "result": "inconclusive",
+    "summary": "The full assembly repeatedly left Testcontainers PostgreSQL instances paused/recycled in the local Docker session, including after serializing test collections. Focused PostgreSQL, telemetry, and Keycloak-backed authentication tests passed; this is not accepted as full-suite evidence.",
+    "testedCommit": "c7c6f6e with uncommitted integration-fixture serialization",
+    "artifact": "console output and Docker process inspection"
+  },
+  {
+    "command": "gitleaks detect --source . --no-git --redact",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
+    "startedAtUtc": "2026-08-04T22:06:00Z",
+    "finishedAtUtc": "2026-08-04T22:06:00Z",
+    "exitCode": null,
+    "result": "not-run",
+    "summary": "The gitleaks CLI is not installed locally; the required secret scan remains a CI gate.",
+    "testedCommit": "c7c6f6e",
+    "artifact": null
+  },
+  {
+    "command": "GitHub Actions exact-head candidate workflows",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
+    "startedAtUtc": "2026-08-04T22:20:36Z",
+    "finishedAtUtc": "2026-08-04T22:30:00Z",
+    "exitCode": 0,
+    "result": "passed",
+    "summary": "Exact candidate passed Backend build-and-test and secret scan (run 30956077382); frontend quality/browser-smoke (runs 30956074507 and 30956077386); and evidence-consistency plus p0/p1 validation (run 30956077424).",
+    "testedCommit": "b72e8efaa6ae6c97998a92967b8e6112f326a14c",
+    "artifact": "https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30956077382; https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30956074507; https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30956077386; https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30956077424"
+  },
+  {
+    "command": "Release build, migrations has-pending-model-changes, focused preparation and same-key adjustment HTTP tests",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend",
+    "startedAtUtc": "2026-08-05T00:05:00Z",
+    "finishedAtUtc": "2026-08-05T00:15:00Z",
+    "exitCode": 0,
+    "result": "passed",
+    "summary": "Release model matches the revised unmerged migration; seven focused PostgreSQL/HTTP tests passed, covering historical declared yield after output consumption, provenance, same-key adjustment replay, and null preparation collections/items.",
+    "testedCommit": "f0cc72d",
+    "artifact": "console output"
+  },
+  {
+    "command": "dotnet format; generate-migration-script; export/check/lint OpenAPI; dependency check; generated-client generation, drift, typecheck, and format; frontend typecheck, lint, and format",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
+    "startedAtUtc": "2026-08-05T00:25:00Z",
+    "finishedAtUtc": "2026-08-05T00:45:00Z",
+    "exitCode": 0,
+    "result": "passed",
+    "summary": "OpenAPI and generated clients are synchronized. The local API was started against synthetic development infrastructure solely for OpenAPI export. Frontend lint emitted the existing Node module-type warning without failing.",
+    "testedCommit": "f0cc72d",
+    "artifact": "artifacts/kitchenflow-migrations.sql; packages/contracts/openapi/kitchenflow-v1.json"
+  },
+  {
+    "command": "ConcurrentAdjustmentWithSameKeyReplaysTheWinningResponse repeated execution",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend",
+    "startedAtUtc": "2026-08-05T00:46:00Z",
+    "finishedAtUtc": "2026-08-05T00:55:00Z",
+    "exitCode": 0,
+    "result": "passed",
+    "summary": "The focused same-key adjustment race test passed 21 consecutive executions without a retry wrapper.",
+    "testedCommit": "f0cc72d",
+    "artifact": "console output"
+  },
+  {
+    "command": "GitHub Actions replacement exact-head candidate workflows",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
+    "startedAtUtc": "2026-08-05T00:46:47Z",
+    "finishedAtUtc": "2026-08-05T01:01:47Z",
+    "exitCode": 0,
+    "result": "passed",
+    "summary": "Backend build-and-test and secret scan passed in run 30964375294; frontend quality/browser-smoke passed in runs 30964372594 and 30964375347; PLAN-0005 p0, p1, and evidence consistency passed in run 30964375297.",
+    "testedCommit": "7e24fa2f86350d8a566de0b9f2f1cdba984080ff",
+    "artifact": "https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30964375294; https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30964372594; https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30964375347; https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30964375297"
+  },
+  {
+    "command": "dotnet format; Release build; focused preparation workflow, declared-yield PostgreSQL matrix, provenance-boundary, and 50 synchronized same-key HTTP iterations; migrations has-pending-model-changes; export/check/lint OpenAPI; generated-client generation/drift/typecheck/format",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
+    "startedAtUtc": "2026-08-05T13:30:00Z",
+    "finishedAtUtc": "2026-08-05T13:57:56Z",
+    "exitCode": 0,
+    "result": "passed",
+    "summary": "Remediation worktree based on 123ad4148a52a84bf43b65d3ce039dc1c6051c7c. Fifty synchronized same-key preparation iterations passed without a retry wrapper; the direct SQL matrix rejected all eight invalid rows with 23514 and accepted six valid modes; 0/1/49/50/51/55 provenance boundaries passed. This is local implementation evidence, not independent validation or exact-head CI.",
+    "testedCommit": "123ad4148a52a84bf43b65d3ce039dc1c6051c7c plus uncommitted remediation",
+    "artifact": "packages/contracts/openapi/kitchenflow-v1.json; packages/api-client/src/generated/schema.ts; apps/frontend/src/generated/api-client"
+  }
+,
+  {
+    "command": "GitHub Actions consolidated implementation and PLAN-0027 validation workflows",
+    "workingDirectory": "GitHub Actions",
+    "exitCode": 0,
+    "result": "passed",
+    "testedCommit": "99d84dab3735c2230985c6011a835e4adce52006",
+    "summary": "Backend 31040038676, Frontend 31040038769, and PLAN-0005 31040038628 completed successfully.",
+    "artifact": "GitHub Actions workflow runs"
+  }
+]

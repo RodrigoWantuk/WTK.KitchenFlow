@@ -1,0 +1,6 @@
+Execução de teste para /home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend/tests/KitchenFlow.IntegrationTests/bin/Release/net10.0/KitchenFlow.IntegrationTests.dll (.NETCoreApp,Version=v10.0)
+1 arquivos de teste no total corresponderam ao padrão especificado.
+AVISO: sobrescrevendo o arquivo de resultados: /home/rodrigo/Repos/GIT/WTK.KitchenFlow/docs/evidence/plan-0027/reports/plan-0027-integration.trx
+Arquivo de resultados: /home/rodrigo/Repos/GIT/WTK.KitchenFlow/docs/evidence/plan-0027/reports/plan-0027-integration.trx
+
+Aprovado!  – Com falha:     0, Aprovado:    14, Ignorado:     0, Total:    14, Duração: 38 s - KitchenFlow.IntegrationTests.dll (net10.0)

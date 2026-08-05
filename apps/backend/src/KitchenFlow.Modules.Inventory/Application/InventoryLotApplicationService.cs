@@ -318,6 +318,18 @@ public sealed class InventoryLotApplicationWorkflow(
         var state = await writeStore.LoadActiveAsync(user.Id, lotId, cancellationToken);
         if (state is null) { return Failure<InventoryLotView>("resource_not_found", "The inventory lot was not found."); }
 
+        // Same-key replay wins over a stale precondition. The first delivery may have committed
+        // between the caller's original ETag read and this load; returning 412 here would turn a
+        // safe retry into a false failure even though the authoritative response is available.
+        if (idempotencyKey is not null)
+        {
+            var prior = await writeStore.FindIdempotencyAsync(user.Id, idempotencyScope!, idempotencyKey.Value, cancellationToken);
+            if (prior is not null)
+            {
+                return Replay(prior, idempotencyHash!);
+            }
+        }
+
         if (!precondition.IsPresent) { return Failure<InventoryLotView>("precondition_required", "If-Match is required."); }
         if (!precondition.IsValid) { return Failure<InventoryLotView>("precondition_failed", "The inventory lot was modified."); }
         if (state.Lot.ConcurrencyToken != precondition.Token) { return Failure<InventoryLotView>("precondition_failed", "The inventory lot was modified."); }

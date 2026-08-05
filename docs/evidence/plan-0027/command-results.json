@@ -1,0 +1,95 @@
+{
+  "plan": "PLAN-0027",
+  "sutSha": "9bff2e130afb4a0f31ea0b84925362f546d1179e",
+  "assessment": "Pass",
+  "commands": [
+    {
+      "command": "candidate identity + workflow SHA verification",
+      "workingDirectory": "repo root",
+      "startedAtUtc": "2026-08-05T15:00:00Z",
+      "finishedAtUtc": "2026-08-05T15:00:47Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "testedSha": "d928752f746030bfd735f84d5b15239562923092",
+      "artifactOrReportPath": "docs/evidence/plan-0027/environment.json",
+      "limitations": "None"
+    },
+    {
+      "command": "dotnet test filter Plan0027",
+      "workingDirectory": "apps/backend",
+      "startedAtUtc": "2026-08-05T15:06:36Z",
+      "finishedAtUtc": "2026-08-05T15:07:28Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "testedSha": "validation branch / product identical to 9bff2e1",
+      "artifactOrReportPath": "docs/evidence/plan-0027/reports/integration-plan0027.txt",
+      "limitations": "14 independent assertions"
+    },
+    {
+      "command": "dotnet restore/format/build/test on SUT worktree",
+      "workingDirectory": "../WTK.Cocinaris-plan-0027-sut/apps/backend",
+      "startedAtUtc": "2026-08-05T15:06:36Z",
+      "finishedAtUtc": "2026-08-05T15:15:57Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "testedSha": "9bff2e130afb4a0f31ea0b84925362f546d1179e",
+      "artifactOrReportPath": "docs/evidence/plan-0027/reports/sut-backend-summary.txt",
+      "limitations": "Independent Plan0027 tests copied into detached worktree for execution only"
+    },
+    {
+      "command": "migration script + has-pending-model-changes + vulns",
+      "workingDirectory": "../WTK.Cocinaris-plan-0027-sut",
+      "startedAtUtc": "2026-08-05T15:09:09Z",
+      "finishedAtUtc": "2026-08-05T15:10:38Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "testedSha": "9bff2e130afb4a0f31ea0b84925362f546d1179e",
+      "artifactOrReportPath": "docs/evidence/plan-0027/reports/sut-migrations-vulns.txt",
+      "limitations": "None"
+    },
+    {
+      "command": "OpenAPI export/check/lint",
+      "workingDirectory": "../WTK.Cocinaris-plan-0027-sut",
+      "startedAtUtc": "2026-08-05T15:09:09Z",
+      "finishedAtUtc": "2026-08-05T15:10:38Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "testedSha": "9bff2e130afb4a0f31ea0b84925362f546d1179e",
+      "artifactOrReportPath": "docs/evidence/plan-0027/reports/sut-openapi.txt",
+      "limitations": "None"
+    },
+    {
+      "command": "idempotent migration apply twice",
+      "workingDirectory": "../WTK.Cocinaris-plan-0027-sut",
+      "startedAtUtc": "2026-08-05T15:16:22Z",
+      "finishedAtUtc": "2026-08-05T15:16:23Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "testedSha": "9bff2e130afb4a0f31ea0b84925362f546d1179e",
+      "artifactOrReportPath": "docs/evidence/plan-0027/reports/sut-idempotent-summary.txt",
+      "limitations": "None"
+    },
+    {
+      "command": "frontend yarn quality/build/audit matrix",
+      "workingDirectory": "../WTK.Cocinaris-plan-0027-sut/apps/frontend",
+      "startedAtUtc": "2026-08-05T15:07:48Z",
+      "finishedAtUtc": "2026-08-05T15:12:19Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "testedSha": "9bff2e130afb4a0f31ea0b84925362f546d1179e",
+      "artifactOrReportPath": "docs/evidence/plan-0027/reports/sut-frontend-summary.txt",
+      "limitations": "None"
+    },
+    {
+      "command": "yarn smoke:browser:ci + validate:firefox-native-zoom",
+      "workingDirectory": "../WTK.Cocinaris-plan-0027-sut/apps/frontend",
+      "startedAtUtc": "2026-08-05T15:16:22Z",
+      "finishedAtUtc": "2026-08-05T15:17:50Z",
+      "exitCode": 0,
+      "result": "Passed",
+      "testedSha": "9bff2e130afb4a0f31ea0b84925362f546d1179e",
+      "artifactOrReportPath": "docs/evidence/plan-0027/reports/sut-browser-summary.txt",
+      "limitations": "Copied CRA build/ to build-prototype for Firefox validator path"
+    }
+  ]
+}
