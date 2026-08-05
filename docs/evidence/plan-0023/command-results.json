@@ -117,5 +117,27 @@
     "summary": "OpenAPI and generated clients are synchronized. The local API was started against synthetic development infrastructure solely for OpenAPI export. Frontend lint emitted the existing Node module-type warning without failing.",
     "testedCommit": "f0cc72d",
     "artifact": "artifacts/kitchenflow-migrations.sql; packages/contracts/openapi/kitchenflow-v1.json"
+  },
+  {
+    "command": "ConcurrentAdjustmentWithSameKeyReplaysTheWinningResponse repeated execution",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend",
+    "startedAtUtc": "2026-08-05T00:46:00Z",
+    "finishedAtUtc": "2026-08-05T00:55:00Z",
+    "exitCode": 0,
+    "result": "passed",
+    "summary": "The focused same-key adjustment race test passed 21 consecutive executions without a retry wrapper.",
+    "testedCommit": "f0cc72d",
+    "artifact": "console output"
+  },
+  {
+    "command": "GitHub Actions replacement exact-head candidate workflows",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
+    "startedAtUtc": "2026-08-05T00:46:47Z",
+    "finishedAtUtc": "2026-08-05T01:01:47Z",
+    "exitCode": 0,
+    "result": "passed",
+    "summary": "Backend build-and-test and secret scan passed in run 30964375294; frontend quality/browser-smoke passed in runs 30964372594 and 30964375347; PLAN-0005 p0, p1, and evidence consistency passed in run 30964375297.",
+    "testedCommit": "7e24fa2f86350d8a566de0b9f2f1cdba984080ff",
+    "artifact": "https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30964375294; https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30964372594; https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30964375347; https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30964375297"
   }
 ]

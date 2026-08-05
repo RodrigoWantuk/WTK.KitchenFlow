@@ -1,11 +1,11 @@
 # PLAN-0023: Implement Prepared Components and Derived Inventory Lots
 
-- **Status:** In Progress
+- **Status:** Validating
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Codex backend/domain implementation agent
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-05T00:45:34Z
+- **Last updated:** 2026-08-05T01:01:47Z
 - **Branch:** `agent/plan-0023-prepared-component-lots`
 - **Pull request:** Draft [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39)
 - **Dependencies:** PLAN-0003 and PLAN-0016 inventory foundations merged
@@ -115,14 +115,25 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - [ ] Independent test plan provides a final assessment.
 - [x] Sequential planning is not implemented prematurely.
 
+## Corrective acceptance criteria
+
+- [x] Declared yield is persisted as immutable measured or qualitative batch history.
+- [x] Batch and provenance reads do not reconstruct declared yield from output-lot state.
+- [x] Idempotent replay and subsequent reads retain the same historical declared yield after output consumption.
+- [x] Concurrent same-key adjustment delivery replays the winner; different keys retain stale-precondition behavior.
+- [x] Null, missing, empty, and invalid preparation collections return validation failures rather than server errors.
+- [x] Provenance is bounded and set-loaded without unbounded N+1 batch reads.
+- [x] Replacement candidate exact-head Backend, Frontend, PLAN-0005, evidence-consistency, quality, and secret-scan gates passed.
+- [ ] Independent PLAN-0026 validation provides its final assessment.
+
 ## Execution state
 
 - **Claimed at:** 2026-08-04T01:24:28Z
 - **Main baseline:** `f166ce21020f6704d3fcd99b4b6d195b33638155`
-- **Current checkpoint:** The prior functional candidate `b72e8efaa6ae6c97998a92967b8e6112f326a14c` is superseded. PR head `c861cb6cfc13c37874e91d825c5dc8e6f2238db7` exposed a same-key adjustment race (412 in PLAN-0005) and an unpersisted declared-yield history defect; corrective implementation is in progress.
+- **Current checkpoint:** Replacement immutable candidate `7e24fa2f86350d8a566de0b9f2f1cdba984080ff` passed exact-head Backend, frontend/browser-smoke/quality, PLAN-0005 p0/p1/evidence-consistency, and secret-scan workflows. The previous `b72e8efaa6ae6c97998a92967b8e6112f326a14c` and `c861cb6cfc13c37874e91d825c5dc8e6f2238db7` candidates are superseded.
 - **Run target:** Deliver the complete owner-scoped preparation transaction vertical slice: domain/application contract, atomic PostgreSQL persistence and migration, HTTP/OpenAPI/client contract, tests, operations documentation, implementation evidence, and an independently testable candidate.
-- **Blockers:** A new exact-head candidate must pass Backend, Frontend, PLAN-0005, evidence, and secret-scan gates after the declared-yield, idempotency, boundary-validation, and bounded-provenance corrections. Existing untracked frontend build and smoke artifacts are preserved and excluded from this plan.
-- **Exact next action:** Persist declared yield as batch history, fix same-key adjustment conflict handling, harden null-item mapping and provenance retrieval, then execute and publish the complete replacement candidate.
+- **Blockers:** Independent PLAN-0026 validation is outstanding. Existing untracked frontend build and smoke artifacts are preserved and excluded from this plan.
+- **Exact next action:** An independent testing agent must claim PLAN-0026 on its own branch, validate the pinned candidate without modifying production behavior, and publish its assessment in a separate testing PR.
 
 ## Progress log
 
@@ -216,3 +227,11 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - **Evidence and validation:** The focused correction suite passed 7/7. Broader local integration commands were started but their complete summaries remain inconclusive in the known local Testcontainers environment; this is not counted as a pass. Exact-head workflows for corrective head `f0cc72d` have started, with secret scan already passing.
 - **Result:** PLAN-0023 remains In Progress and PLAN-0026 remains Draft/unpinned until a replacement exact-head candidate is green.
 - **Next action:** Inspect all `f0cc72d` workflow results, remediate any failure, then pin only the final green exact head.
+
+### 2026-08-05T01:01:47Z — Codex backend/domain implementation agent
+
+- **Checkpoint:** Published replacement candidate `7e24fa2f86350d8a566de0b9f2f1cdba984080ff` after every exact-head required workflow passed.
+- **Root cause and correction:** The prior adjustment race evaluated `If-Match` before a replay lookup, so a second same-key delivery that loaded the winner's new token returned 412. It now performs owner-scoped idempotency lookup before precondition evaluation. Declared yield is now persisted in `inventory.preparation_batches`; no read derives it from mutable output lots.
+- **Evidence and validation:** Backend/secret scan run `30964375294` passed; frontend quality/browser-smoke runs `30964372594` and `30964375347` passed; PLAN-0005 p0, p1, and evidence consistency run `30964375297` passed. The same-key HTTP test passed 21 consecutive local executions without a retry wrapper.
+- **Result:** PLAN-0023 is `Validating`; PLAN-0026 is Ready and pinned. No independent validation has been executed.
+- **Next action:** Independent agent claims PLAN-0026 in an isolated worktree and performs its adversarial validation.

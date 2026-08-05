@@ -1,16 +1,16 @@
 # PLAN-0026: Independently Validate Prepared Components and Derived Lots
 
-- **Status:** Draft
+- **Status:** Ready
 - **Type:** Testing
 - **Priority:** High
 - **Owner:** Unassigned independent testing agent
 - **Created:** 2026-08-04
-- **Last updated:** 2026-08-04T23:00:00Z
+- **Last updated:** 2026-08-05T01:01:47Z
 - **Branch:** `agent/plan-0026-validate-prepared-components`
 - **Pull request:** Not opened
-- **System under test:** Unpinned; prior `b72e8efaa6ae6c97998a92967b8e6112f326a14c` is superseded by corrective PLAN-0023 work
+- **System under test:** `7e24fa2f86350d8a566de0b9f2f1cdba984080ff` (PLAN-0023 Draft [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39))
 - **Related implementation plan:** PLAN-0023
-- **Dependencies:** Replacement PLAN-0023 immutable candidate and its green exact-head CI
+- **Dependencies:** Replacement PLAN-0023 immutable candidate and exact-head CI (satisfied); independent test-agent claim remains required
 
 ## Objective
 
@@ -37,10 +37,10 @@ Independently attempt to disprove the readiness of PLAN-0023 prepared-component 
 
 ## Execution state
 
-- **Current run delivery target:** Independently validate a replacement pinned candidate without modifying its production behavior.
-- **Current checkpoint:** No candidate is pinned. The preceding candidate was superseded after PLAN-0005 found a same-key adjustment race and corrective work began.
-- **Exact next action:** Wait for PLAN-0023 to publish a green exact-head candidate, then an independent testing agent must claim this plan on `agent/plan-0026-validate-prepared-components` and test from a detached worktree.
-- **Blockers:** Replacement candidate and exact-head CI are pending; implementation agent must not execute this plan.
+- **Current run delivery target:** Independently validate the replacement pinned candidate without modifying its production behavior.
+- **Current checkpoint:** Exact candidate `7e24fa2f86350d8a566de0b9f2f1cdba984080ff` is pinned after green exact-head CI; no independent testing has been performed.
+- **Exact next action:** An independent testing agent must claim this plan on `agent/plan-0026-validate-prepared-components`, create a separate testing PR, and test from a detached worktree at the pinned SUT commit.
+- **Blockers:** Awaiting an independent testing agent; implementation agent must not execute this plan.
 - **Working tree state:** Not applicable until claimed.
 
 ## Progress log
@@ -64,3 +64,11 @@ Independently attempt to disprove the readiness of PLAN-0023 prepared-component 
 - **Evidence and validation:** PLAN-0005 run `30956720196` exposed a concurrent same-key adjustment 412; declared-yield persistence requires correction before independent validation.
 - **Result:** No independent validation was executed.
 - **Next action:** Await a new exact green PLAN-0023 candidate.
+
+### 2026-08-05T01:01:47Z — PLAN-0023 implementation agent
+
+- **Checkpoint:** Marked Ready and pinned replacement SUT `7e24fa2f86350d8a566de0b9f2f1cdba984080ff` after exact-head CI passed.
+- **Required adversarial focus:** Validate immutable declared yield after output mutation, same-key adjustment replay ordering/races, different-key stale behavior, null preparation collection boundary validation, and bounded provenance in addition to the original atomicity, owner-isolation, migration, and privacy cases.
+- **Evidence and validation:** Backend/secret scan run `30964375294`, frontend runs `30964372594` and `30964375347`, and PLAN-0005 p0/p1/evidence run `30964375297` passed for the candidate.
+- **Result:** No independent validation was executed or inferred from implementation-agent evidence.
+- **Next action:** Independent testing agent claims this plan and publishes a separate Pass, Conditional Pass, or Fail assessment.
