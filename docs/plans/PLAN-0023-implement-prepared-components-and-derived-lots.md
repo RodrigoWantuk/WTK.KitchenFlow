@@ -1,11 +1,11 @@
 # PLAN-0023: Implement Prepared Components and Derived Inventory Lots
 
-- **Status:** Validating
+- **Status:** In Progress
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Codex backend/domain implementation agent
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-04T22:30:00Z
+- **Last updated:** 2026-08-04T23:00:00Z
 - **Branch:** `agent/plan-0023-prepared-component-lots`
 - **Pull request:** Draft [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39)
 - **Dependencies:** PLAN-0003 and PLAN-0016 inventory foundations merged
@@ -119,10 +119,10 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 
 - **Claimed at:** 2026-08-04T01:24:28Z
 - **Main baseline:** `f166ce21020f6704d3fcd99b4b6d195b33638155`
-- **Current checkpoint:** The immutable product candidate `b72e8efaa6ae6c97998a92967b8e6112f326a14c` has passed exact-head Backend, frontend, validation, evidence-consistency, browser-smoke, quality, and secret-scan workflows. The owner-scoped preparation vertical slice is ready for independent validation; PLAN-0026 is pinned and Ready.
+- **Current checkpoint:** The prior functional candidate `b72e8efaa6ae6c97998a92967b8e6112f326a14c` is superseded. PR head `c861cb6cfc13c37874e91d825c5dc8e6f2238db7` exposed a same-key adjustment race (412 in PLAN-0005) and an unpersisted declared-yield history defect; corrective implementation is in progress.
 - **Run target:** Deliver the complete owner-scoped preparation transaction vertical slice: domain/application contract, atomic PostgreSQL persistence and migration, HTTP/OpenAPI/client contract, tests, operations documentation, implementation evidence, and an independently testable candidate.
-- **Blockers:** Independent PLAN-0026 validation is outstanding. The historical local Docker/Testcontainers limitation remains recorded in evidence but does not supersede the green exact-head CI result. Existing untracked frontend build and smoke artifacts are preserved and excluded from this plan.
-- **Exact next action:** An independent testing agent must claim PLAN-0026 on its own branch, validate the pinned candidate without changing production behavior, and publish its assessment in a separate testing PR.
+- **Blockers:** A new exact-head candidate must pass Backend, Frontend, PLAN-0005, evidence, and secret-scan gates after the declared-yield, idempotency, boundary-validation, and bounded-provenance corrections. Existing untracked frontend build and smoke artifacts are preserved and excluded from this plan.
+- **Exact next action:** Persist declared yield as batch history, fix same-key adjustment conflict handling, harden null-item mapping and provenance retrieval, then execute and publish the complete replacement candidate.
 
 ## Progress log
 
@@ -196,3 +196,9 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - **Defects or coverage gaps:** No independent test execution or assessment has been performed. The previous local Docker/Testcontainers full-suite limitation remains historical evidence only; it is resolved for this candidate by the exact-head Backend workflow.
 - **Result:** Ready for independent validation; not completed and not merge-authorized.
 - **Next action:** An independent testing agent claims and executes PLAN-0026 from an isolated test branch and detached candidate worktree.
+
+### 2026-08-04T23:00:00Z — Codex backend/domain implementation agent
+
+- **Checkpoint:** Reopened corrective implementation after PLAN-0005 run `30956720196` found `ConcurrentAdjustmentWithSameKeyReplaysTheWinningResponse` returning 412 for one same-key delivery. Review also found that batch reads reconstructed declared yield from mutable output lots.
+- **Result:** The prior `b72e8efaa6ae6c97998a92967b8e6112f326a14c` candidate and `c861cb6cfc13c37874e91d825c5dc8e6f2238db7` head are not validation candidates. PLAN-0023 is `In Progress`; PLAN-0026 is returned to Draft and unpinned.
+- **Next action:** Implement, test, and publish the replacement candidate; do not execute independent PLAN-0026 work.
