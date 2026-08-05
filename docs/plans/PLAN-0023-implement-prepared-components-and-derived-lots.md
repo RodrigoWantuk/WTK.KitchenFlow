@@ -1,11 +1,11 @@
 # PLAN-0023: Implement Prepared Components and Derived Inventory Lots
 
-- **Status:** In Progress
+- **Status:** Validating
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Codex backend/domain implementation agent
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-05T13:57:56Z
+- **Last updated:** 2026-08-05T14:15:00Z
 - **Branch:** `agent/plan-0023-prepared-component-lots`
 - **Pull request:** Draft [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39)
 - **Dependencies:** PLAN-0003 and PLAN-0016 inventory foundations merged
@@ -124,16 +124,19 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - [x] Null, missing, empty, and invalid preparation collections return validation failures rather than server errors.
 - [x] Provenance is bounded and set-loaded without unbounded N+1 batch reads.
 - [x] Replacement candidate exact-head Backend, Frontend, PLAN-0005, evidence-consistency, quality, and secret-scan gates passed.
-- [ ] Independent PLAN-0026 validation provides its final assessment.
+- [x] PLAN-0026 produced its final historical Fail assessment.
+- [x] F-0026-01, F-0026-02, and F-0026-03 were remediated.
+- [x] Replacement candidate passed exact-head implementation gates.
+- [ ] PLAN-0027 provides the final independent remediation assessment.
 
 ## Execution state
 
 - **Claimed at:** 2026-08-04T01:24:28Z
 - **Main baseline:** `f166ce21020f6704d3fcd99b4b6d195b33638155`
-- **Current checkpoint:** PLAN-0026 independently assessed immutable candidate `7e24fa2f86350d8a566de0b9f2f1cdba984080ff` as **Fail** in Draft PR #40. That candidate, the prior `b72e8efaa6ae6c97998a92967b8e6112f326a14c`, and `c861cb6cfc13c37874e91d825c5dc8e6f2238db7` are superseded; PR #39 remains Draft during remediation.
+- **Current checkpoint:** Replacement immutable candidate `9bff2e130afb4a0f31ea0b84925362f546d1179e` passed exact-head Backend, Frontend, and PLAN-0005 gates after remediation of F-0026-01, F-0026-02, and F-0026-03.
 - **Run target:** Deliver the complete owner-scoped preparation transaction vertical slice: domain/application contract, atomic PostgreSQL persistence and migration, HTTP/OpenAPI/client contract, tests, operations documentation, implementation evidence, and an independently testable candidate.
-- **Blockers:** Replacement exact-head CI and a subsequent independent retest are required. Existing untracked frontend build and smoke artifacts are preserved and excluded from this plan.
-- **Exact next action:** Complete F-0026-01/02/03 remediation, publish a new exact green candidate, then pin a separate PLAN-0027 independent retest without reopening PLAN-0026.
+- **Blockers:** Independent PLAN-0027 retest remains required. Existing untracked frontend build and smoke artifacts are preserved and excluded from this plan.
+- **Exact next action:** An independent testing agent must claim PLAN-0027, test the pinned candidate from an isolated worktree, and publish Pass, Conditional Pass, or Fail.
 
 ## Progress log
 
@@ -253,3 +256,10 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - **Defects or coverage gaps:** Existing local complete-integration Docker/Testcontainers instability remains a documented historical limitation. PLAN-0026 evidence was not copied or altered; PLAN-0027 has not been executed.
 - **Result:** Corrective implementation checkpoint is ready for full gate execution; PLAN-0023 remains In Progress and no candidate is pinned.
 - **Next action:** Commit and push this checkpoint, run all applicable local gates, then wait for exact-head CI before moving PLAN-0023 or PLAN-0027 state.
+
+### 2026-08-05T14:15:00Z — Codex backend/domain implementation agent
+
+- **Publication:** Pinned functional candidate `9bff2e130afb4a0f31ea0b84925362f546d1179e`; exact-head Backend `31013020164`, Frontend `31013020163`, and PLAN-0005 `31013020245` passed.
+- **Evidence:** Local 50 synchronized same-key iterations, declared-yield direct SQL matrix, provenance 0/1/49/50/51/55 boundary matrix, migration script, OpenAPI, and generated-client gates are recorded. Issue #41 remains open.
+- **State:** PLAN-0026/PR #40 remains immutable historical Fail; PLAN-0027 is prepared and pinned but unexecuted. This publication commit changes documentation/evidence only.
+- **Next action:** Independent PLAN-0027 validation only; no implementation-agent assessment, approval, auto-merge, or merge.

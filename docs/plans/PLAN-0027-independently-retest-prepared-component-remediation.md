@@ -1,6 +1,6 @@
 # PLAN-0027: Independently Retest Prepared-Component Remediation
 
-- **Status:** Draft
+- **Status:** Ready
 - **Type:** Testing
 - **Priority:** High
 - **Owner:** Unassigned independent testing agent
@@ -9,7 +9,7 @@
 - **Implementation plan:** PLAN-0023
 - **Implementation pull request:** Draft [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39)
 - **Historical validation:** PLAN-0026 / Draft PR #40 — Fail at `7e24fa2f86350d8a566de0b9f2f1cdba984080ff`
-- **System under test:** Unpinned until a replacement exact green PLAN-0023 candidate exists
+- **System under test:** `9bff2e130afb4a0f31ea0b84925362f546d1179e`
 
 ## Objective
 
@@ -25,6 +25,6 @@ Independently retest the PLAN-0023 replacement candidate without modifying produ
 
 ## Execution state
 
-- **Current checkpoint:** Placeholder only; no independent work has been performed and no candidate is pinned.
-- **Exact next action:** Wait for PLAN-0023 to publish a replacement exact-head green candidate, then move to Ready, pin that SHA, and have a different testing agent claim this plan in a detached worktree.
+- **Current checkpoint:** Replacement candidate is pinned after exact-head green CI: Backend `31013020164`, Frontend `31013020163`, and PLAN-0005 `31013020245` passed. No independent PLAN-0027 execution has occurred.
+- **Exact next action:** A testing agent independent from the implementation must claim PLAN-0027, create a separate validation branch and PR, and execute the remediation and non-regression matrix against the pinned SUT.
 - **Constraint:** The implementation agent must not claim, execute, assess, approve, or merge this plan.
