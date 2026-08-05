@@ -3,8 +3,9 @@
   "baseline": "f166ce21020f6704d3fcd99b4b6d195b33638155",
   "branch": "agent/plan-0023-prepared-component-lots",
   "implementationPr": 39,
-  "timestampUtc": "2026-08-05T00:45:34Z",
+  "timestampUtc": "2026-08-05T13:57:56Z",
   "hostname": "NOTEBOOK-DEB-RODRIGO",
   "services": ["PostgreSQL 18", "Keycloak 26"],
+  "historicalIndependentValidation": "PLAN-0026 completed Fail at 7e24fa2f86350d8a566de0b9f2f1cdba984080ff; immutable evidence remains in Draft PR #40.",
   "dataPolicy": "Synthetic development data only; no credentials, tokens, cookies, request bodies, notes, quantities, or private inventory text are recorded."
 }

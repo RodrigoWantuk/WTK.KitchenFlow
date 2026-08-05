@@ -347,7 +347,7 @@ namespace KitchenFlow.Infrastructure.Persistence.Migrations
 
                     b.ToTable("preparation_batches", "inventory", t =>
                         {
-                            t.HasCheckConstraint("ck_preparation_batches_declared_yield", "(\"DeclaredYieldMeasuredValue\" IS NOT NULL AND \"DeclaredYieldMeasuredValue\" > 0 AND \"DeclaredYieldMeasuredUnit\" IN ('Gram', 'Milliliter', 'Unit') AND \"DeclaredYieldAvailabilityState\" IS NULL) OR (\"DeclaredYieldMeasuredValue\" IS NULL AND \"DeclaredYieldMeasuredUnit\" IS NULL AND \"DeclaredYieldAvailabilityState\" IN ('Available', 'Low', 'Unavailable'))");
+                            t.HasCheckConstraint("ck_preparation_batches_declared_yield", "((\"DeclaredYieldMeasuredValue\" IS NOT NULL AND \"DeclaredYieldMeasuredValue\" > 0 AND \"DeclaredYieldMeasuredUnit\" IN ('Gram', 'Milliliter', 'Unit') AND \"DeclaredYieldAvailabilityState\" IS NULL) OR (\"DeclaredYieldMeasuredValue\" IS NULL AND \"DeclaredYieldMeasuredUnit\" IS NULL AND \"DeclaredYieldAvailabilityState\" IN ('Available', 'Low', 'Unavailable'))) IS TRUE");
 
                             t.HasCheckConstraint("ck_preparation_batches_prepared_at", "\"PreparedAt\" <= \"CreatedAt\"");
 

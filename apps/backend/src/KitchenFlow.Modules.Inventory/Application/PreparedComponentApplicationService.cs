@@ -27,8 +27,12 @@ public sealed record PreparationOutputView(InventoryLotView Lot, PreparedLotMeta
 /// <summary>Returns the owner-visible representation persisted for an idempotent preparation transaction.</summary>
 public sealed record PreparationBatchView(Guid BatchId, string SourceType, Guid OutputProductId, string OutputProductName, InventoryQuantity DeclaredYield, DateTimeOffset PreparedAt, IReadOnlyList<PreparationInputView> Inputs, IReadOnlyList<PreparationOutputView> Outputs, DateTimeOffset CreatedAt);
 
-/// <summary>Returns the preparation relationship for one owned parent or output lot.</summary>
-public sealed record InventoryLotProvenanceView(Guid LotId, IReadOnlyList<PreparationBatchView> ConsumedBy, IReadOnlyList<PreparationBatchView> ProducedBy);
+/// <summary>
+/// Returns the preparation relationship for one owned parent or output lot. Each direction is
+/// bounded to fifty batches; the corresponding truncation flag tells a client that older links
+/// exist but are intentionally outside this bounded v1 projection.
+/// </summary>
+public sealed record InventoryLotProvenanceView(Guid LotId, IReadOnlyList<PreparationBatchView> ConsumedBy, bool ConsumedByTruncated, IReadOnlyList<PreparationBatchView> ProducedBy, bool ProducedByTruncated);
 
 /// <summary>Persists and reads preparation transactions without exposing database or HTTP concerns to the application workflow.</summary>
 public interface IInventoryPreparationStore
@@ -149,6 +153,15 @@ public sealed class PreparedComponentApplicationWorkflow(ICurrentUserAccessor cu
             return Failure("resource_not_found", "The inventory resource was not found.");
         }
 
+        // The owner-scoped parent lookup intentionally precedes this second replay lookup so a
+        // foreign parent remains indistinguishable from an absent one. Once ownership is known,
+        // a winner that committed between the first lookup and this read is authoritative.
+        existing = await store.FindIdempotencyAsync(user.Id, command.IdempotencyKey.Value, cancellationToken);
+        if (existing is not null)
+        {
+            return Replay(existing, hash);
+        }
+
         Product outputProduct;
         Product? newOutputProduct = null;
         if (command.OutputProductId is { } outputProductId)
@@ -204,7 +217,13 @@ public sealed class PreparedComponentApplicationWorkflow(ICurrentUserAccessor cu
 
             if (!input.Precondition.IsValid || inputById[input.LotId].Lot.ConcurrencyToken != input.Precondition.Token)
             {
-                return Failure("precondition_failed", "An inventory input was modified.", "inputs", "An inventory input was modified.");
+                // A concurrent same-key winner updates the parent and persists the replay record
+                // atomically. Re-read before reporting a stale input so duplicate delivery gets
+                // the winner's 201 representation, while a different key still receives 412.
+                var replay = await store.FindIdempotencyAsync(user.Id, command.IdempotencyKey.Value, cancellationToken);
+                return replay is not null
+                    ? Replay(replay, hash)
+                    : Failure("precondition_failed", "An inventory input was modified.", "inputs", "An inventory input was modified.");
             }
 
             if (!TryMeasuredConsumption(input.ConsumedValue, input.Unit, out var consumed))

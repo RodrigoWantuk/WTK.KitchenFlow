@@ -1041,6 +1041,77 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
         Assert.Equal(60m, batch.GetProperty("declaredYield").GetProperty("measuredValue").GetDecimal());
     }
 
+    [Fact]
+    public async Task ConcurrentSameKeyPreparationReplaysTheWinnerForFiftySynchronizedIterations()
+    {
+        await using var factory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+        await factory.EnsureDatabaseAsync();
+        using var scope = factory.Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var batchCountBefore = await database.PreparationBatches.CountAsync();
+        var inputTransactionCountBefore = await database.Transactions.CountAsync(item => item.Type == "PreparationInputConsumed");
+
+        for (var group = 0; group < 5; group++)
+        {
+            // The real rate limiter remains enabled. Isolated test hosts keep the 50 synchronized
+            // duplicate-delivery iterations below the production fixed-window mutation bound.
+            await using var iterationFactory = new KitchenFlowFactory(_postgres.GetConnectionString(), authenticate: true);
+            await iterationFactory.EnsureDatabaseAsync();
+            for (var offset = 0; offset < 10; offset++)
+            {
+                var iteration = group * 10 + offset;
+                using var client = iterationFactory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+                var csrf = await GetCsrfAsync(client);
+                using var parentCreate = await CreateAsync(client, csrf, Guid.NewGuid().ToString(), $"Concurrent preparation parent {iteration}", 10m);
+                Assert.Equal(System.Net.HttpStatusCode.Created, parentCreate.StatusCode);
+                var parent = await parentCreate.Content.ReadFromJsonAsync<JsonElement>();
+                var parentLotId = parent.GetProperty("lotId").GetGuid();
+                var parentVersion = parentCreate.Headers.ETag!.Tag;
+                var key = Guid.NewGuid().ToString();
+                var body = new
+                {
+                    outputProduct = new { productId = (Guid?)null, productName = $"Concurrent prepared output {iteration}" },
+                    declaredYield = new { measuredValue = 3m, unit = "Gram", availabilityState = (string?)null },
+                    inputs = new[] { new { lotId = parentLotId, quantity = new { measuredValue = 3m, unit = "Gram", availabilityState = (string?)null }, version = parentVersion } },
+                    outputs = new[] { new { quantity = new { measuredValue = 3m, unit = "Gram", availabilityState = (string?)null }, storageLocation = "Refrigerator", customLocation = (string?)null, packageState = "Opened", shelfLifeEvidence = new { date = (DateOnly?)null, source = "Unknown", confidence = "Unknown", conditions = (string?)null } } },
+                    preparedAt = DateTimeOffset.UtcNow.AddMinutes(-1)
+                };
+                var barrier = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                var first = Task.Run(async () =>
+                {
+                    await barrier.Task;
+                    return await SendPreparationAsync(client, csrf, key, body);
+                });
+                var second = Task.Run(async () =>
+                {
+                    await barrier.Task;
+                    return await SendPreparationAsync(client, csrf, key, body);
+                });
+                barrier.SetResult();
+                var responses = await Task.WhenAll(first, second);
+                try
+                {
+                    Assert.All(responses, response => Assert.Equal(System.Net.HttpStatusCode.Created, response.StatusCode));
+                    var bodies = await Task.WhenAll(responses.Select(response => response.Content.ReadFromJsonAsync<JsonElement>()));
+                    Assert.Single(bodies.Select(item => item.GetProperty("batchId").GetGuid()).Distinct());
+                }
+                finally
+                {
+                    foreach (var response in responses)
+                    {
+                        response.Dispose();
+                    }
+                }
+
+                var parentAfter = await client.GetFromJsonAsync<JsonElement>($"/api/v1/inventory/lots/{parentLotId}");
+                Assert.Equal(7m, parentAfter.GetProperty("quantity").GetProperty("measuredValue").GetDecimal());
+            }
+        }
+
+        Assert.Equal(batchCountBefore + 50, await database.PreparationBatches.CountAsync());
+        Assert.Equal(inputTransactionCountBefore + 50, await database.Transactions.CountAsync(item => item.Type == "PreparationInputConsumed"));
+    }
+
     [Theory]
     [InlineData("{\"outputProduct\":{\"productName\":\"Prepared\"},\"declaredYield\":{\"measuredValue\":1,\"unit\":\"Gram\"},\"inputs\":[null],\"outputs\":[]}", "inputs")]
     [InlineData("{\"outputProduct\":{\"productName\":\"Prepared\"},\"declaredYield\":{\"measuredValue\":1,\"unit\":\"Gram\"},\"inputs\":[],\"outputs\":[null]}", "outputs")]
@@ -1075,6 +1146,14 @@ public sealed class ApiAuthenticationTests : IAsyncLifetime
     private static async Task<HttpResponseMessage> CreateAsync(HttpClient client, string csrf, string key, string productName = "Test tomato", decimal measuredValue = 100m)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/inventory/lots") { Content = JsonContent.Create(CreateLot(productName, measuredValue)) };
+        request.Headers.Add("Idempotency-Key", key);
+        request.Headers.Add("X-CSRF-TOKEN", csrf);
+        return await client.SendAsync(request);
+    }
+
+    private static async Task<HttpResponseMessage> SendPreparationAsync(HttpClient client, string csrf, string key, object body)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/inventory/preparations") { Content = JsonContent.Create(body) };
         request.Headers.Add("Idempotency-Key", key);
         request.Headers.Add("X-CSRF-TOKEN", csrf);
         return await client.SendAsync(request);

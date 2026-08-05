@@ -184,12 +184,12 @@ public sealed class PostgreSqlInventoryPreparationStore(ApplicationDbContext dat
         }
 
         const int maximumRelatedBatches = 50;
-        var consumedIds = await RelatedBatchIdsAsync(database.PreparationInputs.AsNoTracking().Where(item => item.OwnerUserId == ownerUserId && item.InputLotId == lotId).Select(item => item.BatchId), ownerUserId, maximumRelatedBatches, cancellationToken);
-        var producedIds = await RelatedBatchIdsAsync(database.PreparationOutputs.AsNoTracking().Where(item => item.OwnerUserId == ownerUserId && item.OutputLotId == lotId).Select(item => item.BatchId), ownerUserId, maximumRelatedBatches, cancellationToken);
-        var views = await GetManyAsync(ownerUserId, consumedIds.Concat(producedIds).Distinct().ToList(), cancellationToken);
-        var consumedBy = consumedIds.Select(id => views[id]).ToList();
-        var producedBy = producedIds.Select(id => views[id]).ToList();
-        return new InventoryLotProvenanceView(lotId, consumedBy, producedBy);
+        var consumed = await RelatedBatchIdsAsync(database.PreparationInputs.AsNoTracking().Where(item => item.OwnerUserId == ownerUserId && item.InputLotId == lotId).Select(item => item.BatchId), ownerUserId, maximumRelatedBatches, cancellationToken);
+        var produced = await RelatedBatchIdsAsync(database.PreparationOutputs.AsNoTracking().Where(item => item.OwnerUserId == ownerUserId && item.OutputLotId == lotId).Select(item => item.BatchId), ownerUserId, maximumRelatedBatches, cancellationToken);
+        var views = await GetManyAsync(ownerUserId, consumed.BatchIds.Concat(produced.BatchIds).Distinct().ToList(), cancellationToken);
+        var consumedBy = consumed.BatchIds.Select(id => views[id]).ToList();
+        var producedBy = produced.BatchIds.Select(id => views[id]).ToList();
+        return new InventoryLotProvenanceView(lotId, consumedBy, consumed.IsTruncated, producedBy, produced.IsTruncated);
     }
 
     private static PreparationOutputView ToOutputView(LotRecord lot, string productName, PreparedLotRecord prepared) =>
@@ -227,11 +227,21 @@ public sealed class PostgreSqlInventoryPreparationStore(ApplicationDbContext dat
                 item.Batch.CreatedAt));
     }
 
-    private async Task<IReadOnlyList<Guid>> RelatedBatchIdsAsync(IQueryable<Guid> ids, Guid ownerUserId, int maximumRelatedBatches, CancellationToken cancellationToken) =>
-        await (from id in ids.Distinct()
-               join batch in database.PreparationBatches.AsNoTracking() on new { Id = id, OwnerUserId = ownerUserId } equals new { batch.Id, batch.OwnerUserId }
-               orderby batch.PreparedAt descending, batch.Id descending
-               select batch.Id).Take(maximumRelatedBatches).ToListAsync(cancellationToken);
+    /// <summary>
+    /// Reads one more identifier than the public bound so provenance can distinguish a complete
+    /// result from a deliberately truncated projection without issuing one query per batch.
+    /// </summary>
+    private async Task<RelatedBatchIds> RelatedBatchIdsAsync(IQueryable<Guid> ids, Guid ownerUserId, int maximumRelatedBatches, CancellationToken cancellationToken)
+    {
+        var batchIds = await (from id in ids.Distinct()
+                              join batch in database.PreparationBatches.AsNoTracking() on new { Id = id, OwnerUserId = ownerUserId } equals new { batch.Id, batch.OwnerUserId }
+                              orderby batch.PreparedAt descending, batch.Id descending
+                              select batch.Id).Take(maximumRelatedBatches + 1).ToListAsync(cancellationToken);
+        return new RelatedBatchIds(batchIds.Take(maximumRelatedBatches).ToList(), batchIds.Count > maximumRelatedBatches);
+    }
+
+    /// <summary>Contains a direction's stable bounded batch identifiers and completeness signal.</summary>
+    private sealed record RelatedBatchIds(IReadOnlyList<Guid> BatchIds, bool IsTruncated);
 
     private static Product ToDomain(ProductRecord item)
     {

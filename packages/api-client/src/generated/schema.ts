@@ -418,12 +418,15 @@ export interface components {
             resultingQuantity: null | components["schemas"]["QuantityResponse"];
             type: null | string;
         };
-        /** @description Returns preparation batches that consumed or produced one owned lot. */
+        /** @description Returns preparation batches that consumed or produced one owned lot. Each direction returns at
+         *     most fifty batches; its truncation flag is true when additional older relationships exist. */
         LotProvenanceResponse: {
             consumedBy: components["schemas"]["PreparationResponse"][];
+            consumedByTruncated: boolean;
             /** Format: uuid */
             lotId: string;
             producedBy: components["schemas"]["PreparationResponse"][];
+            producedByTruncated: boolean;
         };
         /** @description Returns the current representation of an inventory lot. */
         LotResponse: {

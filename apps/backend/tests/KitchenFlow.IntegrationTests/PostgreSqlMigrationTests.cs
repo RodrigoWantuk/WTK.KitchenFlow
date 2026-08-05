@@ -419,6 +419,76 @@ public sealed class PostgreSqlMigrationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task PreparationDeclaredYieldConstraintFailsClosedForEveryInvalidModeAndAcceptsValidModes()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(_postgres.GetConnectionString()).Options;
+        await using var context = new ApplicationDbContext(options);
+        await context.Database.EnsureDeletedAsync();
+        await context.Database.MigrateAsync();
+        var ownerId = Guid.NewGuid();
+        var productId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        context.Users.Add(new InternalUser(ownerId, $"https://issuer.test/{ownerId}", $"subject-{ownerId}", now));
+        context.Products.Add(new ProductRecord { Id = productId, OwnerUserId = ownerId, DisplayName = "Yield constraint product", NormalizedSearchName = "YIELD CONSTRAINT PRODUCT", CreatedAt = now, UpdatedAt = now });
+        await context.SaveChangesAsync();
+
+        await using var connection = new NpgsqlConnection(_postgres.GetConnectionString());
+        await connection.OpenAsync();
+        foreach (var invalid in new (decimal? Value, string? Unit, string? Availability)[]
+        {
+            (null, null, null), (1m, null, null), (null, "Gram", null), (1m, "Gram", "Available"),
+            (0m, "Gram", null), (-1m, "Gram", null), (1m, "Cup", null), (null, null, "Unknown")
+        })
+        {
+            await AssertDeclaredYieldInsertAsync(connection, ownerId, productId, invalid.Value, invalid.Unit, invalid.Availability, shouldSucceed: false);
+        }
+
+        foreach (var valid in new (decimal? Value, string? Unit, string? Availability)[]
+        {
+            (1m, "Gram", null), (1m, "Milliliter", null), (1m, "Unit", null),
+            (null, null, "Available"), (null, null, "Low"), (null, null, "Unavailable")
+        })
+        {
+            await AssertDeclaredYieldInsertAsync(connection, ownerId, productId, valid.Value, valid.Unit, valid.Availability, shouldSucceed: true);
+        }
+    }
+
+    [Theory]
+    [InlineData(0, false)]
+    [InlineData(1, false)]
+    [InlineData(49, false)]
+    [InlineData(50, false)]
+    [InlineData(51, true)]
+    [InlineData(55, true)]
+    public async Task PreparationProvenanceReportsItsIndependentBoundAndTruncationState(int relatedBatchCount, bool expectedTruncated)
+    {
+        var seed = await SeedProvenanceGraphAsync(relatedBatchCount);
+        await using var context = CreateContext();
+        var store = new PostgreSqlInventoryPreparationStore(context);
+
+        var parent = await store.GetLotProvenanceAsync(seed.OwnerId, seed.ParentLotId, CancellationToken.None);
+        var output = await store.GetLotProvenanceAsync(seed.OwnerId, seed.FirstOutputLotId, CancellationToken.None);
+
+        Assert.NotNull(parent);
+        Assert.Equal(Math.Min(relatedBatchCount, 50), parent!.ConsumedBy.Count);
+        Assert.Equal(expectedTruncated, parent.ConsumedByTruncated);
+        Assert.Empty(parent.ProducedBy);
+        Assert.False(parent.ProducedByTruncated);
+        Assert.Equal(parent.ConsumedBy.OrderByDescending(item => item.PreparedAt).ThenByDescending(item => item.BatchId), parent.ConsumedBy);
+        if (relatedBatchCount == 0)
+        {
+            Assert.Null(output);
+            return;
+        }
+
+        Assert.NotNull(output);
+        Assert.Empty(output!.ConsumedBy);
+        Assert.False(output.ConsumedByTruncated);
+        Assert.Single(output.ProducedBy);
+        Assert.False(output.ProducedByTruncated);
+    }
+
+    [Fact]
     public async Task UniqueEquipmentStableCodeMigrationFailsClosedWhenDuplicatesExist()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -545,6 +615,36 @@ public sealed class PostgreSqlMigrationTests : IAsyncLifetime
         return new PreparationParentSeed(ownerId, productId, lotId, token, 1, Product.Restore(productId, ownerId, name!, now, now, false));
     }
 
+    private async Task<ProvenanceGraphSeed> SeedProvenanceGraphAsync(int relatedBatchCount)
+    {
+        await using var context = CreateContext();
+        await context.Database.EnsureDeletedAsync();
+        await context.Database.MigrateAsync();
+        var ownerId = Guid.NewGuid();
+        var productId = Guid.NewGuid();
+        var parentLotId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        context.Users.Add(new InternalUser(ownerId, $"https://issuer.test/{ownerId}", $"provenance-{ownerId}", now));
+        context.Products.Add(new ProductRecord { Id = productId, OwnerUserId = ownerId, DisplayName = "Provenance product", NormalizedSearchName = "PROVENANCE PRODUCT", CreatedAt = now, UpdatedAt = now });
+        context.Lots.Add(new LotRecord { Id = parentLotId, OwnerUserId = ownerId, ProductId = productId, MeasuredValue = 1000m, MeasuredUnit = "Gram", StorageLocation = "Pantry", Version = 1, ConcurrencyToken = Guid.NewGuid(), CreatedAt = now, UpdatedAt = now });
+        var firstOutputLotId = Guid.Empty;
+        for (var index = 0; index < relatedBatchCount; index++)
+        {
+            var batchId = Guid.NewGuid();
+            var outputLotId = Guid.NewGuid();
+            firstOutputLotId = index == 0 ? outputLotId : firstOutputLotId;
+            var preparedAt = now.AddMinutes(-index - 1);
+            context.PreparationBatches.Add(new PreparationBatchRecord { Id = batchId, OwnerUserId = ownerId, OutputProductId = productId, DeclaredYieldMeasuredValue = 1m, DeclaredYieldMeasuredUnit = "Gram", SourceType = "ManualPreparation", PreparedAt = preparedAt, CreatedAt = now });
+            context.PreparationInputs.Add(new PreparationInputRecord { BatchId = batchId, OwnerUserId = ownerId, InputLotId = parentLotId, ConsumedValue = 1m, ConsumedUnit = "Gram" });
+            context.Lots.Add(new LotRecord { Id = outputLotId, OwnerUserId = ownerId, ProductId = productId, MeasuredValue = 1m, MeasuredUnit = "Gram", StorageLocation = "Refrigerator", Version = 1, ConcurrencyToken = Guid.NewGuid(), CreatedAt = now, UpdatedAt = now });
+            context.PreparationOutputs.Add(new PreparationOutputRecord { BatchId = batchId, OwnerUserId = ownerId, OutputLotId = outputLotId });
+            context.PreparedLots.Add(new PreparedLotRecord { LotId = outputLotId, OwnerUserId = ownerId, BatchId = batchId, LifecycleState = "Prepared", PreparedAt = preparedAt, ShelfLifeSource = "Unknown", ShelfLifeConfidence = "Unknown" });
+        }
+
+        await context.SaveChangesAsync();
+        return new ProvenanceGraphSeed(ownerId, parentLotId, firstOutputLotId);
+    }
+
     private static PreparedComponentApplicationWorkflow CreatePreparationWorkflow(ApplicationDbContext context, Guid ownerId) => new(new PreparationTestCurrentUser(ownerId), new PostgreSqlInventoryPreparationStore(context), TimeProvider.System);
 
     private static PrepareComponentsCommand CreatePreparationCommand(PreparationParentSeed parent, Guid key, DateTimeOffset preparedAt) => new(null, "Prepared component", 3m, "Gram", null, [new PreparationInputCommand(parent.LotId, 3m, "Gram", InventoryVersionPrecondition.Valid(parent.ConcurrencyToken))], [new PreparationOutputCommand(3m, "Gram", null, "Refrigerator", null, "Opened", null, "Unknown", "Unknown", null)], preparedAt, key, "preparation-concurrency-test");
@@ -557,7 +657,33 @@ public sealed class PostgreSqlMigrationTests : IAsyncLifetime
         return storage!;
     }
 
+    private static async Task AssertDeclaredYieldInsertAsync(NpgsqlConnection connection, Guid ownerId, Guid productId, decimal? value, string? unit, string? availability, bool shouldSucceed)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO inventory.preparation_batches ("Id", "OwnerUserId", "OutputProductId", "DeclaredYieldMeasuredValue", "DeclaredYieldMeasuredUnit", "DeclaredYieldAvailabilityState", "SourceType", "PreparedAt", "CreatedAt")
+            VALUES (@id, @owner, @product, @value, @unit, @availability, 'ManualPreparation', NOW(), NOW())
+            """;
+        command.Parameters.AddWithValue("id", Guid.NewGuid());
+        command.Parameters.AddWithValue("owner", ownerId);
+        command.Parameters.AddWithValue("product", productId);
+        command.Parameters.AddWithValue("value", value.HasValue ? value.Value : DBNull.Value);
+        command.Parameters.AddWithValue("unit", unit ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("availability", availability ?? (object)DBNull.Value);
+
+        if (shouldSucceed)
+        {
+            Assert.Equal(1, await command.ExecuteNonQueryAsync());
+            return;
+        }
+
+        var exception = await Assert.ThrowsAsync<PostgresException>(() => command.ExecuteNonQueryAsync());
+        Assert.Equal(PostgresErrorCodes.CheckViolation, exception.SqlState);
+    }
+
     private sealed record PreparationParentSeed(Guid OwnerId, Guid ProductId, Guid LotId, Guid ConcurrencyToken, long Version, Product Product);
+
+    private sealed record ProvenanceGraphSeed(Guid OwnerId, Guid ParentLotId, Guid FirstOutputLotId);
 
     private sealed class PreparationTestCurrentUser(Guid ownerId) : ICurrentUserAccessor
     {

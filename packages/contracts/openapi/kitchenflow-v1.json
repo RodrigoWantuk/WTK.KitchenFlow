@@ -558,13 +558,16 @@
         "type": "object"
       },
       "LotProvenanceResponse": {
-        "description": "Returns preparation batches that consumed or produced one owned lot.",
+        "description": "Returns preparation batches that consumed or produced one owned lot. Each direction returns at\nmost fifty batches; its truncation flag is true when additional older relationships exist.",
         "properties": {
           "consumedBy": {
             "items": {
               "$ref": "#/components/schemas/PreparationResponse"
             },
             "type": "array"
+          },
+          "consumedByTruncated": {
+            "type": "boolean"
           },
           "lotId": {
             "format": "uuid",
@@ -575,12 +578,17 @@
               "$ref": "#/components/schemas/PreparationResponse"
             },
             "type": "array"
+          },
+          "producedByTruncated": {
+            "type": "boolean"
           }
         },
         "required": [
           "lotId",
           "consumedBy",
-          "producedBy"
+          "consumedByTruncated",
+          "producedBy",
+          "producedByTruncated"
         ],
         "type": "object"
       },

@@ -138,7 +138,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             {
                 table.HasCheckConstraint("ck_preparation_batches_source", "\"SourceType\" IN ('ManualPreparation')");
                 table.HasCheckConstraint("ck_preparation_batches_prepared_at", "\"PreparedAt\" <= \"CreatedAt\"");
-                table.HasCheckConstraint("ck_preparation_batches_declared_yield", "(\"DeclaredYieldMeasuredValue\" IS NOT NULL AND \"DeclaredYieldMeasuredValue\" > 0 AND \"DeclaredYieldMeasuredUnit\" IN ('Gram', 'Milliliter', 'Unit') AND \"DeclaredYieldAvailabilityState\" IS NULL) OR (\"DeclaredYieldMeasuredValue\" IS NULL AND \"DeclaredYieldMeasuredUnit\" IS NULL AND \"DeclaredYieldAvailabilityState\" IN ('Available', 'Low', 'Unavailable'))");
+                table.HasCheckConstraint("ck_preparation_batches_declared_yield", "((\"DeclaredYieldMeasuredValue\" IS NOT NULL AND \"DeclaredYieldMeasuredValue\" > 0 AND \"DeclaredYieldMeasuredUnit\" IN ('Gram', 'Milliliter', 'Unit') AND \"DeclaredYieldAvailabilityState\" IS NULL) OR (\"DeclaredYieldMeasuredValue\" IS NULL AND \"DeclaredYieldMeasuredUnit\" IS NULL AND \"DeclaredYieldAvailabilityState\" IN ('Available', 'Low', 'Unavailable'))) IS TRUE");
             });
             entity.HasKey(x => x.Id);
             entity.HasAlternateKey(x => new { x.Id, x.OwnerUserId });

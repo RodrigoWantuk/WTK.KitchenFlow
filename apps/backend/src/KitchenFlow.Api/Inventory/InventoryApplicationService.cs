@@ -108,7 +108,7 @@ public sealed class InventoryApplicationService(
 
     /// <summary>Maps an owner-scoped lot provenance query to its HTTP representation.</summary>
     public async Task<IResult> ProvenanceAsync(Guid lotId, HttpContext context, CancellationToken cancellationToken) =>
-        ToResult(await getProvenance.GetAsync(lotId, cancellationToken), item => new LotProvenanceResponse(item.LotId, item.ConsumedBy.Select(ToPreparationResponse).ToList(), item.ProducedBy.Select(ToPreparationResponse).ToList()), context.TraceIdentifier);
+        ToResult(await getProvenance.GetAsync(lotId, cancellationToken), item => new LotProvenanceResponse(item.LotId, item.ConsumedBy.Select(ToPreparationResponse).ToList(), item.ConsumedByTruncated, item.ProducedBy.Select(ToPreparationResponse).ToList(), item.ProducedByTruncated), context.TraceIdentifier);
 
     private LotResponse ToResponse(InventoryLotView item) => ToResponse(item, tokens.WriteVersion(item.LotId, item.ConcurrencyToken));
     private static LotResponse ToResponse(InventoryLotView item, string version) => new(item.LotId, item.ProductId, item.ProductName, ToQuantity(item.Quantity)!, item.StorageLocation, item.CustomLocation, item.PackageState, item.PrintedExpirationDate, item.Notes, version, item.CreatedAt, item.UpdatedAt);

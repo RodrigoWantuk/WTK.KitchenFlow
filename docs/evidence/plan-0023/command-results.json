@@ -139,5 +139,16 @@
     "summary": "Backend build-and-test and secret scan passed in run 30964375294; frontend quality/browser-smoke passed in runs 30964372594 and 30964375347; PLAN-0005 p0, p1, and evidence consistency passed in run 30964375297.",
     "testedCommit": "7e24fa2f86350d8a566de0b9f2f1cdba984080ff",
     "artifact": "https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30964375294; https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30964372594; https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30964375347; https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30964375297"
+  },
+  {
+    "command": "dotnet format; Release build; focused preparation workflow, declared-yield PostgreSQL matrix, provenance-boundary, and 50 synchronized same-key HTTP iterations; migrations has-pending-model-changes; export/check/lint OpenAPI; generated-client generation/drift/typecheck/format",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
+    "startedAtUtc": "2026-08-05T13:30:00Z",
+    "finishedAtUtc": "2026-08-05T13:57:56Z",
+    "exitCode": 0,
+    "result": "passed",
+    "summary": "Remediation worktree based on 123ad4148a52a84bf43b65d3ce039dc1c6051c7c. Fifty synchronized same-key preparation iterations passed without a retry wrapper; the direct SQL matrix rejected all eight invalid rows with 23514 and accepted six valid modes; 0/1/49/50/51/55 provenance boundaries passed. This is local implementation evidence, not independent validation or exact-head CI.",
+    "testedCommit": "123ad4148a52a84bf43b65d3ce039dc1c6051c7c plus uncommitted remediation",
+    "artifact": "packages/contracts/openapi/kitchenflow-v1.json; packages/api-client/src/generated/schema.ts; apps/frontend/src/generated/api-client"
   }
 ]

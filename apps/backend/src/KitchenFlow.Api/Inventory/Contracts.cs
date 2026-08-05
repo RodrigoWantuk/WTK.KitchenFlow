@@ -55,5 +55,8 @@ public sealed record PreparationOutputResponse(LotResponse Lot, PreparedLotMetad
 /// <summary>Returns an owner-visible preparation batch and its immutable input/output provenance.</summary>
 public sealed record PreparationResponse(Guid BatchId, string SourceType, Guid OutputProductId, string OutputProductName, QuantityResponse DeclaredYield, DateTimeOffset PreparedAt, IReadOnlyList<PreparationInputResponse> Inputs, IReadOnlyList<PreparationOutputResponse> Outputs, DateTimeOffset CreatedAt);
 
-/// <summary>Returns preparation batches that consumed or produced one owned lot.</summary>
-public sealed record LotProvenanceResponse(Guid LotId, IReadOnlyList<PreparationResponse> ConsumedBy, IReadOnlyList<PreparationResponse> ProducedBy);
+/// <summary>
+/// Returns preparation batches that consumed or produced one owned lot. Each direction returns at
+/// most fifty batches; its truncation flag is true when additional older relationships exist.
+/// </summary>
+public sealed record LotProvenanceResponse(Guid LotId, IReadOnlyList<PreparationResponse> ConsumedBy, bool ConsumedByTruncated, IReadOnlyList<PreparationResponse> ProducedBy, bool ProducedByTruncated);

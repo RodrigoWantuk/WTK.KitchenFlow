@@ -1,11 +1,11 @@
 # PLAN-0023: Implement Prepared Components and Derived Inventory Lots
 
-- **Status:** Validating
+- **Status:** In Progress
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Codex backend/domain implementation agent
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-05T01:01:47Z
+- **Last updated:** 2026-08-05T13:57:56Z
 - **Branch:** `agent/plan-0023-prepared-component-lots`
 - **Pull request:** Draft [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39)
 - **Dependencies:** PLAN-0003 and PLAN-0016 inventory foundations merged
@@ -130,10 +130,10 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 
 - **Claimed at:** 2026-08-04T01:24:28Z
 - **Main baseline:** `f166ce21020f6704d3fcd99b4b6d195b33638155`
-- **Current checkpoint:** Replacement immutable candidate `7e24fa2f86350d8a566de0b9f2f1cdba984080ff` passed exact-head Backend, frontend/browser-smoke/quality, PLAN-0005 p0/p1/evidence-consistency, and secret-scan workflows. The previous `b72e8efaa6ae6c97998a92967b8e6112f326a14c` and `c861cb6cfc13c37874e91d825c5dc8e6f2238db7` candidates are superseded.
+- **Current checkpoint:** PLAN-0026 independently assessed immutable candidate `7e24fa2f86350d8a566de0b9f2f1cdba984080ff` as **Fail** in Draft PR #40. That candidate, the prior `b72e8efaa6ae6c97998a92967b8e6112f326a14c`, and `c861cb6cfc13c37874e91d825c5dc8e6f2238db7` are superseded; PR #39 remains Draft during remediation.
 - **Run target:** Deliver the complete owner-scoped preparation transaction vertical slice: domain/application contract, atomic PostgreSQL persistence and migration, HTTP/OpenAPI/client contract, tests, operations documentation, implementation evidence, and an independently testable candidate.
-- **Blockers:** Independent PLAN-0026 validation is outstanding. Existing untracked frontend build and smoke artifacts are preserved and excluded from this plan.
-- **Exact next action:** An independent testing agent must claim PLAN-0026 on its own branch, validate the pinned candidate without modifying production behavior, and publish its assessment in a separate testing PR.
+- **Blockers:** Replacement exact-head CI and a subsequent independent retest are required. Existing untracked frontend build and smoke artifacts are preserved and excluded from this plan.
+- **Exact next action:** Complete F-0026-01/02/03 remediation, publish a new exact green candidate, then pin a separate PLAN-0027 independent retest without reopening PLAN-0026.
 
 ## Progress log
 
@@ -235,3 +235,21 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - **Evidence and validation:** Backend/secret scan run `30964375294` passed; frontend quality/browser-smoke runs `30964372594` and `30964375347` passed; PLAN-0005 p0, p1, and evidence consistency run `30964375297` passed. The same-key HTTP test passed 21 consecutive local executions without a retry wrapper.
 - **Result:** PLAN-0023 is `Validating`; PLAN-0026 is Ready and pinned. No independent validation has been executed.
 - **Next action:** Independent agent claims PLAN-0026 in an isolated worktree and performs its adversarial validation.
+
+### 2026-08-05T13:57:56Z — Codex backend/domain implementation agent
+
+- **Checkpoint:** Returned PLAN-0023 to In Progress after independent PLAN-0026 Draft PR #40 assessed SUT `7e24fa2f86350d8a566de0b9f2f1cdba984080ff` as Fail. No PLAN-0026 evidence or validation tests were merged into this implementation branch.
+- **Findings:** F-0026-01/P1 requires authoritative replay when a same-key preparation loser sees a stale input after the winner commits; F-0026-02/P1 requires a fail-closed declared-yield SQL CHECK; F-0026-03/P2 requires an explicit provenance truncation signal at the existing fifty-batch bound.
+- **Remediation target:** Re-read owner-scoped preparation idempotency before stale-precondition failure, make the unmerged batch CHECK definite under SQL NULL semantics, add independent consumed/produced truncation flags, and add permanent product regression coverage.
+- **Tracking:** [Issue #41](https://github.com/RodrigoWantuk/WTK.Cocinaris/issues/41) remains open until a future independent PLAN-0027 Pass.
+- **Result:** Historical PLAN-0026 Fail evidence remains immutable on PR #40; no approval, auto-merge, merge, or independent retest was performed by the implementation agent.
+- **Next action:** Validate the corrective implementation locally, regenerate contracts, and publish only a new exact-head green candidate.
+
+### 2026-08-05T13:57:56Z — Codex backend/domain implementation agent
+
+- **Checkpoint:** Implemented the PLAN-0026 remediation checkpoint. Preparation retries now re-read an owner-scoped idempotency record after parent lookup and before stale-precondition return; the unmerged migration's declared-yield CHECK is explicitly `IS TRUE`; bounded provenance returns independent consumed/produced truncation flags after fetching at most fifty-one identifiers per direction.
+- **Changes included in the commit:** Application/persistence/API/OpenAPI/generated-client contracts; revised migration, designer, and snapshot; focused workflow, PostgreSQL direct-SQL matrix and provenance-boundary tests; fifty synchronized HTTP same-key preparation iterations; lifecycle/runbook/evidence updates; immutable PLAN-0026 completion reference; Draft successor PLAN-0027; tracking issue #41.
+- **Evidence and validation:** Release build, format verification after formatting, model pending-change validation, focused six unit tests, seven PostgreSQL tests (including invalid/valid yield matrix and 0/1/49/50/51/55 provenance bounds), fifty synchronized HTTP repetitions, and OpenAPI/generated-client gates passed locally. The full local suite and exact-head CI have not yet been rerun for this checkpoint.
+- **Defects or coverage gaps:** Existing local complete-integration Docker/Testcontainers instability remains a documented historical limitation. PLAN-0026 evidence was not copied or altered; PLAN-0027 has not been executed.
+- **Result:** Corrective implementation checkpoint is ready for full gate execution; PLAN-0023 remains In Progress and no candidate is pinned.
+- **Next action:** Commit and push this checkpoint, run all applicable local gates, then wait for exact-head CI before moving PLAN-0023 or PLAN-0027 state.

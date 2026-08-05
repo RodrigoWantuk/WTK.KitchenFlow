@@ -1,14 +1,14 @@
 # PLAN-0026: Independently Validate Prepared Components and Derived Lots
 
-- **Status:** Ready
+- **Status:** Completed
 - **Type:** Testing
 - **Priority:** High
 - **Owner:** Unassigned independent testing agent
 - **Created:** 2026-08-04
-- **Last updated:** 2026-08-05T01:01:47Z
+- **Last updated:** 2026-08-05T01:48:18Z
 - **Branch:** `agent/plan-0026-validate-prepared-components`
-- **Pull request:** Not opened
-- **System under test:** `7e24fa2f86350d8a566de0b9f2f1cdba984080ff` (PLAN-0023 Draft [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39))
+- **Pull request:** Draft [PR #40](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/40) (historical evidence, unmerged)
+- **System under test:** `7e24fa2f86350d8a566de0b9f2f1cdba984080ff` — **Fail**
 - **Related implementation plan:** PLAN-0023
 - **Dependencies:** Replacement PLAN-0023 immutable candidate and exact-head CI (satisfied); independent test-agent claim remains required
 
@@ -37,11 +37,11 @@ Independently attempt to disprove the readiness of PLAN-0023 prepared-component 
 
 ## Execution state
 
-- **Current run delivery target:** Independently validate the replacement pinned candidate without modifying its production behavior.
-- **Current checkpoint:** Exact candidate `7e24fa2f86350d8a566de0b9f2f1cdba984080ff` is pinned after green exact-head CI; no independent testing has been performed.
-- **Exact next action:** An independent testing agent must claim this plan on `agent/plan-0026-validate-prepared-components`, create a separate testing PR, and test from a detached worktree at the pinned SUT commit.
-- **Blockers:** Awaiting an independent testing agent; implementation agent must not execute this plan.
-- **Working tree state:** Not applicable until claimed.
+- **Current run delivery target:** Independently validate the pinned candidate without modifying its production behavior.
+- **Current checkpoint:** Completed — **Fail** at exact SUT `7e24fa2f86350d8a566de0b9f2f1cdba984080ff`; assessment and immutable evidence are in Draft PR #40 at validation head `6728b9ad9b7e6c5ccd3e60fa3c22ed74278c71c6`.
+- **Exact next action:** Preserve PR #40 as historical Fail evidence. After remediation, an independent agent must use successor PLAN-0027 rather than reopening this plan.
+- **Blockers:** Superseded candidate requires implementation remediation and a new independent retest plan.
+- **Working tree state:** Validation branch remains retained; it must not be merged into PR #39.
 
 ## Progress log
 
@@ -72,3 +72,9 @@ Independently attempt to disprove the readiness of PLAN-0023 prepared-component 
 - **Evidence and validation:** Backend/secret scan run `30964375294`, frontend runs `30964372594` and `30964375347`, and PLAN-0005 p0/p1/evidence run `30964375297` passed for the candidate.
 - **Result:** No independent validation was executed or inferred from implementation-agent evidence.
 - **Next action:** Independent testing agent claims this plan and publishes a separate Pass, Conditional Pass, or Fail assessment.
+
+### 2026-08-05T01:48:18Z — Independent PLAN-0026 testing agent
+
+- **Assessment:** **Fail** at immutable SUT `7e24fa2f86350d8a566de0b9f2f1cdba984080ff` in Draft validation PR #40.
+- **Findings:** F-0026-01/P1 false same-key preparation 412; F-0026-02/P1 SQL NULL combinations accepted by the declared-yield CHECK; F-0026-03/P2 provenance hard-bound lacks truncation signal.
+- **Result:** PLAN-0023 returns to In Progress. This completed Fail plan and its evidence remain immutable; successor PLAN-0027 must perform any future independent retest.
