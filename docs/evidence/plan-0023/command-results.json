@@ -95,5 +95,27 @@
     "summary": "Exact candidate passed Backend build-and-test and secret scan (run 30956077382); frontend quality/browser-smoke (runs 30956074507 and 30956077386); and evidence-consistency plus p0/p1 validation (run 30956077424).",
     "testedCommit": "b72e8efaa6ae6c97998a92967b8e6112f326a14c",
     "artifact": "https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30956077382; https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30956074507; https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30956077386; https://github.com/RodrigoWantuk/WTK.Cocinaris/actions/runs/30956077424"
+  },
+  {
+    "command": "Release build, migrations has-pending-model-changes, focused preparation and same-key adjustment HTTP tests",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow/apps/backend",
+    "startedAtUtc": "2026-08-05T00:05:00Z",
+    "finishedAtUtc": "2026-08-05T00:15:00Z",
+    "exitCode": 0,
+    "result": "passed",
+    "summary": "Release model matches the revised unmerged migration; seven focused PostgreSQL/HTTP tests passed, covering historical declared yield after output consumption, provenance, same-key adjustment replay, and null preparation collections/items.",
+    "testedCommit": "f0cc72d",
+    "artifact": "console output"
+  },
+  {
+    "command": "dotnet format; generate-migration-script; export/check/lint OpenAPI; dependency check; generated-client generation, drift, typecheck, and format; frontend typecheck, lint, and format",
+    "workingDirectory": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow",
+    "startedAtUtc": "2026-08-05T00:25:00Z",
+    "finishedAtUtc": "2026-08-05T00:45:00Z",
+    "exitCode": 0,
+    "result": "passed",
+    "summary": "OpenAPI and generated clients are synchronized. The local API was started against synthetic development infrastructure solely for OpenAPI export. Frontend lint emitted the existing Node module-type warning without failing.",
+    "testedCommit": "f0cc72d",
+    "artifact": "artifacts/kitchenflow-migrations.sql; packages/contracts/openapi/kitchenflow-v1.json"
   }
 ]

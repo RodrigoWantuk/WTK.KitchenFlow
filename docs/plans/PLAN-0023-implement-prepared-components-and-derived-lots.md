@@ -5,7 +5,7 @@
 - **Priority:** High
 - **Owner:** Codex backend/domain implementation agent
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-04T23:00:00Z
+- **Last updated:** 2026-08-05T00:45:34Z
 - **Branch:** `agent/plan-0023-prepared-component-lots`
 - **Pull request:** Draft [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39)
 - **Dependencies:** PLAN-0003 and PLAN-0016 inventory foundations merged
@@ -209,3 +209,10 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - **Concurrency correction:** Same-key adjustment replay now checks the owner-scoped idempotency record before stale `If-Match` evaluation after ownership is established. This closes the observed race where the winner advanced the token before the second delivery performed its precondition check.
 - **Evidence and validation:** Release build and `migrations has-pending-model-changes` passed with explicit Release configuration. Focused real-PostgreSQL and HTTP tests passed 7/7, including same-key adjustment, immutable yield after output consumption, provenance, and null input/output collection cases.
 - **Next action:** Add remaining adversarial coverage, execute migration/API/client gates and repeated concurrency runs, then record outcomes and publish a replacement candidate.
+
+### 2026-08-05T00:45:34Z — Codex backend/domain implementation agent
+
+- **Checkpoint:** Generated the revised idempotent migration script, confirmed the Release model has no pending changes, exported/linted/checked OpenAPI, regenerated and drift-checked both generated clients, and passed frontend typecheck/lint/format checks.
+- **Evidence and validation:** The focused correction suite passed 7/7. Broader local integration commands were started but their complete summaries remain inconclusive in the known local Testcontainers environment; this is not counted as a pass. Exact-head workflows for corrective head `f0cc72d` have started, with secret scan already passing.
+- **Result:** PLAN-0023 remains In Progress and PLAN-0026 remains Draft/unpinned until a replacement exact-head candidate is green.
+- **Next action:** Inspect all `f0cc72d` workflow results, remediate any failure, then pin only the final green exact head.
