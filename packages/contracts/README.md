@@ -13,6 +13,19 @@ This directory contains versioned contracts shared across KitchenFlow boundaries
 
 The exact generator and generated-file commit policy require an implementation plan after the initial solution exists.
 
+## Recipe AI schemas (protocol 0.3)
+
+Versioned AI response schemas, deterministic validators, and positive/negative fixtures live under [`ai/recipe/`](ai/recipe/).
+
+```bash
+cd packages/contracts/ai/recipe
+npm install
+npm test
+npm run check:drift
+```
+
+Live provider evaluation is intentionally separate: `scripts/ai/recipe-live-eval.mjs`.
+
 ## Inventory v1 snapshot
 
 `openapi/kitchenflow-v1.json` is generated from the running ASP.NET Core API. Run

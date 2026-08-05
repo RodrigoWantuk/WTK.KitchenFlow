@@ -57,7 +57,7 @@ A plan may include multiple disciplines, but it must identify a primary type and
 - Use [`0000-plan-template.md`](0000-plan-template.md) for implementation, research, documentation, and operations work.
 - Use [`0000-test-plan-template.md`](0000-test-plan-template.md) when the primary responsibility is independent test design or execution.
 
-The test-plan template adds requirements traceability, risk-based priorities, system-under-test baselines, evidence tracking, defect classification, and a final quality assessment. Do not replace it with an implementation checklist for substantial testing work.
+The test-plan template adds requirements traceability, risk-based priorities, system-under-test baselines, evidence tracking, defect classification, and a final quality assessment. Use it when independent validation is justified by elevated risk or an explicit owner request. Ordinary work follows the lean default in [`PLAN-0007-amendment-2026-08-05-lean-validation.md`](PLAN-0007-amendment-2026-08-05-lean-validation.md) and does not require a separate testing plan.
 
 ## Required plan content
 

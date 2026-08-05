@@ -11,10 +11,11 @@ Then send one JSON request as the variable user payload. Configure structured ou
 ## Protocol generations
 
 - Files `01`–`05` remain protocol `0.2-draft` regression fixtures.
-- Files `06`–`07` are selected-recipe expansion fixtures migrated to protocol `0.3-draft` for the visual descriptor.
-- Files `08`–`10` are canonical protocol `0.3-draft` product-flow fixtures.
+- Files `06`–`07` are selected-recipe expansion fixtures for protocol `0.3` (visual descriptor).
+- Files `08`–`10` are canonical protocol `0.3` product-flow fixtures.
 - Protocol `0.3` returns exactly three compact candidates.
-- Selected-recipe expansion must also emit the bounded, versioned `thumbnailVisual` object defined by PLAN-0017.
+- Selected-recipe expansion must also emit the bounded, versioned `thumbnailVisual` object.
+- Strict response schemas and positive/negative fixtures: [`../../../packages/contracts/ai/recipe/`](../../../packages/contracts/ai/recipe/).
 
 ## Files
 
@@ -37,7 +38,8 @@ Then send one JSON request as the variable user payload. Configure structured ou
 - `assumptionsUsed` only;
 - distinct formats, techniques and main structures;
 - bounded prior semantic summaries instead of full history;
-- advance preparation expressed as relative lead time.
+- advance preparation expressed as relative lead time;
+- response `schemaVersion` equal to `"0.3"`.
 
 ## Expanded-recipe visual expectations
 
@@ -72,4 +74,4 @@ The backend, not the model, validates and canonicalizes this object and computes
 
 Capture provider/model/backend fingerprint, prompt/protocol version, thinking level, max tokens, structured-output mode, prompt/cache-hit/cache-miss tokens, reasoning/final tokens, time to first token, total latency, raw response, schema/semantic validation, diversity, plausibility, visual-descriptor fidelity, canonicalization result, repair count and estimated cost.
 
-Run at least three repetitions per canonical scenario before approving a production default.
+Lean PLAN-0022 evaluation uses a representative four-call campaign rather than three repetitions per fixture. Statistical p50/p95 latency claims require a later larger sample.

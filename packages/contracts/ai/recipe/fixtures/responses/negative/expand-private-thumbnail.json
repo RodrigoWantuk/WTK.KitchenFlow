@@ -1,0 +1,175 @@
+{
+  "operation": "recipe.expand_selected.v1",
+  "schemaVersion": "0.3",
+  "recipe": {
+    "recipeId": "recipe-frango-arroz-001",
+    "revision": 1,
+    "name": "Frango com arroz e cenoura",
+    "mealTypes": [
+      "dinner"
+    ],
+    "servings": 2,
+    "yield": "2 plates",
+    "ingredients": [
+      {
+        "ingredientId": "ing-chicken",
+        "sourceType": "inventory",
+        "displayName": "Peito de frango",
+        "inventoryItemId": "inv-001",
+        "requiredQuantity": 350,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "ingredientId": "ing-rice",
+        "sourceType": "inventory",
+        "displayName": "Arroz branco",
+        "inventoryItemId": "inv-002",
+        "requiredQuantity": 180,
+        "unit": "g",
+        "optional": false
+      },
+      {
+        "ingredientId": "ing-carrot",
+        "sourceType": "inventory",
+        "displayName": "Cenoura",
+        "inventoryItemId": "inv-003",
+        "requiredQuantity": 1,
+        "unit": "unit",
+        "optional": false
+      },
+      {
+        "ingredientId": "ing-oil",
+        "sourceType": "assumption",
+        "displayName": "Óleo vegetal",
+        "requiredQuantity": 15,
+        "unit": "ml",
+        "optional": false
+      }
+    ],
+    "equipment": [
+      {
+        "equipmentId": "eq-stove",
+        "name": "Fogão",
+        "capabilities": [
+          "burner"
+        ]
+      },
+      {
+        "equipmentId": "eq-pan",
+        "name": "Panela média",
+        "capabilities": [
+          "boil",
+          "simmer",
+          "saute"
+        ]
+      },
+      {
+        "equipmentId": "eq-skillet",
+        "name": "Frigideira",
+        "capabilities": [
+          "saute",
+          "sear"
+        ]
+      }
+    ],
+    "preparations": [],
+    "stages": [
+      {
+        "stageId": "stage-rice",
+        "name": "Cozinhar o arroz",
+        "instructions": "Lave o arroz e cozinhe em água até ficar macio.",
+        "activeMinutes": 5,
+        "passiveMinutes": 15,
+        "dependsOn": [],
+        "sensoryCues": [
+          "grãos soltos"
+        ],
+        "usesIngredientIds": [
+          "ing-rice"
+        ]
+      },
+      {
+        "stageId": "stage-chicken",
+        "name": "Selar o frango",
+        "instructions": "Tempere e sele o peito de frango na frigideira até dourar.",
+        "activeMinutes": 12,
+        "passiveMinutes": 0,
+        "dependsOn": [],
+        "sensoryCues": [
+          "superficie dourada"
+        ],
+        "usesIngredientIds": [
+          "ing-chicken",
+          "ing-oil"
+        ]
+      },
+      {
+        "stageId": "stage-carrot",
+        "name": "Refogar a cenoura",
+        "instructions": "Corte a cenoura e refogue até amaciar levemente.",
+        "activeMinutes": 8,
+        "passiveMinutes": 0,
+        "dependsOn": [],
+        "sensoryCues": [
+          "cenoura macia"
+        ],
+        "usesIngredientIds": [
+          "ing-carrot"
+        ]
+      }
+    ],
+    "dependencies": [
+      {
+        "fromId": "stage-rice",
+        "toId": "stage-chicken",
+        "relationship": "before"
+      }
+    ],
+    "storage": {
+      "refrigerateHours": 48,
+      "freezeCompatible": true,
+      "reheatNotes": "Reaqueça em frigideira média até aquecer por completo."
+    },
+    "producedComponents": [],
+    "reconciliationHints": [
+      "Confirm remaining chicken grams after plating.",
+      "Confirm rice remaining in the pot."
+    ],
+    "assumptions": [
+      "sal",
+      "óleo vegetal",
+      "água"
+    ],
+    "thumbnailVisual": {
+      "schemaVersion": "1",
+      "appearanceDescription": "Chicken for user RodrigoWantuk pantry inv-001 allergy peanuts",
+      "visibleComponents": [
+        "cooked chicken breast",
+        "white rice",
+        "sauteed carrot slices"
+      ],
+      "dishFormat": "plated_main_with_sides",
+      "plating": "single modern dinner plate",
+      "sauceAppearance": "light pan juices coating the chicken",
+      "textureAndDoneness": [
+        "fully cooked chicken",
+        "loose white rice",
+        "lightly browned carrots"
+      ],
+      "garnish": [],
+      "dominantColors": [
+        "white",
+        "golden",
+        "orange"
+      ],
+      "excludedElements": [
+        "cutlery",
+        "napkin",
+        "text",
+        "logo",
+        "people"
+      ]
+    }
+  }
+}

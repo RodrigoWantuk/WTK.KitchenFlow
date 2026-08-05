@@ -181,3 +181,7 @@ No executable tests were applicable because no executable code changed.
 - [x] No hidden or unexplained partial work remains.
 - [x] Exact continuation instructions exist.
 - [x] Delivery state and branch-cleanup responsibility are recorded.
+
+## Later amendments
+
+- [`PLAN-0007-amendment-2026-08-05-lean-validation.md`](PLAN-0007-amendment-2026-08-05-lean-validation.md) — lean risk-based validation default (2026-08-05).

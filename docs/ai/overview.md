@@ -1,7 +1,8 @@
 # AI Architecture Overview
 
 - **Status:** Accepted
-- **Last updated:** 2026-07-28
+- **Last updated:** 2026-08-05
+- **Recipe artifact protocol:** [`recipe-artifact-protocol.md`](recipe-artifact-protocol.md) (`0.3`, Revised under PLAN-0022)
 
 ## Purpose
 

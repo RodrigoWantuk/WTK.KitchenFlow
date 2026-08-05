@@ -164,7 +164,21 @@ Expected layers include:
 - food-safety and restriction tests;
 - accessibility, localization, performance, resilience, backup, and restore checks.
 
-Read [`docs/testing/product-foundation-gates.md`](docs/testing/product-foundation-gates.md). Testing agents use the same plan protocol, substantial-delivery mandate, and independent verification standard.
+Read [`docs/testing/product-foundation-gates.md`](docs/testing/product-foundation-gates.md). Testing agents use the same plan protocol and substantial-delivery mandate.
+
+### Lean risk-based validation (default)
+
+Governing amendment: [`docs/plans/PLAN-0007-amendment-2026-08-05-lean-validation.md`](docs/plans/PLAN-0007-amendment-2026-08-05-lean-validation.md).
+
+For normal work, require only targeted tests for changed behavior, one focused boundary test when a real boundary changes, format/build/typecheck for affected projects, and **one final CI execution on the PR head**.
+
+Do not require by default a separate testing plan, an independent testing agent, an additional validation PR, duplicated evidence packages, candidate/packaging SHA ceremonies, or repeated full-suite runs after documentation-only commits.
+
+Test only affected areas. Default deterministic execution is once; flaky suspicion allows up to three runs; concurrency/idempotency changes may use 5–10 focused synchronized runs. More than ten repetitions requires a documented reproduced race or an explicit owner request.
+
+Independent validation is reserved for concrete high-impact risk (cross-user exposure, destructive migrations, payment/accounting, production credentials, confirmed concurrency corruption, data-loss recovery, critical food-safety enforcement). Even then, prefer one focused independent review over a chain of validation/retest plans unless a blocking defect is found.
+
+After CI passes on the final head, record workflow run IDs in the PR description or comment. Do not create a documentation-only commit solely to record successful workflow IDs.
 
 ## 10. Complete documentation and code-documentation expectations
 

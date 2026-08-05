@@ -1,26 +1,30 @@
 # PLAN-0022: Evaluate and Finalize Recipe AI Artifact Contracts
 
-- **Status:** Ready
+- **Status:** In Progress
 - **Type:** Research
 - **Priority:** High
-- **Owner:** Unassigned AI evaluation and contract agent
+- **Owner:** Cursor agent (PLAN-0022 lean evaluation)
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-02
+- **Last updated:** 2026-08-05
 - **Branch:** `agent/plan-0022-recipe-ai-evaluation`
-- **Pull request:** Not opened
+- **Pull request:** Draft (opening with this delivery)
 - **Predecessor:** PLAN-0017 documentation delivery
 - **Related operations plan:** PLAN-0008
 - **Related ADR:** ADR-0005
+- **Lean evaluation amendment:** [`PLAN-0022-amendment-2026-08-05-lean-evaluation.md`](PLAN-0022-amendment-2026-08-05-lean-evaluation.md)
+- **Lean validation policy:** [`PLAN-0007-amendment-2026-08-05-lean-validation.md`](PLAN-0007-amendment-2026-08-05-lean-validation.md)
 
 ## Objective
 
-Produce decision-ready empirical evidence for the recipe candidate and selected-expansion protocol, finalize strict machine contracts and thresholds, and either accept, revise, or reject protocol `0.3-draft` without implementing production provider integration.
+Produce decision-ready evidence for the recipe candidate and selected-expansion protocol, finalize strict machine contracts and thresholds, and accept, revise, or reject the draft protocol **without** implementing production provider integration.
+
+Under the lean amendment, the goal is to **unblock recipe AI contract implementation**, not to statistically select a permanent provider.
 
 ## Consolidated ownership
 
 This plan is the sole owner of:
 
-- PLAN-0017's unfinished repeated benchmark campaign;
+- PLAN-0017's unfinished benchmark campaign (now reduced by the lean amendment);
 - the recipe-specific model-evaluation portion of PLAN-0008 Phase 3;
 - the strict JSON Schema/tool-output decision;
 - final candidate/expansion field limits and semantic thresholds.
@@ -29,19 +33,15 @@ PLAN-0017 is completed as documentation history. PLAN-0008 consumes this plan's 
 
 ## Included scope
 
-- fixtures 06–10, with at least three repetitions of principal scenarios;
-- candidate and expansion operation evaluation;
-- `cook_now` and `menu_planning`;
-- DeepSeek V4 Flash thinking-high baseline;
-- at least one bounded non-thinking or lower-latency fallback;
-- schema validity, exact references, hard constraints, equipment, lead time, state, assumptions, and diversity;
-- injection resistance and no-authority source text;
-- `thumbnailVisual` fidelity, privacy, field bounds, and canonicalization test vectors;
-- TTFT, total latency, tokens, cache use, repair attempts, provider/model fingerprint, and cost;
-- strict JSON Schema/tool definition under the accepted contract boundary;
-- canonical ingredient identity decision requirements;
-- package-confidence threshold proposal;
-- final protocol disposition and updated evaluation docs.
+- deterministic validation of fixtures 01–10;
+- strict candidate and expansion JSON Schemas (`0.3`);
+- positive/negative contract fixtures and semantic validators;
+- bounded live campaign: 1 thinking + 1 fallback for `cook_now`, 1 thinking + 1 fallback for `menu_planning`;
+- at most one repair retry for empty/truncated/invalid output;
+- injection/no-authority checks;
+- ingredient-identity and package-confidence decisions;
+- `cook_now` / menu-planning model policy;
+- protocol disposition.
 
 ## Excluded scope
 
@@ -52,84 +52,70 @@ PLAN-0017 is completed as documentation history. PLAN-0008 consumes this plan's 
 - browser/provider credentials in source;
 - direct frontend provider calls;
 - model reasoning retention or publication;
-- selection of a permanent provider solely from this benchmark.
+- selection of a permanent provider solely from this benchmark;
+- three-repetition statistical campaigns and p95 claims from the lean sample;
+- independent validation PR or PLAN-0029 retest.
 
 ## Environment and credential rules
 
 - Use synthetic fixtures only.
-- Keep API keys in ignored environment/secret storage.
-- Record provider/model/version without recording credentials or private reasoning.
-- Bound total test cost before the first call.
-- Separate live-provider evaluation from default repository tests.
-- Read the final host-specific section of `AGENTS.md` before any remote operation.
-- On `NOTEBOOK-DEB-RODRIGO`, use the documented GitHub App wrappers, an `agent/` branch, a draft PR, and request `RodrigoWantuk` review.
+- Keep API keys in ignored environment/secret storage (`DEEPSEEK_API_KEY`).
+- Never commit or print credentials or private reasoning.
+- Bound total test cost before the first call (`PLAN0022_COST_CEILING_USD`, default `0.05`).
+- Separate live-provider evaluation from default repository tests (`PLAN0022_LIVE_EVAL=1`).
+- On `NOTEBOOK-DEB-RODRIGO`, use GitHub App wrappers, an `agent/` branch, a draft PR, and request `RodrigoWantuk` review.
 
 ## Execution phases
 
-### Phase 1 — Reproduce and validate fixtures
+### Phase 1 — Deterministic fixtures and schemas
 
-- parse every fixture as JSON;
-- validate current schema and semantic expectations;
-- document ambiguities before live calls;
-- pin operation, prompt, fixture, provider, and model versions.
+- parse every request fixture as JSON;
+- publish strict response schemas;
+- add positive/negative fixtures and semantic validators;
+- document decisions for identity, package confidence, and routing.
 
-### Phase 2 — Repeated model campaign
+### Phase 2 — Bounded live campaign
 
-- run at least three repetitions for principal candidate and expansion scenarios;
-- capture bounded raw outputs and metrics;
-- classify failures and repairs;
-- compare thinking-high with a validated lower-latency fallback.
+- run the four representative calls only;
+- capture observed latency/cost without p50/p95 claims;
+- classify schema/semantic failures and repairs.
 
-### Phase 3 — Contract finalization
+### Phase 3 — Contract finalization and disposition
 
-- define strict closed schemas and collection/string limits;
-- define exact-reference and canonicalization rules;
-- create ingredient-identity and package-confidence decision records;
-- add deterministic positive/negative contract fixtures.
-
-### Phase 4 — Decision
-
-- score quality, validity, latency, privacy, and cost;
-- decide synchronous `cook_now` model policy;
-- decide menu-planning policy;
-- set protocol status to Accepted, Revised, or Rejected;
-- hand implementation to a later AI Gateway plan.
-
-## Required evidence
-
-For every run:
-
-- fixture and repetition ID;
-- operation/workflow/prompt version;
-- provider/model/version and relevant reasoning mode;
-- TTFT and total latency;
-- input/output/cached usage;
-- estimated/actual cost;
-- schema and semantic result;
-- repair/fallback count;
-- diversity and hard-constraint result;
-- `thumbnailVisual` result where applicable;
-- privacy/injection result;
-- bounded raw output or privacy-safe failure record.
+- version schemas and bounds as protocol `0.3`;
+- set disposition Accepted / Revised / Rejected;
+- hand implementation to a later AI Gateway plan;
+- unblock PLAN-0021 when remaining menu/planning source contracts are satisfied.
 
 ## Acceptance criteria
 
-- [ ] All fixtures parse and have deterministic validators.
-- [ ] Required scenarios have at least three repetitions.
-- [ ] Empty/truncated output rate and repair rate are known.
-- [ ] `cook_now` latency is measured against p50 <= 15s and p95 <= 25s.
-- [ ] Exact references, states, units, constraints, and preparation feasibility are verified.
-- [ ] Injection attempts cannot change authority or expose hidden context.
-- [ ] Visual descriptors are bounded, faithful, private, and canonicalizable.
-- [ ] Thinking-high and fallback policies are evidence-based.
-- [ ] Strict contracts and thresholds are versioned.
-- [ ] Final disposition is explicit.
-- [ ] No production integration or user data is introduced.
-- [ ] PLAN-0008 references this evidence rather than duplicating it.
+- [x] All request fixtures parse and have deterministic validators.
+- [x] Strict candidate and expansion schemas are versioned.
+- [x] Positive and negative contract fixtures cover schema, references, units, limits, privacy, and injection/no-authority cases.
+- [ ] Bounded live campaign executed (4 calls, ≤1 repair each) with cost ceiling.
+- [x] Exact-reference, canonical-unit, equipment, lead-time, and assumption rules are encoded.
+- [x] Ingredient-identity and package-confidence decisions are recorded.
+- [x] `cook_now` and menu-planning model policies are recorded.
+- [x] Statistical p50/p95 characterization explicitly deferred.
+- [x] Protocol disposition is explicit (**Revised** → `0.3`).
+- [x] No production integration or user data is introduced.
+- [x] No independent validation PR / PLAN-0029 created.
+- [x] PLAN-0008 references this evidence rather than duplicating it.
 
 ## Execution state
 
-- **Current checkpoint:** Protocol 0.3, prompt, fixtures, and initial evaluation record are on `main`.
-- **Run target:** Complete Phases 1–4 as one decision-ready evaluation package.
-- **Blockers:** Live provider access and an explicitly bounded evaluation budget are runtime prerequisites; they are not repository blockers.
-- **Exact next action:** Claim the plan, verify the host workflow, establish a cost ceiling, run deterministic fixture validation, then execute the repeated provider campaign.
+- **Current checkpoint:** Lean validation policy adopted; post-merge PLAN-0023/0026/0027 reconciliation written; protocol `0.3` schemas, fixtures, validators, and decisions delivered; deterministic tests passed. Live campaign blocked on missing `DEEPSEEK_API_KEY`.
+- **Run target:** Complete lean Phases 1–3, including the four live calls when the credential is available, then mark Completed and open/update the draft PR.
+- **Blockers:** `DEEPSEEK_API_KEY` not present in the agent environment (runtime prerequisite).
+- **Exact next action:** Export `DEEPSEEK_API_KEY`, set `PLAN0022_LIVE_EVAL=1`, run `node scripts/ai/recipe-live-eval.mjs`, record evidence, then mark PLAN-0022 Completed and update PLAN-0021 to Ready.
+
+## Progress log
+
+### 2026-08-05 — Lean adoption and deterministic contract finalization
+
+- Adopted [`PLAN-0007-amendment-2026-08-05-lean-validation.md`](PLAN-0007-amendment-2026-08-05-lean-validation.md) and [`PLAN-0022-amendment-2026-08-05-lean-evaluation.md`](PLAN-0022-amendment-2026-08-05-lean-evaluation.md).
+- Reconciled registry delivery for PLAN-0023 (merged PR #39 at `7912d4676ffc1f06ac193b7d6788c3a910ed2bd1`), PLAN-0026 (PR #40 closed without merge, Fail), and PLAN-0027 (Pass, incorporated through PR #39 / PR #42).
+- Published strict schemas under `packages/contracts/ai/recipe/`, positive/negative fixtures, and Node validators.
+- Validation: `cd packages/contracts/ai/recipe && npm test && npm run check:drift` — passed.
+- Protocol disposition set to **Revised** (`0.3`).
+- Live campaign not yet executed (credential missing).
