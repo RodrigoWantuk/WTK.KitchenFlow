@@ -71,7 +71,7 @@ PLAN-0017 is completed as documentation history. PLAN-0008 consumes this plan's 
 - [x] All request fixtures parse and have deterministic validators.
 - [x] Strict candidate and expansion schemas are versioned.
 - [x] Positive and negative contract fixtures cover schema, references, units, limits, privacy, and injection/no-authority cases.
-- [x] Bounded live campaign executed (4 calls, ≤1 repair each) with cost ceiling.
+- [x] Bounded live campaign executed (4 scenarios, 8 actual provider calls, ≤1 repair each) with cost ceiling.
 - [x] Exact-reference, canonical-unit, equipment, lead-time, and assumption rules are encoded.
 - [x] Ingredient-identity and package-confidence decisions are recorded.
 - [x] `cook_now` and menu-planning model policies are recorded.
@@ -83,7 +83,7 @@ PLAN-0017 is completed as documentation history. PLAN-0008 consumes this plan's 
 
 ## Execution state
 
-- **Current checkpoint:** PLAN-0022 Completed. Protocol `0.3` Revised; lean live campaign executed (4 calls, ~US$ 0.0129); deterministic validators passed; Draft PR #43 updated.
+- **Current checkpoint:** PLAN-0022 Completed. Protocol `0.3` Revised; lean live campaign executed (4 scenarios / 8 provider calls, ~US$ 0.012867); historical header timings preserved; total latency and TTFT unavailable for that run; deterministic validators passed; Draft PR #43.
 - **Run target:** Delivered.
 - **Blockers:** None.
 - **Exact next action:** Owner reviews Draft PR #43. Next implementation work: AI Gateway plan consuming finalized recipe AI contracts; PLAN-0021 may proceed once remaining menu/planning source contracts are accepted.
@@ -110,3 +110,11 @@ PLAN-0017 is completed as documentation history. PLAN-0008 consumes this plan's 
 - Committed remaining PLAN-0021 Ready execution-state sync.
 - Pushed final PLAN-0022 completion head to Draft PR #43 for owner review and one final CI run.
 - No approval, auto-merge, or merge performed.
+
+### 2026-08-05 — Live evaluation accounting correction
+
+- Corrected evidence accounting without rerunning provider calls: **4 scenarios evaluated**, **8 actual provider calls**, max one repair per scenario, cost US$ 0.012867 preserved.
+- Relabeled historical `460–518 ms` values as response-header timing; total latency and TTFT marked unavailable; statistical latency remains deferred.
+- Updated `scripts/ai/recipe-live-eval.mjs` for future runs (`scenariosEvaluated`, `providerCallsAttempted`, header vs total latency, `ttftMs: null`).
+- Replaced absolute local validator path with `packages/contracts/ai/recipe`.
+- Focused validation: `scripts/contracts/validate-recipe-ai.sh` and live-eval script parse check.

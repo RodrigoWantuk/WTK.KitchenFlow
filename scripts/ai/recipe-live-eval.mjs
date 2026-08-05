@@ -11,9 +11,13 @@
  *
  * Writes privacy-safe evidence under docs/evidence/plan-0022/ without raw prompts
  * that contain no secrets beyond synthetic fixture content already in-repo.
+ *
+ * Accounting:
+ *   scenariosEvaluated — distinct campaign scenarios (default 4)
+ *   providerCallsAttempted — every actual callDeepSeek invocation, including repairs
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   compileSchemas,
@@ -115,6 +119,10 @@ function extractJsonObject(text) {
   }
 }
 
+/**
+ * Non-streaming chat completion. Measures response-header timing and total
+ * body-inclusive latency separately. TTFT is unavailable without streaming.
+ */
 async function callDeepSeek({ thinking, reasoningEffort, userPayload }) {
   const body = {
     model: "deepseek-v4-flash",
@@ -134,7 +142,6 @@ async function callDeepSeek({ thinking, reasoningEffort, userPayload }) {
   }
 
   const started = performance.now();
-  let firstTokenMs = null;
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
@@ -143,15 +150,19 @@ async function callDeepSeek({ thinking, reasoningEffort, userPayload }) {
     },
     body: JSON.stringify(body),
   });
-  const totalMs = performance.now() - started;
+  const responseHeadersMs = performance.now() - started;
+
   const raw = await response.text();
-  if (!firstTokenMs) firstTokenMs = totalMs;
+  const totalLatencyMs = performance.now() - started;
+
   if (!response.ok) {
     return {
       ok: false,
       status: response.status,
-      totalMs,
-      firstTokenMs,
+      responseHeadersMs,
+      totalLatencyMs,
+      ttftMs: null,
+      ttftMeasurement: "unavailable_without_streaming",
       error: `HTTP ${response.status}`,
       // Never include response body if it might echo auth; keep short.
       detail: raw.slice(0, 200),
@@ -163,8 +174,10 @@ async function callDeepSeek({ thinking, reasoningEffort, userPayload }) {
   return {
     ok: true,
     status: response.status,
-    totalMs,
-    firstTokenMs,
+    responseHeadersMs,
+    totalLatencyMs,
+    ttftMs: null,
+    ttftMeasurement: "unavailable_without_streaming",
     content,
     usage,
     model: parsed.model || "deepseek-v4-flash",
@@ -175,6 +188,8 @@ async function callDeepSeek({ thinking, reasoningEffort, userPayload }) {
 mkdirSync(evidenceDir, { recursive: true });
 
 let spent = 0;
+let providerCallsAttempted = 0;
+let scenariosEvaluated = 0;
 const results = [];
 
 for (const run of RUNS) {
@@ -189,6 +204,7 @@ for (const run of RUNS) {
     continue;
   }
 
+  scenariosEvaluated += 1;
   const request = JSON.parse(
     readFileSync(join(docsExamplesDir, run.fixture), "utf8"),
   );
@@ -197,6 +213,7 @@ for (const run of RUNS) {
   let finalRecord = null;
   while (attempt < 2) {
     attempt += 1;
+    providerCallsAttempted += 1;
     const call = await callDeepSeek({
       thinking: run.thinking,
       reasoningEffort: run.reasoningEffort,
@@ -211,8 +228,11 @@ for (const run of RUNS) {
         ok: false,
         error: call.error,
         detail: call.detail,
-        latencyMs: Math.round(call.totalMs),
-        ttftMs: Math.round(call.firstTokenMs),
+        responseHeadersMs: Math.round(call.responseHeadersMs),
+        totalLatencyMs: Math.round(call.totalLatencyMs),
+        ttftMs: null,
+        ttftMeasurement: call.ttftMeasurement,
+        repairAttempted: attempt > 1,
       };
       break;
     }
@@ -237,8 +257,10 @@ for (const run of RUNS) {
       thinking: run.thinking,
       model: call.model,
       provider: "deepseek",
-      latencyMs: Math.round(call.totalMs),
-      ttftMs: Math.round(call.firstTokenMs),
+      responseHeadersMs: Math.round(call.responseHeadersMs),
+      totalLatencyMs: Math.round(call.totalLatencyMs),
+      ttftMs: null,
+      ttftMeasurement: call.ttftMeasurement,
       usage: {
         promptTokens: call.usage.prompt_tokens ?? null,
         completionTokens: call.usage.completion_tokens ?? null,
@@ -278,7 +300,8 @@ for (const run of RUNS) {
       {
         id: finalRecord.id,
         ok: Boolean(finalRecord.schemaOk && finalRecord.semanticOk),
-        latencyMs: finalRecord.latencyMs,
+        responseHeadersMs: finalRecord.responseHeadersMs,
+        totalLatencyMs: finalRecord.totalLatencyMs,
         estimatedCostUsd: finalRecord.estimatedCostUsd,
         schemaOk: finalRecord.schemaOk,
         semanticOk: finalRecord.semanticOk,
@@ -298,10 +321,13 @@ const summary = {
   fallbackModelPolicy: "thinking disabled",
   costCeilingUsd: costCeiling,
   totalEstimatedCostUsd: Number(spent.toFixed(6)),
-  liveCallsAttempted: results.filter((item) => !item.skipped).length,
+  scenariosEvaluated,
+  providerCallsAttempted,
+  maximumRepairsPerScenario: 1,
   results,
   statisticalLatency: "deferred — sample too small for p50/p95 claims",
-  validatorPackage: packageRoot,
+  ttftMeasurement: "unavailable_without_streaming",
+  validatorPackage: relative(repoRoot, packageRoot),
   generatedAt: new Date().toISOString(),
 };
 
@@ -311,5 +337,5 @@ writeFileSync(
 );
 
 console.log(
-  `\nLive campaign complete. Calls=${summary.liveCallsAttempted} spentUsd=${summary.totalEstimatedCostUsd} ceiling=${costCeiling}`,
+  `\nLive campaign complete. scenarios=${scenariosEvaluated} providerCalls=${providerCallsAttempted} spentUsd=${summary.totalEstimatedCostUsd} ceiling=${costCeiling}`,
 );

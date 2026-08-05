@@ -7,12 +7,18 @@
 
 ## Campaign
 
-Four representative calls under cost ceiling US$ 0.05 (spent ≈ US$ 0.0129):
+Four representative scenarios under cost ceiling US$ 0.05 (spent ≈ US$ 0.012867):
 
 1. `cook_now` thinking-high
 2. `cook_now` non-thinking fallback
 3. `menu_planning` thinking-high
 4. `menu_planning` non-thinking fallback
+
+Each scenario reached attempt 2 (one repair). **Actual provider calls: 8.** Do not describe four scenarios as four provider calls.
+
+## Latency accounting
+
+Historical `460–518 ms` values are preserved as **response-header timing** only. Total response latency and TTFT are unavailable for that historical run (non-streaming calls; the original timer stopped before the response body was fully read). Statistical latency characterization remains deferred. Future script runs record `responseHeadersMs`, `totalLatencyMs`, and `ttftMs: null` with `ttftMeasurement: unavailable_without_streaming`.
 
 ## Outcome
 

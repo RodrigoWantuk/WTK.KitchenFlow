@@ -7,7 +7,6 @@
   "fallbackModelPolicy": "thinking disabled",
   "costCeilingUsd": 0.05,
   "totalEstimatedCostUsd": 0.012867,
-  "liveCallsAttempted": 4,
   "results": [
     {
       "id": "cook_now_thinking",
@@ -16,8 +15,6 @@
       "thinking": true,
       "model": "deepseek-v4-flash",
       "provider": "deepseek",
-      "latencyMs": 518,
-      "ttftMs": 518,
       "usage": {
         "promptTokens": 1495,
         "completionTokens": 8192,
@@ -36,7 +33,13 @@
       "semanticErrors": [
         "empty or non-JSON content"
       ],
-      "repairAttempted": true
+      "repairAttempted": true,
+      "responseHeadersMs": 518,
+      "totalLatencyMs": null,
+      "ttftMs": null,
+      "ttftMeasurement": "unavailable_without_streaming",
+      "latencyMeasurementNote": "responseHeadersMs is the preserved historical fetch()-resolve timing; totalLatencyMs unavailable for this historical run",
+      "providerCallsForScenario": 2
     },
     {
       "id": "cook_now_fallback",
@@ -45,8 +48,6 @@
       "thinking": false,
       "model": "deepseek-v4-flash",
       "provider": "deepseek",
-      "latencyMs": 460,
-      "ttftMs": 460,
       "usage": {
         "promptTokens": 1416,
         "completionTokens": 1828,
@@ -78,7 +79,13 @@
         "must have required property 'clarifications' @ ",
         "must have required property 'optional' @ /candidates/1/additionalIngredients/0",
         "must have required property 'optional' @ /candidates/2/additionalIngredients/0"
-      ]
+      ],
+      "responseHeadersMs": 460,
+      "totalLatencyMs": null,
+      "ttftMs": null,
+      "ttftMeasurement": "unavailable_without_streaming",
+      "latencyMeasurementNote": "responseHeadersMs is the preserved historical fetch()-resolve timing; totalLatencyMs unavailable for this historical run",
+      "providerCallsForScenario": 2
     },
     {
       "id": "menu_planning_thinking",
@@ -87,8 +94,6 @@
       "thinking": true,
       "model": "deepseek-v4-flash",
       "provider": "deepseek",
-      "latencyMs": 478,
-      "ttftMs": 478,
       "usage": {
         "promptTokens": 1632,
         "completionTokens": 8192,
@@ -122,7 +127,13 @@
         "must have required property 'clarifications' @ ",
         "must have required property 'optional' @ /candidates/1/additionalIngredients/0",
         "must have required property 'optional' @ /candidates/2/additionalIngredients/0"
-      ]
+      ],
+      "responseHeadersMs": 478,
+      "totalLatencyMs": null,
+      "ttftMs": null,
+      "ttftMeasurement": "unavailable_without_streaming",
+      "latencyMeasurementNote": "responseHeadersMs is the preserved historical fetch()-resolve timing; totalLatencyMs unavailable for this historical run",
+      "providerCallsForScenario": 2
     },
     {
       "id": "menu_planning_fallback",
@@ -131,8 +142,6 @@
       "thinking": false,
       "model": "deepseek-v4-flash",
       "provider": "deepseek",
-      "latencyMs": 463,
-      "ttftMs": 463,
       "usage": {
         "promptTokens": 1553,
         "completionTokens": 1682,
@@ -164,14 +173,28 @@
         "must have required property 'clarifications' @ ",
         "must have required property 'name' @ /candidates/0/additionalIngredients/0",
         "must have required property 'name' @ /candidates/0/additionalIngredients/1"
-      ]
+      ],
+      "responseHeadersMs": 463,
+      "totalLatencyMs": null,
+      "ttftMs": null,
+      "ttftMeasurement": "unavailable_without_streaming",
+      "latencyMeasurementNote": "responseHeadersMs is the preserved historical fetch()-resolve timing; totalLatencyMs unavailable for this historical run",
+      "providerCallsForScenario": 2
     }
   ],
-  "statisticalLatency": "deferred \u2014 sample too small for p50/p95 claims",
-  "validatorPackage": "/home/rodrigo/Repos/GIT/WTK.KitchenFlow/packages/contracts/ai/recipe",
+  "statisticalLatency": "deferred \u2014 sample too small for p50/p95 claims; historical total latency and TTFT unavailable for this campaign",
+  "validatorPackage": "packages/contracts/ai/recipe",
   "generatedAt": "2026-08-05T23:35:10.893Z",
   "notes": [
+    "Scenarios evaluated: 4. Actual provider calls: 8 (each scenario reached attempt 2 / one repair).",
     "Full AJV error lists compacted to samples for reviewability; response JSON files preserve raw model output for fallbacks.",
-    "Thinking runs produced no durable response JSON files because content was empty/truncated."
-  ]
+    "Thinking runs produced no durable response JSON files because content was empty/truncated.",
+    "Absolute local validator paths were replaced with repository-relative packages/contracts/ai/recipe."
+  ],
+  "scenariosEvaluated": 4,
+  "providerCallsAttempted": 8,
+  "maximumRepairsPerScenario": 1,
+  "ttftMeasurement": "unavailable_without_streaming",
+  "latencyMeasurementNote": "Historical values previously stored as latencyMs/ttftMs measured elapsed time until fetch() resolved (response headers), before response.text() completed, and therefore are not total response latency or real TTFT. Those values are preserved as responseHeadersMs only. totalLatencyMs and ttftMs are null for this historical run and were not fabricated.",
+  "accountingCorrectedAt": "2026-08-05"
 }

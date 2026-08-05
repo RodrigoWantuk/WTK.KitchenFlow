@@ -17,4 +17,6 @@ Rules:
 - never print the API key;
 - stop when the cost ceiling is reached;
 - at most one repair retry for empty/truncated/invalid JSON;
-- evidence is written under `docs/evidence/plan-0022/`.
+- evidence is written under `docs/evidence/plan-0022/`;
+- summaries report `scenariosEvaluated` and `providerCallsAttempted` separately (repairs count as provider calls);
+- non-streaming runs set `ttftMs` to null (`unavailable_without_streaming`) and distinguish response-header timing from total body-inclusive latency.
