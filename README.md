@@ -17,14 +17,19 @@ KitchenFlow has completed its initial product and architecture discovery and now
 
 - backend-managed OIDC browser session and internal user ownership;
 - owner-isolated PostgreSQL inventory with concurrency, idempotency, history, migrations, OpenAPI, and operational tests;
-- profile, household context, preferences/restrictions, equipment, and completeness backend;
+- profile, household context, preferences/restrictions, equipment, and completeness backend plus production profile UI;
+- public entry and mock-backed contextual home presentation;
+- prepared components and derived inventory lots;
 - generated TypeScript API client;
 - production session and authenticated inventory frontend routes;
+- recipe AI protocol `0.3` (Revised) with deterministic validators;
 - prototype/production isolation and blocking frontend/backend CI gates.
 
-The full initial release is **not** implemented. Public entry, contextual home, production profile UI, recipes, planning, shopping, guided cooking, reconciliation, AI Gateway, persistent jobs, notifications, privacy workflows, generated media, billing, and launch operations remain plan-driven future work.
+The full initial release is **not** implemented. Recipes generation (in progress under PLAN-0028), planning, shopping, guided cooking, reconciliation, thumbnail generation, persistent jobs, notifications, privacy workflows, billing, and launch operations remain plan-driven future work.
 
 Do not interpret accepted architecture or prototype surfaces as completed production capability.
+
+See [`docs/roadmap/initial-release-delivery-map.md`](docs/roadmap/initial-release-delivery-map.md).
 
 ## Initial release direction
 
