@@ -154,31 +154,31 @@ public sealed class FakeAiProvider : IAiProvider
         IReadOnlyList<string> requiredEquipment,
         JsonArray inventoryUses,
         string difficulty) => new()
-    {
-        ["candidateId"] = candidateId,
-        ["candidateStrategy"] = strategy,
-        ["name"] = name,
-        ["targetMealType"] = mealType,
-        ["dishFormat"] = dishFormat,
-        ["primaryTechnique"] = technique,
-        ["primaryIngredientRefs"] = new JsonArray(primaryIngredientRefs.Select(item => (JsonNode)item).ToArray()),
-        ["summary"] = summary,
-        ["servings"] = servings,
-        ["time"] = new JsonObject { ["activeMinutes"] = 20, ["passiveMinutes"] = 10, ["totalMinutes"] = 30 },
-        ["difficulty"] = difficulty,
-        ["requiredEquipmentIds"] = new JsonArray(requiredEquipment.Select(item => (JsonNode)item).ToArray()),
-        ["requiredCapabilities"] = new JsonArray("burner", "saute"),
-        ["inventoryUses"] = inventoryUses.DeepClone(),
-        ["additionalIngredients"] = new JsonArray(),
-        ["preparationProfile"] = new JsonObject
         {
-            ["requiresAdvancePreparation"] = false,
-            ["minimumLeadMinutes"] = 0,
-            ["blockingPreparationCodes"] = new JsonArray(),
-            ["mayProduceReusableComponents"] = false
-        },
-        ["assumptionsUsed"] = new JsonArray("salt", "cooking oil")
-    };
+            ["candidateId"] = candidateId,
+            ["candidateStrategy"] = strategy,
+            ["name"] = name,
+            ["targetMealType"] = mealType,
+            ["dishFormat"] = dishFormat,
+            ["primaryTechnique"] = technique,
+            ["primaryIngredientRefs"] = new JsonArray(primaryIngredientRefs.Select(item => (JsonNode)item).ToArray()),
+            ["summary"] = summary,
+            ["servings"] = servings,
+            ["time"] = new JsonObject { ["activeMinutes"] = 20, ["passiveMinutes"] = 10, ["totalMinutes"] = 30 },
+            ["difficulty"] = difficulty,
+            ["requiredEquipmentIds"] = new JsonArray(requiredEquipment.Select(item => (JsonNode)item).ToArray()),
+            ["requiredCapabilities"] = new JsonArray("burner", "saute"),
+            ["inventoryUses"] = inventoryUses.DeepClone(),
+            ["additionalIngredients"] = new JsonArray(),
+            ["preparationProfile"] = new JsonObject
+            {
+                ["requiresAdvancePreparation"] = false,
+                ["minimumLeadMinutes"] = 0,
+                ["blockingPreparationCodes"] = new JsonArray(),
+                ["mayProduceReusableComponents"] = false
+            },
+            ["assumptionsUsed"] = new JsonArray("salt", "cooking oil")
+        };
 
     private static string BuildExpandResponse(string payload)
     {

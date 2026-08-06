@@ -12,10 +12,7 @@ import { useSession } from "@/app/session/SessionProvider";
 import { useProductionI18n } from "@/app/i18n/ProductionI18nProvider";
 import { Button } from "@/components/ui/button";
 import { FeatureUnavailable } from "@/components/runtime/FeatureUnavailable";
-import {
-  isRetryableRecipeError,
-  recipeErrorMessageKey,
-} from "./recipeErrors";
+import { isRetryableRecipeError, recipeErrorMessageKey } from "./recipeErrors";
 
 type Phase =
   | "checking-inventory"
@@ -256,7 +253,11 @@ export function RecipeGeneratePage() {
 
   if (phase === "requesting" || phase === "selecting") {
     return (
-      <div data-testid="recipes-generate-busy" className="space-y-4" role="status">
+      <div
+        data-testid="recipes-generate-busy"
+        className="space-y-4"
+        role="status"
+      >
         <p>
           {phase === "requesting"
             ? t("recipes.generate.requesting")
@@ -347,9 +348,7 @@ export function RecipeGeneratePage() {
   return (
     <div data-testid="recipes-generate-confirm" className="space-y-6">
       <div>
-        <h1 className="font-display text-3xl">
-          {t("recipes.generate.title")}
-        </h1>
+        <h1 className="font-display text-3xl">{t("recipes.generate.title")}</h1>
         <p className="mt-1 text-muted-foreground">
           {t("recipes.generate.subtitle")}
         </p>

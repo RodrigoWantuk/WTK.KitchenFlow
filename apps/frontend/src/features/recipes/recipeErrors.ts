@@ -1,9 +1,7 @@
 import type { RecipeApiErrorCode } from "@/contracts/recipes";
 
 /** Maps recipe API error codes to production i18n keys. */
-export function recipeErrorMessageKey(
-  code: RecipeApiErrorCode,
-): string {
+export function recipeErrorMessageKey(code: RecipeApiErrorCode): string {
   switch (code) {
     case "ai_capability_unavailable":
     case "ai_provider_unavailable":

@@ -69,21 +69,21 @@ public sealed class RecipeGenerationSession
         Guid id, Guid ownerUserId, Guid idempotencyKey, string executionMode, RecipeGenerationSessionStatus status,
         string? candidatesSnapshotJson, string? selectedCandidateId, Guid? selectedRecipeId, Guid? selectIdempotencyKey, string? failureReason,
         DateTimeOffset createdAt, DateTimeOffset updatedAt, DateTimeOffset expiresAt) => new()
-    {
-        Id = id,
-        OwnerUserId = ownerUserId,
-        IdempotencyKey = idempotencyKey,
-        ExecutionMode = executionMode,
-        Status = status,
-        CandidatesSnapshotJson = candidatesSnapshotJson,
-        SelectedCandidateId = selectedCandidateId,
-        SelectedRecipeId = selectedRecipeId,
-        SelectIdempotencyKey = selectIdempotencyKey,
-        FailureReason = failureReason,
-        CreatedAt = createdAt,
-        UpdatedAt = updatedAt,
-        ExpiresAt = expiresAt
-    };
+        {
+            Id = id,
+            OwnerUserId = ownerUserId,
+            IdempotencyKey = idempotencyKey,
+            ExecutionMode = executionMode,
+            Status = status,
+            CandidatesSnapshotJson = candidatesSnapshotJson,
+            SelectedCandidateId = selectedCandidateId,
+            SelectedRecipeId = selectedRecipeId,
+            SelectIdempotencyKey = selectIdempotencyKey,
+            FailureReason = failureReason,
+            CreatedAt = createdAt,
+            UpdatedAt = updatedAt,
+            ExpiresAt = expiresAt
+        };
 
     /// <summary>Returns whether the session may still be acted upon.</summary>
     public bool IsExpired(DateTimeOffset now) => now >= ExpiresAt;

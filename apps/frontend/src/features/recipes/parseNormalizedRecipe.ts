@@ -16,9 +16,7 @@ export function parseNormalizedRecipeJson(
     const root = JSON.parse(raw) as unknown;
     if (!root || typeof root !== "object") return null;
     const recipe =
-      "recipe" in root &&
-      root.recipe &&
-      typeof root.recipe === "object"
+      "recipe" in root && root.recipe && typeof root.recipe === "object"
         ? (root.recipe as Record<string, unknown>)
         : (root as Record<string, unknown>);
 
@@ -89,7 +87,9 @@ export function parseNormalizedRecipeJson(
     }
 
     const assumptions = Array.isArray(recipe.assumptions)
-      ? recipe.assumptions.filter((item): item is string => typeof item === "string")
+      ? recipe.assumptions.filter(
+          (item): item is string => typeof item === "string",
+        )
       : [];
 
     return {

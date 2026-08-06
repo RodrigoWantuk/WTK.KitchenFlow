@@ -97,3 +97,7 @@ current inventory and profile
 - Added production Recipes area (`/app/receitas`, `/gerar`, `/:recipeId`), primary nav (`production-nav-receitas`), `createLiveRecipeRepository` over generated `@kitchenflow/api-client` recipe paths (CSRF + Idempotency-Key), prototype unavailable stub (no mock fixtures), `recipesCatalog` en/pt-BR/es, and degraded unavailable/budget/invalid-output/empty-inventory states.
 - Focused frontend tests (`RecipesFlow`, `liveRecipeRepository`, `recipesCatalog`, `productionIsolation`) passed.
 - Remaining for the owner: review PR #44. Agent must not approve, auto-merge, or merge.
+
+### 2026-08-05 — CI format remediation
+
+- Applied `dotnet format` and Prettier so Backend `build-and-test` and Frontend `quality` gates pass on the final PR head.

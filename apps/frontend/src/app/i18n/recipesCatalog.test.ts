@@ -1,7 +1,4 @@
-import {
-  REQUIRED_RECIPES_I18N_KEYS,
-  recipesCatalogs,
-} from "./recipesCatalog";
+import { REQUIRED_RECIPES_I18N_KEYS, recipesCatalogs } from "./recipesCatalog";
 import { PRODUCTION_LOCALES } from "./productionCatalog";
 
 describe("recipes i18n completeness", () => {

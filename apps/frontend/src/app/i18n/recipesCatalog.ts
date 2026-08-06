@@ -179,7 +179,8 @@ const es: Record<(typeof REQUIRED_RECIPES_I18N_KEYS)[number], string> = {
   "recipes.actions.confirmGenerate": "Pedir tres candidatos",
   "recipes.actions.selectCandidate": "Seleccionar y guardar",
   "recipes.actions.openInventory": "Abrir despensa",
-  "recipes.list.error": "No se pudieron cargar las recetas. Inténtalo de nuevo.",
+  "recipes.list.error":
+    "No se pudieron cargar las recetas. Inténtalo de nuevo.",
   "recipes.detail.title": "Receta",
   "recipes.detail.loading": "Cargando receta…",
   "recipes.detail.error": "No se pudo cargar esta receta.",

@@ -18,11 +18,7 @@ export function RecipeProvider({
   repository: RecipeRepository;
   children: ReactNode;
 }) {
-  return createElement(
-    RecipeContext.Provider,
-    { value: repository },
-    children,
-  );
+  return createElement(RecipeContext.Provider, { value: repository }, children);
 }
 
 export function useRecipeRepository(): RecipeRepository {

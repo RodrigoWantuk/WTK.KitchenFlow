@@ -86,7 +86,9 @@ function authenticatedSession(): SessionState {
   };
 }
 
-function sessionAdapter(state: SessionState = authenticatedSession()): SessionAdapter {
+function sessionAdapter(
+  state: SessionState = authenticatedSession(),
+): SessionAdapter {
   return {
     getSession: async () => state,
     beginLogin: () => undefined,
@@ -101,7 +103,11 @@ function inventoryWithLots(count: number): InventoryRepository {
         lotId: `lot-${i}`,
         productId: `p-${i}`,
         productName: `Product ${i}`,
-        quantity: { kind: "measured" as const, value: 1, unit: "Unit" as const },
+        quantity: {
+          kind: "measured" as const,
+          value: 1,
+          unit: "Unit" as const,
+        },
         storageLocation: "Pantry" as const,
         customLocation: null,
         packageState: null,
@@ -131,7 +137,9 @@ function inventoryWithLots(count: number): InventoryRepository {
   };
 }
 
-function createRecipeRepo(overrides: Partial<RecipeRepository> = {}): RecipeRepository {
+function createRecipeRepo(
+  overrides: Partial<RecipeRepository> = {},
+): RecipeRepository {
   const detail: RecipeDetail = {
     recipeId: "recipe-1",
     revisionNumber: 1,
@@ -186,10 +194,15 @@ function renderGenerate(recipeRepo: RecipeRepository, lotCount = 1) {
           <RecipeProvider repository={recipeRepo}>
             <MemoryRouter initialEntries={["/app/receitas/gerar"]}>
               <Routes>
-                <Route path="/app/receitas/gerar" element={<RecipeGeneratePage />} />
+                <Route
+                  path="/app/receitas/gerar"
+                  element={<RecipeGeneratePage />}
+                />
                 <Route
                   path="/app/receitas/:recipeId"
-                  element={<div data-testid="saved-recipe-destination">saved</div>}
+                  element={
+                    <div data-testid="saved-recipe-destination">saved</div>
+                  }
                 />
               </Routes>
             </MemoryRouter>
@@ -213,7 +226,9 @@ describe("production recipes vertical slice", () => {
                   <Route path="/app/receitas" element={<RecipesListPage />} />
                   <Route
                     path="/app/receitas/gerar"
-                    element={<div data-testid="generate-destination">generate</div>}
+                    element={
+                      <div data-testid="generate-destination">generate</div>
+                    }
                   />
                   <Route
                     path="/app/receitas/:recipeId"
@@ -230,7 +245,9 @@ describe("production recipes vertical slice", () => {
     expect(await screen.findByTestId("recipes-list")).toBeInTheDocument();
     expect(screen.getByText("Tomato Skillet")).toBeInTheDocument();
     await user.click(screen.getByTestId("recipes-generate-link"));
-    expect(await screen.findByTestId("generate-destination")).toBeInTheDocument();
+    expect(
+      await screen.findByTestId("generate-destination"),
+    ).toBeInTheDocument();
   });
 
   it("renders exactly three candidates and navigates after selection", async () => {
@@ -252,7 +269,9 @@ describe("production recipes vertical slice", () => {
     );
 
     await user.click(await screen.findByTestId("recipes-confirm-generate"));
-    expect(await screen.findByTestId("recipes-candidate-list")).toBeInTheDocument();
+    expect(
+      await screen.findByTestId("recipes-candidate-list"),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("recipes-candidate-cand-a")).toBeInTheDocument();
     expect(screen.getByTestId("recipes-candidate-cand-b")).toBeInTheDocument();
     expect(screen.getByTestId("recipes-candidate-cand-c")).toBeInTheDocument();
@@ -263,7 +282,9 @@ describe("production recipes vertical slice", () => {
       "cand-a",
       expect.objectContaining({ csrfToken: "csrf-test" }),
     );
-    expect(await screen.findByTestId("saved-recipe-destination")).toBeInTheDocument();
+    expect(
+      await screen.findByTestId("saved-recipe-destination"),
+    ).toBeInTheDocument();
   });
 
   it("shows unavailable state for provider failures", async () => {
@@ -311,7 +332,10 @@ describe("production recipes vertical slice", () => {
             <RecipeProvider repository={createRecipeRepo()}>
               <MemoryRouter initialEntries={["/app/receitas/recipe-1"]}>
                 <Routes>
-                  <Route path="/app/receitas/:recipeId" element={<RecipeDetailPage />} />
+                  <Route
+                    path="/app/receitas/:recipeId"
+                    element={<RecipeDetailPage />}
+                  />
                 </Routes>
               </MemoryRouter>
             </RecipeProvider>

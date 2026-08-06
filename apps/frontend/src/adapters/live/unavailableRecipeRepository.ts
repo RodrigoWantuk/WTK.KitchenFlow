@@ -1,7 +1,4 @@
-import {
-  RecipeApiError,
-  type RecipeRepository,
-} from "@/contracts/recipes";
+import { RecipeApiError, type RecipeRepository } from "@/contracts/recipes";
 
 /**
  * Prototype stand-in that never serves mock recipe fixtures.
