@@ -24,7 +24,7 @@ public sealed class RecipeCookNowApplicationServiceTests
         Assert.Equal(AiUsageReservationOutcome.Reserved, reserved.Outcome);
         Assert.Equal(1, await ledger.CountOpenReservationsAsync(owner, CancellationToken.None));
 
-        await governor.SettleAsync(reserved.ReservationId!.Value, 3, "fake", "fake-model", CancellationToken.None);
+        await governor.SettleAsync(reserved.ReservationId!.Value, 3, "fake", "fake-model", CancellationToken.None, promptTokens: 10, completionTokens: 20);
         Assert.Equal(0, await ledger.CountOpenReservationsAsync(owner, CancellationToken.None));
         Assert.Equal(3, await ledger.SumOwnerUnitsForDayAsync(owner, DateTimeOffset.UtcNow, CancellationToken.None));
 
@@ -32,6 +32,36 @@ public sealed class RecipeCookNowApplicationServiceTests
         await governor.ReleaseAsync(second.ReservationId!.Value, CancellationToken.None);
         Assert.Equal(3, await ledger.SumOwnerUnitsForDayAsync(owner, DateTimeOffset.UtcNow, CancellationToken.None));
         Assert.Equal(0, await ledger.CountOpenReservationsAsync(owner, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task ConcurrentReserveAgainstTightCeilingAllowsExactlyOne()
+    {
+        var ledger = new InMemoryAiUsageLedgerStore();
+        var governor = new AiUsageGovernor(ledger, new AiUsageOptions { UserDailyUnitCeiling = 3, GlobalDailyUnitCeiling = 3, UserConcurrencyCeiling = 2 }, TimeProvider.System);
+        var owner = Guid.NewGuid();
+        using var ready = new CountdownEvent(2);
+        using var start = new ManualResetEventSlim(false);
+        var results = new AiUsageReservationResult[2];
+
+        async Task Run(int index)
+        {
+            ready.Signal();
+            start.Wait();
+            results[index] = await governor.ReserveAsync(owner, AiOperationRegistry.SuggestCandidates, 3, $"corr-{index}", CancellationToken.None);
+        }
+
+        var tasks = new[]
+        {
+            Task.Run(() => Run(0)),
+            Task.Run(() => Run(1))
+        };
+        Assert.True(ready.Wait(TimeSpan.FromSeconds(5)));
+        start.Set();
+        await Task.WhenAll(tasks);
+        Assert.Equal(1, results.Count(item => item.Outcome == AiUsageReservationOutcome.Reserved));
+        Assert.Equal(1, results.Count(item => item.Outcome == AiUsageReservationOutcome.UserBudgetExhausted || item.Outcome == AiUsageReservationOutcome.GlobalBudgetExhausted));
+        Assert.Equal(1, ledger.EntryCount);
     }
 
     [Fact]
@@ -54,10 +84,12 @@ public sealed class RecipeCookNowApplicationServiceTests
     {
         var sharedGeneration = new InMemoryRecipeGenerationStore();
         var sharedRecipes = new InMemoryRecipeStore();
+        var sharedLedger = new InMemoryAiUsageLedgerStore();
+        var sharedUnitOfWork = new InMemoryRecipeCookNowUnitOfWork(sharedGeneration, sharedRecipes, sharedLedger);
         var ownerA = Guid.NewGuid();
         var ownerB = Guid.NewGuid();
-        var serviceA = CreateHarness(ownerA, sharedGeneration, sharedRecipes).Service;
-        var serviceB = CreateHarness(ownerB, sharedGeneration, sharedRecipes).Service;
+        var serviceA = CreateHarness(ownerA, sharedGeneration, sharedRecipes, sharedLedger, sharedUnitOfWork).Service;
+        var serviceB = CreateHarness(ownerB, sharedGeneration, sharedRecipes, sharedLedger, sharedUnitOfWork).Service;
 
         var created = await serviceA.RequestCandidatesAsync(new RequestCandidatesCommand(Guid.NewGuid(), "corr"), CancellationToken.None);
         var foreignSession = await serviceB.GetSessionAsync(created.Value!.SessionId, CancellationToken.None);
@@ -115,6 +147,32 @@ public sealed class RecipeCookNowApplicationServiceTests
     }
 
     [Fact]
+    public async Task RepairAttemptSendsDistinctPayloadWithValidationErrors()
+    {
+        var harness = CreateHarness(useProtocolDefaults: false);
+        string? firstPayload = null;
+        string? repairPayload = null;
+        harness.Provider.Enqueue(AiOperationRegistry.SuggestCandidates, request =>
+        {
+            firstPayload = request.Payload;
+            return AiProviderInvocationResult.Success("""{"operation":"recipe.suggest_candidates.v1","schemaVersion":"0.3","candidates":[],"clarifications":[]}""", "fake-model");
+        });
+        harness.Provider.Enqueue(AiOperationRegistry.SuggestCandidates, request =>
+        {
+            repairPayload = request.Payload;
+            return AiProviderInvocationResult.Success("""{"operation":"recipe.suggest_candidates.v1","schemaVersion":"0.3","candidates":[],"clarifications":[]}""", "fake-model");
+        });
+
+        _ = await harness.Service.RequestCandidatesAsync(new RequestCandidatesCommand(Guid.NewGuid(), "corr"), CancellationToken.None);
+        Assert.False(string.IsNullOrWhiteSpace(firstPayload));
+        Assert.False(string.IsNullOrWhiteSpace(repairPayload));
+        Assert.NotEqual(firstPayload, repairPayload);
+        Assert.Contains("repair", repairPayload!, StringComparison.Ordinal);
+        Assert.Contains("responseSchema", firstPayload!, StringComparison.Ordinal);
+        Assert.Contains("validationErrors", repairPayload!, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task ValidThreeCandidateSuggestPassesProtocolValidation()
     {
         var harness = CreateHarness();
@@ -148,23 +206,31 @@ public sealed class RecipeCookNowApplicationServiceTests
             || nameSetter.IsPrivate);
     }
 
-    private static Harness CreateHarness(Guid? ownerId = null, InMemoryRecipeGenerationStore? generation = null, InMemoryRecipeStore? recipes = null, bool useProtocolDefaults = true)
+    private static Harness CreateHarness(
+        Guid? ownerId = null,
+        InMemoryRecipeGenerationStore? generation = null,
+        InMemoryRecipeStore? recipes = null,
+        InMemoryAiUsageLedgerStore? ledger = null,
+        InMemoryRecipeCookNowUnitOfWork? unitOfWork = null,
+        bool useProtocolDefaults = true)
     {
         var owner = ownerId ?? Guid.NewGuid();
-        var ledger = new InMemoryAiUsageLedgerStore();
+        var usageLedger = ledger ?? new InMemoryAiUsageLedgerStore();
         var provider = new FakeAiProvider(useProtocolDefaults);
         var generationStore = generation ?? new InMemoryRecipeGenerationStore();
         var recipeStore = recipes ?? new InMemoryRecipeStore();
+        var cookNowUnitOfWork = unitOfWork ?? new InMemoryRecipeCookNowUnitOfWork(generationStore, recipeStore, usageLedger);
         var service = new RecipeCookNowApplicationService(
             new FixedCurrentUserAccessor(owner),
             generationStore,
             recipeStore,
+            cookNowUnitOfWork,
             new EmptyRecipeContextAssembler(),
             provider,
             AiOperationRegistry.CreateDefault(),
-            new AiUsageGovernor(ledger, new AiUsageOptions(), TimeProvider.System),
+            new AiUsageGovernor(usageLedger, new AiUsageOptions(), TimeProvider.System),
             TimeProvider.System);
-        return new Harness(service, provider, ledger, recipeStore, owner);
+        return new Harness(service, provider, usageLedger, recipeStore, owner);
     }
 
     private sealed record Harness(RecipeCookNowApplicationService Service, FakeAiProvider Provider, InMemoryAiUsageLedgerStore Ledger, InMemoryRecipeStore Recipes, Guid OwnerId);
@@ -198,36 +264,110 @@ public sealed class RecipeCookNowApplicationServiceTests
 
     private sealed class InMemoryAiUsageLedgerStore : IAiUsageLedgerStore
     {
-        private readonly ConcurrentDictionary<Guid, AiUsageEntry> _entries = new();
+        private readonly object _gate = new();
+        private readonly Dictionary<Guid, AiUsageEntry> _entries = new();
 
-        public Task<int> SumGlobalUnitsForDayAsync(DateTimeOffset asOf, CancellationToken cancellationToken) =>
-            Task.FromResult(Sum(null, asOf));
-
-        public Task<int> SumOwnerUnitsForDayAsync(Guid ownerUserId, DateTimeOffset asOf, CancellationToken cancellationToken) =>
-            Task.FromResult(Sum(ownerUserId, asOf));
-
-        public Task<int> CountOpenReservationsAsync(Guid ownerUserId, CancellationToken cancellationToken) =>
-            Task.FromResult(_entries.Values.Count(item => item.OwnerUserId == ownerUserId && item.Status == AiUsageEntryStatus.Reserved));
-
-        public Task<Guid> InsertReservationAsync(Guid ownerUserId, string operation, int reservedUnits, string correlationId, DateTimeOffset now, CancellationToken cancellationToken)
+        public int EntryCount
         {
-            var id = Guid.NewGuid();
-            _entries[id] = new AiUsageEntry(id, ownerUserId, operation, AiUsageEntryStatus.Reserved, reservedUnits, null, null, null, correlationId, now, null);
-            return Task.FromResult(id);
+            get
+            {
+                lock (_gate)
+                {
+                    return _entries.Count;
+                }
+            }
         }
 
-        public Task SettleAsync(Guid reservationId, int settledUnits, string provider, string model, DateTimeOffset now, CancellationToken cancellationToken)
+        public Task<AiUsageReservationResult> TryReserveAsync(
+            Guid ownerUserId,
+            string operation,
+            int estimatedUnits,
+            string correlationId,
+            DateTimeOffset now,
+            AiUsageOptions ceilings,
+            CancellationToken cancellationToken)
         {
-            var current = _entries[reservationId];
-            _entries[reservationId] = current with { Status = AiUsageEntryStatus.Settled, SettledUnits = settledUnits, Provider = provider, Model = model, ClosedAt = now };
-            return Task.CompletedTask;
+            lock (_gate)
+            {
+                var open = _entries.Values.Count(item => item.OwnerUserId == ownerUserId && item.Status == AiUsageEntryStatus.Reserved);
+                if (open >= ceilings.UserConcurrencyCeiling)
+                {
+                    return Task.FromResult(AiUsageReservationResult.Rejected(AiUsageReservationOutcome.ConcurrencyExhausted));
+                }
+
+                var dayStart = new DateTimeOffset(now.UtcDateTime.Date, TimeSpan.Zero);
+                var dayEnd = dayStart.AddDays(1);
+                int Sum(Guid? owner) => _entries.Values
+                    .Where(item => item.CreatedAt >= dayStart && item.CreatedAt < dayEnd && item.Status != AiUsageEntryStatus.Released)
+                    .Where(item => owner is null || item.OwnerUserId == owner)
+                    .Sum(item => item.Status == AiUsageEntryStatus.Settled ? item.SettledUnits ?? item.ReservedUnits : item.ReservedUnits);
+
+                if (Sum(null) + estimatedUnits > ceilings.GlobalDailyUnitCeiling)
+                {
+                    return Task.FromResult(AiUsageReservationResult.Rejected(AiUsageReservationOutcome.GlobalBudgetExhausted));
+                }
+
+                if (Sum(ownerUserId) + estimatedUnits > ceilings.UserDailyUnitCeiling)
+                {
+                    return Task.FromResult(AiUsageReservationResult.Rejected(AiUsageReservationOutcome.UserBudgetExhausted));
+                }
+
+                var id = Guid.NewGuid();
+                _entries[id] = new AiUsageEntry(id, ownerUserId, operation, AiUsageEntryStatus.Reserved, estimatedUnits, null, null, null, correlationId, now, null);
+                return Task.FromResult(AiUsageReservationResult.Success(id));
+            }
+        }
+
+        public Task<int> SumGlobalUnitsForDayAsync(DateTimeOffset asOf, CancellationToken cancellationToken)
+        {
+            lock (_gate)
+            {
+                return Task.FromResult(Sum(null, asOf));
+            }
+        }
+
+        public Task<int> SumOwnerUnitsForDayAsync(Guid ownerUserId, DateTimeOffset asOf, CancellationToken cancellationToken)
+        {
+            lock (_gate)
+            {
+                return Task.FromResult(Sum(ownerUserId, asOf));
+            }
+        }
+
+        public Task<int> CountOpenReservationsAsync(Guid ownerUserId, CancellationToken cancellationToken)
+        {
+            lock (_gate)
+            {
+                return Task.FromResult(_entries.Values.Count(item => item.OwnerUserId == ownerUserId && item.Status == AiUsageEntryStatus.Reserved));
+            }
+        }
+
+        public Task SettleAsync(
+            Guid reservationId,
+            int settledUnits,
+            string provider,
+            string model,
+            int? promptTokens,
+            int? completionTokens,
+            DateTimeOffset now,
+            CancellationToken cancellationToken)
+        {
+            lock (_gate)
+            {
+                var current = _entries[reservationId];
+                _entries[reservationId] = current with { Status = AiUsageEntryStatus.Settled, SettledUnits = settledUnits, Provider = provider, Model = model, ClosedAt = now };
+                return Task.CompletedTask;
+            }
         }
 
         public Task ReleaseAsync(Guid reservationId, DateTimeOffset now, CancellationToken cancellationToken)
         {
-            var current = _entries[reservationId];
-            _entries[reservationId] = current with { Status = AiUsageEntryStatus.Released, ClosedAt = now };
-            return Task.CompletedTask;
+            lock (_gate)
+            {
+                var current = _entries[reservationId];
+                _entries[reservationId] = current with { Status = AiUsageEntryStatus.Released, ClosedAt = now };
+                return Task.CompletedTask;
+            }
         }
 
         private int Sum(Guid? ownerUserId, DateTimeOffset asOf)
@@ -243,30 +383,126 @@ public sealed class RecipeCookNowApplicationServiceTests
 
     private sealed class InMemoryRecipeGenerationStore : IRecipeGenerationStore
     {
-        private readonly ConcurrentDictionary<Guid, RecipeGenerationSession> _sessions = new();
+        private readonly object _gate = new();
+        private readonly Dictionary<Guid, RecipeGenerationSession> _sessions = new();
 
-        public Task<RecipeGenerationSession?> FindByIdempotencyKeyAsync(Guid ownerUserId, Guid idempotencyKey, CancellationToken cancellationToken) =>
-            Task.FromResult(_sessions.Values.SingleOrDefault(item => item.OwnerUserId == ownerUserId && item.IdempotencyKey == idempotencyKey));
-
-        public Task<RecipeGenerationSession?> FindBySelectIdempotencyKeyAsync(Guid ownerUserId, Guid selectIdempotencyKey, CancellationToken cancellationToken) =>
-            Task.FromResult(_sessions.Values.SingleOrDefault(item => item.OwnerUserId == ownerUserId && item.SelectIdempotencyKey == selectIdempotencyKey));
-
-        public Task SaveNewAsync(RecipeGenerationSession session, CancellationToken cancellationToken)
+        public Task<RecipeGenerationSessionClaimResult> TryClaimNewSessionAsync(RecipeGenerationSession session, CancellationToken cancellationToken)
         {
-            _sessions[session.Id] = session;
-            return Task.CompletedTask;
+            lock (_gate)
+            {
+                var existing = _sessions.Values.SingleOrDefault(item => item.OwnerUserId == session.OwnerUserId && item.IdempotencyKey == session.IdempotencyKey);
+                if (existing is not null)
+                {
+                    return Task.FromResult(new RecipeGenerationSessionClaimResult(false, existing));
+                }
+
+                _sessions[session.Id] = session;
+                return Task.FromResult(new RecipeGenerationSessionClaimResult(true, session));
+            }
         }
 
-        public Task<RecipeGenerationSession?> FindByIdAsync(Guid ownerUserId, Guid sessionId, CancellationToken cancellationToken) =>
-            Task.FromResult(_sessions.TryGetValue(sessionId, out var session) && session.OwnerUserId == ownerUserId ? session : null);
+        public Task<RecipeSelectionClaimResult> TryClaimSelectionAsync(
+            Guid ownerUserId,
+            Guid sessionId,
+            string candidateId,
+            Guid selectIdempotencyKey,
+            DateTimeOffset now,
+            CancellationToken cancellationToken)
+        {
+            lock (_gate)
+            {
+                var keyed = _sessions.Values.SingleOrDefault(item => item.OwnerUserId == ownerUserId && item.SelectIdempotencyKey == selectIdempotencyKey);
+                if (keyed is not null)
+                {
+                    if (keyed.Id != sessionId || !string.Equals(keyed.SelectedCandidateId, candidateId, StringComparison.Ordinal))
+                    {
+                        return Task.FromResult(new RecipeSelectionClaimResult(RecipeSelectionClaimOutcome.Conflict, keyed));
+                    }
+
+                    if (keyed.Status == RecipeGenerationSessionStatus.Selected)
+                    {
+                        return Task.FromResult(new RecipeSelectionClaimResult(RecipeSelectionClaimOutcome.AlreadySelected, keyed));
+                    }
+
+                    if (keyed.Status == RecipeGenerationSessionStatus.Expanding)
+                    {
+                        return Task.FromResult(new RecipeSelectionClaimResult(RecipeSelectionClaimOutcome.InProgress, keyed));
+                    }
+                }
+
+                if (!_sessions.TryGetValue(sessionId, out var session) || session.OwnerUserId != ownerUserId)
+                {
+                    return Task.FromResult(new RecipeSelectionClaimResult(RecipeSelectionClaimOutcome.NotFound, null));
+                }
+
+                if (session.IsExpired(now))
+                {
+                    return Task.FromResult(new RecipeSelectionClaimResult(RecipeSelectionClaimOutcome.NotReady, session));
+                }
+
+                if (session.Status == RecipeGenerationSessionStatus.Selected
+                    && string.Equals(session.SelectedCandidateId, candidateId, StringComparison.Ordinal)
+                    && session.SelectIdempotencyKey == selectIdempotencyKey)
+                {
+                    return Task.FromResult(new RecipeSelectionClaimResult(RecipeSelectionClaimOutcome.AlreadySelected, session));
+                }
+
+                if (session.Status == RecipeGenerationSessionStatus.Expanding)
+                {
+                    if (string.Equals(session.SelectedCandidateId, candidateId, StringComparison.Ordinal)
+                        && session.SelectIdempotencyKey == selectIdempotencyKey)
+                    {
+                        return Task.FromResult(new RecipeSelectionClaimResult(RecipeSelectionClaimOutcome.InProgress, session));
+                    }
+
+                    return Task.FromResult(new RecipeSelectionClaimResult(RecipeSelectionClaimOutcome.Conflict, session));
+                }
+
+                if (session.Status != RecipeGenerationSessionStatus.CandidatesReady)
+                {
+                    return Task.FromResult(new RecipeSelectionClaimResult(RecipeSelectionClaimOutcome.NotReady, session));
+                }
+
+                session.BeginSelection(candidateId, selectIdempotencyKey, now);
+                _sessions[session.Id] = session;
+                return Task.FromResult(new RecipeSelectionClaimResult(RecipeSelectionClaimOutcome.Claimed, session));
+            }
+        }
+
+        public Task<RecipeGenerationSession?> FindByIdempotencyKeyAsync(Guid ownerUserId, Guid idempotencyKey, CancellationToken cancellationToken)
+        {
+            lock (_gate)
+            {
+                return Task.FromResult(_sessions.Values.SingleOrDefault(item => item.OwnerUserId == ownerUserId && item.IdempotencyKey == idempotencyKey));
+            }
+        }
+
+        public Task<RecipeGenerationSession?> FindBySelectIdempotencyKeyAsync(Guid ownerUserId, Guid selectIdempotencyKey, CancellationToken cancellationToken)
+        {
+            lock (_gate)
+            {
+                return Task.FromResult(_sessions.Values.SingleOrDefault(item => item.OwnerUserId == ownerUserId && item.SelectIdempotencyKey == selectIdempotencyKey));
+            }
+        }
+
+        public Task<RecipeGenerationSession?> FindByIdAsync(Guid ownerUserId, Guid sessionId, CancellationToken cancellationToken)
+        {
+            lock (_gate)
+            {
+                return Task.FromResult(_sessions.TryGetValue(sessionId, out var session) && session.OwnerUserId == ownerUserId ? session : null);
+            }
+        }
 
         public Task<RecipeGenerationSession?> FindActiveAsync(Guid ownerUserId, Guid sessionId, CancellationToken cancellationToken) =>
             FindByIdAsync(ownerUserId, sessionId, cancellationToken);
 
         public Task SaveAsync(RecipeGenerationSession session, CancellationToken cancellationToken)
         {
-            _sessions[session.Id] = session;
-            return Task.CompletedTask;
+            lock (_gate)
+            {
+                _sessions[session.Id] = session;
+                return Task.CompletedTask;
+            }
         }
     }
 
@@ -296,6 +532,70 @@ public sealed class RecipeCookNowApplicationServiceTests
             }
 
             return Task.FromResult<RecipeDetail?>(new RecipeDetail(item.Recipe.Id, item.Revision.RevisionNumber, item.Revision.Name, item.Revision.MealTypes, item.Revision.Servings, item.Revision.NormalizedRecipeJson, item.Revision.ThumbnailVisualJson, item.Revision.CreatedAt));
+        }
+    }
+
+    private sealed class InMemoryRecipeCookNowUnitOfWork(
+        InMemoryRecipeGenerationStore generationStore,
+        InMemoryRecipeStore recipeStore,
+        InMemoryAiUsageLedgerStore ledger) : IRecipeCookNowUnitOfWork
+    {
+        public async Task CompleteSuggestAsync(
+            RecipeGenerationSession session,
+            Guid reservationId,
+            int settledUnits,
+            string provider,
+            string model,
+            int? promptTokens,
+            int? completionTokens,
+            DateTimeOffset now,
+            CancellationToken cancellationToken)
+        {
+            await generationStore.SaveAsync(session, cancellationToken);
+            await ledger.SettleAsync(reservationId, settledUnits, provider, model, promptTokens, completionTokens, now, cancellationToken);
+        }
+
+        public async Task FailSuggestAsync(
+            RecipeGenerationSession session,
+            Guid reservationId,
+            string failureReason,
+            DateTimeOffset now,
+            CancellationToken cancellationToken)
+        {
+            session.MarkFailed(failureReason, now);
+            await generationStore.SaveAsync(session, cancellationToken);
+            await ledger.ReleaseAsync(reservationId, now, cancellationToken);
+        }
+
+        public async Task FinalizeExpansionAsync(
+            Recipe recipe,
+            RecipeRevision revision,
+            RecipeGenerationSession session,
+            Guid reservationId,
+            int settledUnits,
+            string provider,
+            string model,
+            int? promptTokens,
+            int? completionTokens,
+            DateTimeOffset now,
+            CancellationToken cancellationToken)
+        {
+            session.CompleteSelection(recipe.Id, now);
+            await recipeStore.SaveNewAsync(recipe, revision, cancellationToken);
+            await generationStore.SaveAsync(session, cancellationToken);
+            await ledger.SettleAsync(reservationId, settledUnits, provider, model, promptTokens, completionTokens, now, cancellationToken);
+        }
+
+        public async Task FailExpansionAsync(
+            RecipeGenerationSession session,
+            Guid reservationId,
+            string failureReason,
+            DateTimeOffset now,
+            CancellationToken cancellationToken)
+        {
+            session.MarkFailed(failureReason, now);
+            await generationStore.SaveAsync(session, cancellationToken);
+            await ledger.ReleaseAsync(reservationId, now, cancellationToken);
         }
     }
 }

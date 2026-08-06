@@ -14,4 +14,9 @@
     <ProjectReference Include="../KitchenFlow.SharedKernel/KitchenFlow.SharedKernel.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\..\..\packages\contracts\ai\recipe\schemas\recipe-suggest-candidates.response.v0.3.json" Link="Contracts\recipe-suggest-candidates.response.v0.3.json" LogicalName="KitchenFlow.Modules.Recipes.Contracts.recipe-suggest-candidates.response.v0.3.json" />
+    <EmbeddedResource Include="..\..\..\..\packages\contracts\ai\recipe\schemas\recipe-expand-selected.response.v0.3.json" Link="Contracts\recipe-expand-selected.response.v0.3.json" LogicalName="KitchenFlow.Modules.Recipes.Contracts.recipe-expand-selected.response.v0.3.json" />
+  </ItemGroup>
+
 </Project>

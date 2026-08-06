@@ -34,6 +34,7 @@ export const REQUIRED_RECIPES_I18N_KEYS = [
   "recipes.generate.confirmDetail",
   "recipes.generate.requesting",
   "recipes.generate.selecting",
+  "recipes.generate.waitingSession",
   "recipes.generate.candidatesTitle",
   "recipes.generate.candidatesHint",
   "recipes.generate.minutes",
@@ -84,7 +85,8 @@ const en: Record<(typeof REQUIRED_RECIPES_I18N_KEYS)[number], string> = {
   "recipes.generate.confirmDetail":
     "KitchenFlow will read your on-hand pantry and preferences, then ask the AI gateway for exactly three validated candidates. Nothing is saved until you select one.",
   "recipes.generate.requesting": "Requesting candidates…",
-  "recipes.generate.selecting": "Saving selected recipe…",
+  "recipes.generate.selecting": "Expanding and saving the selected recipe…",
+  "recipes.generate.waitingSession": "Waiting for generation to finish…",
   "recipes.generate.candidatesTitle": "Choose one candidate",
   "recipes.generate.candidatesHint":
     "Three validated options. Selecting one expands and saves an owned recipe revision.",
@@ -140,7 +142,8 @@ const ptBR: Record<(typeof REQUIRED_RECIPES_I18N_KEYS)[number], string> = {
   "recipes.generate.confirmDetail":
     "O KitchenFlow lerá a despensa e as preferências e pedirá ao gateway de IA exatamente três candidatos validados. Nada é salvo até você selecionar um.",
   "recipes.generate.requesting": "Solicitando candidatos…",
-  "recipes.generate.selecting": "Salvando a receita selecionada…",
+  "recipes.generate.selecting": "Expandindo e salvando a receita selecionada…",
+  "recipes.generate.waitingSession": "Aguardando a geração terminar…",
   "recipes.generate.candidatesTitle": "Escolha um candidato",
   "recipes.generate.candidatesHint":
     "Três opções validadas. Selecionar uma expande e salva uma revisão de receita sua.",
@@ -198,7 +201,9 @@ const es: Record<(typeof REQUIRED_RECIPES_I18N_KEYS)[number], string> = {
   "recipes.generate.confirmDetail":
     "KitchenFlow leerá tu despensa y preferencias y pedirá al gateway de IA exactamente tres candidatos validados. Nada se guarda hasta que selecciones uno.",
   "recipes.generate.requesting": "Solicitando candidatos…",
-  "recipes.generate.selecting": "Guardando la receta seleccionada…",
+  "recipes.generate.selecting":
+    "Expandiendo y guardando la receta seleccionada…",
+  "recipes.generate.waitingSession": "Esperando a que termine la generación…",
   "recipes.generate.candidatesTitle": "Elige un candidato",
   "recipes.generate.candidatesHint":
     "Tres opciones validadas. Seleccionar una expande y guarda una revisión de receta tuya.",

@@ -53,6 +53,8 @@ namespace KitchenFlow.Infrastructure.Persistence.Migrations
                     Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     ReservedUnits = table.Column<int>(type: "integer", nullable: false),
                     SettledUnits = table.Column<int>(type: "integer", nullable: true),
+                    PromptTokens = table.Column<int>(type: "integer", nullable: true),
+                    CompletionTokens = table.Column<int>(type: "integer", nullable: true),
                     Provider = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: true),
                     Model = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     CorrelationId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
@@ -98,7 +100,7 @@ namespace KitchenFlow.Infrastructure.Persistence.Migrations
                     table.PrimaryKey("PK_generation_sessions", x => x.Id);
                     table.UniqueConstraint("AK_generation_sessions_Id_OwnerUserId", x => new { x.Id, x.OwnerUserId });
                     table.CheckConstraint("ck_generation_sessions_execution_mode", "\"ExecutionMode\" IN ('cook_now')");
-                    table.CheckConstraint("ck_generation_sessions_status", "\"Status\" IN ('AwaitingCandidates', 'CandidatesReady', 'Selected', 'Failed')");
+                    table.CheckConstraint("ck_generation_sessions_status", "\"Status\" IN ('AwaitingCandidates', 'CandidatesReady', 'Expanding', 'Selected', 'Failed')");
                     table.ForeignKey(
                         name: "FK_generation_sessions_recipes_SelectedRecipeId_OwnerUserId",
                         columns: x => new { x.SelectedRecipeId, x.OwnerUserId },

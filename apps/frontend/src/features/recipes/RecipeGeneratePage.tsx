@@ -23,8 +23,30 @@ type Phase =
   | "selecting"
   | "error";
 
+const SESSION_POLL_INTERVAL_MS = 750;
+const SESSION_POLL_MAX_ATTEMPTS = 80;
+
+function sleep(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal.aborted) {
+      reject(new DOMException("Aborted", "AbortError"));
+      return;
+    }
+    const timer = window.setTimeout(() => resolve(), ms);
+    signal.addEventListener(
+      "abort",
+      () => {
+        window.clearTimeout(timer);
+        reject(new DOMException("Aborted", "AbortError"));
+      },
+      { once: true },
+    );
+  });
+}
+
 /**
  * Cook-now generation: confirm constraints → three candidates → select → saved recipe.
+ * Polls GET session while status is AwaitingCandidates or Expanding; never invents recipes.
  */
 export function RecipeGeneratePage() {
   const recipeRepo = useRecipeRepository();
@@ -81,6 +103,55 @@ export function RecipeGeneratePage() {
     setErrorKey("recipes.generate.cancelled");
   }
 
+  async function pollGenerationSession(
+    sessionId: string,
+    signal: AbortSignal,
+    isTerminal: (status: string) => boolean,
+  ): Promise<RecipeGenerationSession> {
+    let latest: RecipeGenerationSession | null = null;
+    for (let attempt = 0; attempt < SESSION_POLL_MAX_ATTEMPTS; attempt += 1) {
+      latest = await recipeRepo.getGenerationSession(sessionId, signal);
+      if (isTerminal(latest.status)) {
+        return latest;
+      }
+      await sleep(SESSION_POLL_INTERVAL_MS, signal);
+    }
+    throw new RecipeApiError(
+      "unavailable",
+      "Generation session polling timed out.",
+      504,
+    );
+  }
+
+  async function resolveCandidatesSession(
+    initial: RecipeGenerationSession,
+    signal: AbortSignal,
+  ): Promise<RecipeGenerationSession> {
+    if (
+      initial.status === "CandidatesReady" &&
+      initial.candidates?.length === 3
+    ) {
+      return initial;
+    }
+    if (initial.status === "Failed") {
+      return initial;
+    }
+    if (
+      initial.status === "AwaitingCandidates" ||
+      initial.status === "Expanding"
+    ) {
+      return pollGenerationSession(
+        initial.sessionId,
+        signal,
+        (status) =>
+          status === "CandidatesReady" ||
+          status === "Failed" ||
+          status === "Selected",
+      );
+    }
+    return initial;
+  }
+
   async function requestCandidates() {
     if (!session.csrfToken) {
       setPhase("error");
@@ -98,12 +169,21 @@ export function RecipeGeneratePage() {
     setSelectedId(null);
     selectIdempotencyRef.current = null;
     try {
-      const result = await recipeRepo.requestCandidates({
+      const initial = await recipeRepo.requestCandidates({
         csrfToken: session.csrfToken,
         idempotencyKey: requestIdempotencyKey,
         signal: controller.signal,
       });
       if (controller.signal.aborted) return;
+      const result = await resolveCandidatesSession(initial, controller.signal);
+      if (controller.signal.aborted) return;
+      if (result.status === "Failed") {
+        setPhase("error");
+        setErrorKey("recipes.error.invalidOutput");
+        setErrorCode("ai_output_invalid");
+        setRequestIdempotencyKey(crypto.randomUUID());
+        return;
+      }
       if (!result.candidates || result.candidates.length !== 3) {
         setPhase("error");
         setErrorKey("recipes.error.invalidOutput");
@@ -115,6 +195,11 @@ export function RecipeGeneratePage() {
       setPhase("candidates");
     } catch (err) {
       if (controller.signal.aborted) return;
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setPhase("confirm");
+        setErrorKey("recipes.generate.cancelled");
+        return;
+      }
       if (err instanceof RecipeApiError && err.code === "cancelled") {
         setPhase("confirm");
         setErrorKey("recipes.generate.cancelled");
@@ -150,13 +235,14 @@ export function RecipeGeneratePage() {
     if (!selectIdempotencyRef.current) {
       selectIdempotencyRef.current = crypto.randomUUID();
     }
+    const selectKey = selectIdempotencyRef.current;
     try {
       const detail = await recipeRepo.selectCandidate(
         sessionView.sessionId,
         candidate.candidateId,
         {
           csrfToken: session.csrfToken,
-          idempotencyKey: selectIdempotencyRef.current,
+          idempotencyKey: selectKey,
           signal: controller.signal,
         },
       );
@@ -164,10 +250,71 @@ export function RecipeGeneratePage() {
       navigate(`/app/receitas/${detail.recipeId}`, { replace: false });
     } catch (err) {
       if (controller.signal.aborted) return;
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setPhase("candidates");
+        setErrorKey("recipes.generate.cancelled");
+        return;
+      }
       if (err instanceof RecipeApiError && err.code === "cancelled") {
         setPhase("candidates");
         setErrorKey("recipes.generate.cancelled");
         return;
+      }
+      // Concurrent same-key Expanding: poll until Selected/Failed, then replay select.
+      if (
+        err instanceof RecipeApiError &&
+        err.code === "ai_operation_conflict"
+      ) {
+        try {
+          const polled = await pollGenerationSession(
+            sessionView.sessionId,
+            controller.signal,
+            (status) => status === "Selected" || status === "Failed",
+          );
+          if (controller.signal.aborted) return;
+          if (polled.status === "Failed") {
+            setPhase("error");
+            setErrorCode("ai_output_invalid");
+            setErrorKey("recipes.error.invalidOutput");
+            selectIdempotencyRef.current = null;
+            return;
+          }
+          const detail = await recipeRepo.selectCandidate(
+            sessionView.sessionId,
+            candidate.candidateId,
+            {
+              csrfToken: session.csrfToken,
+              idempotencyKey: selectKey,
+              signal: controller.signal,
+            },
+          );
+          if (controller.signal.aborted) return;
+          navigate(`/app/receitas/${detail.recipeId}`, { replace: false });
+          return;
+        } catch (pollErr) {
+          if (controller.signal.aborted) return;
+          if (
+            pollErr instanceof DOMException &&
+            pollErr.name === "AbortError"
+          ) {
+            setPhase("candidates");
+            setErrorKey("recipes.generate.cancelled");
+            return;
+          }
+          const code =
+            pollErr instanceof RecipeApiError
+              ? pollErr.code
+              : ("unexpected" as const);
+          setPhase("error");
+          setErrorCode(code);
+          setErrorKey(
+            pollErr instanceof RecipeApiError
+              ? recipeErrorMessageKey(pollErr.code)
+              : "recipes.error.unexpected",
+          );
+          selectIdempotencyRef.current = null;
+          return;
+        }
       }
       const code =
         err instanceof RecipeApiError ? err.code : ("unexpected" as const);
@@ -262,6 +409,9 @@ export function RecipeGeneratePage() {
           {phase === "requesting"
             ? t("recipes.generate.requesting")
             : t("recipes.generate.selecting")}
+          <span className="sr-only">
+            {t("recipes.generate.waitingSession")}
+          </span>
         </p>
         <Button
           type="button"

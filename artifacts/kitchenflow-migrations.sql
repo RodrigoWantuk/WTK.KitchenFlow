@@ -943,6 +943,8 @@ BEGIN
         "Status" character varying(20) NOT NULL,
         "ReservedUnits" integer NOT NULL,
         "SettledUnits" integer,
+        "PromptTokens" integer,
+        "CompletionTokens" integer,
         "Provider" character varying(60),
         "Model" character varying(100),
         "CorrelationId" character varying(100) NOT NULL,
@@ -977,7 +979,7 @@ BEGIN
         CONSTRAINT "PK_generation_sessions" PRIMARY KEY ("Id"),
         CONSTRAINT "AK_generation_sessions_Id_OwnerUserId" UNIQUE ("Id", "OwnerUserId"),
         CONSTRAINT ck_generation_sessions_execution_mode CHECK ("ExecutionMode" IN ('cook_now')),
-        CONSTRAINT ck_generation_sessions_status CHECK ("Status" IN ('AwaitingCandidates', 'CandidatesReady', 'Selected', 'Failed')),
+        CONSTRAINT ck_generation_sessions_status CHECK ("Status" IN ('AwaitingCandidates', 'CandidatesReady', 'Expanding', 'Selected', 'Failed')),
         CONSTRAINT "FK_generation_sessions_recipes_SelectedRecipeId_OwnerUserId" FOREIGN KEY ("SelectedRecipeId", "OwnerUserId") REFERENCES recipes.recipes ("Id", "OwnerUserId") ON DELETE RESTRICT,
         CONSTRAINT "FK_generation_sessions_users_OwnerUserId" FOREIGN KEY ("OwnerUserId") REFERENCES identity.users ("Id") ON DELETE RESTRICT
     );

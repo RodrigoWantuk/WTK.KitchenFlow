@@ -9,16 +9,19 @@ namespace KitchenFlow.Modules.Recipes.Application;
 
 /// <summary>
 /// Module-owned application service for the complete authenticated cook-now recipe generation
-/// vertical slice: create a generation session, request three validated candidates through the AI
-/// Gateway (reserve usage, invoke the provider, validate the response, allow at most one repair,
-/// then settle or release the reservation), select and expand one candidate into an immutable
-/// recipe revision, and list or read previously generated recipes. AI output is never trusted or
+/// vertical slice: claim a generation session, reserve usage, invoke the AI Gateway (with at most
+/// one repair), then finalize candidates or expansion atomically. AI output is never trusted or
 /// persisted until it passes <see cref="RecipeProtocolValidator"/> schema and semantic validation.
 /// </summary>
+/// <remarks>
+/// Session and selection claims prevent concurrent duplicate provider calls. An unavoidable crash
+/// window remains between a successful provider return and the finalization database commit.
+/// </remarks>
 public sealed class RecipeCookNowApplicationService(
     ICurrentUserAccessor currentUser,
     IRecipeGenerationStore generationStore,
     IRecipeStore recipeStore,
+    IRecipeCookNowUnitOfWork unitOfWork,
     IRecipeContextAssembler contextAssembler,
     IAiProvider aiProvider,
     AiOperationRegistry operationRegistry,
@@ -30,7 +33,7 @@ public sealed class RecipeCookNowApplicationService(
     /// <summary>
     /// Creates a cook-now generation session and requests exactly three validated candidates.
     /// Replays the prior result when <see cref="RequestCandidatesCommand.IdempotencyKey"/> was
-    /// already used by this owner, without re-invoking the AI Gateway or re-reserving usage.
+    /// already claimed by this owner, without re-invoking the AI Gateway or re-reserving usage.
     /// </summary>
     public async Task<RecipeApplicationResult<RecipeGenerationSessionView>> RequestCandidatesAsync(RequestCandidatesCommand command, CancellationToken cancellationToken)
     {
@@ -39,26 +42,25 @@ public sealed class RecipeCookNowApplicationService(
             return Failure<RecipeGenerationSessionView>("validation_failed", "A UUID Idempotency-Key header is required.");
         }
 
-        var user = await currentUser.GetCurrentAsync(cancellationToken);
-        var existing = await generationStore.FindByIdempotencyKeyAsync(user.Id, command.IdempotencyKey.Value, cancellationToken);
-        if (existing is not null)
-        {
-            return RecipeApplicationResult<RecipeGenerationSessionView>.Succeeded(ToSessionView(existing));
-        }
-
         if (!operationRegistry.TryGet(AiOperationRegistry.SuggestCandidates, out var definition))
         {
             return Failure<RecipeGenerationSessionView>("ai_capability_unavailable", "The recipe suggestion capability is not registered.");
         }
 
+        var user = await currentUser.GetCurrentAsync(cancellationToken);
         var now = timeProvider.GetUtcNow();
         var session = RecipeGenerationSession.Create(user.Id, command.IdempotencyKey.Value, now);
+        var claim = await generationStore.TryClaimNewSessionAsync(session, cancellationToken);
+        if (!claim.WasCreated)
+        {
+            return RecipeApplicationResult<RecipeGenerationSessionView>.Succeeded(ToSessionView(claim.Session));
+        }
 
         var reservation = await usageGovernor.ReserveAsync(user.Id, definition.Operation, definition.EstimatedUsageUnits, command.CorrelationId, cancellationToken);
         if (reservation.Outcome != AiUsageReservationOutcome.Reserved)
         {
-            session.MarkFailed($"usage_{reservation.Outcome}", now);
-            await generationStore.SaveNewAsync(session, cancellationToken);
+            claim.Session.MarkFailed($"usage_{reservation.Outcome}", timeProvider.GetUtcNow());
+            await generationStore.SaveAsync(claim.Session, cancellationToken);
             return Failure<RecipeGenerationSessionView>(MapReservationFailure(reservation.Outcome), ReservationDetail(reservation.Outcome));
         }
 
@@ -66,16 +68,28 @@ public sealed class RecipeCookNowApplicationService(
         var invocation = await InvokeSuggestWithRepairAsync(definition, context, command.CorrelationId, cancellationToken);
         if (invocation.Response is null)
         {
-            await usageGovernor.ReleaseAsync(reservation.ReservationId!.Value, cancellationToken);
-            session.MarkFailed(invocation.FailureCode ?? "ai_output_invalid", timeProvider.GetUtcNow());
-            await generationStore.SaveNewAsync(session, cancellationToken);
+            await unitOfWork.FailSuggestAsync(
+                claim.Session,
+                reservation.ReservationId!.Value,
+                invocation.FailureCode ?? "ai_output_invalid",
+                timeProvider.GetUtcNow(),
+                cancellationToken);
             return Failure<RecipeGenerationSessionView>(invocation.FailureCode ?? "ai_output_invalid", invocation.FailureDetail ?? "The AI provider did not return three validated candidates.");
         }
 
-        await usageGovernor.SettleAsync(reservation.ReservationId!.Value, definition.EstimatedUsageUnits, aiProvider.Name, invocation.ModelUsed ?? "unknown", cancellationToken);
-        session.AttachValidatedCandidates(JsonSerializer.Serialize(invocation.Response, SerializerOptions), timeProvider.GetUtcNow());
-        await generationStore.SaveNewAsync(session, cancellationToken);
-        return RecipeApplicationResult<RecipeGenerationSessionView>.Succeeded(ToSessionView(session, invocation.Response.Candidates));
+        var completedAt = timeProvider.GetUtcNow();
+        claim.Session.AttachValidatedCandidates(JsonSerializer.Serialize(invocation.Response, SerializerOptions), completedAt);
+        await unitOfWork.CompleteSuggestAsync(
+            claim.Session,
+            reservation.ReservationId!.Value,
+            definition.EstimatedUsageUnits,
+            aiProvider.Name,
+            invocation.ModelUsed ?? "unknown",
+            invocation.PromptTokens,
+            invocation.CompletionTokens,
+            completedAt,
+            cancellationToken);
+        return RecipeApplicationResult<RecipeGenerationSessionView>.Succeeded(ToSessionView(claim.Session, invocation.Response.Candidates));
     }
 
     /// <summary>Gets one owner-scoped generation session and its validated candidates, when present.</summary>
@@ -89,7 +103,7 @@ public sealed class RecipeCookNowApplicationService(
     }
 
     /// <summary>
-    /// Selects one previously suggested candidate, expands it through the AI Gateway, and persists
+    /// Claims Expanding selection, expands one candidate through the AI Gateway, and persists
     /// exactly one new owner-isolated immutable recipe and its first revision on success. Replays the
     /// prior recipe when <see cref="SelectCandidateCommand.IdempotencyKey"/> was already used.
     /// </summary>
@@ -105,61 +119,55 @@ public sealed class RecipeCookNowApplicationService(
             return Failure<RecipeDetailView>("validation_failed", "A candidate identifier is required.");
         }
 
-        var user = await currentUser.GetCurrentAsync(cancellationToken);
-        var priorSelection = await generationStore.FindBySelectIdempotencyKeyAsync(user.Id, command.IdempotencyKey.Value, cancellationToken);
-        if (priorSelection?.SelectedRecipeId is Guid priorRecipeId)
-        {
-            var priorDetail = await recipeStore.FindDetailAsync(user.Id, priorRecipeId, cancellationToken);
-            return priorDetail is null
-                ? Failure<RecipeDetailView>("resource_not_found", "The previously selected recipe was not found.")
-                : RecipeApplicationResult<RecipeDetailView>.Succeeded(ToDetailView(priorDetail));
-        }
-
-        var session = await generationStore.FindActiveAsync(user.Id, command.SessionId, cancellationToken);
-        if (session is null)
-        {
-            return Failure<RecipeDetailView>("resource_not_found", "The generation session was not found.");
-        }
-
-        var now = timeProvider.GetUtcNow();
-        if (session.IsExpired(now))
-        {
-            return Failure<RecipeDetailView>("precondition_failed", "The generation session has expired.");
-        }
-
-        if (session.Status == RecipeGenerationSessionStatus.Selected && session.SelectedRecipeId is Guid existingRecipeId)
-        {
-            if (!string.Equals(session.SelectedCandidateId, command.CandidateId, StringComparison.Ordinal))
-            {
-                return Failure<RecipeDetailView>("ai_operation_conflict", "A different candidate was already selected for this generation session.");
-            }
-
-            var existingDetail = await recipeStore.FindDetailAsync(user.Id, existingRecipeId, cancellationToken);
-            return existingDetail is null
-                ? Failure<RecipeDetailView>("resource_not_found", "The previously selected recipe was not found.")
-                : RecipeApplicationResult<RecipeDetailView>.Succeeded(ToDetailView(existingDetail));
-        }
-
-        if (session.Status != RecipeGenerationSessionStatus.CandidatesReady)
-        {
-            return Failure<RecipeDetailView>("precondition_failed", "Candidates are not ready for selection on this session.");
-        }
-
-        var candidates = JsonSerializer.Deserialize<SuggestCandidatesResponse>(session.CandidatesSnapshotJson!, SerializerOptions)!;
-        var selected = candidates.Candidates.FirstOrDefault(item => string.Equals(item.CandidateId, command.CandidateId, StringComparison.Ordinal));
-        if (selected is null)
-        {
-            return Failure<RecipeDetailView>("resource_not_found", "The candidate was not found in this generation session.");
-        }
-
         if (!operationRegistry.TryGet(AiOperationRegistry.ExpandSelected, out var definition))
         {
             return Failure<RecipeDetailView>("ai_capability_unavailable", "The recipe expansion capability is not registered.");
         }
 
+        var user = await currentUser.GetCurrentAsync(cancellationToken);
+        var now = timeProvider.GetUtcNow();
+        var claim = await generationStore.TryClaimSelectionAsync(
+            user.Id,
+            command.SessionId,
+            command.CandidateId,
+            command.IdempotencyKey.Value,
+            now,
+            cancellationToken);
+
+        switch (claim.Outcome)
+        {
+            case RecipeSelectionClaimOutcome.NotFound:
+                return Failure<RecipeDetailView>("resource_not_found", "The generation session was not found.");
+            case RecipeSelectionClaimOutcome.NotReady:
+                return Failure<RecipeDetailView>("precondition_failed", claim.Session!.IsExpired(now)
+                    ? "The generation session has expired."
+                    : "Candidates are not ready for selection on this session.");
+            case RecipeSelectionClaimOutcome.Conflict:
+                return Failure<RecipeDetailView>("ai_operation_conflict", "A conflicting candidate selection is already in progress or completed for this request.");
+            case RecipeSelectionClaimOutcome.InProgress:
+                return Failure<RecipeDetailView>("ai_operation_conflict", "Selection expansion is already in progress for this request.");
+            case RecipeSelectionClaimOutcome.AlreadySelected:
+                return await ReplaySelectedRecipeAsync(user.Id, claim.Session!, cancellationToken);
+            case RecipeSelectionClaimOutcome.Claimed:
+                break;
+            default:
+                return Failure<RecipeDetailView>("ai_operation_conflict", "The selection claim could not be completed.");
+        }
+
+        var session = claim.Session!;
+        var candidates = JsonSerializer.Deserialize<SuggestCandidatesResponse>(session.CandidatesSnapshotJson!, SerializerOptions)!;
+        var selected = candidates.Candidates.FirstOrDefault(item => string.Equals(item.CandidateId, command.CandidateId, StringComparison.Ordinal));
+        if (selected is null)
+        {
+            await generationStore.SaveAsync(MarkFailedCopy(session, "resource_not_found", timeProvider.GetUtcNow()), cancellationToken);
+            return Failure<RecipeDetailView>("resource_not_found", "The candidate was not found in this generation session.");
+        }
+
         var reservation = await usageGovernor.ReserveAsync(user.Id, definition.Operation, definition.EstimatedUsageUnits, command.CorrelationId, cancellationToken);
         if (reservation.Outcome != AiUsageReservationOutcome.Reserved)
         {
+            session.MarkFailed($"usage_{reservation.Outcome}", timeProvider.GetUtcNow());
+            await generationStore.SaveAsync(session, cancellationToken);
             return Failure<RecipeDetailView>(MapReservationFailure(reservation.Outcome), ReservationDetail(reservation.Outcome));
         }
 
@@ -167,13 +175,14 @@ public sealed class RecipeCookNowApplicationService(
         var invocation = await InvokeExpandWithRepairAsync(definition, context, command.CorrelationId, cancellationToken);
         if (invocation.Response is null)
         {
-            await usageGovernor.ReleaseAsync(reservation.ReservationId!.Value, cancellationToken);
-            session.MarkFailed(invocation.FailureCode ?? "ai_output_invalid", timeProvider.GetUtcNow());
-            await generationStore.SaveAsync(session, cancellationToken);
+            await unitOfWork.FailExpansionAsync(
+                session,
+                reservation.ReservationId!.Value,
+                invocation.FailureCode ?? "ai_output_invalid",
+                timeProvider.GetUtcNow(),
+                cancellationToken);
             return Failure<RecipeDetailView>(invocation.FailureCode ?? "ai_output_invalid", invocation.FailureDetail ?? "The AI provider did not return a valid expanded recipe.");
         }
-
-        await usageGovernor.SettleAsync(reservation.ReservationId!.Value, definition.EstimatedUsageUnits, aiProvider.Name, invocation.ModelUsed ?? "unknown", cancellationToken);
 
         var completedAt = timeProvider.GetUtcNow();
         var expandedRecipe = invocation.Response.Recipe;
@@ -190,9 +199,18 @@ public sealed class RecipeCookNowApplicationService(
             session.Id,
             completedAt);
 
-        await recipeStore.SaveNewAsync(recipe, revision, cancellationToken);
-        session.CompleteSelection(selected.CandidateId, recipe.Id, command.IdempotencyKey.Value, completedAt);
-        await generationStore.SaveAsync(session, cancellationToken);
+        await unitOfWork.FinalizeExpansionAsync(
+            recipe,
+            revision,
+            session,
+            reservation.ReservationId!.Value,
+            definition.EstimatedUsageUnits,
+            aiProvider.Name,
+            invocation.ModelUsed ?? "unknown",
+            invocation.PromptTokens,
+            invocation.CompletionTokens,
+            completedAt,
+            cancellationToken);
         return RecipeApplicationResult<RecipeDetailView>.Succeeded(ToDetailView(revision), RecipeApplicationSuccess.Created);
     }
 
@@ -214,17 +232,36 @@ public sealed class RecipeCookNowApplicationService(
             : RecipeApplicationResult<RecipeDetailView>.Succeeded(ToDetailView(detail));
     }
 
-    private async Task<(SuggestCandidatesResponse? Response, string? ModelUsed, string? FailureCode, string? FailureDetail)> InvokeSuggestWithRepairAsync(
+    private async Task<RecipeApplicationResult<RecipeDetailView>> ReplaySelectedRecipeAsync(Guid ownerUserId, RecipeGenerationSession session, CancellationToken cancellationToken)
+    {
+        if (session.SelectedRecipeId is not Guid recipeId)
+        {
+            return Failure<RecipeDetailView>("resource_not_found", "The previously selected recipe was not found.");
+        }
+
+        var priorDetail = await recipeStore.FindDetailAsync(ownerUserId, recipeId, cancellationToken);
+        return priorDetail is null
+            ? Failure<RecipeDetailView>("resource_not_found", "The previously selected recipe was not found.")
+            : RecipeApplicationResult<RecipeDetailView>.Succeeded(ToDetailView(priorDetail));
+    }
+
+    private async Task<(SuggestCandidatesResponse? Response, string? ModelUsed, int? PromptTokens, int? CompletionTokens, string? FailureCode, string? FailureDetail)> InvokeSuggestWithRepairAsync(
         AiOperationDefinition definition, RecipeSuggestRequestContext context, string correlationId, CancellationToken cancellationToken)
     {
-        var payload = RecipeAiRequestEnvelopes.BuildSuggestRequest(context);
-        using var requestDocument = JsonDocument.Parse(payload);
+        var initialPayload = RecipeAiRequestEnvelopes.BuildSuggestRequest(context);
+        using var requestDocument = JsonDocument.Parse(initialPayload);
         var requestElement = requestDocument.RootElement;
         string? modelUsed = null;
+        int? promptTokens = null;
+        int? completionTokens = null;
         AiProviderFailureKind? lastTransportFailure = null;
-        var sawInvalidOutput = false;
+        IReadOnlyList<string>? lastValidationErrors = null;
+        string? lastInvalidOutput = null;
         for (var attempt = 0; attempt <= definition.MaxRepairAttempts; attempt++)
         {
+            var payload = attempt == 0
+                ? initialPayload
+                : RecipeAiRequestEnvelopes.BuildSuggestRepairRequest(context, lastValidationErrors ?? ["validation_failed"], lastInvalidOutput ?? string.Empty);
             var invocation = await aiProvider.InvokeAsync(new AiProviderInvocationRequest(definition.Operation, payload, definition.PreferNonThinking, definition.TimeoutSeconds, correlationId), cancellationToken);
             if (!invocation.IsSuccess)
             {
@@ -233,29 +270,38 @@ public sealed class RecipeCookNowApplicationService(
             }
 
             modelUsed = invocation.ModelUsed;
+            promptTokens = SumNullable(promptTokens, invocation.PromptTokens);
+            completionTokens = SumNullable(completionTokens, invocation.CompletionTokens);
             var validation = RecipeProtocolValidator.ValidateSuggest(invocation.RawContent!, requestElement);
             if (validation.IsValid)
             {
-                return (validation.Response, modelUsed, null, null);
+                return (validation.Response, modelUsed, promptTokens, completionTokens, null, null);
             }
 
-            sawInvalidOutput = true;
+            lastValidationErrors = validation.Errors;
+            lastInvalidOutput = invocation.RawContent;
         }
 
-        return (null, modelUsed, MapProviderFailure(lastTransportFailure, sawInvalidOutput), DescribeProviderFailure(lastTransportFailure, sawInvalidOutput));
+        return (null, modelUsed, promptTokens, completionTokens, MapProviderFailure(lastTransportFailure, lastValidationErrors is not null), DescribeProviderFailure(lastTransportFailure, lastValidationErrors is not null));
     }
 
-    private async Task<(ExpandSelectedResponse? Response, string? ModelUsed, string? FailureCode, string? FailureDetail)> InvokeExpandWithRepairAsync(
+    private async Task<(ExpandSelectedResponse? Response, string? ModelUsed, int? PromptTokens, int? CompletionTokens, string? FailureCode, string? FailureDetail)> InvokeExpandWithRepairAsync(
         AiOperationDefinition definition, RecipeExpandRequestContext context, string correlationId, CancellationToken cancellationToken)
     {
-        var payload = RecipeAiRequestEnvelopes.BuildExpandRequest(context);
-        using var requestDocument = JsonDocument.Parse(payload);
+        var initialPayload = RecipeAiRequestEnvelopes.BuildExpandRequest(context);
+        using var requestDocument = JsonDocument.Parse(initialPayload);
         var requestElement = requestDocument.RootElement;
         string? modelUsed = null;
+        int? promptTokens = null;
+        int? completionTokens = null;
         AiProviderFailureKind? lastTransportFailure = null;
-        var sawInvalidOutput = false;
+        IReadOnlyList<string>? lastValidationErrors = null;
+        string? lastInvalidOutput = null;
         for (var attempt = 0; attempt <= definition.MaxRepairAttempts; attempt++)
         {
+            var payload = attempt == 0
+                ? initialPayload
+                : RecipeAiRequestEnvelopes.BuildExpandRepairRequest(context, lastValidationErrors ?? ["validation_failed"], lastInvalidOutput ?? string.Empty);
             var invocation = await aiProvider.InvokeAsync(new AiProviderInvocationRequest(definition.Operation, payload, definition.PreferNonThinking, definition.TimeoutSeconds, correlationId), cancellationToken);
             if (!invocation.IsSuccess)
             {
@@ -264,17 +310,29 @@ public sealed class RecipeCookNowApplicationService(
             }
 
             modelUsed = invocation.ModelUsed;
+            promptTokens = SumNullable(promptTokens, invocation.PromptTokens);
+            completionTokens = SumNullable(completionTokens, invocation.CompletionTokens);
             var validation = RecipeProtocolValidator.ValidateExpand(invocation.RawContent!, requestElement);
             if (validation.IsValid)
             {
-                return (validation.Response, modelUsed, null, null);
+                return (validation.Response, modelUsed, promptTokens, completionTokens, null, null);
             }
 
-            sawInvalidOutput = true;
+            lastValidationErrors = validation.Errors;
+            lastInvalidOutput = invocation.RawContent;
         }
 
-        return (null, modelUsed, MapProviderFailure(lastTransportFailure, sawInvalidOutput), DescribeProviderFailure(lastTransportFailure, sawInvalidOutput));
+        return (null, modelUsed, promptTokens, completionTokens, MapProviderFailure(lastTransportFailure, lastValidationErrors is not null), DescribeProviderFailure(lastTransportFailure, lastValidationErrors is not null));
     }
+
+    private static RecipeGenerationSession MarkFailedCopy(RecipeGenerationSession session, string reason, DateTimeOffset now)
+    {
+        session.MarkFailed(reason, now);
+        return session;
+    }
+
+    private static int? SumNullable(int? left, int? right) =>
+        left is null && right is null ? null : (left ?? 0) + (right ?? 0);
 
     private static RecipeGenerationSessionView ToSessionView(RecipeGenerationSession session, IReadOnlyList<SuggestCandidate>? candidates = null)
     {

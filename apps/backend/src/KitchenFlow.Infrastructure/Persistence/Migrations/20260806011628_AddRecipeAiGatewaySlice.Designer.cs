@@ -64,6 +64,12 @@ namespace KitchenFlow.Infrastructure.Persistence.Migrations
                     b.Property<int?>("SettledUnits")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("CompletionTokens")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("PromptTokens")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -697,7 +703,7 @@ namespace KitchenFlow.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_generation_sessions_execution_mode", "\"ExecutionMode\" IN ('cook_now')");
 
-                            t.HasCheckConstraint("ck_generation_sessions_status", "\"Status\" IN ('AwaitingCandidates', 'CandidatesReady', 'Selected', 'Failed')");
+                            t.HasCheckConstraint("ck_generation_sessions_status", "\"Status\" IN ('AwaitingCandidates', 'CandidatesReady', 'Expanding', 'Selected', 'Failed')");
                         });
                 });
 

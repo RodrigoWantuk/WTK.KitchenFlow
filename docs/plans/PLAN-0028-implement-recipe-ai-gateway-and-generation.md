@@ -1,13 +1,13 @@
 # PLAN-0028: Implement Recipe AI Gateway and Cook-Now Generation Vertical Slice
 
-- **Status:** In Progress
+- **Status:** Completed
 - **Type:** Implementation
 - **Priority:** Critical
 - **Owner:** Cursor backend/frontend vertical-slice agent
 - **Created:** 2026-08-05
-- **Last updated:** 2026-08-05
+- **Last updated:** 2026-08-06
 - **Branch:** `agent/plan-0028-recipe-ai-gateway`
-- **Pull request:** [PR #44](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/44) — Ready for owner review
+- **Pull request:** [PR #44](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/44) — ready for owner review (unmerged)
 - **Predecessor:** PLAN-0022 (protocol `0.3` Revised, merged via PR #43)
 - **Related ADR:** ADR-0005
 - **Related contracts:** `packages/contracts/ai/recipe/`
@@ -39,7 +39,8 @@ current inventory and profile
 - production Recipes frontend routes `/app/receitas`, `/app/receitas/gerar`, `/app/receitas/:recipeId`;
 - degraded AI-unavailable behavior;
 - Draft placeholders for PLAN-0029 and PLAN-0030;
-- lean targeted tests and one final CI execution.
+- lean targeted tests and one final CI execution;
+- merge-blocker remediations: atomic reservation, session/selection claims, transactional finalization, full-schema DeepSeek envelopes, real repair payloads.
 
 ## Excluded scope
 
@@ -51,6 +52,34 @@ current inventory and profile
 - independent validation plan or PR;
 - guided cooking, import, sharing, notifications.
 
+## Usage units versus provider tokens
+
+- **KitchenFlow usage units** (`ReservedUnits` / `SettledUnits`) are normalized credits enforced by the usage governor (default: suggest = 3, expand = 5). Ceilings and budget exhaustion apply only to these units.
+- **Provider tokens** (`PromptTokens` / `CompletionTokens`) are optional observability metadata from the model provider. They are never treated as budget units and do not affect reservation or settlement arithmetic.
+- **Future monetary cost** may later derive from provider tokens and published prices. Billing is out of scope.
+
+## Concurrency and atomicity (merge-blocker remediations)
+
+### Atomic usage reservation
+
+`IAiUsageLedgerStore.TryReserveAsync` performs one PostgreSQL transaction with a dedicated `pg_advisory_xact_lock`, evaluates global daily / owner daily / owner concurrency ceilings, and inserts the reservation only when every ceiling permits it. The governor does not perform separate read/check/insert calls.
+
+### Session claim before provider
+
+`POST /recipes/generation-sessions` claims the owner/idempotency pair (`AwaitingCandidates`) before usage reservation or DeepSeek invocation. Concurrent same-key requests reload the existing session without a second reservation or provider call. Unique-constraint conflicts reload rather than surfacing as unhandled database exceptions.
+
+### Selection claim (`Expanding`)
+
+Before expand reservation/provider, the session atomically transitions `CandidatesReady → Expanding` with selected candidate ID, selection idempotency key, and claim timestamp. Same key + same candidate replays; same key + different candidate/session returns `ai_operation_conflict`; concurrent selections yield exactly one winner.
+
+### Transactional recipe finalization
+
+One persistence transaction creates the recipe identity, first immutable revision, marks the session `Selected`, associates candidate/recipe, and settles usage. Provider invocation remains outside the database transaction.
+
+### Unavoidable crash window
+
+Between a successful provider response and the finalization commit, a process crash can leave a settled-or-open reservation without a persisted recipe, or require release on retry. Concurrent duplicates are still prevented by the persisted execution claim (`AwaitingCandidates` / `Expanding`). Operators must not treat that window as absent.
+
 ## Acceptance criteria
 
 - [x] Roadmap delivery map and stale plan reconciliation committed.
@@ -61,16 +90,27 @@ current inventory and profile
 - [x] Selected expansion persists one owner-isolated immutable recipe revision.
 - [x] Frontend production routes support generate → select → open saved recipe with localized unavailable states.
 - [x] OpenAPI drift, migration, focused backend/frontend tests, and recipe contract validators pass.
-- [x] Draft PR open; no approval/auto-merge/merge by the agent.
+- [x] Atomic usage reservation, session/selection claims, Expanding status, schema-embedded repair, and focused PostgreSQL concurrency tests remediate PR #44 merge blockers.
+- [x] Bounded synthetic live DeepSeek smoke Passed (suggest + expand; max one repair each).
+- [x] Draft/ready PR open; no approval/auto-merge/merge by the agent.
 
 ## Execution state
 
-- **Current checkpoint:** Backend cook-now API + production Recipes frontend vertical slice implemented; PR #44 awaiting owner review.
-- **Run target:** Delivered implementation; merge reserved for owner.
+- **Current checkpoint:** Merge-blocker remediations complete; focused Fake-only concurrency tests Passed; live synthetic smoke Passed; awaiting final CI on pushed head and owner review of PR #44.
+- **Run target:** Complete PLAN-0028 remediations on PR #44 without a separate validation plan or stress campaign.
 - **Blockers:** None.
-- **Exact next action:** Owner reviews and decides whether to merge PR #44. Agent must not approve, auto-merge, or merge.
+- **Exact next action:** Owner reviews and merges PR #44. Agent must not approve, auto-merge, or merge.
 
 ## Progress log
+
+### 2026-08-06 — PR #44 merge-blocker remediations completed
+
+- Replaced non-atomic usage count/sum/insert with `IAiUsageLedgerStore.TryReserveAsync` using PostgreSQL transaction + dedicated `pg_advisory_xact_lock`; `AiUsageGovernor.ReserveAsync` only short-circuits Disabled then calls TryReserveAsync.
+- `SettleAsync` persists optional `PromptTokens` / `CompletionTokens`; XML/docs distinguish KitchenFlow units from provider tokens. Migration `20260806011628_AddRecipeAiGatewaySlice` revised in place (Expanding status + token columns).
+- Added `TryClaimNewSessionAsync` and `TryClaimSelectionAsync` (CandidatesReady → Expanding); `IRecipeCookNowUnitOfWork` finalizes suggest/expand in one EF transaction (documented crash window after provider return).
+- Embedded linked protocol `0.3` response schemas into Recipes; repair payloads include schema + bounded validation errors + previous invalid output (not identical retry).
+- Added focused PostgreSQL concurrency integration tests (one synchronized concurrent run each) and updated Fake-only unit tests / frontend Expanding|AwaitingCandidates polling.
+- Live synthetic smoke via `scripts/ai/RecipeGatewayLiveSmoke`: suggest Passed (1 repair), expand Passed (0 repair), 3 provider calls, ~US$ 0.00243 estimated, ceiling US$ 0.05. Evidence: `docs/evidence/plan-0028/`.
 
 ### 2026-08-05 — Claim
 

@@ -38,6 +38,7 @@ public static class RecipeAiServiceCollectionExtensions
                 provider.GetRequiredService<TimeProvider>()));
         services.AddScoped<IRecipeGenerationStore, PostgreSqlRecipeGenerationStore>();
         services.AddScoped<IRecipeStore, PostgreSqlRecipeStore>();
+        services.AddScoped<IRecipeCookNowUnitOfWork, PostgreSqlRecipeCookNowUnitOfWork>();
         services.AddScoped<IRecipeContextAssembler, RecipeContextAssembler>();
         services.AddScoped<RecipeCookNowApplicationService>();
         services.AddScoped<RecipeApiService>();

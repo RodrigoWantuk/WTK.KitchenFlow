@@ -34,6 +34,10 @@ public enum AiUsageEntryStatus
 }
 
 /// <summary>Application-facing usage ledger entry.</summary>
+/// <remarks>
+/// <see cref="ReservedUnits"/> and <see cref="SettledUnits"/> are KitchenFlow normalized usage credits
+/// (suggest candidates = 3, expand selected = 5 by default), not provider tokens.
+/// </remarks>
 public sealed record AiUsageEntry(Guid Id, Guid OwnerUserId, string Operation, AiUsageEntryStatus Status, int ReservedUnits, int? SettledUnits, string? Provider, string? Model, string CorrelationId, DateTimeOffset CreatedAt, DateTimeOffset? ClosedAt);
 
 /// <summary>Outcome of an attempted usage reservation.</summary>

@@ -3,10 +3,15 @@ namespace KitchenFlow.Modules.Recipes.Domain;
 /// <summary>Lifecycle status of one recipe generation session.</summary>
 public enum RecipeGenerationSessionStatus
 {
-    /// <summary>The session was created but candidates were not yet requested or produced.</summary>
+    /// <summary>The session was claimed and owns suggest execution until candidates are ready or the session fails.</summary>
     AwaitingCandidates,
     /// <summary>Validated candidates were persisted and are available for selection.</summary>
     CandidatesReady,
+    /// <summary>
+    /// A selection was claimed and owns expand execution until the recipe is persisted or the session fails.
+    /// Concurrent duplicate selections are rejected while this status is held.
+    /// </summary>
+    Expanding,
     /// <summary>A candidate was selected, expanded, and persisted as a recipe.</summary>
     Selected,
     /// <summary>The session failed safely; no recipe was produced.</summary>
@@ -36,11 +41,11 @@ public sealed class RecipeGenerationSession
     public RecipeGenerationSessionStatus Status { get; private set; }
     /// <summary>Gets the validated candidate snapshot JSON, present once candidates are ready.</summary>
     public string? CandidatesSnapshotJson { get; private set; }
-    /// <summary>Gets the stable identifier of the selected candidate, present once selected.</summary>
+    /// <summary>Gets the stable identifier of the selected candidate, present once selection is claimed or completed.</summary>
     public string? SelectedCandidateId { get; private set; }
     /// <summary>Gets the identifier of the recipe produced from the selected candidate.</summary>
     public Guid? SelectedRecipeId { get; private set; }
-    /// <summary>Gets the client-supplied idempotency key used for the select-and-expand command, when selection completed.</summary>
+    /// <summary>Gets the client-supplied idempotency key used for the select-and-expand command, when selection was claimed or completed.</summary>
     public Guid? SelectIdempotencyKey { get; private set; }
     /// <summary>Gets a non-sensitive failure classification, present only when <see cref="Status"/> is <see cref="RecipeGenerationSessionStatus.Failed"/>.</summary>
     public string? FailureReason { get; private set; }
@@ -101,7 +106,24 @@ public sealed class RecipeGenerationSession
         UpdatedAt = now;
     }
 
-    /// <summary>Records a safe failure; no recipe or candidate snapshot is attached.</summary>
+    /// <summary>
+    /// Claims selection execution by transitioning <see cref="RecipeGenerationSessionStatus.CandidatesReady"/> to
+    /// <see cref="RecipeGenerationSessionStatus.Expanding"/> with the selected candidate and select idempotency key.
+    /// </summary>
+    public void BeginSelection(string candidateId, Guid selectIdempotencyKey, DateTimeOffset now)
+    {
+        if (Status != RecipeGenerationSessionStatus.CandidatesReady)
+        {
+            throw new InvalidOperationException("Selection can only be claimed when validated candidates are ready.");
+        }
+
+        SelectedCandidateId = candidateId;
+        SelectIdempotencyKey = selectIdempotencyKey;
+        Status = RecipeGenerationSessionStatus.Expanding;
+        UpdatedAt = now;
+    }
+
+    /// <summary>Records a safe failure; no recipe is attached. Allowed from any non-selected status, including Expanding.</summary>
     public void MarkFailed(string reason, DateTimeOffset now)
     {
         if (Status is RecipeGenerationSessionStatus.Selected)
@@ -114,17 +136,18 @@ public sealed class RecipeGenerationSession
         UpdatedAt = now;
     }
 
-    /// <summary>Records the selected candidate and the recipe produced from its expansion.</summary>
-    public void CompleteSelection(string candidateId, Guid recipeId, Guid selectIdempotencyKey, DateTimeOffset now)
+    /// <summary>
+    /// Completes a claimed expansion by recording the produced recipe and transitioning
+    /// <see cref="RecipeGenerationSessionStatus.Expanding"/> to <see cref="RecipeGenerationSessionStatus.Selected"/>.
+    /// </summary>
+    public void CompleteSelection(Guid recipeId, DateTimeOffset now)
     {
-        if (Status != RecipeGenerationSessionStatus.CandidatesReady)
+        if (Status != RecipeGenerationSessionStatus.Expanding)
         {
-            throw new InvalidOperationException("A candidate can only be selected once validated candidates are ready.");
+            throw new InvalidOperationException("A recipe can only be attached after selection was claimed for expansion.");
         }
 
-        SelectedCandidateId = candidateId;
         SelectedRecipeId = recipeId;
-        SelectIdempotencyKey = selectIdempotencyKey;
         Status = RecipeGenerationSessionStatus.Selected;
         UpdatedAt = now;
     }
