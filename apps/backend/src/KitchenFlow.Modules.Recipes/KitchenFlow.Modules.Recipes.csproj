@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>KitchenFlow.Modules.Recipes</AssemblyName>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../KitchenFlow.Modules.Ai/KitchenFlow.Modules.Ai.csproj" />
+    <ProjectReference Include="../KitchenFlow.Modules.Identity/KitchenFlow.Modules.Identity.csproj" />
+    <ProjectReference Include="../KitchenFlow.Modules.Inventory/KitchenFlow.Modules.Inventory.csproj" />
+    <ProjectReference Include="../KitchenFlow.Modules.Profiles/KitchenFlow.Modules.Profiles.csproj" />
+    <ProjectReference Include="../KitchenFlow.SharedKernel/KitchenFlow.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>

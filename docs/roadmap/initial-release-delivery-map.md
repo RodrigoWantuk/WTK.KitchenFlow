@@ -17,12 +17,11 @@ This map accounts for major initial-release capabilities. States are exclusive p
 | Public entry and mock-backed contextual home | PLAN-0010, PLAN-0011 |
 | Prepared components and derived lots | PLAN-0023 |
 | Recipe AI protocol and deterministic contracts | PLAN-0017, PLAN-0022 (`0.3` Revised) |
+| AI Gateway and cook-now recipe generation (suggest → select → expand → save) | PLAN-0028 |
 
 ## In Progress
 
-| Capability | Plan |
-|---|---|
-| AI Gateway and cook-now recipe generation | PLAN-0028 |
+_None at this checkpoint._
 
 ## Ready
 

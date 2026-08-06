@@ -23,9 +23,10 @@ KitchenFlow has completed its initial product and architecture discovery and now
 - generated TypeScript API client;
 - production session and authenticated inventory frontend routes;
 - recipe AI protocol `0.3` (Revised) with deterministic validators;
+- AI Gateway cook-now recipe generation (suggest three candidates → select → expand → persist user-owned revision) with production Recipes UI;
 - prototype/production isolation and blocking frontend/backend CI gates.
 
-The full initial release is **not** implemented. Recipes generation (in progress under PLAN-0028), planning, shopping, guided cooking, reconciliation, thumbnail generation, persistent jobs, notifications, privacy workflows, billing, and launch operations remain plan-driven future work.
+The full initial release is **not** implemented. Sequential planning/menus/shopping, guided cooking, reconciliation, thumbnail generation, persistent jobs, notifications, privacy workflows, billing, and launch operations remain plan-driven future work.
 
 Do not interpret accepted architecture or prototype surfaces as completed production capability.
 

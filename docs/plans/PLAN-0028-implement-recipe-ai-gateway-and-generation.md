@@ -7,7 +7,7 @@
 - **Created:** 2026-08-05
 - **Last updated:** 2026-08-05
 - **Branch:** `agent/plan-0028-recipe-ai-gateway`
-- **Pull request:** Not opened
+- **Pull request:** [PR #44](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/44) — Ready for owner review
 - **Predecessor:** PLAN-0022 (protocol `0.3` Revised, merged via PR #43)
 - **Related ADR:** ADR-0005
 - **Related contracts:** `packages/contracts/ai/recipe/`
@@ -53,22 +53,22 @@ current inventory and profile
 
 ## Acceptance criteria
 
-- [ ] Roadmap delivery map and stale plan reconciliation committed.
-- [ ] AI Gateway registers `recipe.suggest_candidates.v1` and `recipe.expand_selected.v1`.
-- [ ] DeepSeek adapter is replaceable; secrets absent from repository defaults.
-- [ ] Usage ledger reserves, settles, and releases; ceilings and disablement enforced.
-- [ ] Cook-now flow returns exactly three validated candidates or fails safely after one repair.
-- [ ] Selected expansion persists one owner-isolated immutable recipe revision.
-- [ ] Frontend production routes support generate → select → open saved recipe with localized unavailable states.
-- [ ] OpenAPI drift, migration, focused backend/frontend tests, and recipe contract validators pass.
-- [ ] Draft PR open; no approval/auto-merge/merge by the agent.
+- [x] Roadmap delivery map and stale plan reconciliation committed.
+- [x] AI Gateway registers `recipe.suggest_candidates.v1` and `recipe.expand_selected.v1`.
+- [x] DeepSeek adapter is replaceable; secrets absent from repository defaults.
+- [x] Usage ledger reserves, settles, and releases; ceilings and disablement enforced.
+- [x] Cook-now flow returns exactly three validated candidates or fails safely after one repair.
+- [x] Selected expansion persists one owner-isolated immutable recipe revision.
+- [x] Frontend production routes support generate → select → open saved recipe with localized unavailable states.
+- [x] OpenAPI drift, migration, focused backend/frontend tests, and recipe contract validators pass.
+- [x] Draft PR open; no approval/auto-merge/merge by the agent.
 
 ## Execution state
 
-- **Current checkpoint:** Roadmap reconciled; Draft PR #44 open; AI/Recipes modules scaffolding and protocol validators in progress.
-- **Run target:** Complete the cook-now vertical slice through focused validation and a Draft PR.
+- **Current checkpoint:** Backend cook-now API + production Recipes frontend vertical slice implemented; PR #44 awaiting owner review.
+- **Run target:** Delivered implementation; merge reserved for owner.
 - **Blockers:** None.
-- **Exact next action:** Complete Recipes application/persistence/API, OpenAPI clients, production frontend, focused tests, and final CI.
+- **Exact next action:** Owner reviews and decides whether to merge PR #44. Agent must not approve, auto-merge, or merge.
 
 ## Progress log
 
@@ -86,8 +86,14 @@ current inventory and profile
 - Created Draft PLAN-0029 and PLAN-0030 placeholders.
 - Updated root README production capability list.
 
-### 2026-08-05 — Backend scaffold in progress
+### 2026-08-05 — Backend cook-now API slice
 
-- Added KitchenFlow.Modules.Ai (provider abstractions, Fake/DeepSeek providers, usage governor).
-- Added KitchenFlow.Modules.Recipes protocol validators with fixture-parity unit tests and RecipeGenerationSession domain.
-- Draft PR #44 opened for documentation reconciliation; implementation continues.
+- Wired EF persistence for `ai.usage_ledger` and `recipes.*` with owner-scoped FKs, unique idempotency indexes, and append-only revision trigger; migration `20260806011628_AddRecipeAiGatewaySlice`.
+- Implemented AI Gateway (DeepSeek/Unavailable/Fake), usage governor, Recipes module, authenticated `/api/v1/recipes` endpoints.
+- Focused unit tests passed with Fake only; OpenAPI exported and TypeScript clients regenerated; recipe contract validators passed.
+
+### 2026-08-05 — Production frontend and completion
+
+- Added production Recipes area (`/app/receitas`, `/gerar`, `/:recipeId`), primary nav (`production-nav-receitas`), `createLiveRecipeRepository` over generated `@kitchenflow/api-client` recipe paths (CSRF + Idempotency-Key), prototype unavailable stub (no mock fixtures), `recipesCatalog` en/pt-BR/es, and degraded unavailable/budget/invalid-output/empty-inventory states.
+- Focused frontend tests (`RecipesFlow`, `liveRecipeRepository`, `recipesCatalog`, `productionIsolation`) passed.
+- Remaining for the owner: review PR #44. Agent must not approve, auto-merge, or merge.
