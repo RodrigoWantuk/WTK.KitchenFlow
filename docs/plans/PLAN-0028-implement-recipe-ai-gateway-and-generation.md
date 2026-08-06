@@ -65,10 +65,10 @@ current inventory and profile
 
 ## Execution state
 
-- **Current checkpoint:** Branch created from `cfec795`; plan claimed; roadmap reconciliation and stale-plan corrections prepared.
+- **Current checkpoint:** Roadmap reconciled; Draft PR #44 open; AI/Recipes modules scaffolding and protocol validators in progress.
 - **Run target:** Complete the cook-now vertical slice through focused validation and a Draft PR.
 - **Blockers:** None.
-- **Exact next action:** Commit documentation reconciliation, then continue AI Gateway / Recipes module implementation.
+- **Exact next action:** Complete Recipes application/persistence/API, OpenAPI clients, production frontend, focused tests, and final CI.
 
 ## Progress log
 
@@ -76,3 +76,18 @@ current inventory and profile
 
 - Created branch `agent/plan-0028-recipe-ai-gateway` from main `cfec79546fcd5e476f7198cdc788a6ce251d35c5`.
 - Registered PLAN-0028 as In Progress.
+
+### 2026-08-05 — Roadmap reconciliation
+
+- Added `docs/roadmap/initial-release-delivery-map.md`.
+- Reconciled PLAN-0022 as merged through PR #43.
+- Set PLAN-0021 to Blocked on PLAN-0029 accepted-menu read contract.
+- Updated PLAN-0008 thumbnail amendment delivery (docs merged; implementation pending PLAN-0030).
+- Created Draft PLAN-0029 and PLAN-0030 placeholders.
+- Updated root README production capability list.
+
+### 2026-08-05 — Backend scaffold in progress
+
+- Added KitchenFlow.Modules.Ai (provider abstractions, Fake/DeepSeek providers, usage governor).
+- Added KitchenFlow.Modules.Recipes protocol validators with fixture-parity unit tests and RecipeGenerationSession domain.
+- Draft PR #44 opened for documentation reconciliation; implementation continues.
