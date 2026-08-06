@@ -1,0 +1,251 @@
+{
+  "operation": "recipe.suggest_candidates.v1",
+  "requestId": "eval-v03-cook-now-001",
+  "candidates": [
+    {
+      "candidateId": "cand-001",
+      "candidateStrategy": "on_hand_first",
+      "name": "Frango com Arroz e Cenoura",
+      "targetMealType": "dinner",
+      "dishFormat": "prato único",
+      "primaryTechnique": "refogar",
+      "primaryIngredientRefs": [
+        "ingredient-chicken-breast",
+        "ingredient-white-rice",
+        "ingredient-carrot"
+      ],
+      "summary": "Refogado de frango com arroz e cenoura, temperado com sal e óleo.",
+      "servings": 2,
+      "time": {
+        "activeMinutes": 30,
+        "totalMinutes": 40
+      },
+      "difficulty": "beginner",
+      "requiredEquipmentIds": [
+        "eq-stove",
+        "eq-pan",
+        "eq-skillet"
+      ],
+      "requiredCapabilities": [
+        "burner",
+        "boil",
+        "simmer",
+        "saute",
+        "sear"
+      ],
+      "inventoryUses": [
+        {
+          "ingredientRef": "ingredient-chicken-breast",
+          "inventoryItemId": "inv-001",
+          "userName": "Peito de frango",
+          "requiredQuantity": 400,
+          "unit": "g",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        },
+        {
+          "ingredientRef": "ingredient-white-rice",
+          "inventoryItemId": "inv-002",
+          "userName": "Arroz branco",
+          "requiredQuantity": 200,
+          "unit": "g",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        },
+        {
+          "ingredientRef": "ingredient-carrot",
+          "inventoryItemId": "inv-003",
+          "userName": "Cenoura",
+          "requiredQuantity": 2,
+          "unit": "unit",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        }
+      ],
+      "additionalIngredients": [],
+      "preparationProfile": {
+        "requiresAdvancePreparation": false,
+        "minimumLeadMinutes": 0,
+        "blockingPreparationCodes": [],
+        "mayProduceReusableComponents": false
+      },
+      "assumptionsUsed": [
+        "água",
+        "sal",
+        "óleo vegetal"
+      ]
+    },
+    {
+      "candidateId": "cand-002",
+      "candidateStrategy": "on_hand_flexible",
+      "name": "Omelete de Cenoura com Arroz",
+      "targetMealType": "dinner",
+      "dishFormat": "prato único",
+      "primaryTechnique": "grelhar",
+      "primaryIngredientRefs": [
+        "ingredient-eggs",
+        "ingredient-carrot",
+        "ingredient-white-rice"
+      ],
+      "summary": "Omelete de cenoura servido com arroz branco, simples e rápido.",
+      "servings": 2,
+      "time": {
+        "activeMinutes": 25,
+        "totalMinutes": 35
+      },
+      "difficulty": "beginner",
+      "requiredEquipmentIds": [
+        "eq-stove",
+        "eq-pan",
+        "eq-skillet"
+      ],
+      "requiredCapabilities": [
+        "burner",
+        "boil",
+        "simmer",
+        "saute",
+        "sear"
+      ],
+      "inventoryUses": [
+        {
+          "ingredientRef": "ingredient-eggs",
+          "inventoryItemId": "inv-004",
+          "userName": "Ovos",
+          "requiredQuantity": 4,
+          "unit": "unit",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        },
+        {
+          "ingredientRef": "ingredient-carrot",
+          "inventoryItemId": "inv-003",
+          "userName": "Cenoura",
+          "requiredQuantity": 2,
+          "unit": "unit",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        },
+        {
+          "ingredientRef": "ingredient-white-rice",
+          "inventoryItemId": "inv-002",
+          "userName": "Arroz branco",
+          "requiredQuantity": 200,
+          "unit": "g",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        }
+      ],
+      "additionalIngredients": [
+        {
+          "ingredientRef": "ingredient-onion",
+          "name": "Cebola",
+          "quantity": 1,
+          "unit": "unit"
+        }
+      ],
+      "preparationProfile": {
+        "requiresAdvancePreparation": false,
+        "minimumLeadMinutes": 0,
+        "blockingPreparationCodes": [],
+        "mayProduceReusableComponents": false
+      },
+      "assumptionsUsed": [
+        "água",
+        "sal",
+        "óleo vegetal"
+      ]
+    },
+    {
+      "candidateId": "cand-003",
+      "candidateStrategy": "exploratory",
+      "name": "Frango ao Molho de Ovo com Arroz",
+      "targetMealType": "dinner",
+      "dishFormat": "prato único",
+      "primaryTechnique": "ensopar",
+      "primaryIngredientRefs": [
+        "ingredient-chicken-breast",
+        "ingredient-eggs",
+        "ingredient-white-rice"
+      ],
+      "summary": "Tiras de frango cozidas em caldo com ovo, acompanhadas de arroz.",
+      "servings": 2,
+      "time": {
+        "activeMinutes": 30,
+        "totalMinutes": 45
+      },
+      "difficulty": "beginner",
+      "requiredEquipmentIds": [
+        "eq-stove",
+        "eq-pan",
+        "eq-skillet"
+      ],
+      "requiredCapabilities": [
+        "burner",
+        "boil",
+        "simmer",
+        "saute",
+        "sear"
+      ],
+      "inventoryUses": [
+        {
+          "ingredientRef": "ingredient-chicken-breast",
+          "inventoryItemId": "inv-001",
+          "userName": "Peito de frango",
+          "requiredQuantity": 400,
+          "unit": "g",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        },
+        {
+          "ingredientRef": "ingredient-eggs",
+          "inventoryItemId": "inv-004",
+          "userName": "Ovos",
+          "requiredQuantity": 2,
+          "unit": "unit",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        },
+        {
+          "ingredientRef": "ingredient-white-rice",
+          "inventoryItemId": "inv-002",
+          "userName": "Arroz branco",
+          "requiredQuantity": 200,
+          "unit": "g",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        }
+      ],
+      "additionalIngredients": [
+        {
+          "ingredientRef": "ingredient-onion",
+          "name": "Cebola",
+          "quantity": 1,
+          "unit": "unit"
+        },
+        {
+          "ingredientRef": "ingredient-garlic",
+          "name": "Alho",
+          "quantity": 2,
+          "unit": "dente"
+        },
+        {
+          "ingredientRef": "ingredient-tomato",
+          "name": "Tomate",
+          "quantity": 2,
+          "unit": "unit"
+        }
+      ],
+      "preparationProfile": {
+        "requiresAdvancePreparation": false,
+        "minimumLeadMinutes": 0,
+        "blockingPreparationCodes": [],
+        "mayProduceReusableComponents": false
+      },
+      "assumptionsUsed": [
+        "água",
+        "sal",
+        "óleo vegetal"
+      ]
+    }
+  ]
+}

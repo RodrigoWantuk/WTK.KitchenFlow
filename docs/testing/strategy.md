@@ -1,7 +1,8 @@
 # Testing Strategy
 
-- **Status:** Draft
-- **Last updated:** 2026-07-28
+- **Status:** Accepted with lean-validation amendment
+- **Last updated:** 2026-08-05
+- **Lean validation amendment:** [`../plans/PLAN-0007-amendment-2026-08-05-lean-validation.md`](../plans/PLAN-0007-amendment-2026-08-05-lean-validation.md)
 
 ## Purpose
 
@@ -22,9 +23,26 @@ Testing is part of feature design. A requirement is incomplete until its verific
 
 ## Test execution governance
 
-Substantial or independent testing work must use a testing plan under `docs/plans/` and a matching entry in `docs/plan-status.md`.
+### Default lean validation
 
-Use [`../plans/0000-test-plan-template.md`](../plans/0000-test-plan-template.md) to define:
+Ordinary implementation, research, documentation, and contract work follows the lean risk-based default in [`../plans/PLAN-0007-amendment-2026-08-05-lean-validation.md`](../plans/PLAN-0007-amendment-2026-08-05-lean-validation.md):
+
+1. targeted unit tests for changed deterministic behavior;
+2. one focused integration or contract test when a real boundary changes;
+3. format/build/typecheck for affected projects;
+4. one final CI execution on the PR head.
+
+Validation scope tracks the changed area. Backend-only, frontend-only, contract-only, and documentation-only changes do not require unrelated full matrices. Live AI provider campaigns remain separated from the default fast suite and must declare a cost ceiling.
+
+Default deterministic execution is once. Suspected flaky behavior may use up to three executions. Concurrency or idempotency changes may use 5–10 focused synchronized executions. More than ten repetitions requires a documented reproduced race or an explicit owner request.
+
+Independent validation is not required by default. It is reserved for concrete high-impact risk such as cross-user authorization or data exposure, destructive migrations, payment or financial accounting, production credential handling, confirmed concurrency corruption, data-loss recovery, or critical food-safety enforcement.
+
+Do not create a documentation-only commit solely to record successful CI workflow IDs after the final head has already passed.
+
+### When a dedicated testing plan is required
+
+A separate testing plan under `docs/plans/` is required only when independent validation is justified by the elevated-risk criteria above, or when the owner explicitly requests an independent assessment. Use [`../plans/0000-test-plan-template.md`](../plans/0000-test-plan-template.md) to define:
 
 - the exact system-under-test branch, pull request, commit, release, and environment;
 - the authoritative test basis and acceptance criteria;

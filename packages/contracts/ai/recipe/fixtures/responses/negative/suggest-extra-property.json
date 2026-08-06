@@ -1,0 +1,224 @@
+{
+  "operation": "recipe.suggest_candidates.v1",
+  "schemaVersion": "0.3",
+  "candidates": [
+    {
+      "candidateId": "c1",
+      "candidateStrategy": "on_hand_first",
+      "name": "Frango grelhado com arroz",
+      "targetMealType": "dinner",
+      "dishFormat": "plated_main_with_sides",
+      "primaryTechnique": "pan_sear",
+      "primaryIngredientRefs": [
+        "ingredient-chicken-breast",
+        "ingredient-white-rice"
+      ],
+      "summary": "Peito de frango selado com arroz e cenoura refogada.",
+      "servings": 2,
+      "time": {
+        "activeMinutes": 25,
+        "passiveMinutes": 15,
+        "totalMinutes": 40
+      },
+      "difficulty": "easy",
+      "requiredEquipmentIds": [
+        "eq-stove",
+        "eq-skillet",
+        "eq-pan"
+      ],
+      "requiredCapabilities": [
+        "burner",
+        "sear",
+        "boil"
+      ],
+      "inventoryUses": [
+        {
+          "ingredientRef": "ingredient-chicken-breast",
+          "inventoryItemId": "inv-001",
+          "userName": "Peito de frango",
+          "requiredQuantity": 350,
+          "unit": "g",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        },
+        {
+          "ingredientRef": "ingredient-white-rice",
+          "inventoryItemId": "inv-002",
+          "userName": "Arroz branco",
+          "requiredQuantity": 180,
+          "unit": "g",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        },
+        {
+          "ingredientRef": "ingredient-carrot",
+          "inventoryItemId": "inv-003",
+          "userName": "Cenoura",
+          "requiredQuantity": 1,
+          "unit": "unit",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        }
+      ],
+      "additionalIngredients": [],
+      "preparationProfile": {
+        "requiresAdvancePreparation": false,
+        "minimumLeadMinutes": 0,
+        "blockingPreparationCodes": [],
+        "mayProduceReusableComponents": false
+      },
+      "assumptionsUsed": [
+        "sal",
+        "óleo vegetal"
+      ],
+      "secretReasoning": "leak"
+    },
+    {
+      "candidateId": "c2",
+      "candidateStrategy": "on_hand_flexible",
+      "name": "Omelete de cenoura",
+      "targetMealType": "dinner",
+      "dishFormat": "single_skillet",
+      "primaryTechnique": "omelette",
+      "primaryIngredientRefs": [
+        "ingredient-eggs",
+        "ingredient-carrot"
+      ],
+      "summary": "Omelete simples com cenoura ralada e arroz de acompanhamento.",
+      "servings": 2,
+      "time": {
+        "activeMinutes": 20,
+        "passiveMinutes": 10,
+        "totalMinutes": 30
+      },
+      "difficulty": "easy",
+      "requiredEquipmentIds": [
+        "eq-stove",
+        "eq-skillet",
+        "eq-pan"
+      ],
+      "requiredCapabilities": [
+        "burner",
+        "saute",
+        "boil"
+      ],
+      "inventoryUses": [
+        {
+          "ingredientRef": "ingredient-eggs",
+          "inventoryItemId": "inv-004",
+          "userName": "Ovos",
+          "requiredQuantity": 4,
+          "unit": "unit",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        },
+        {
+          "ingredientRef": "ingredient-carrot",
+          "inventoryItemId": "inv-003",
+          "userName": "Cenoura",
+          "requiredQuantity": 1,
+          "unit": "unit",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        },
+        {
+          "ingredientRef": "ingredient-white-rice",
+          "inventoryItemId": "inv-002",
+          "userName": "Arroz branco",
+          "requiredQuantity": 160,
+          "unit": "g",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        }
+      ],
+      "additionalIngredients": [
+        {
+          "name": "Cebola",
+          "requiredQuantity": 0.5,
+          "unit": "unit",
+          "optional": false
+        }
+      ],
+      "preparationProfile": {
+        "requiresAdvancePreparation": false,
+        "minimumLeadMinutes": 0,
+        "blockingPreparationCodes": [],
+        "mayProduceReusableComponents": false
+      },
+      "assumptionsUsed": [
+        "sal",
+        "óleo vegetal"
+      ]
+    },
+    {
+      "candidateId": "c3",
+      "candidateStrategy": "exploratory",
+      "name": "Arroz de forno com ovos",
+      "targetMealType": "dinner",
+      "dishFormat": "baked_casserole",
+      "primaryTechnique": "bake_finish",
+      "primaryIngredientRefs": [
+        "ingredient-white-rice",
+        "ingredient-eggs"
+      ],
+      "summary": "Arroz misturado com ovos e cenoura, finalizado na panela.",
+      "servings": 2,
+      "time": {
+        "activeMinutes": 30,
+        "passiveMinutes": 15,
+        "totalMinutes": 45
+      },
+      "difficulty": "medium",
+      "requiredEquipmentIds": [
+        "eq-stove",
+        "eq-pan"
+      ],
+      "requiredCapabilities": [
+        "burner",
+        "simmer"
+      ],
+      "inventoryUses": [
+        {
+          "ingredientRef": "ingredient-white-rice",
+          "inventoryItemId": "inv-002",
+          "userName": "Arroz branco",
+          "requiredQuantity": 200,
+          "unit": "g",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        },
+        {
+          "ingredientRef": "ingredient-eggs",
+          "inventoryItemId": "inv-004",
+          "userName": "Ovos",
+          "requiredQuantity": 3,
+          "unit": "unit",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        },
+        {
+          "ingredientRef": "ingredient-carrot",
+          "inventoryItemId": "inv-003",
+          "userName": "Cenoura",
+          "requiredQuantity": 1,
+          "unit": "unit",
+          "availabilitySource": "on_hand",
+          "requiredState": "raw"
+        }
+      ],
+      "additionalIngredients": [],
+      "preparationProfile": {
+        "requiresAdvancePreparation": false,
+        "minimumLeadMinutes": 0,
+        "blockingPreparationCodes": [],
+        "mayProduceReusableComponents": true
+      },
+      "assumptionsUsed": [
+        "sal",
+        "óleo vegetal",
+        "água"
+      ]
+    }
+  ],
+  "clarifications": []
+}

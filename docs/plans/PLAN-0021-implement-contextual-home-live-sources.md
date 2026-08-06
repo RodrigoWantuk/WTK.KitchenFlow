@@ -1,14 +1,14 @@
 # PLAN-0021: Implement Contextual Home Live Source Contracts and Adapters
 
-- **Status:** Blocked
+- **Status:** Ready
 - **Type:** Implementation
 - **Priority:** High
 - **Owner:** Unassigned backend/frontend vertical-slice agent
 - **Created:** 2026-08-02
-- **Last updated:** 2026-08-02
+- **Last updated:** 2026-08-05
 - **Branch:** `agent/plan-0021-contextual-home-live-sources`
 - **Pull request:** Not opened
-- **Dependencies:** PLAN-0011 presentation boundary; PLAN-0020 production profile UI; PLAN-0022 recipe contract decisions; future accepted menu/planning source contract
+- **Dependencies:** PLAN-0011 presentation boundary; PLAN-0020 production profile UI; PLAN-0022 recipe contract decisions (Completed); accepted menu/planning source contract
 - **Related product:** `docs/product/entry-and-contextual-home.md`
 - **Parent implementation plan:** PLAN-0011 Phase 3 and Phase 4 transfer
 
@@ -101,6 +101,6 @@ Represent:
 
 ## Execution state
 
-- **Current checkpoint:** Plan defined; presentation and upstream live-source prerequisites are not all available.
-- **Blockers:** PLAN-0011, PLAN-0020, PLAN-0022, and an accepted-menu/planning read contract.
-- **Exact next action:** Keep blocked. Reassess after PLAN-0011 and PLAN-0020 merge; split a first deterministic inventory/profile source slice if menu/AI prerequisites remain unavailable.
+- **Current checkpoint:** PLAN-0011, PLAN-0020, and PLAN-0022 recipe AI contracts are complete. Remaining prerequisite before full live AI-backed home sources is an accepted menu/planning source contract.
+- **Blockers:** Accepted menu/planning source contract.
+- **Exact next action:** Confirm or create the accepted menu/planning source contract, then claim `agent/plan-0021-contextual-home-live-sources` and implement the deterministic inventory/profile slices first if menu/AI sources remain pending.

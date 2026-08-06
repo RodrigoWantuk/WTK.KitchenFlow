@@ -60,6 +60,7 @@ packages/*
 !packages/api-client/
 !packages/api-client/**
 packages/api-client/node_modules/
+packages/contracts/**/node_modules/
 
 # Python
 __pycache__/

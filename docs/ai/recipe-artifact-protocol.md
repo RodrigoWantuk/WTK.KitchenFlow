@@ -1,14 +1,17 @@
 # AI Recipe Artifact Protocol
 
-- **Status:** Validating — protocol `0.3-draft`
-- **Plan:** [`PLAN-0017`](../plans/PLAN-0017-define-ai-recipe-artifact-protocol.md)
+- **Status:** Revised — protocol `0.3`
+- **Disposition:** Revised (from `0.3-draft`) under PLAN-0022 lean evaluation
+- **Plan:** [`PLAN-0022`](../plans/PLAN-0022-evaluate-and-finalize-recipe-ai-contracts.md) · predecessor [`PLAN-0017`](../plans/PLAN-0017-define-ai-recipe-artifact-protocol.md)
+- **Strict schemas:** [`../../packages/contracts/ai/recipe/`](../../packages/contracts/ai/recipe/)
+- **Decisions:** [`decisions/ingredient-identity-2026-08-05.md`](decisions/ingredient-identity-2026-08-05.md), [`decisions/package-confidence-threshold-2026-08-05.md`](decisions/package-confidence-threshold-2026-08-05.md), [`decisions/model-routing-cook-now-menu-planning-2026-08-05.md`](decisions/model-routing-cook-now-menu-planning-2026-08-05.md)
 - **Thumbnail policy:** [`PLAN-0008`](../plans/PLAN-0008-define-lean-launch-ai-economics.md)
-- **Updated:** 2026-08-02
-- **Text-model baseline:** `deepseek-v4-flash`, thinking enabled, `reasoning_effort: high`
+- **Updated:** 2026-08-05
+- **Text-model baseline:** `deepseek-v4-flash` (thinking-high quality baseline; non-thinking fallback for synchronous `cook_now`)
 
 ## Boundary
 
-Cocinaris uses AI to propose culinary artifacts. Application code remains authoritative for identity, authorization, inventory, quantities, expiration, reservations, shopping aggregation, package arithmetic, scheduling, concurrency and mutations.
+KitchenFlow uses AI to propose culinary artifacts. Application code remains authoritative for identity, authorization, inventory, quantities, expiration, reservations, shopping aggregation, package arithmetic, scheduling, concurrency and mutations.
 
 Every model response is parsed, schema-validated and semantically validated. It may be rejected or repaired and never mutates product state directly.
 
@@ -25,11 +28,15 @@ Returns exactly three compact candidates for either:
 
 Candidates contain comparison and validation fields, not detailed cooking steps. Transient candidates may reuse an existing cached image, but do not automatically trigger paid image generation.
 
+Strict response schema: `packages/contracts/ai/recipe/schemas/recipe-suggest-candidates.response.v0.3.json` with `schemaVersion: "0.3"`.
+
 ### `recipe.expand_selected.v1`
 
 Produces one persisted recipe revision containing ingredients, equipment, preparation tasks, stages, dependencies, relative lead times, sensory cues, storage/freezing guidance, produced components, reconciliation hints and `thumbnailVisual`.
 
 The backend converts relative dependencies into concrete reminders and validates/canonicalizes the visual descriptor.
+
+Strict response schema: `packages/contracts/ai/recipe/schemas/recipe-expand-selected.response.v0.3.json` with `schemaVersion: "0.3"`.
 
 ### `recipe.thumbnail.generate.v1`
 
@@ -71,7 +78,7 @@ The backend computes authoritative semantic fingerprints and rejects near-duplic
 
 ## Generation sessions
 
-Cocinaris owns generation-session state. Another batch receives current canonical state plus at most nine compact prior semantic summaries/fingerprints and explicit rejection reasons. Full model responses, provider conversation history and reasoning are not replayed.
+KitchenFlow owns generation-session state. Another batch receives current canonical state plus at most nine compact prior semantic summaries/fingerprints and explicit rejection reasons. Full model responses, provider conversation history and reasoning are not replayed.
 
 Provider cache/state is an optimization only; correctness never depends on it.
 
@@ -86,6 +93,8 @@ prepared_component
 ```
 
 The model must not calculate balances, sufficiency, reservations, remaining quantities, shortfalls, package counts, percentages or shopping quantities.
+
+Projected package surplus enters AI context only at confidence `high` ([decision](decisions/package-confidence-threshold-2026-08-05.md)).
 
 When a recipe is accepted, deterministic code:
 
@@ -106,6 +115,8 @@ Availability explicitly declares states such as `raw`, `cooked`, `frozen`, `thaw
 
 The model cannot assume a prepared state. Required transformations appear as advance preparations or recipe stages.
 
+Canonical ingredient identity is backend-owned and reference-preserving ([decision](decisions/ingredient-identity-2026-08-05.md)).
+
 Candidates expose:
 
 - whether advance preparation is required;
@@ -119,7 +130,7 @@ Expanded tasks return relative dependencies only. Concrete timestamps, reminders
 
 Hard constraints are absolute: restrictions, required/excluded ingredients, equipment/capabilities, target meal, lead time, maximum time, inventory mode, ingredient state and explicit user constraints.
 
-For supplied items, the model copies exact stable references, names, units, states and availability sources. Unit conversion and renaming are forbidden.
+For supplied items, the model copies exact stable references, names, units, states and availability sources. Unit conversion and renaming are forbidden. Canonical units in responses are `g`, `ml`, and `unit`.
 
 `assumptionsUsed` lists only authorized assumptions actually used. An assumption cannot also appear as an additional ingredient.
 
@@ -182,6 +193,7 @@ In addition to normal recipe fields, it includes:
 - Do not make safety, nutrition, freshness, authenticity or guaranteed-result claims.
 - Keep fields bounded and canonicalizable.
 - Material visual changes create a new descriptor; wording-only edits do not.
+- Do not emit cache hashes, provider names, model names, or render policy inside the descriptor.
 
 The backend validates consistency with normalized ingredients and produced states, canonicalizes accepted JSON and computes the semantic visual identity. The model never authors hashes or cache decisions.
 
@@ -202,16 +214,21 @@ Candidate generation uses compact fields, no detailed steps, no previous reasoni
 
 The visual descriptor is generated only during selected-recipe expansion and must not inflate candidate responses.
 
-Synchronous `cook_now` target:
+Routing policy ([decision](decisions/model-routing-cook-now-menu-planning-2026-08-05.md)):
+
+- synchronous `cook_now`: prefer non-thinking fallback;
+- `menu_planning`: prefer thinking-high behind progressive UI;
+- maximum automatic repair attempts = 1;
+- empty/truncated JSON is a failure after repair.
+
+Latency targets remain product goals:
 
 ```text
 p50 <= 15 seconds
 p95 <= 25 seconds
-empty/truncated JSON = 0
-maximum automatic repair attempts = 1
 ```
 
-If thinking-high cannot meet the gate after compaction, use a validated non-thinking fallback for `cook_now`. Menu planning may retain higher reasoning behind progressive UI when measured quality justifies it.
+Statistical p50/p95 characterization is **deferred** until a larger evaluation sample exists. Lean PLAN-0022 observations and PLAN-0017 provisional runs are recorded as point samples only.
 
 Never expose or persist reasoning content. Record token/cache usage, time to first token, total latency, repair rate, semantic failures and cost per accepted recipe. Track visual-descriptor failures separately from image-generation metrics.
 
@@ -219,7 +236,7 @@ Never expose or persist reasoning content. Record token/cache usage, time to fir
 
 Application validation covers:
 
-- closed field types, limits and enums;
+- closed field types, limits and enums via the versioned JSON Schemas;
 - exact references, names, units, states and sources;
 - hard constraints and revision freshness;
 - equipment/capability and lead-time feasibility;
@@ -232,13 +249,22 @@ Application validation covers:
 
 All strings from users, inventory, OCR, imports, URLs and notes are untrusted data. Instructions remain separate from data, schemas are closed and model output is never executed directly.
 
-## Remaining decisions
+Deterministic validators and fixtures live in `packages/contracts/ai/recipe/` and are the default CI-oriented check for contract changes. Live provider campaigns remain opt-in and cost-bounded.
 
-- final strict JSON Schema/tool definition;
-- final `thumbnailVisual` limits, enums and canonicalization rules;
-- canonical ingredient identity service;
-- package catalog and confidence thresholds;
-- final token/cost ceilings after repeated benchmarks;
-- food-safety/storage authority and disclaimer policy;
+## Finalized by PLAN-0022
+
+- strict candidate and expansion response schemas (`0.3`);
+- collection and string bounds;
+- exact-reference and canonical-unit rules;
+- ingredient identity treatment;
+- package-confidence threshold (`high` only for surplus context);
+- `cook_now` / `menu_planning` model policy and repair/fallback behavior;
+- protocol disposition: **Revised** to `0.3`.
+
+## Remaining implementation work (not this protocol)
+
+- production AI Gateway and provider adapter;
+- food-safety/storage authority and disclaimer policy UI;
 - slow-response progress UI;
-- implementation handoff to PLAN-0008 image generation and cache infrastructure.
+- PLAN-0008 image generation and cache infrastructure;
+- larger-sample latency/cost characterization.

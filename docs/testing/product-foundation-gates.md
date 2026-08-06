@@ -1,11 +1,12 @@
 # Product Foundation Test Gates
 
 - **Status:** Accepted
-- **Last updated:** 2026-07-28
+- **Last updated:** 2026-08-05
+- **Lean validation amendment:** [`../plans/PLAN-0007-amendment-2026-08-05-lean-validation.md`](../plans/PLAN-0007-amendment-2026-08-05-lean-validation.md)
 
 ## Purpose
 
-These gates translate the accepted discovery into behaviors that implementation and independent testing plans must verify. They supplement [`strategy.md`](strategy.md).
+These gates translate the accepted discovery into behaviors that implementation work and, when justified by elevated risk, independent testing plans must verify. They supplement [`strategy.md`](strategy.md). Ordinary changes use lean targeted validation; independent validation plans are reserved for concrete high-impact risk.
 
 A feature is not correct merely because its happy-path UI works or its AI output looks plausible.
 

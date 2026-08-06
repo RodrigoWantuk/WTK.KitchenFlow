@@ -7,7 +7,7 @@
 - **Created:** 2026-08-02
 - **Last updated:** 2026-08-05T15:18:38Z
 - **Branch:** `agent/plan-0023-prepared-component-lots`
-- **Pull request:** Draft [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39)
+- **Pull request:** Merged [PR #39](https://github.com/RodrigoWantuk/WTK.Cocinaris/pull/39) at `7912d4676ffc1f06ac193b7d6788c3a910ed2bd1`
 - **Dependencies:** PLAN-0003 and PLAN-0016 inventory foundations merged
 - **Related product:** `docs/product/closed-loop-kitchen-orchestration.md`
 - **Related domain:** `docs/domain/inventory-lifecycle.md`
@@ -283,7 +283,8 @@ Because the plan affects inventory consumption, derived lots, concurrency, and m
 - **State:** PLAN-0023 is Completed; Draft PR #39 awaits consolidated exact-head CI before owner review. PLAN-0026 remains historical Fail in unmerged PR #40.
 - **Next action:** Run consolidated exact-head CI for this incorporation/documentation head.
 
-### 2026-08-05T15:26:00Z — Codex backend/domain implementation agent
+### 2026-08-05 — Post-merge reconciliation (PLAN-0022 agent)
 
-- **Checkpoint:** Removed pre-existing unrelated PLAN-0018 local artifacts from the publication index while preserving them as untracked local files.
-- **Next action:** Push the corrected consolidated documentation head and await CI.
+- **Checkpoint:** PLAN-0023 is merged through PR #39 at `7912d4676ffc1f06ac193b7d6788c3a910ed2bd1`. Functional SUT remains `9bff2e130afb4a0f31ea0b84925362f546d1179e`. PLAN-0026 remains Completed — Fail with PR #40 closed without merge. PLAN-0027 remains Completed — Pass and was incorporated through PR #39 via PR #42. Issue #41 is closed.
+- **Note:** Historical assessment evidence is not rewritten. Stale statements that PR #39 still awaited owner review or final documentation-head checks are superseded by this merge record.
+- **Next action:** None for PLAN-0023; active work continues under PLAN-0022.
